@@ -1280,6 +1280,9 @@ static OWP_CheckBoxA* s_owpBrushMirrorV = 0;
 
 
 static OrgWindow* s_placefolderWnd = 0;
+static OWP_ScrollWnd* s_placescrollWnd = 0;
+static OWP_Separator* s_placesp = 0;
+
 //static OWP_Label* s_placefolderlabel_1 = 0;
 //static OWP_Label* s_placefolderlabel_2 = 0;
 //static OWP_Label* s_placefolderlabel_3 = 0;
@@ -1291,7 +1294,8 @@ static OrgWindow* s_placefolderWnd = 0;
 //#define SHORTCUTTEXTNUM	52
 //#define SHORTCUTTEXTNUM	46
 //#define SHORTCUTTEXTNUM	49
-#define SHORTCUTTEXTNUM	50
+//#define SHORTCUTTEXTNUM	50
+#define SHORTCUTTEXTNUM	96
 static OWP_Label* s_shortcuttext[SHORTCUTTEXTNUM];
 
 static bool s_skyparamsFlag = false;
@@ -4259,6 +4263,8 @@ void InitApp()
 
 	{
 		s_placefolderWnd = 0;
+		s_placescrollWnd = 0;
+		s_placesp = 0;
 		//s_placefolderlabel_1 = 0;
 		//s_placefolderlabel_2 = 0;
 		//s_placefolderlabel_3 = 0;
@@ -5699,6 +5705,14 @@ void OnDestroyDevice()
 	//	delete s_placefolderlabel_3;
 	//	s_placefolderlabel_3 = 0;
 	//}
+	if (s_placesp) {
+		delete s_placesp;
+		s_placesp = 0;
+	}
+	if (s_placescrollWnd) {
+		delete s_placescrollWnd;
+		s_placescrollWnd = 0;
+	}
 	if (s_placefolderWnd) {
 		delete s_placefolderWnd;
 		s_placefolderWnd = 0;
@@ -5884,6 +5898,7 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 	static double savetooltiptime = 0.0;
 	static int capcnt = 0;
 
+
 	MoveMemory(g_savekeybuf, g_keybuf, sizeof(BYTE) * 256);
 	g_tb_XPlus = false;
 	g_tb_XMinus = false;
@@ -5891,6 +5906,8 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 	g_tb_YMinus = false;
 	g_tb_ZPlus = false;
 	g_tb_ZMinus = false;
+	ZeroMemory(g_keybuf, sizeof(BYTE) * 256);
+
 
 	if (ploopstartflag) {
 		*ploopstartflag = 0;
@@ -5965,6 +5982,8 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		//g_SampleUI.GetStatic(IDC_STATIC_UMTHREADS)->SetText(sz);
 
 
+		OnFrameKeyboard();//OnDSUpdate()より前で. OnDSUpdate()内でArrowKeyの処理をするため.
+
 		if (g_undertrackingRMenu == 0) {
 			OnDSUpdate();
 		}
@@ -5977,7 +5996,6 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		SetCamera6Angle();
 		AutoCameraTarget();
 
-		OnFrameKeyboard();
 
 		if ((g_previewFlag == 0) && (s_savepreviewFlag != 0)) {
 			s_cursorFlag = true;
@@ -7711,7 +7729,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				s_ikselectmat = s_selm;
 
 				//シングルスレッド　TourBoxから呼び出す用
-				if (g_edittarget == EDITTARGET_BONE && !g_Ikey) {
+				if ((g_edittarget == EDITTARGET_BONE) && !g_Ikey) {
 					if (ChkEnableIK()) {
 						s_pickinfo.pickobjno = s_curboneno;
 						IKOperateJointAxisDelta(PICK_X, delta);
@@ -24783,6 +24801,7 @@ int ChangeToolSpriteMode()
 
 int OnFrameKeyboard()
 {
+
 	//###################################
 	//#### OnUserFrameMove()にて初期化 ###
 	//###################################
@@ -24793,8 +24812,8 @@ int OnFrameKeyboard()
 	//g_tb_YMinus = false;
 	//g_tb_ZPlus = false;
 	//g_tb_ZMinus = false;
+	//ZeroMemory(g_keybuf, sizeof(BYTE) * 256);
 
-	ZeroMemory(g_keybuf, sizeof(BYTE) * 256);
 	if (GetKeyboardState((PBYTE)g_keybuf) == FALSE) {
 		//失敗した場合にはゴミが入らないように初期化
 		//MoveMemory(g_savekeybuf, g_keybuf, sizeof(BYTE) * 256);
@@ -24849,13 +24868,13 @@ int OnFrameKeyboard()
 		//プレートメニュー：スペースキーを押すたびにkind変更. Cキーを押し続けながらスペースキーを押すたびにplate変更.
 		//2023/08/22 以下のメニュー変更にスペースキーを使うので　DXUTの　スペースキーのホットキー機能をコメントアウト
 		if ((g_keybuf[VK_SPACE] & 0x80) && ((g_savekeybuf[VK_SPACE] & 0x80) == 0)) {//TourBox ショートボタンを押す度に
-			if (g_keybuf['C'] & 0x80) {//TourBox 下矢印ボタンを押しながら
+			if (!g_controlkey && (g_keybuf['C'] & 0x80)) {//TourBox 下矢印ボタンを押しながら
 				if (s_plateFlag == false) {
 					s_guiswflag = false;//!!!!2025/04/27
 					s_plateFlag = true;
 				}
 			}
-			else if (g_keybuf['V'] & 0x80) {//TourBox 上矢印ボタンを押しながら
+			else if (!g_controlkey && (g_keybuf['V'] & 0x80)) {//TourBox 上矢印ボタンを押しながら
 				ChangeToolSpriteMode();
 			}
 			else {
@@ -25041,7 +25060,7 @@ int OnFrameKeyboard()
 
 
 	//TourBox
-		if (g_keybuf['U'] & 0x80) {//TourBox 左矢印ボタン　アンドゥデータ作成
+		if (!g_controlkey && (g_keybuf['U'] & 0x80)) {//TourBox 左矢印ボタン　アンドゥデータ作成
 			PrepairUndo();
 		}
 		
@@ -30316,9 +30335,28 @@ int CreatePlaceFolderWnd()
 		//}
 
 
-		WCHAR shortcuttext[SHORTCUTTEXTNUM][90] = {
+		s_placescrollWnd = new OWP_ScrollWnd(L"PlaceScroll", true, labelheight);
+		if (!s_placescrollWnd) {
+			_ASSERT(0);
+			return 1;
+		}
+		//要素数が変わったときには指定し忘れないように！！！
+		s_placescrollWnd->setLineDataSize(95 + 3);
+		s_placescrollWnd->setSize(WindowSize(s_sidewidth, s_sideheight - 30));
+		s_placefolderWnd->addParts(*s_placescrollWnd);
+		s_placefolderWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
+		s_placescrollWnd->setPos(WindowPos(0, 0));
+
+
+		s_placesp = new OWP_Separator(s_placefolderWnd, true, 0.010, false, s_placescrollWnd);
+		if (!s_placesp) {
+			_ASSERT(0);
+			return 1;
+		}
+		s_placescrollWnd->addParts(*s_placesp);
+
+		WCHAR shortcuttext[SHORTCUTTEXTNUM][100] = {
 			L"ShortCutKey",
-			L" ",
 			L"　Menu",
 			L"　　SpaceKey　：　Change kind of PlateMenu.",
 			L"　　C + SpaceKey　：　Change Plate.",
@@ -30327,52 +30365,106 @@ int CreatePlaceFolderWnd()
 			L"　Joint Selection",
 			L"　　H + LeftArrow or RightArrow　：　Select LeftHand or RightHand.",
 			L"	　　　JointName whitch contain string L_Hand or LeftHand",
-
 			L"	　　　JointName whitch contain string R_Hand or RightHand",
+
 			L"　　F + LeftArrow or RightArrow　：　Select LeftFoot or RightFoot.",
 			L"	　　　JointName whitch contain string L_Foot or LeftFoot",
 			L"	　　　JointName whitch contain string R_Foot or RightFoot",
 			L" ",
 			L"　　LeftArrow or RightArrow　：　Select joint whitch is at same depth level.",
-			L" ",
 			L"　　UpperArrow or LowerArrow　：　Select parent joint or child joint.",
 			L" ",
 			L"　Brush Selection",
-
 			L"　　RClick in the margin of 3DWnd　：　Select Brush.",
 			L"　　RClick or RDrag in the Timeline of EulerGraph　：　Set TopPos of BrushShape.",
+
 			L" ",
 			L"　Edit Motion",
 			L"　　T + MouseWheel　：　Twist motion.",
-			L" ",
 			L"　　Shift + Drag(X or Y or Z) on ScalingMode　：　Scale all axes.",
 			L" ",
-			L" ",
 			L"　Timeline",
-			
 			L"　　Ctrl + MouseWheel　：　Move frame selection by 1 frame.",
 			L" ",
 			L"　Manipulator",
 			L"　　S + Mouse_R_Drag　：　Change manipulator scale.",
+
 			L" ",
 			L"　OWP_Slider",
 			L"　　Drag on CenterBar　：　Slide starting from clicked position.",
 			L"    LButton DoubleClick :  Set value of clicked position.",
 			L"    RButton DoubleClick :  Undo value limited to 1,000,000 times.",
-			L"    Mouse Wheel : Slide per a pixel.",
-			
+			L"    Mouse Wheel : Slide per a pixel.",			
 			L" ",
 			L"　DispGroupWindow",
 			L"　　RButton on a Element　：　Context Menu for SimilarCheck.",
 			L" ",
+
 			L"　OWP_ScrollWindow",
 			L"　　MouseWheel on ScrollBar　：　Scroll Window.",
 			L" ",
 			L"　Pick on ShaderPlateMenu, DispGroupPlateMenu",
 			L"　　NumKey(1-9) : Pick an object from the camera close to theNumber.",
-			L" "
+			L" ",
+			L"With TourBox Device",
+			L" It is better to hover the mouse over the window you are operating.",
+			L" ",
+			L" Change PlateMenu",
 
+			L"  ShortButton : Change 2ndMenu at LowerWindow.",
+			L"  KeepPushLowArrow + ShortButton : Select 2ndMenu at LowerWindow.",
+			L"  KeepPushUpArrow + ShortButton : Change CommandMenu at UpperWindow.",
+			L" ",
+			L" Change IK Mode",
+			L"  TopButton : Switch modes in the order of rotation, movement, and scale.",
+			L" ",
+			L" When BoneMode pushing FrogButton at TimeLine",
+			L"  Rotate Scroll: Rotate(Move,Scale) the selected joint around the X-axis.",
+			L"  Rotate Dial: Rotate(Move,Scale) the selected joint around the Y-axis.",
+
+			L"  Turn Knob : Rotate(Move,Scale) the selected joint around the Z-axis.",
+			L" ",
+			L" When CameraAnimMode pushing FrogButton at TimeLine",
+			L"  Rotate Scroll: Rotate(Move,Scale) current CameraAnim around the X-axis.",
+			L"  Rotate Dial: Rotate(Move,Scale) current CameraAnim around the Y-axis.",
+			L"  Turn Knob : Rotate(Move,Scale) current CameraAnim around the Z-axis.",
+			L" ",
+			L" When KeepPushing RightArrowButton",
+			L"  Rotate Scroll: Rotate(Move,Scale) CameraForEditting around the X-axis.",
+			L"  Rotate Dial: Rotate(Move,Scale) CameraForEditting around the Y-axis.",
+
+			L"  Turn Knob : Rotate(Move,Scale) CameraForEditting around the Z-axis.",
+			L" ",
+			L" Can operate finely by pressing the SideButton while operating.",
+			L" Whether to rotate, move, or scale depends on the IK mode.",
+			L" ",
+			L" Change ApplyFrame of EditRange",
+			L"  KeepPushingTourButton + Turn Knob : Change ApplyFrame.",
+			L" ",
+			L" When hover the mouse over the LongTimeLine",
+			L"  Rotate Scroll : Change current frame of LongTimeLine.",
+
+			L" ",
+			L" Undo and Redo",
+			L"  Left round button : Undo.",
+			L"  Right round button : Redo.",
+			L"  LeftArrowButton : Make a UndoPoint.",
+			L" ",
+			L" Lock the camera target",
+			L"  Push Knob : Lock to Selected Joint.",
+			L"  Push Dial : Lock to Selected Joint Once.",
+			L"  KeepPushingRightArrow + Push Dial : the manipulator at target.",
+
+			L" ",
+			L" SelectChange JointTreeView",
+			L"  SideButton + UpArrow : SelChange to parent joint.",
+			L"  SideButton + DownArrow : SelChange to child joint.",
+			L"  SideButton + RightArrow : SelChange to sister joint.(between_L_ and _R_)",
+			L"  SideButton + LeftArrow : SelChange to brother joint.(between_L_ and _R_)"
 		};
+
+
+
 
 		int textno;
 		for (textno = 0; textno < SHORTCUTTEXTNUM; textno++) {
@@ -30381,14 +30473,16 @@ int CreatePlaceFolderWnd()
 				_ASSERT(0);
 				return 1;
 			}
-		
+
+
 			//red color new line
 			//if (textno == 25) {
 			//if ((textno == 19) || (textno == 20)) {
-			if (textno == 21) {
+			if ((textno == 0) || ((textno == 46))) {
 				COLORREF colred = RGB(168, 129, 129);
 				s_shortcuttext[textno]->setTextColor(colred);
 			}
+			s_placesp->addParts2(*s_shortcuttext[textno]);
 		}
 
 
@@ -30396,9 +30490,9 @@ int CreatePlaceFolderWnd()
 		//s_placefolderWnd->addParts(*s_placefolderlabel_1);
 		//s_placefolderWnd->addParts(*s_placefolderlabel_2);
 		//s_placefolderWnd->addParts(*s_placefolderlabel_3);
-		for (textno = 0; textno < SHORTCUTTEXTNUM; textno++) {
-			s_placefolderWnd->addParts(*s_shortcuttext[textno]);
-		}
+		//for (textno = 0; textno < SHORTCUTTEXTNUM; textno++) {
+		//	s_placescrollWnd->addParts(*s_shortcuttext[textno]);
+		//}
 
 
 		s_placefolderWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
@@ -34940,14 +35034,14 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				s_ikselectmat = s_selm;
 
 				//シングルスレッド　TourBoxから呼び出す用
-				if (g_edittarget == EDITTARGET_BONE && !g_Ikey) {
+				if ((g_edittarget == EDITTARGET_BONE) && !g_Ikey) {
 					if (ChkEnableIK()) {
 						s_pickinfo.pickobjno = s_curboneno;
 						IKOperateJointAxisDelta(PICK_X, delta);
 						s_pickinfo.pickobjno = -1;
 					}
 				}
-				else if (g_edittarget == EDITTARGET_CAMERA || g_Ikey) {
+				else if ((g_edittarget == EDITTARGET_CAMERA) || g_Ikey) {
 					IKOperateCameraAxisDelta(PICK_X, delta);
 				}
 				s_befdeltax = delta;
@@ -35851,13 +35945,13 @@ int OnMouseMoveFunc()
 
 				if (g_previewFlag == 0) {
 
-					if (g_edittarget == EDITTARGET_MORPH && !g_Ikey) {
+					if ((g_edittarget == EDITTARGET_MORPH) && !g_Ikey) {
 						//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!",
 						//	L"Current mode is not for editing BoneMotion.", MB_OK);
 						OutputToInfoWnd(INFOCOLOR_WARNING, L"### EdittingMorph mode now. ###");
 						OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change graph mode! ###");
 					}
-					else if (g_edittarget == EDITTARGET_BONE && !g_Ikey) {
+					else if ((g_edittarget == EDITTARGET_BONE) && !g_Ikey) {
 						if (ChkEnableIK()) {
 							CBone* chkbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 							if (chkbone && chkbone->IsHipsBone()) {
@@ -35870,7 +35964,7 @@ int OnMouseMoveFunc()
 							}
 						}
 					}
-					else if (g_edittarget == EDITTARGET_CAMERA || g_Ikey) {
+					else if ((g_edittarget == EDITTARGET_CAMERA) || g_Ikey) {
 						IKOperateCameraAxisDelta(buttonflagForIkFunc, deltax);
 					}
 
@@ -37325,8 +37419,8 @@ void DSCrossButtonSelectTree(bool firstctrlselect)
 	//select control
 	//十字キー移動ブロック
 	{
-		if ((s_currentwndid >= 0) && (s_currenthwnd != 0)) {
-
+		//if ((s_currentwndid >= 0) && (s_currenthwnd != 0)) {
+		if (s_timelineWnd && s_owpTimeline) {
 
 			int parentbuttonid = 4;
 			int sisterbuttonid = 5;
@@ -37371,7 +37465,7 @@ void DSCrossButtonSelectTree(bool firstctrlselect)
 			}
 
 
-			if (s_currentwndid == MB3D_WND_TREE) {
+			//if (s_currentwndid == MB3D_WND_TREE) {
 				if (GetCurrentModel() && (s_curboneno >= 0)) {
 					CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 					if (curbone) {
@@ -37425,8 +37519,10 @@ void DSCrossButtonSelectTree(bool firstctrlselect)
 								//階層的としてのsister, brotherが無い場合には名前としてのsister, brotherをチェックする
 								if (changeflag != true) {
 									string strcurbonename = curbone->GetBoneName();
-									string strLeft = "Left";
-									string strRight = "Right";
+									//string strLeft = "Left";
+									//string strRight = "Right";
+									string strLeft = "_L_";
+									string strRight = "_R_";
 
 									string chkLeft = strcurbonename;
 									string chkRight = strcurbonename;
@@ -37518,8 +37614,10 @@ void DSCrossButtonSelectTree(bool firstctrlselect)
 							//階層的としてのsister, brotherが無い場合には名前としてのsister, brotherをチェックする
 							if (changeflag != true) {
 								string strcurbonename = curbone->GetBoneName();
-								string strLeft = "Left";
-								string strRight = "Right";
+								//string strLeft = "Left";
+								//string strRight = "Right";
+								string strLeft = "_L_";
+								string strRight = "_R_";
 
 								string chkLeft = strcurbonename;
 								string chkRight = strcurbonename;
@@ -37589,7 +37687,7 @@ void DSCrossButtonSelectTree(bool firstctrlselect)
 
 					}
 				}
-			}
+			//}
 		}
 	}
 
@@ -40559,14 +40657,16 @@ void OnArrowKey()
 
 	bool arrowkeypushed = false;
 	if (!FocusEditWnd()) {//2023/08/28 EditCtrl入力中は　矢印キーのショートカット機能を使わない
-		if (((g_savekeybuf[VK_UP] & 0x80) == 0) && ((g_keybuf[VK_UP] & 0x80) != 0)) {
+		if ((((g_savekeybuf[VK_UP] & 0x80) == 0) && ((g_keybuf[VK_UP] & 0x80) != 0)) ||
+			(g_controlkey && ((g_savekeybuf['V'] & 0x80) == 0) && ((g_keybuf['V'] & 0x80) != 0))) {//TourBox サイドボタン＋上矢印ボタン
 			s_dsbuttonup[parentbuttonid] = 1;
 			s_dsbuttonup[sisterbuttonid] = 0;
 			s_dsbuttonup[childbuttonid] = 0;
 			s_dsbuttonup[brotherbuttonid] = 0;
 			arrowkeypushed = true;
 		}
-		else if (((g_savekeybuf[VK_DOWN] & 0x80) == 0) && ((g_keybuf[VK_DOWN] & 0x80) != 0)) {
+		else if ((((g_savekeybuf[VK_DOWN] & 0x80) == 0) && ((g_keybuf[VK_DOWN] & 0x80) != 0)) ||
+			(g_controlkey && ((g_savekeybuf['C'] & 0x80) == 0) && ((g_keybuf['C'] & 0x80) != 0))) {//TourBox サイドボタン＋下矢印ボタン
 			s_dsbuttonup[parentbuttonid] = 0;
 			s_dsbuttonup[sisterbuttonid] = 0;
 			s_dsbuttonup[childbuttonid] = 1;
@@ -40574,15 +40674,17 @@ void OnArrowKey()
 			arrowkeypushed = true;
 		}
 		else if (((g_keybuf['H'] & 0x80) == 0) && ((g_keybuf['F'] & 0x80) == 0) && 
-			((g_savekeybuf[VK_LEFT] & 0x80) == 0) && ((g_keybuf[VK_LEFT] & 0x80) != 0)) {
+			((((g_savekeybuf[VK_LEFT] & 0x80) == 0) && ((g_keybuf[VK_LEFT] & 0x80) != 0)) || 
+			(g_controlkey && ((g_savekeybuf['U'] & 0x80) == 0) && ((g_keybuf['U'] & 0x80) != 0)))) {//TourBox サイドボタン＋左矢印ボタン
 			s_dsbuttonup[parentbuttonid] = 0;
 			s_dsbuttonup[sisterbuttonid] = 1;
 			s_dsbuttonup[childbuttonid] = 0;
 			s_dsbuttonup[brotherbuttonid] = 0;
 			arrowkeypushed = true;
 		}
-		else if (((g_keybuf['H'] & 0x80) == 0) && ((g_keybuf['F'] & 0x80) == 0) && 
-			((g_savekeybuf[VK_RIGHT] & 0x80) == 0) && ((g_keybuf[VK_RIGHT] & 0x80) != 0)) {
+		else if (((g_keybuf['H'] & 0x80) == 0) && ((g_keybuf['F'] & 0x80) == 0) &&
+			((((g_savekeybuf[VK_RIGHT] & 0x80) == 0) && ((g_keybuf[VK_RIGHT] & 0x80) != 0)) ||
+				(g_controlkey && ((g_savekeybuf['I'] & 0x80) == 0) && ((g_keybuf['I'] & 0x80) != 0)))) {//TourBox サイドボタン＋右矢印ボタン
 			s_dsbuttonup[parentbuttonid] = 0;
 			s_dsbuttonup[sisterbuttonid] = 0;
 			s_dsbuttonup[childbuttonid] = 0;
