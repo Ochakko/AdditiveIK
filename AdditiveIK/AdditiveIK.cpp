@@ -30459,8 +30459,8 @@ int CreatePlaceFolderWnd()
 			L" SelectChange JointTreeView",
 			L"  SideButton + UpArrow : SelChange to parent joint.",
 			L"  SideButton + DownArrow : SelChange to child joint.",
-			L"  SideButton + RightArrow : SelChange to sister joint.(between_L_ and _R_)",
-			L"  SideButton + LeftArrow : SelChange to brother joint.(between_L_ and _R_)"
+			L"  SideButton + LeftArrow : SelChange to brother joint.(between_L_ and _R_)",
+			L" "
 		};
 
 
@@ -40683,8 +40683,9 @@ void OnArrowKey()
 			arrowkeypushed = true;
 		}
 		else if (((g_keybuf['H'] & 0x80) == 0) && ((g_keybuf['F'] & 0x80) == 0) &&
-			((((g_savekeybuf[VK_RIGHT] & 0x80) == 0) && ((g_keybuf[VK_RIGHT] & 0x80) != 0)) ||
-				(g_controlkey && ((g_savekeybuf['I'] & 0x80) == 0) && ((g_keybuf['I'] & 0x80) != 0)))) {//TourBox サイドボタン＋右矢印ボタン
+			((((g_savekeybuf[VK_RIGHT] & 0x80) == 0) && ((g_keybuf[VK_RIGHT] & 0x80) != 0)))) {
+			//|| //右矢印ボタンは　編集用カメラ回転に使っているので　ここでは使わないことに
+			//(g_controlkey && ((g_savekeybuf['I'] & 0x80) == 0) && ((g_keybuf['I'] & 0x80) != 0)))) {//TourBox サイドボタン＋右矢印ボタン
 			s_dsbuttonup[parentbuttonid] = 0;
 			s_dsbuttonup[sisterbuttonid] = 0;
 			s_dsbuttonup[childbuttonid] = 0;
