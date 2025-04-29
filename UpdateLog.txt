@@ -1,6 +1,14 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2025/04/29
+　既知の問題(Known Issue)
+　　カメラの詳細回転(サイドボタン＋右矢印＋回転)操作が効かない
+　　　理由：キー入力は同時押しが２つまでの環境が多いため、３つ同時押しは効かないことが多い
+　　　対策(予定)：ボタン1つ押して回転詳細度を設定した後に、『右矢印＋回転』操作でカメラ編集をする
+　　　
+　　　次の週末(次の連休)以降に取り組みます
+
 2025/04/28
 　TourBoxNEO(https://www.tourboxtech.com/jp/)デバイスへの対応(このバージョンとしてはこの辺で.)
 　　テスト用のPresetをTest/TourBox_Presetフォルダに置きました
