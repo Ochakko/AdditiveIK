@@ -12738,6 +12738,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 		editboneforret = firstbone;
 	}
 
+
 	//CBone* lastpar = firstbone->GetParent(false);
 	//int calcnum = 20;
 	int calcnum = 1;//今はtargetposを細かく刻んでいないので１で良い
@@ -12793,6 +12794,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 
 				ChaMatrix saveapplyframemat;
 				ChaVector3 saveapplyframeeul;
+				ChaMatrix savestartframetraanimmat;
 				if (parentbone->GetParent(false)) {
 					saveapplyframemat = parentbone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 					saveapplyframeeul = parentbone->GetParent(false)->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
@@ -12801,6 +12803,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 					saveapplyframemat = parentbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 					saveapplyframeeul = parentbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 				}
+				parentbone->GetLocalTraAnimMat(limitdegflag, curmotid, RoundingTime(startframe), &savestartframetraanimmat);//2025/05/03
 				//saveapplyframemat = parentbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 				//saveapplyframeeul = parentbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 
@@ -12810,11 +12813,6 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 					CQuaternion rotq0;
 					rotq0.SetAxisAndRot(rotaxis2, rotrad2);
 
-					//parentbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
-					// 
-					//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-					parentbone->SaveSRT(limitdegflag, curmotid, startframe);
-
 					//2023/01/22 : topposスライダーの位置のフレーム(３D表示中のフレーム)において　
 					//制限角度により　回転出来ない場合は　リターンする
 					//if (g_limitdegflag != 0) {
@@ -12822,7 +12820,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 						//2023/01/28 IK時は　GetBtForce()チェックはしない　BtForce == 1でも角度制限する
 						int ismovable = IsMovableRot(limitdegflag, wallscrapingikflag, 
 							curmotid, applyframe, applyframe,
-							rotq0, saveapplyframemat, 
+							rotq0, saveapplyframemat, savestartframetraanimmat,
 							parentbone, 
 							//parentbone
 							parentbone->GetParent(false)
@@ -12849,16 +12847,16 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 						bool keynum1flag = false;
 						bool skip_ikconstraint_flag = false;
 						bool fromiktarget = false;
-						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
-							keyno, 
-							parentbone, 
-							//parentbone,
-							parentbone->GetParent(false),
-							curmotid, applyframe, startframe, applyframe,
-							rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
-							&saveapplyframemat
-							//nullptr
-						);
+						//ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
+						//	keyno, 
+						//	parentbone, 
+						//	//parentbone,
+						//	parentbone->GetParent(false),
+						//	curmotid, applyframe, startframe, applyframe,
+						//	rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
+						//	&saveapplyframemat, savestartframetraanimmat
+						//	//nullptr
+						//);
 
 						keyno++;
 					}
@@ -12866,23 +12864,23 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 						bool keynum1flag = true;
 						bool skip_ikconstraint_flag = false;
 						bool fromiktarget = false;
-						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
-							0, 
-							parentbone, 
-							//parentbone, 
-							parentbone->GetParent(false),
-							curmotid, GetCurrentFrame(), startframe, applyframe,
-							rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
-							&saveapplyframemat
-							//nullptr
-						);
+						//ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
+						//	0, 
+						//	parentbone, 
+						//	//parentbone, 
+						//	parentbone->GetParent(false),
+						//	curmotid, GetCurrentFrame(), startframe, applyframe,
+						//	rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
+						//	&saveapplyframemat, savestartframetraanimmat
+						//	//nullptr
+						//);
 					}
 
 
-					//2023/03/04 制限角度に引っ掛かった場合には　やめて　次のジョイントの回転へ
-					if ((ismovable2 == 0) && (wallscrapingikflag == 0)) {
-						continue;
-					}
+					////2023/03/04 制限角度に引っ掛かった場合には　やめて　次のジョイントの回転へ
+					//if ((ismovable2 == 0) && (wallscrapingikflag == 0)) {
+					//	continue;
+					//}
 
 
 					//parentboneのrotqを保存
@@ -12894,6 +12892,7 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 					//currotrec.applyframemat = parentbone->GetWorldMat(limitdegflag, curmotid, applyframe, 0);
 					currotrec.applyframemat = saveapplyframemat;//2025/02/24 変更前のapplymatが必要
 					currotrec.applyframeeul = saveapplyframeeul;//2025/02/24 変更前のapplymatが必要
+					currotrec.startframetraanimmat = savestartframetraanimmat;//2025/05/03
 					currotrec.rotq = rotq0;
 					currotrec.targetpos = targetpos;
 					currotrec.lessthanthflag = false;
@@ -13085,10 +13084,7 @@ int CModel::IKRotatePostIK(bool limitdegflag, int wallscrapingikflag, CEditRange
 			CQuaternion rotq0 = currotrec.rotq;
 			bool lessthanthflag = currotrec.lessthanthflag;
 			ChaMatrix saveapplymat = currotrec.applyframemat;
-
-			//if (parentbone && parentbone->IsSkeleton() && (curbone->GetJointFPos() != parentbone->GetJointFPos())) {
-				//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-				parentbone->SaveSRT(limitdegflag, curmotid, startframe);
+			ChaMatrix savestartmat = currotrec.startframetraanimmat;
 
 				if (lessthanthflag == false) {
 					if (keynum >= 2) {
@@ -13105,7 +13101,7 @@ int CModel::IKRotatePostIK(bool limitdegflag, int wallscrapingikflag, CEditRange
 									keyno,
 									parentbone, aplybone,
 									curmotid, startframe, applyframe,
-									rotq0, saveapplymat, keynum1flag, skip_ikconstraint_flag, fromiktarget);
+									rotq0, saveapplymat, savestartmat, keynum1flag, skip_ikconstraint_flag, fromiktarget);
 							}
 							WaitPostIKFinished();
 							//SetUnderPostIK(false);
@@ -13271,6 +13267,7 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 				
 				ChaMatrix saveapplyframemat;
 				ChaVector3 saveapplyframeeul;
+				ChaMatrix savestartframetraanimmat;
 				if (parentbone->GetParent(false)) {
 					saveapplyframemat = parentbone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 					saveapplyframeeul = parentbone->GetParent(false)->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
@@ -13279,6 +13276,7 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 					saveapplyframemat = parentbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 					saveapplyframeeul = parentbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 				}
+				parentbone->GetLocalTraAnimMat(limitdegflag, curmotid, RoundingTime(startframe), &savestartframetraanimmat);//2025/05/03
 				//saveapplyframemat = parentbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 				//saveapplyframeeul = parentbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 
@@ -13291,7 +13289,7 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 					//parentbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
 					// 
 					//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-					parentbone->SaveSRT(limitdegflag, curmotid, startframe);
+					//parentbone->SaveSRT(limitdegflag, curmotid, startframe);
 
 
 					//2023/01/22 : topposスライダーの位置のフレーム(３D表示中のフレーム)において　
@@ -13301,7 +13299,7 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 						//2023/01/28 IK時は　GetBtForce()チェックはしない　BtForce == 1でも角度制限する
 						int ismovable = IsMovableRot(limitdegflag, wallscrapingikflag, 
 							curmotid, applyframe, applyframe,
-							rotq0, saveapplyframemat, 
+							rotq0, saveapplyframemat, savestartframetraanimmat,
 							parentbone, 
 							parentbone->GetParent(false));
 						if (ismovable == 0) {
@@ -13330,7 +13328,7 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 								//parentbone, 
 								parentbone->GetParent(false),
 								curmotid, curframe, startframe, applyframe,
-								rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, &saveapplyframemat);
+								rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, &saveapplyframemat, savestartframetraanimmat);
 
 							keyno++;
 						}
@@ -13345,7 +13343,7 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 							//parentbone, 
 							parentbone->GetParent(false),
 							curmotid, GetCurrentFrame(), startframe, applyframe,
-							rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, &saveapplyframemat);
+							rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, &saveapplyframemat, savestartframetraanimmat);
 					}
 
 
@@ -14779,6 +14777,7 @@ int CModel::RigControl(bool limitdegflag, int wallscrapingikflag, int depthcnt, 
 							curbone->SaveSRT(limitdegflag, curmotid, startframe);
 							ChaMatrix saveapplyframemat;
 							ChaVector3 saveapplyframeeul;
+							ChaMatrix savestartframetraanimmat;
 							//if (curbone->GetParent(false)) {
 							//	saveapplyframemat = curbone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 							//	saveapplyframeeul = curbone->GetParent(false)->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
@@ -14789,7 +14788,7 @@ int CModel::RigControl(bool limitdegflag, int wallscrapingikflag, int depthcnt, 
 							//}
 							saveapplyframemat = curbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 							saveapplyframeeul = curbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-
+							curbone->GetLocalTraAnimMat(limitdegflag, curmotid, RoundingTime(startframe), &savestartframetraanimmat);//2025/05/03
 
 							//2023/01/23 : Rigの場合は　回転できなくても処理を継続
 							////2023/01/22 : topposスライダーの位置のフレーム(３D表示中のフレーム)において　
@@ -14865,13 +14864,13 @@ int CModel::RigControl(bool limitdegflag, int wallscrapingikflag, int depthcnt, 
 											qForHipsRot.Slerp2(endq, 1.0 - changerate, &curqForHipsRot);
 
 											curbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag, 
-												0, RoundingTime(startframe),
+												0, savestartframetraanimmat,
 												infooutflag, 0, curmotid, curframe, 
 												curqForRot, curqForHipsRot, fromiktarget);
 										}
 										else{
 											curbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag,
-												0, RoundingTime(startframe),
+												0, savestartframetraanimmat,
 												infooutflag, 0, curmotid, curframe, 
 												qForRot, qForHipsRot, fromiktarget);
 										}
@@ -14879,7 +14878,7 @@ int CModel::RigControl(bool limitdegflag, int wallscrapingikflag, int depthcnt, 
 									else{
 										if (keyno == 0){
 											curbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag,
-												0, RoundingTime(startframe),
+												0, savestartframetraanimmat,
 												infooutflag, 0, curmotid, curframe, 
 												qForRot, qForHipsRot, fromiktarget);
 										}
@@ -14897,7 +14896,7 @@ int CModel::RigControl(bool limitdegflag, int wallscrapingikflag, int depthcnt, 
 								qForRot = localq;
 								qForHipsRot = localq;
 								curbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag, 
-									0, RoundingTime(startframe),
+									0, savestartframetraanimmat,
 									infooutflag, 0, curmotid, GetCurrentFrame(),
 									qForRot, qForHipsRot, fromiktarget);
 							}
@@ -15091,6 +15090,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 
 					ChaMatrix saveapplyframemat;
 					ChaVector3 saveapplyframeeul;
+					ChaMatrix savestartframetraanimmat;
 					//if (curbone->GetParent(false)) {
 					//	saveapplyframemat = curbone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 					//	saveapplyframeeul = curbone->GetParent(false)->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
@@ -15101,7 +15101,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 					//}
 					saveapplyframemat = curbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 					saveapplyframeeul = curbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-
+					curbone->GetLocalTraAnimMat(limitdegflag, curmotid, RoundingTime(startframe), &savestartframetraanimmat);//2025/05/03
 
 					//if (fabs(rotrad2) >= (0.020 * DEG2PAI)) {//2023/02/11
 					if (fabs(rotrad2) >= (0.010 * DEG2PAI)) {//2023/03/04
@@ -15121,7 +15121,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 						//curbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
 						// 
 						//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-						curbone->SaveSRT(limitdegflag, curmotid, startframe);
+						//curbone->SaveSRT(limitdegflag, curmotid, startframe);
 
 						int ismovable2 = 1;
 
@@ -15139,7 +15139,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 								//curbone->GetParent(false),
 								curmotid, curframe, startframe, applyframe,
 								localq, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
-								&saveapplyframemat
+								&saveapplyframemat, savestartframetraanimmat
 								//nullptr
 							);
 						}
@@ -15155,7 +15155,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 								//curbone->GetParent(false),
 								curmotid, GetCurrentFrame(), startframe, applyframe,
 								localq, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
-								&saveapplyframemat
+								&saveapplyframemat, savestartframetraanimmat
 								//nullptr
 							);
 						}
@@ -15173,6 +15173,7 @@ int CModel::RigControlUnderRig(bool limitdegflag, int wallscrapingikflag, int de
 						currotrec.aplybone = curbone;
 						//currotrec.aplybone = curbone->GetParent(false);
 						currotrec.applyframemat = saveapplyframemat;//2025/02/24 変更前のapplymatが必要
+						currotrec.startframetraanimmat = savestartframetraanimmat;//2025/05/03
 						currotrec.rotq = localq;
 						currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
 						currotrec.lessthanthflag = false;
@@ -15414,6 +15415,7 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 
 					ChaMatrix saveapplyframemat;
 					ChaVector3 saveapplyframeeul;
+					ChaMatrix savestartframetraanimmat;
 					//if (curbone->GetParent(false)) {
 					//	saveapplyframemat = curbone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 					//	saveapplyframeeul = curbone->GetParent(false)->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
@@ -15424,7 +15426,7 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 					//}
 					saveapplyframemat = curbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 					saveapplyframeeul = curbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-
+					curbone->GetLocalTraAnimMat(limitdegflag, curmotid, RoundingTime(applyframe), &savestartframetraanimmat);//2025/05/03
 
 					//if (fabs(rotrad2) >= (0.020 * DEG2PAI)) {//2023/02/11
 					if (fabs(rotrad2) >= (0.010 * DEG2PAI)) {//2023/03/04
@@ -15448,7 +15450,7 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 						//// 
 						//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
 						//curbone->SaveSRT(limitdegflag, curmotid, startframe);
-						curbone->SaveSRT(limitdegflag, curmotid, applyframe);//2024/09/06
+						//curbone->SaveSRT(limitdegflag, curmotid, applyframe);//2024/09/06
 
 						int ismovable2 = 1;
 
@@ -15461,7 +15463,7 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 							curbone, curbone, //curbone->GetParent(false),//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
 							curmotid, applyframe, applyframe, applyframe,
 							localq, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
-							&saveapplyframemat
+							&saveapplyframemat, savestartframetraanimmat
 							//nullptr
 						);
 
@@ -15634,11 +15636,7 @@ int CModel::RigControlPostRig(bool limitdegflag, int wallscrapingikflag, int dep
 			CQuaternion localq = currotrec.rotq;
 			bool lessthanthflag = currotrec.lessthanthflag;
 			ChaMatrix saveapplymat = currotrec.applyframemat;
-
-			//curbone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
-			// 
-			//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-			curbone->SaveSRT(limitdegflag, curmotid, roundingstartframe);
+			ChaMatrix savestartmat = currotrec.startframetraanimmat;
 
 			//2023/01/23 : Rigの場合は　回転できなくても処理を継続
 						
@@ -15660,7 +15658,7 @@ int CModel::RigControlPostRig(bool limitdegflag, int wallscrapingikflag, int dep
 								//curbone, aplybone,
 								curbone, curbone, //parentbone,//2024/04/18 applybone-->curbone Test 1009_5モデル167フレームをapplyframeにして足の青いリグドラッグ
 								curmotid, startframe, applyframe,
-								localq, saveapplymat, keynum1flag, skip_ikconstraint_flag, fromiktarget);
+								localq, saveapplymat, savestartmat, keynum1flag, skip_ikconstraint_flag, fromiktarget);
 						}
 						WaitPostIKFinished();
 						//SetUnderPostIK(false);
@@ -16252,7 +16250,7 @@ void CModel::InterpolateBetweenSelectionReq(bool limitdegflag, CBone* srcbone,
 
 
 int CModel::IsMovableRot(bool limitdegflag, int wallscrapingikflag, int srcmotid, double srcframe, double srcapplyframe, 
-	CQuaternion srcaddrot, ChaMatrix srcapplymat,
+	CQuaternion srcaddrot, ChaMatrix srcapplymat, ChaMatrix savestartframetraanimmat,
 	CBone* srcrotbone, CBone* srcaplybone)
 {
 	ChaCalcFunc chacalcfunc;
@@ -16306,7 +16304,7 @@ int CModel::IsMovableRot(bool limitdegflag, int wallscrapingikflag, int srcmotid
 	dummyparentwm.SetIdentity();
 	double dummystartframe = 0.0;
 	int onlycheckIsMovable = 0;
-	srcrotbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag, &onlycheckIsMovable, dummystartframe,
+	srcrotbone->RotAndTraBoneQReq(limitdegflag, wallscrapingikflag, &onlycheckIsMovable, savestartframetraanimmat,
 		infooutflag, 0, srcmotid, roundingframe, 
 		curqForRot, curqForHipsRot, fromiktarget);
 
@@ -17688,18 +17686,14 @@ int CModel::IKRotateAxisDeltaUnderIK(
 			//}
 			ChaMatrix saveapplyframemat;
 			ChaVector3 saveapplyframeeul;
+			ChaMatrix savestartframetraanimmat;
 			saveapplyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 			saveapplyframeeul = aplybone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+			aplybone->GetLocalTraAnimMat(limitdegflag, curmotid, RoundingTime(startframe), &savestartframetraanimmat);//2025/05/03
 
 			if (fabs(rotrad2) >= 1e-4) {
 				CQuaternion qForRot;
 				CQuaternion qForHipsRot;
-
-
-				//aplybone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
-				// 
-				//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-				aplybone->SaveSRT(limitdegflag, curmotid, startframe);
 
 
 				//2023/01/22 : topposスライダーの位置のフレーム(３D表示中のフレーム)において　
@@ -17708,7 +17702,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 				if ((limitdegflag != false) && (wallscrapingikflag == 0)) {//2023/01/23
 					//2023/01/28 IK時は　GetBtForce()チェックはしない　BtForce == 1でも角度制限する
 					int ismovable = IsMovableRot(limitdegflag, wallscrapingikflag, curmotid, applyframe, applyframe, 
-						localq, saveapplyframemat,
+						localq, saveapplyframemat, savestartframetraanimmat,
 						aplybone,
 						aplybone
 						//aplybone->GetParent(false)
@@ -17745,9 +17739,9 @@ int CModel::IKRotateAxisDeltaUnderIK(
 						aplybone, 
 						aplybone, 
 						//aplybone->GetParent(false),
-						curmotid, curframe, startframe, applyframe,
+						curmotid, applyframe, startframe, applyframe,
 						localq, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
-						&saveapplyframemat
+						&saveapplyframemat, savestartframetraanimmat
 						//&saveapplyframematpar
 						//&selectmat
 						//nullptr
@@ -17769,9 +17763,9 @@ int CModel::IKRotateAxisDeltaUnderIK(
 						aplybone, 
 						aplybone, 
 						//aplybone->GetParent(false),
-						curmotid, GetCurrentFrame(), startframe, applyframe,
+						curmotid, applyframe, startframe, applyframe,
 						localq, keynum1flag, false, fromiktarget, 
-						&saveapplyframemat
+						&saveapplyframemat, savestartframetraanimmat
 						//&saveapplyframematpar
 						//&selectmat
 						//nullptr
@@ -17813,6 +17807,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 				currotrec.applyframemat = saveapplyframemat;//2025/02/24 変更前のapplymatが必要
 				//currotrec.applyframemat = selectmat;
 				currotrec.applyframeeul = saveapplyframeeul;//2025/02/24 変更前のapplymatが必要
+				currotrec.startframetraanimmat = savestartframetraanimmat;//2025/05/03
 				currotrec.rotq = localq;
 				currotrec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
 				currotrec.lessthanthflag = false;
@@ -17945,11 +17940,12 @@ int CModel::IKRotateAxisDeltaPostIK(
 			CQuaternion localq = currotrec.rotq;
 			bool lessthanthflag = currotrec.lessthanthflag;
 			ChaMatrix saveapplymat = currotrec.applyframemat;
+			ChaMatrix savestartmat = currotrec.startframetraanimmat;
 
-			//aplybone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
-			// 
-			//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-			aplybone->SaveSRT(limitdegflag, curmotid, startframe);
+			////aplybone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
+			//// 
+			////保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
+			//aplybone->SaveSRT(limitdegflag, curmotid, startframe);//2025/05/03 UnderIK()で保存してPostIK()で使用する　ここでは保存しない
 
 			if (lessthanthflag == false) {
 				if (keynum >= 2) {
@@ -17968,7 +17964,7 @@ int CModel::IKRotateAxisDeltaPostIK(
 								keyno,
 								aplybone, aplybone, //parentbone,
 								curmotid, startframe, applyframe,
-								localq, saveapplymat, keynum1flag, skip_ikconstraint_flag, fromiktarget);
+								localq, saveapplymat, savestartmat, keynum1flag, skip_ikconstraint_flag, fromiktarget);
 						}
 						WaitPostIKFinished();
 						//SetUnderPostIK(false);
@@ -18123,6 +18119,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 
 
 			parentbone = curbone->GetParent(false);
+			editboneforret = parentbone;
 
 			//parentboneの無いcurboneをドラッグした時はbreakしない
 			if (!parentbone && (firstbone != curbone)) {
@@ -18200,9 +18197,10 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 			//aplybone->SaveSRT(limitdegflag, m_curmotinfo->motid, startframe, endframe);
 			// 
 			//保存結果は　CBone::RotAndTraBoneQReqにおいてしか使っておらず　startframeしか使っていない
-			aplybone->SaveSRT(limitdegflag, curmotid, startframe);
+			//aplybone->SaveSRT(limitdegflag, curmotid, startframe);
 			ChaMatrix saveapplyframemat;
 			ChaVector3 saveapplyframeeul;
+			ChaMatrix savestartframetraanimmat;
 			//if (aplybone->GetParent(false)) {
 			//	saveapplyframemat = aplybone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 			//	saveapplyframeeul = aplybone->GetParent(false)->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
@@ -18213,7 +18211,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 			//}
 			saveapplyframemat = aplybone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
 			saveapplyframeeul = aplybone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
-
+			aplybone->GetLocalTraAnimMat(limitdegflag, curmotid, RoundingTime(startframe), &savestartframetraanimmat);//2025/05/03
 
 			//2023/01/22 : topposスライダーの位置のフレーム(３D表示中のフレーム)において　
 			//制限角度により　回転出来ない場合は　リターンする
@@ -18221,7 +18219,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 			if ((limitdegflag != false) && (wallscrapingikflag == 0)) {//2023/01/23
 				//2023/01/28 IK時は　GetBtForce()チェックはしない　BtForce == 1でも角度制限する
 				int ismovable = IsMovableRot(limitdegflag, wallscrapingikflag, curmotid, applyframe, applyframe, 
-					localq, saveapplyframemat,
+					localq, saveapplyframemat, savestartframetraanimmat,
 					aplybone, aplybone);
 				if (ismovable == 0) {
 					////g_underIKRot = false;//2023/01/14 parent limited or not
@@ -18253,7 +18251,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 						keyno, 
 						aplybone, aplybone, //aplybone->GetParent(false),
 						curmotid, curframe, startframe, applyframe,
-						localq, keynum1flag, skip_ikconstraint_flag, fromiktarget, &saveapplyframemat);
+						localq, keynum1flag, skip_ikconstraint_flag, fromiktarget, &saveapplyframemat, savestartframetraanimmat);
 
 					keyno++;
 				}
@@ -18270,7 +18268,7 @@ int CModel::IKRotateAxisDelta(bool limitdegflag, int wallscrapingikflag,
 					0, 
 					aplybone, aplybone, //aplybone->GetParent(false),
 					curmotid, GetCurrentFrame(), startframe, applyframe,
-					localq, keynum1flag, skip_ikconstraint_flag, fromiktarget, &saveapplyframemat);
+					localq, keynum1flag, skip_ikconstraint_flag, fromiktarget, &saveapplyframemat, savestartframetraanimmat);
 			}
 
 
@@ -18574,6 +18572,127 @@ int CModel::FKBoneTraAxis(bool limitdegflag, int wallscrapingikflag,
 
 	return 0;
 }
+
+int CModel::FKBoneTra(
+	bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
+	int srcboneno, ChaVector3 addtra)
+{
+	ChaCalcFunc chacalcfunc;
+
+	if (srcboneno < 0) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	CBone* firstbone = m_bonelist[srcboneno];
+	if (!firstbone) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (firstbone->IsNotSkeleton()) {
+		return 1;
+	}
+
+	if (!ExistCurrentMotion()) {
+		return 0;
+	}
+	int curmotid = GetCurrentMotID();
+	int curframeleng = IntTime(GetCurrentMotLeng());
+
+
+	SetIKTargetVec();
+
+	CBone* curbone = firstbone;
+	SetBefEditMatFK(limitdegflag, erptr, curbone);
+
+	CBone* lastpar = firstbone->GetParent(false);
+
+	int keynum;
+	double startframe, endframe, applyframe;
+	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
+
+	startframe = RoundingTime(startframe);
+	endframe = RoundingTime(endframe);
+	applyframe = RoundingTime(applyframe);
+
+
+	curbone = firstbone;
+	double firstframe = 0.0;
+
+	ChaMatrix dummyparentwm;
+	dummyparentwm.SetIdentity();//Req関数の最初の呼び出し時は　Identityを渡せばよい
+
+	ChaVector3 translation;
+	translation.SetParams(0.0f, 0.0f, 0.0f);
+
+	ChaMatrix saveapplyframemat;
+	ChaVector3 saveapplyframeeul;
+	//if (curbone->GetParent(false)) {
+	//	saveapplyframemat = curbone->GetParent(false)->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+	//	saveapplyframeeul = curbone->GetParent(false)->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+	//}
+	//else {
+	//	saveapplyframemat = curbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+	//	saveapplyframeeul = curbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+	//}
+	saveapplyframemat = curbone->GetWorldMat(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+	saveapplyframeeul = curbone->GetLocalEul(limitdegflag, curmotid, RoundingTime(applyframe), 0);//2025/02/24
+
+
+	if (keynum >= 2) {
+		//float changerate = 1.0f / (float)(endframe - startframe + 1);
+
+		int keyno = 0;
+		//double curframe = applyframe;
+		double curframe;
+		for (curframe = startframe; curframe <= endframe; curframe += 1.0) {
+			double changerate;
+			changerate = (double)(*(g_motionbrush_value + (int)curframe));
+
+
+			if (keyno == 0) {
+				firstframe = curframe;
+			}
+			if (g_absikflag == 0) {
+				if (g_slerpoffflag == 0) {
+					translation = addtra * (float)changerate;
+					curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, curmotid, curframe, translation, dummyparentwm, dummyparentwm);
+				}
+				else {
+					translation = addtra;
+					curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, curmotid, curframe, translation, dummyparentwm, dummyparentwm);
+				}
+			}
+			else {
+				if (keyno == 0) {
+					translation = addtra;
+					curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, curmotid, curframe, translation, dummyparentwm, dummyparentwm);
+				}
+				//else {
+				//	curbone->SetAbsMatReq(limitdegflag, 0, m_curmotinfo->motid, curframe, firstframe);
+				//}
+			}
+
+			bool skip_ikconstraint_flag = false;
+			chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, curframe, skip_ikconstraint_flag);
+
+
+			keyno++;
+
+		}
+	}
+	else {
+		translation = addtra;
+		curbone->AddBoneTraReq(limitdegflag, wallscrapingikflag, 0, curmotid, startframe, translation, dummyparentwm, dummyparentwm);
+
+		bool skip_ikconstraint_flag = false;
+		chacalcfunc.IKTargetVec(this, limitdegflag, wallscrapingikflag, erptr, curmotid, startframe, skip_ikconstraint_flag);
+
+	}
+
+	return curbone->GetBoneNo();
+}
+
 
 int CModel::FKBoneTraUnderFK(
 	bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,

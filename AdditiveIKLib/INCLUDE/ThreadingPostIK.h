@@ -33,7 +33,7 @@ public:
 	void IKRotateOneFrame(CModel* srcmodel, int srclimitdegflag, int srcwallscrapingikflag, CEditRange* srcerptr,
 		int srckeyno, CBone* srcrotbone, CBone* srcparentbone,
 		int srcmotid, double srcstartframe, double srcapplyframe,
-		CQuaternion srcrotq0, ChaMatrix srcsaveapplymat,
+		CQuaternion srcrotq0, ChaMatrix srcsaveapplymat, ChaMatrix srcstartframetraanimmat,
 		bool srckeynum1flag, bool srcskip_ikconstraint_flag, bool srcfromiktarget);
 
 private:
@@ -62,6 +62,7 @@ private:
 	double applyframe;
 	CQuaternion rotq0;
 	ChaMatrix applymat;
+	ChaMatrix startmat;
 	bool keynum1flag;
 	bool skip_ikconstraint_flag;
 	bool fromiktarget;

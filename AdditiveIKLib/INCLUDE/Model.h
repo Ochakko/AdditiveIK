@@ -216,6 +216,7 @@ typedef struct tag_ikrotrec
 
 	ChaMatrix applyframemat;
 	ChaVector3 applyframeeul;
+	ChaMatrix startframetraanimmat;
 
 	void Init() {
 		rotbone = nullptr;
@@ -227,6 +228,7 @@ typedef struct tag_ikrotrec
 
 		applyframemat.SetIdentity();
 		applyframeeul.SetParams(0.0f, 0.0f, 0.0f);
+		startframetraanimmat.SetIdentity();
 	}
 
 	tag_ikrotrec() {
@@ -779,6 +781,9 @@ public:
  * @param (ChaVector3 addtra) IN 移動分のベクトル。
  * @return 成功したら０。
  */
+	int FKBoneTra(
+		bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
+		int srcboneno, ChaVector3 addtra);
 	int FKBoneTraUnderFK(
 		bool limitdegflag, int wallscrapingikflag, CEditRange* erptr,
 		int srcboneno, ChaVector3 addtra);
@@ -1434,7 +1439,7 @@ private:
 	//	CQuaternion* dstqForRot, CQuaternion* dstqForHipsRot);
 	int IsMovableRot(bool limitdegflag, int wallscrapingikflag, 
 		int srcmotid, double srcframe, double srcapplyframe,
-		CQuaternion srcaddrot, ChaMatrix srcapplymat,
+		CQuaternion srcaddrot, ChaMatrix srcapplymat, ChaMatrix srcstartmat,
 		CBone* srcrotbone, CBone* srcaplybone);
 
 	//2023/10/17 ChaCalcFuncに移動
@@ -3305,8 +3310,7 @@ public: //accesser
 		}
 		else {
 			IKROTREC norec;
-			norec.rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-			norec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
+			norec.Init();
 			norec.lessthanthflag = true;
 			return norec;
 		}
@@ -3348,8 +3352,6 @@ public: //accesser
 		else {
 			IKROTREC norec;
 			norec.Init();
-			norec.rotq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
-			norec.targetpos.SetParams(0.0f, 0.0f, 0.0f);
 			norec.lessthanthflag = true;
 			return norec;
 		}

@@ -29,11 +29,12 @@ public:
 		int keyno, CBone* rotbone, CBone* parentbone,
 		int srcmotid, double curframe, double startframe, double applyframe,
 		CQuaternion rotq0, bool keynum1flag, bool skip_ikconstraint_flag, bool fromiktarget,
-		ChaMatrix* srcapplymat//2025/02/24
+		ChaMatrix* srcapplymat,//2025/02/24
+		ChaMatrix srcstartframetraanimmat
 	);
 	int RotAndTraBoneQReq(CBone* srcbone, bool limitdegflag, int wallscrapingikflag, 
 		int* onlycheckptr,
-		double srcstartframe, bool infooutflag, CBone* parentbone, int srcmotid, double srcframe,
+		ChaMatrix srcstartframetraanimmat, bool infooutflag, CBone* parentbone, int srcmotid, double srcframe,
 		CQuaternion qForRot, CQuaternion qForHipsRot, bool fromiktarget);
 
 

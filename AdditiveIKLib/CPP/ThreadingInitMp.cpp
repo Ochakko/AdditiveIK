@@ -105,7 +105,7 @@ int CThreadingInitMp::ThreadFunc()
 							int frameindex;
 							for (frameindex = 0; frameindex < framenum; frameindex++) {
 								ChaCalcFunc chacalcfunc;
-								double curframe = m_framenovec[frameindex];
+								double curframe = RoundingTime(m_framenovec[frameindex]);;
 								chacalcfunc.InitMPReq(m_model, limitdegflag, pbone, motid, curframe);
 							}
 						}
@@ -153,7 +153,7 @@ int CThreadingInitMp::ThreadFunc()
 							int frameindex;
 							for (frameindex = 0; frameindex < framenum; frameindex++) {
 								ChaCalcFunc chacalcfunc;
-								double curframe = m_framenovec[frameindex];
+								double curframe = RoundingTime(m_framenovec[frameindex]);;
 								chacalcfunc.InitMPReq(m_model, limitdegflag, pbone, motid, curframe);
 							}
 						}

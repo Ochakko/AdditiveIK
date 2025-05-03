@@ -3563,7 +3563,48 @@ int CBone::RestoreMotionForFootRig(int srcmotid, double srcframe)
 }
 
 
+int CBone::GetLocalTraAnimMat(bool limitdegflag, int srcmotid, double srcframe, ChaMatrix* dsttanimmat)
+{
+	if (!dsttanimmat) {
+		_ASSERT(0);
+		return 1;
+	}
 
+	double curframe = RoundingTime(srcframe);
+
+	//2023/04/28
+	if (IsNotSkeleton()) {
+		dsttanimmat->SetIdentity();
+		return 0;
+	}
+
+	CMotionPoint* curmp;
+	curmp = GetMotionPoint(srcmotid, curframe);
+	if (curmp) {
+		ChaMatrix curwm, parentwm, localmat;
+		curwm = GetWorldMat(limitdegflag, srcmotid, curframe, curmp);
+		if (GetParent(false)) {
+			parentwm = GetParent(false)->GetWorldMat(limitdegflag, srcmotid, curframe, 0);
+			localmat = curwm * ChaMatrixInv(parentwm);
+		}
+		else {
+			parentwm.SetIdentity();
+			localmat = curwm;
+		}
+
+		ChaMatrix smat, rmat, tmat, tanimmat;
+		smat.SetIdentity();
+		rmat.SetIdentity();
+		tmat.SetIdentity();
+		tanimmat.SetIdentity();
+		GetSRTandTraAnim(localmat, GetNodeMat(), &smat, &rmat, &tmat, &tanimmat);
+		//curmp->SetSaveSRTandTraAnim(smat, rmat, tmat, tanimmat);
+
+		*dsttanimmat = tanimmat;
+	}
+	return 0;
+
+}
 
 int CBone::SaveSRT(bool limitdegflag, int srcmotid, double srcframe)
 {
@@ -3604,7 +3645,7 @@ int CBone::SaveSRT(bool limitdegflag, int srcmotid, double srcframe)
 //2023/03/04 ismovableをリターン
 //###############################
 int CBone::RotAndTraBoneQReq(bool limitdegflag, int wallscrapingikflag, int* onlycheckptr,
-	double srcstartframe, bool infooutflag, CBone* parentbone, int srcmotid, double srcframe,
+	ChaMatrix srcstartframetraanimmat, bool infooutflag, CBone* parentbone, int srcmotid, double srcframe,
 	CQuaternion qForRot, CQuaternion qForHipsRot, bool fromiktarget)
 {
 	//######################################
@@ -3622,7 +3663,7 @@ int CBone::RotAndTraBoneQReq(bool limitdegflag, int wallscrapingikflag, int* onl
 
 	ChaCalcFunc chacalcfunc;
 	return chacalcfunc.RotAndTraBoneQReq(this, limitdegflag, wallscrapingikflag, onlycheckptr,
-		srcstartframe, infooutflag, parentbone, srcmotid, srcframe,
+		srcstartframetraanimmat, infooutflag, parentbone, srcmotid, srcframe,
 		qForRot, qForHipsRot, fromiktarget);
 }
 

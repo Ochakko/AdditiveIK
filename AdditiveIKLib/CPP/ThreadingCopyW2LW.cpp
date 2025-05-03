@@ -105,7 +105,7 @@ int CThreadingCopyW2LW::ThreadFunc()
 							for (frameindex = 0; frameindex < framenum; frameindex++) {
 								ChaCalcFunc chacalcfunc;
 
-								double curframe = m_framenovec[frameindex];
+								double curframe = RoundingTime(m_framenovec[frameindex]);;
 								chacalcfunc.CopyWorldToLimitedWorldOne(m_model, pbone, motid, curframe);
 							}
 						}
@@ -154,7 +154,7 @@ int CThreadingCopyW2LW::ThreadFunc()
 							for (frameindex = 0; frameindex < framenum; frameindex++) {
 								ChaCalcFunc chacalcfunc;
 
-								double curframe = m_framenovec[frameindex];
+								double curframe = RoundingTime(m_framenovec[frameindex]);;
 								chacalcfunc.CopyWorldToLimitedWorldOne(m_model, pbone, motid, curframe);
 							}
 						}

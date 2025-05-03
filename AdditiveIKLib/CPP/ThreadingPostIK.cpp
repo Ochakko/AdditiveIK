@@ -64,6 +64,7 @@ int CThreadingPostIK::InitParams()
 	applyframe = 0.0;
 	rotq0.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 	applymat.SetIdentity();
+	startmat.SetIdentity();
 	keynum1flag = false;
 	skip_ikconstraint_flag = true;
 	fromiktarget = false;
@@ -109,14 +110,15 @@ int CThreadingPostIK::ThreadFunc()
 			if (InterlockedAdd(&m_start_state, 0) == 1) {//計算開始命令をキャッチ
 				if (InterlockedAdd(&m_exit_state, 0) != 1) {//スレッドが終了していない場合
 
-					if (m_model && (m_model->GetInView(0) == true)) {
+					//if (m_model && (m_model->GetInView(0) == true)) {
+					if (m_model) {//2025/05/03
 						//EnterCriticalSection(&m_CritSection);//再入防止 呼び出し側で処理終了を待つので不要
 						if (!m_framenovec.empty()) {
 							int framenum = (int)m_framenovec.size();
 							int frameindex;
 							for (frameindex = 0; frameindex < framenum; frameindex++) {
 								ChaCalcFunc chacalcfunc;
-								double curframe = m_framenovec[frameindex];
+								double curframe = RoundingTime(m_framenovec[frameindex]);;
 								int dummykeyno;
 								if (curframe == 0.0) {
 									dummykeyno = 0;
@@ -124,7 +126,7 @@ int CThreadingPostIK::ThreadFunc()
 								else {
 									dummykeyno = 1;
 								}
-								if (IsEqualRoundingTime(curframe, applyframe) == false) {
+								//if (IsEqualRoundingTime(curframe, applyframe) == false) {
 									chacalcfunc.IKRotateOneFrame(m_model, limitdegflag, wallscrapingikflag, erptr,
 										dummykeyno,
 										rotbone, 
@@ -132,8 +134,8 @@ int CThreadingPostIK::ThreadFunc()
 										parentbone,
 										motid, curframe, startframe, applyframe,
 										rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget,
-										&applymat);
-								}
+										&applymat, startmat);
+								//}
 							}
 						}
 					}
@@ -173,14 +175,15 @@ int CThreadingPostIK::ThreadFunc()
 					// Event object was signaled
 				case WAIT_OBJECT_0:
 				{
-					if (m_model && (m_model->GetInView(0) == true)) {
+					//if (m_model && (m_model->GetInView(0) == true)) {
+					if (m_model) {//2025/05/03
 						EnterCriticalSection(&m_CritSection);
 						if (!m_framenovec.empty()) {
 							int framenum = (int)m_framenovec.size();
 							int frameindex;
 							for (frameindex = 0; frameindex < framenum; frameindex++) {
 								ChaCalcFunc chacalcfunc;
-								double curframe = m_framenovec[frameindex];
+								double curframe = RoundingTime(m_framenovec[frameindex]);;
 								int dummykeyno;
 								if (curframe == 0.0) {
 									dummykeyno = 0;
@@ -197,7 +200,7 @@ int CThreadingPostIK::ThreadFunc()
 										parentbone,
 										motid, curframe, startframe, applyframe,
 										rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget,
-										&applymat);
+										&applymat, startmat);
 								}
 							}
 						}
@@ -261,7 +264,7 @@ int CThreadingPostIK::AddFramenoList(double srcframeno)
 void CThreadingPostIK::IKRotateOneFrame(CModel* srcmodel, int srclimitdegflag, int srcwallscrapingikflag, CEditRange* srcerptr,
 	int srckeyno, CBone* srcrotbone, CBone* srcparentbone,
 	int srcmotid, double srcstartframe, double srcapplyframe,
-	CQuaternion srcrotq0, ChaMatrix srcapplymat,
+	CQuaternion srcrotq0, ChaMatrix srcapplymat, ChaMatrix srcstartmat,
 	bool srckeynum1flag, bool srcskip_ikconstraint_flag, bool srcfromiktarget)
 {
 
@@ -286,6 +289,7 @@ void CThreadingPostIK::IKRotateOneFrame(CModel* srcmodel, int srclimitdegflag, i
 		applyframe = RoundingTime(srcapplyframe);
 		rotq0 = srcrotq0;
 		applymat = srcapplymat;
+		startmat = srcstartmat;
 		keynum1flag = srckeynum1flag;
 		skip_ikconstraint_flag = srcskip_ikconstraint_flag;
 		fromiktarget = srcfromiktarget;

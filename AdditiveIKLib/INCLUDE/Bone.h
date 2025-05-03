@@ -306,7 +306,7 @@ public:
 		CQuaternion rotq, ChaMatrix srcbefparentwm, ChaMatrix srcnewparentwm, 
 		CBone* bvhbone = 0, ChaVector3 traanim = ChaVector3(0.0f, 0.0f, 0.0f));// , int setmatflag = 0, ChaMatrix* psetmat = 0, bool onretarget = false);
 	int RotAndTraBoneQReq(bool limitdegflag, int wallscrapingikflag, 
-		int* onlycheckptr, double srcstartframe, bool infooutflag, CBone* parentbone, int srcmotid, double srcframe,
+		int* onlycheckptr, ChaMatrix srcstartframetraanimmat, bool infooutflag, CBone* parentbone, int srcmotid, double srcframe,
 		CQuaternion qForRot, CQuaternion qForHipsRot, bool fromiktarget);
 
 	//directsetで　parentの姿勢を更新　再帰
@@ -326,6 +326,7 @@ public:
 		ChaMatrix srcsmat, ChaMatrix srcrmat, ChaMatrix srctanimmat, ChaVector3 oneframetraanim);
 
 	int SaveSRT(bool limitdegflag, int srcmotid, double srcframe);
+	int GetLocalTraAnimMat(bool limitdegflag, int srcmotid, double srcframe, ChaMatrix* dsttanimmat);
 	int SaveMotionForFootRig(int srcmotid, double srcframe);
 	int RestoreMotionForFootRig(int srcmotid, double srcframe);
 

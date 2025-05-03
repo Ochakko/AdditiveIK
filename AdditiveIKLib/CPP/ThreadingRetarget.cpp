@@ -107,7 +107,7 @@ int CThreadingRetarget::ThreadFunc()
 							int frameindex;
 							for (frameindex = 0; frameindex < framenum; frameindex++) {
 								ChaCalcFunc chacalcfunc;
-								double curframe = m_framenovec[frameindex];
+								double curframe = RoundingTime(m_framenovec[frameindex]);;
 
 								//chacalcfunc.RetargetReqOne(limitdegflag, m_model, bvhmodel, 
 								//	modelbone, curframe, bvhtopbone, hrate, sconvbonemap);
@@ -158,7 +158,7 @@ int CThreadingRetarget::ThreadFunc()
 							int frameindex;
 							for (frameindex = 0; frameindex < framenum; frameindex++) {
 								ChaCalcFunc chacalcfunc;
-								double curframe = m_framenovec[frameindex];
+								double curframe = RoundingTime(m_framenovec[frameindex]);;
 
 								//chacalcfunc.RetargetReqOne(limitdegflag, m_model, bvhmodel,
 								//	modelbone, curframe, bvhtopbone, hrate, sconvbonemap);

@@ -108,7 +108,7 @@ int CThreadingFKTra::ThreadFunc()
 							for (frameindex = 0; frameindex < framenum; frameindex++) {
 								ChaCalcFunc chacalcfunc;
 
-								double curframe = m_framenovec[frameindex];
+								double curframe = RoundingTime(m_framenovec[frameindex]);;
 								chacalcfunc.FKBoneTraOneFrame(m_model, limitdegflag, wallscrapingikflag, 
 									erptr,
 									boneno, motid, curframe, addtra);
@@ -160,7 +160,7 @@ int CThreadingFKTra::ThreadFunc()
 							for (frameindex = 0; frameindex < framenum; frameindex++) {
 								ChaCalcFunc chacalcfunc;
 
-								double curframe = m_framenovec[frameindex];
+								double curframe = RoundingTime(m_framenovec[frameindex]);;
 								chacalcfunc.FKBoneTraOneFrame(m_model, limitdegflag, wallscrapingikflag, 
 									erptr,
 									boneno, motid, curframe, addtra);
