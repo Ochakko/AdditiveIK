@@ -111,6 +111,9 @@ int CLmtFile::WriteLmtFile( WCHAR* strpath, CModel* srcmodel, char* fbxcomment )
 
 	CallF( Write2File( "</Lmt>\r\n" ), return 1 );
 
+	FlushFileBuffers(m_hfile);
+	SetEndOfFile(m_hfile);
+
 	return 0;
 }
 void CLmtFile::WriteLmtReq(bool limitdegflag, CBone* srcbone)

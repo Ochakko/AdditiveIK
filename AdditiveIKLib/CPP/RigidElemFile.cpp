@@ -106,6 +106,9 @@ int CRigidElemFile::WriteRigidElemFile( WCHAR* strpath, CModel* srcmodel, int re
 
 	CallF( Write2File( "</RIGIDELEM>\r\n" ), return 1 );
 
+	FlushFileBuffers(m_hfile);
+	SetEndOfFile(m_hfile);
+
 	return 0;
 }
 void CRigidElemFile::WriteREReq( CBone* srcbone )

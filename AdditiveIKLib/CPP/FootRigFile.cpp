@@ -77,6 +77,9 @@ int CFootRigFile::WriteFootRigFile(const WCHAR* srcfilepath, FOOTRIGELEM srcfoot
 
 	CallF( Write2File( "</FOOTRIG>\r\n" ), return 1 );
 
+	FlushFileBuffers(m_hfile);
+	SetEndOfFile(m_hfile);
+
 	return 0;
 }
 

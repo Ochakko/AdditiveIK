@@ -3758,7 +3758,7 @@ void InitApp()
 	//以下３つはiniファイルから読み込む
 	////g_ikrate = 0.20f;
 	//g_ikrate = 0.5f;
-	//g_ikmaxdeg = 2.0f;
+	//g_ikmaxdeg = 8.0f;
 	//g_iktargettimes = 100;
 
 
@@ -25099,7 +25099,7 @@ int OnFrameKeyboard()
 
 
 	//TourBox
-		if (!g_controlkey && (g_keybuf['U'] & 0x80)) {//TourBox 左矢印ボタン　アンドゥデータ作成
+		if (!g_controlkey && (g_keybuf['U'] & 0x80) && ((g_savekeybuf['U'] & 0x80) == 0)) {//TourBox 左矢印ボタン　アンドゥデータ作成
 			PrepairUndo();
 		}
 		
@@ -25141,9 +25141,19 @@ int OnFrameKeyboard()
 				deltaApplyFrame = 1;
 			}
 			if (applyFrameMove) {
-				double tempapplyframe = g_motionbrush_applyframe;
-				if ((RoundingTime(tempapplyframe + deltaApplyFrame) >= RoundingTime(g_motionbrush_startframe)) &&
-					(RoundingTime(tempapplyframe + deltaApplyFrame) <= RoundingTime(g_motionbrush_endframe))) {
+				double tempapplyframe;
+				if (g_applyrate == 0.0) {
+					tempapplyframe = s_buttonselectstart;
+				}
+				else if (g_applyrate == 100.0) {
+					tempapplyframe = s_buttonselectend;
+				}
+				else {
+					tempapplyframe = (double)((int)(s_buttonselectstart + (s_buttonselectend - s_buttonselectstart) * (g_applyrate / 100.0)));//editrangeと同じ式
+				}
+
+				if ((RoundingTime(tempapplyframe + deltaApplyFrame) >= RoundingTime(s_buttonselectstart)) &&
+					(RoundingTime(tempapplyframe + deltaApplyFrame) <= RoundingTime(s_buttonselectend))) {
 
 					g_motionbrush_applyframe = RoundingTime(tempapplyframe + deltaApplyFrame);
 
@@ -25153,7 +25163,7 @@ int OnFrameKeyboard()
 					s_owpEulerGraph->setCurrentTime(currenttime, false);//eulergraphとshowpostimeも同期
 
 
-					g_applyrate = (g_motionbrush_applyframe - RoundingTime(g_motionbrush_startframe)) * 100.0 / (RoundingTime(g_motionbrush_endframe) - RoundingTime(g_motionbrush_startframe));
+					g_applyrate = (g_motionbrush_applyframe - RoundingTime(s_buttonselectstart)) * 100.0 / (RoundingTime(s_buttonselectend) - RoundingTime(s_buttonselectstart));
 					if (s_editmotionflag < 0) {//IK中でないとき
 						int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 						if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
@@ -25178,7 +25188,6 @@ int OnFrameKeyboard()
 		}
 		else if ((g_keybuf[VK_NUMPAD2] & 0x80) || (g_keybuf['2'] & 0x80)) {
 			g_pickorder = 2;
-			g_tb_XMinus = true;
 		}
 		else if ((g_keybuf[VK_NUMPAD3] & 0x80) || (g_keybuf['3'] & 0x80)) {
 			g_pickorder = 3;
@@ -29203,21 +29212,21 @@ int OnFrameUndo(bool fromds, int fromdskind)
 		OnSpriteUndo();
 	}
 	//keyboard event
-	else if (fromds || (GetCurrentModel() && g_controlkey && (g_keybuf['Z'] & 0x80) && !(g_savekeybuf['Z'] & 0x80))) {
+	else if (GetCurrentModel() && g_controlkey && (g_keybuf['Z'] & 0x80) && !(g_savekeybuf['Z'] & 0x80)) {
 
-		if (((fromds && (fromdskind == 1)) || (g_keybuf[VK_SHIFT] & 0x80)) && (s_undoFlag == false) && (s_redoFlag == false)) {
+		if ((g_keybuf[VK_SHIFT] & 0x80) && (s_undoFlag == false) && (s_redoFlag == false)) {
 			//redo
 			s_redoFlag = true;
-			s_spundo[1].ButtonDown();
-			s_SpriteButtonDownUndoRedo = true;
-			//OnSpriteUndo();
+			//s_spundo[1].ButtonDown();
+			//s_SpriteButtonDownUndoRedo = true;
+			OnSpriteUndo();
 		}
-		else if (((fromds && (fromdskind == 0)) || !fromds) && (s_undoFlag == false) && (s_redoFlag == false)) {
+		else if ((s_undoFlag == false) && (s_redoFlag == false)) {
 			//undo
 			s_undoFlag = true;
-			s_spundo[0].ButtonDown();
-			s_SpriteButtonDownUndoRedo = true;
-			//OnSpriteUndo();
+			//s_spundo[0].ButtonDown();
+			//s_SpriteButtonDownUndoRedo = true;
+			OnSpriteUndo();
 		}
 	}
 
@@ -30380,7 +30389,7 @@ int CreatePlaceFolderWnd()
 			return 1;
 		}
 		//要素数が変わったときには指定し忘れないように！！！
-		s_placescrollWnd->setLineDataSize(95 + 3);
+		s_placescrollWnd->setLineDataSize(101 + 3);
 		s_placescrollWnd->setSize(WindowSize(s_sidewidth, s_sideheight - 30));
 		s_placefolderWnd->addParts(*s_placescrollWnd);
 		s_placefolderWnd->setPos(WindowPos(windowposx, s_sidemenuheight));

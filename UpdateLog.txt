@@ -2,8 +2,8 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2025/05/04　その２
-　AdditiveIK 1.0.0.43RC1(リリース候補1)
+2025/05/04　その３
+　AdditiveIK 1.0.0.43RC2(リリース候補2)
 　　1.0.0.42からの変更点
 　　　不具合修正
 　　　　ファイルオープン履歴がまだ消えることがある件
@@ -70,8 +70,12 @@ https://github.com/Ochakko/AdditiveIK
 　　　　　　　名前に_L_(_R_)が含まれている場合_R_(_L_)が含まれている名前を選択.
 　　
 　　　TourBox操作説明を起動時に表示されるショートカット一覧ウインドウに記述(スクロールバー付きで).[###### 本日の変更点 #####]
-
-
+　　　
+　　RC2:ショートカット一覧が見切れていたのを修正
+　　　　IK Max Degのデフォルト値をを2.0から8.0に変更(ただし、AppData/Local/Programs/OchakkoLAB/AdditiveIKのiniファイルの設定を優先)
+　　　　各種設定ファイル出力の出力モード設定抜けを修正、ファイル書き出し後処理を明示的に呼び出し
+　　　　TourBoxの左矢印を押している間中UndoPoint作成がたくさん作られる不具合を修正
+　　　　TourBoxのTourボタン+ノブ回転でApplyFrameを移動する際に参照する変数を修正
 
 
 2025/05/04

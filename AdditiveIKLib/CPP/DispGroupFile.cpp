@@ -83,6 +83,9 @@ int CDispGroupFile::WriteDispGroupFile( WCHAR* strpath, CModel* srcmodel )
 
 	CallF( Write2File( "</DispGroupFile>\r\n" ), return 1 );
 
+	FlushFileBuffers(m_hfile);
+	SetEndOfFile(m_hfile);
+
 	return 0;
 }
 

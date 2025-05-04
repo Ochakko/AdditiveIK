@@ -83,6 +83,9 @@ int CLightsForEditFile::WriteLightsForEditFile(const WCHAR* srcfilepath, int slo
 
 	CallF( Write2File( "</LIGHTSFOREDIT>\r\n" ), return 1 );
 
+	FlushFileBuffers(m_hfile);
+	SetEndOfFile(m_hfile);
+
 	return 0;
 }
 

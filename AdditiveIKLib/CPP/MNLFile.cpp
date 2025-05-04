@@ -82,6 +82,9 @@ int CMNLFile::WriteMNLFile(WCHAR* strpath, CModel* srcmodel)
 
 	CallF( Write2File( "</MNL>\r\n" ), return 1 );
 
+	FlushFileBuffers(m_hfile);
+	SetEndOfFile(m_hfile);
+
 	return 0;
 }
 

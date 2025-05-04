@@ -74,6 +74,9 @@ int CThresholdFile::WriteThresholdFile(const WCHAR* srcfilepath)
 
 	CallF( Write2File( "</THRESHOLD>\r\n" ), return 1 );
 
+	FlushFileBuffers(m_hfile);
+	SetEndOfFile(m_hfile);
+
 	return 0;
 }
 

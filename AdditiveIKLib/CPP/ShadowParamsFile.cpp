@@ -180,6 +180,10 @@ int CShadowParamsFile::WriteShadowParamsFile(const WCHAR* srcfilepath)
 
 	CallF( Write2File( "</SHADOWPARAMS>\r\n" ), return 1 );
 
+
+	FlushFileBuffers(m_hfile);
+	SetEndOfFile(m_hfile);
+
 	return 0;
 }
 

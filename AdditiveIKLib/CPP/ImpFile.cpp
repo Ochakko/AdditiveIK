@@ -107,6 +107,10 @@ int CImpFile::WriteImpFile( WCHAR* strpath, CModel* srcmodel )
 
 	CallF( Write2File( "</IMPULSE>\r\n" ), return 1 );
 
+	FlushFileBuffers(m_hfile);
+	SetEndOfFile(m_hfile);
+
+
 	return 0;
 }
 void CImpFile::WriteImpReq( CBone* srcbone )

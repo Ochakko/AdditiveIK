@@ -75,7 +75,6 @@ int WriteLIMFile(CModel* pmodel, WCHAR* pfilename, char* fbxdate, int srcmotid, 
 {
 	s_model = pmodel;
 
-
 	CallF( pmodel->MakeEnglishName(), return 1 );
 
 	WCHAR outfilename[MAX_PATH] = { 0L };

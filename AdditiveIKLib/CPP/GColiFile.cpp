@@ -74,6 +74,10 @@ int CGColiFile::WriteGColiFile( WCHAR* strpath, BPWorld* srcbpw )
 
 	CallF( Write2File( "</GCOLI>\r\n" ), return 1 );
 
+	FlushFileBuffers(m_hfile);
+	SetEndOfFile(m_hfile);
+
+
 	return 0;
 }
 

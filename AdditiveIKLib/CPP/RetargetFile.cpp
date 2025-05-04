@@ -60,6 +60,7 @@ int CRetargetFile::WriteRetargetFile(WCHAR* srcpath, CModel* srcmodel, CModel* s
 		_ASSERT(0);
 		return 1;
 	}
+	m_mode = XMLIO_WRITE;
 
 	m_convbonemap = convbonemap;
 	m_model = srcmodel;
@@ -94,6 +95,8 @@ int CRetargetFile::WriteRetargetFile(WCHAR* srcpath, CModel* srcmodel, CModel* s
 
 	CallF(Write2File("\r\n</RTG>\r\n"), return 1);
 
+	FlushFileBuffers(m_hfile);
+	SetEndOfFile(m_hfile);
 
 	return 0;
 }

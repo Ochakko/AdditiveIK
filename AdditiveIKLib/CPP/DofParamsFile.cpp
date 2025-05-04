@@ -61,6 +61,8 @@ int CDofParamsFile::WriteDofParamsFile(WCHAR* filename, int srcindex)
 		return 1;
 	}
 
+	m_mode = XMLIO_WRITE;
+
 	m_hfile = CreateFile( filename, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
 		FILE_FLAG_SEQUENTIAL_SCAN, NULL );
 	if( m_hfile == INVALID_HANDLE_VALUE ){
@@ -86,6 +88,9 @@ int CDofParamsFile::WriteDofParamsFile(WCHAR* filename, int srcindex)
 
 
 	CallF( Write2File( "</DofParamsFile>\r\n" ), return 1 );
+
+	FlushFileBuffers(m_hfile);
+	SetEndOfFile(m_hfile);
 
 	return 0;
 }

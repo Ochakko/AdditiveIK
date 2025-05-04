@@ -54,6 +54,8 @@ int CSkyParamsFile::WriteSkyParamsFile(WCHAR* filename, CShaderTypeParams srcpar
 		return 1;
 	}
 
+	m_mode = XMLIO_WRITE;
+
 	m_hfile = CreateFile( filename, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
 		FILE_FLAG_SEQUENTIAL_SCAN, NULL );
 	if( m_hfile == INVALID_HANDLE_VALUE ){
@@ -143,6 +145,9 @@ int CSkyParamsFile::WriteSkyParamsFile(WCHAR* filename, CShaderTypeParams srcpar
 
 
 	CallF( Write2File( "</SKYPARAMSFILE>\r\n" ), return 1 );
+
+	FlushFileBuffers(m_hfile);
+	SetEndOfFile(m_hfile);
 
 	return 0;
 }

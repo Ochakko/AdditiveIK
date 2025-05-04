@@ -72,6 +72,9 @@ int CChooseColorFile::WriteChooseColorFile(const WCHAR* srcfilepath, const COLOR
 
 	CallF( Write2File( "</CHOOSECOLOR>\r\n" ), return 1 );
 
+	FlushFileBuffers(m_hfile);
+	SetEndOfFile(m_hfile);
+
 	return 0;
 }
 
