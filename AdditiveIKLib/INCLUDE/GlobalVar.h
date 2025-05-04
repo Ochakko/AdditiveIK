@@ -126,6 +126,7 @@ bool g_zcmpalways = false;
 bool g_rotatetanim = false;
 bool g_tpose = true;
 bool g_preciseOnPreviewToo = false;
+bool g_preciseRotation = false;
 bool g_x180flag = false;
 //bool g_edgesmp = false;
 
@@ -445,6 +446,7 @@ extern bool g_zcmpalways;
 extern bool g_rotatetanim;
 extern bool g_tpose;
 extern bool g_preciseOnPreviewToo;
+extern bool g_preciseRotation;
 extern bool g_x180flag;
 //extern bool g_edgesmp;
 

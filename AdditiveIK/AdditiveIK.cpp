@@ -1048,6 +1048,10 @@ bool g_altkey = false;
 bool g_spacekey = false;
 bool g_Lkey = false;
 bool g_Ikey = false;
+bool g_Qkey = false;
+bool g_Wkey = false;
+bool g_Ekey = false;
+bool g_Rkey = false;
 bool g_ctrlshiftkeyformb = false;//ForMiddleButton
 static bool s_skey = false;
 static int s_akeycnt = 0;
@@ -1295,7 +1299,7 @@ static OWP_Separator* s_placesp = 0;
 //#define SHORTCUTTEXTNUM	46
 //#define SHORTCUTTEXTNUM	49
 //#define SHORTCUTTEXTNUM	50
-#define SHORTCUTTEXTNUM	96
+#define SHORTCUTTEXTNUM	101
 static OWP_Label* s_shortcuttext[SHORTCUTTEXTNUM];
 
 static bool s_skyparamsFlag = false;
@@ -4131,6 +4135,10 @@ void InitApp()
 	g_spacekey = false;
 	g_Lkey = false;
 	g_Ikey = false;
+	g_Qkey = false;
+	g_Wkey = false;
+	g_Ekey = false;
+	g_Rkey = false;
 	g_ctrlshiftkeyformb = false;//ForMiddleButton
 	s_skey = false;
 	
@@ -4290,6 +4298,7 @@ void InitApp()
 	g_rotatetanim = true;
 	g_tpose = true;
 	g_preciseOnPreviewToo = false;
+	g_preciseRotation = false;
 	g_x180flag = false;
 
 	g_refposstep = 10;
@@ -7704,7 +7713,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	}
 	else if (uMsg == WM_MOUSEWHEEL) {
 		if (((g_keybuf['T'] & 0x80) != 0) || g_altkey) {
-			if (GetCurrentModel() && (s_curboneno > 0) && ChkEnableIK()) {
+			//if (GetCurrentModel() && (s_curboneno > 0) && ChkEnableIK()) {
 				s_tkeyflag = 1;
 
 				float twistvalue = 0.5f;
@@ -7722,7 +7731,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				else {
 					delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
 				}
-				if (g_controlkey) {
+				if (g_preciseRotation) {
 					delta *= 0.25f;
 				}
 
@@ -7746,7 +7755,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 				//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
 				//UpdateEditedEuler();
-			}
+			//}
 		}
 
 		/*
@@ -15541,7 +15550,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.42\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.43\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -24863,8 +24872,37 @@ int OnFrameKeyboard()
 			g_Ikey = false;
 		}
 
+		if ((g_keybuf['Q'] & 0x80) && ((g_savekeybuf['Q'] & 0x80) == 0)) {//TourBox サイドボタン + 上矢印ボタン
+			g_Qkey = true;
+		}
+		else {
+			g_Qkey = false;
+		}
+		if ((g_keybuf['W'] & 0x80) && ((g_savekeybuf['W'] & 0x80) == 0)) {//TourBox サイドボタン + 下矢印ボタン
+			g_Wkey = true;
+		}
+		else {
+			g_Wkey = false;
+		}
+		if ((g_keybuf['E'] & 0x80) && ((g_savekeybuf['E'] & 0x80) == 0)) {//TourBox サイドボタン + 左矢印ボタン
+			g_Ekey = true;
+		}
+		else {
+			g_Ekey = false;
+		}
+		if ((g_keybuf['R'] & 0x80) && ((g_savekeybuf['R'] & 0x80) == 0)) {//TourBox サイドボタン + 右矢印ボタン
+			g_Rkey = true;
+		}
+		else {
+			g_Rkey = false;
+		}
 
-
+		if (g_keybuf['X'] & 0x80) {
+			g_preciseRotation = false;
+		}
+		if (g_keybuf['B'] & 0x80) {
+			g_preciseRotation = true;
+		}
 
 		//プレートメニュー：スペースキーを押すたびにkind変更. Cキーを押し続けながらスペースキーを押すたびにplate変更.
 		//2023/08/22 以下のメニュー変更にスペースキーを使うので　DXUTの　スペースキーのホットキー機能をコメントアウト
@@ -24983,7 +25021,7 @@ int OnFrameKeyboard()
 			OnCameraTargetOnce();
 		}
 		//TourBox
-		if ((g_keybuf['R'] & 0x80) && ((g_savekeybuf['R'] & 0x80) == 0)) {//TourBox 右矢印＋ノブボタンを押す
+		if ((g_keybuf['G'] & 0x80) && ((g_savekeybuf['G'] & 0x80) == 0)) {//TourBox 右矢印＋ノブボタンを押す
 			//Lock to Manipulator
 			s_camtargetdisp = (s_camtargetdisp == 0) ? 1 : 0;
 			if (s_sidemenu_targetdisp) {
@@ -30399,18 +30437,20 @@ int CreatePlaceFolderWnd()
 			L" ",
 			L"　DispGroupWindow",
 			L"　　RButton on a Element　：　Context Menu for SimilarCheck.",
-			L" ",
+			L" ",//40
 
 			L"　OWP_ScrollWindow",
 			L"　　MouseWheel on ScrollBar　：　Scroll Window.",
 			L" ",
 			L"　Pick on ShaderPlateMenu, DispGroupPlateMenu",
 			L"　　NumKey(1-9) : Pick an object from the camera close to theNumber.",
-			L" ",
+			L" ",//46
+
+
 			L"With TourBox Device",
 			L" It is better to hover the mouse over the window you are operating.",
 			L" ",
-			L" Change PlateMenu",
+			L" Change PlateMenu",//50
 
 			L"  ShortButton : Change 2ndMenu at LowerWindow.",
 			L"  KeepPushLowArrow + ShortButton : Select 2ndMenu at LowerWindow.",
@@ -30419,48 +30459,54 @@ int CreatePlaceFolderWnd()
 			L" Change IK Mode",
 			L"  TopButton : Switch modes in the order of rotation, movement, and scale.",
 			L" ",
+			L" Change Precise Mode",
+			L"  TallButton + LeftCircleButton : PreciseMode Off(NormalMode).",
+			L"  TallButton + RightCircleButton : PreciseMode On(PreciseMode).",//60
+
+			L" ",
 			L" When BoneMode pushing FrogButton at TimeLine",
 			L"  Rotate Scroll: Rotate(Move,Scale) the selected joint around the X-axis.",
 			L"  Rotate Dial: Rotate(Move,Scale) the selected joint around the Y-axis.",
-
 			L"  Turn Knob : Rotate(Move,Scale) the selected joint around the Z-axis.",
 			L" ",
 			L" When CameraAnimMode pushing FrogButton at TimeLine",
 			L"  Rotate Scroll: Rotate(Move,Scale) current CameraAnim around the X-axis.",
 			L"  Rotate Dial: Rotate(Move,Scale) current CameraAnim around the Y-axis.",
-			L"  Turn Knob : Rotate(Move,Scale) current CameraAnim around the Z-axis.",
+			L"  Turn Knob : Rotate(Move,Scale) current CameraAnim around the Z-axis.",//70
+
 			L" ",
 			L" When KeepPushing RightArrowButton",
 			L"  Rotate Scroll: Rotate(Move,Scale) CameraForEditting around the X-axis.",
 			L"  Rotate Dial: Rotate(Move,Scale) CameraForEditting around the Y-axis.",
-
 			L"  Turn Knob : Rotate(Move,Scale) CameraForEditting around the Z-axis.",
 			L" ",
-			L" Can operate finely by pressing the SideButton while operating.",
 			L" Whether to rotate, move, or scale depends on the IK mode.",
+			L" In ScaleMode, scaling all axis is default, scaling each axis with pushing SideButton",
 			L" ",
-			L" Change ApplyFrame of EditRange",
+			L" Change ApplyFrame of EditRange",//80
+
 			L"  KeepPushingTourButton + Turn Knob : Change ApplyFrame.",
 			L" ",
 			L" When hover the mouse over the LongTimeLine",
 			L"  Rotate Scroll : Change current frame of LongTimeLine.",
-
 			L" ",
 			L" Undo and Redo",
 			L"  Left round button : Undo.",
 			L"  Right round button : Redo.",
 			L"  LeftArrowButton : Make a UndoPoint.",
-			L" ",
+			L" ",//90
+			
 			L" Lock the camera target",
 			L"  Push Knob : Lock to Selected Joint.",
 			L"  Push Dial : Lock to Selected Joint Once.",
 			L"  KeepPushingRightArrow + Push Dial : the manipulator at target.",
-
 			L" ",
 			L" SelectChange JointTreeView",
 			L"  SideButton + UpArrow : SelChange to parent joint.",
 			L"  SideButton + DownArrow : SelChange to child joint.",
-			L"  SideButton + LeftArrow : SelChange to brother joint.(between_L_ and _R_)",
+			L"  SideButton + LeftArrow : SelChange to sister joint.(between_L_ and _R_)",
+			L"  SideButton + RightArrow : SelChange to brother joint.(between_L_ and _R_)",//100
+
 			L" "
 		};
 
@@ -34424,7 +34470,7 @@ int OnTimeLineWheel()
 			if ((g_keybuf['A'] & 0x80)) {// || (g_keybuf['O'] & 0x80)) {
 				adkeyflag = 1;
 				if ((s_akeycnt % 5) == 0) {
-					if (g_controlkey == false) {
+					if (g_preciseRotation == false) {
 						delta2 = -5;
 					}
 					else {
@@ -34438,7 +34484,7 @@ int OnTimeLineWheel()
 			else if ((g_keybuf['D'] & 0x80)) {// || (g_keybuf['P'] & 0x80)) {
 				adkeyflag = 1;
 				if ((s_dkeycnt % 5) == 0) {
-					if (g_controlkey == false) {
+					if (g_preciseRotation == false) {
 						delta2 = 5;
 					}
 					else {
@@ -34453,7 +34499,7 @@ int OnTimeLineWheel()
 			if (adkeyflag == 0) {//timelineのwheeldeltaはホイールを回していない間は更新されずに値が残るため、ホイールだけを扱うこと(キー処理中ではないこと)を明示的に確認する。
 								 //マウス操作 MButton and Wheel, A D key
 				delta = (int)(s_owpLTimeline->getMouseWheelDelta());
-				if (g_controlkey == false) {
+				if (g_preciseRotation == false) {
 					delta2 = (double)delta / 20.0;
 				}
 				else {
@@ -34506,7 +34552,7 @@ int OnTimeLineWheel()
 			int delta = 0;
 			double delta2 = 0;
 			delta = (int)(s_owpLTimeline->getMouseWheelDelta());
-			if (g_controlkey == false) {
+			if (g_preciseRotation == false) {
 				delta2 = (double)delta / 20.0;
 			}
 			else {
@@ -35010,7 +35056,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	case WM_MOUSEWHEEL:
 	{
 		if (((g_keybuf['T'] & 0x80) != 0) || g_altkey) {
-			if (GetCurrentModel() && (s_curboneno > 0) && ChkEnableIK()) {
+			//if (GetCurrentModel() && (s_curboneno > 0) && ChkEnableIK()) {
 				s_tkeyflag = 1;
 
 				float twistvalue = 0.5f;
@@ -35028,7 +35074,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				else {
 					delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
 				}
-				if (g_controlkey){
+				if (g_preciseRotation){
 					delta *= 0.25f;
 				}
 
@@ -35051,7 +35097,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 				//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
 				//UpdateEditedEuler();
-			}
+			//}
 		}
 	}
 	break;
@@ -35563,7 +35609,7 @@ int OnMouseMoveFunc()
 
 		float deltax = (float)((s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) + (s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y)) * 0.5f;
 		if (deltax > 0.0f) {
-			if (g_controlkey == true) {
+			if (g_preciseRotation == true) {
 				s_selectuserscale += 1;
 			}
 			else {
@@ -35573,7 +35619,7 @@ int OnMouseMoveFunc()
 			s_selectuserscale = max(30, s_selectuserscale);
 		}
 		else if (deltax < 0.0f) {
-			if (g_controlkey == true) {
+			if (g_preciseRotation == true) {
 				s_selectuserscale -= 1;
 			}
 			else {
@@ -35654,7 +35700,7 @@ int OnMouseMoveFunc()
 							if (s_customrigbone) {
 								float deltau = (float)(s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) * 0.5f;
 								float deltav = (float)(s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y) * 0.5f;
-								if (g_controlkey == true) {
+								if (g_preciseRotation == true) {
 									deltau *= 0.250f;
 									deltav *= 0.250f;
 								}
@@ -35712,7 +35758,7 @@ int OnMouseMoveFunc()
 
 				if (g_previewFlag == 0) {
 					float deltax = (float)((s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) + (s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y)) * 0.5f;
-					if (g_controlkey == true) {
+					if (g_preciseRotation == true) {
 						deltax *= 0.250f;
 					}
 
@@ -35795,7 +35841,7 @@ int OnMouseMoveFunc()
 
 				if (g_previewFlag == 0) {
 					float deltax = (float)((s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) + (s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y)) * 0.5f;
-					if (g_controlkey == true) {
+					if (g_preciseRotation == true) {
 						deltax *= 0.250f;
 					}
 
@@ -35904,7 +35950,7 @@ int OnMouseMoveFunc()
 					deltax = -value;
 				}
 
-				if (g_controlkey) {
+				if (g_preciseRotation) {
 					deltax *= 0.25f;
 				}
 
@@ -35976,7 +36022,7 @@ int OnMouseMoveFunc()
 		cammv.x = ((float)s_pickinfo.mousepos.x - (float)s_pickinfo.mousebefpos.x) / (float)s_pickinfo.winx * -s_cammvstep;
 		cammv.y = ((float)s_pickinfo.mousepos.y - (float)s_pickinfo.mousebefpos.y) / (float)s_pickinfo.winy * s_cammvstep;
 		cammv.z = 0.0f;
-		if (g_controlkey == true) {
+		if (g_preciseRotation == true) {
 			cammv *= 0.250f;
 		}
 		cammv *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
@@ -35992,7 +36038,7 @@ int OnMouseMoveFunc()
 
 		float deltax;
 		deltax = -((float)s_pickinfo.mousepos.x - (float)s_pickinfo.mousebefpos.x) / (float)s_pickinfo.winx * 250.0f * (float)DEG2PAI;
-		if (g_controlkey == true) {
+		if (g_preciseRotation == true) {
 			deltax *= 0.250f;
 		}
 
@@ -36011,7 +36057,7 @@ int OnMouseMoveFunc()
 		float roty, rotxz;
 		rotxz = -((float)s_pickinfo.mousepos.x - (float)s_pickinfo.mousebefpos.x) / (float)s_pickinfo.winx * 250.0f;
 		roty = ((float)s_pickinfo.mousepos.y - (float)s_pickinfo.mousebefpos.y) / (float)s_pickinfo.winy * 250.0f;
-		if (g_controlkey == true) {
+		if (g_preciseRotation == true) {
 			rotxz *= 0.250f;
 			roty *= 0.250f;
 		}
@@ -36028,7 +36074,7 @@ int OnMouseMoveFunc()
 		float deltadist = (float)((s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) + (s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y)) * 0.5f;
 		//float mdelta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
 		//float deltadist = mdelta * g_camdist * 0.0010f;
-		if (g_controlkey == true) {
+		if (g_preciseRotation == true) {
 			deltadist *= 0.250f;
 		}
 		deltadist *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
@@ -40636,7 +40682,7 @@ void OnArrowKey()
 	bool arrowkeypushed = false;
 	if (!FocusEditWnd()) {//2023/08/28 EditCtrl入力中は　矢印キーのショートカット機能を使わない
 		if ((((g_savekeybuf[VK_UP] & 0x80) == 0) && ((g_keybuf[VK_UP] & 0x80) != 0)) ||
-			(g_controlkey && ((g_savekeybuf['V'] & 0x80) == 0) && ((g_keybuf['V'] & 0x80) != 0))) {//TourBox サイドボタン＋上矢印ボタン
+			g_Qkey) {//TourBox サイドボタン＋上矢印ボタン
 			s_dsbuttonup[parentbuttonid] = 1;
 			s_dsbuttonup[sisterbuttonid] = 0;
 			s_dsbuttonup[childbuttonid] = 0;
@@ -40644,7 +40690,7 @@ void OnArrowKey()
 			arrowkeypushed = true;
 		}
 		else if ((((g_savekeybuf[VK_DOWN] & 0x80) == 0) && ((g_keybuf[VK_DOWN] & 0x80) != 0)) ||
-			(g_controlkey && ((g_savekeybuf['C'] & 0x80) == 0) && ((g_keybuf['C'] & 0x80) != 0))) {//TourBox サイドボタン＋下矢印ボタン
+			g_Wkey) {//TourBox サイドボタン＋下矢印ボタン
 			s_dsbuttonup[parentbuttonid] = 0;
 			s_dsbuttonup[sisterbuttonid] = 0;
 			s_dsbuttonup[childbuttonid] = 1;
@@ -40653,7 +40699,7 @@ void OnArrowKey()
 		}
 		else if (((g_keybuf['H'] & 0x80) == 0) && ((g_keybuf['F'] & 0x80) == 0) && 
 			((((g_savekeybuf[VK_LEFT] & 0x80) == 0) && ((g_keybuf[VK_LEFT] & 0x80) != 0)) || 
-			(g_controlkey && ((g_savekeybuf['U'] & 0x80) == 0) && ((g_keybuf['U'] & 0x80) != 0)))) {//TourBox サイドボタン＋左矢印ボタン
+			g_Ekey)) {//TourBox サイドボタン＋左矢印ボタン
 			s_dsbuttonup[parentbuttonid] = 0;
 			s_dsbuttonup[sisterbuttonid] = 1;
 			s_dsbuttonup[childbuttonid] = 0;
@@ -40661,9 +40707,9 @@ void OnArrowKey()
 			arrowkeypushed = true;
 		}
 		else if (((g_keybuf['H'] & 0x80) == 0) && ((g_keybuf['F'] & 0x80) == 0) &&
-			((((g_savekeybuf[VK_RIGHT] & 0x80) == 0) && ((g_keybuf[VK_RIGHT] & 0x80) != 0)))) {
-			//|| //右矢印ボタンは　編集用カメラ回転に使っているので　ここでは使わないことに
-			//(g_controlkey && ((g_savekeybuf['I'] & 0x80) == 0) && ((g_keybuf['I'] & 0x80) != 0)))) {//TourBox サイドボタン＋右矢印ボタン
+			((((g_savekeybuf[VK_RIGHT] & 0x80) == 0) && ((g_keybuf[VK_RIGHT] & 0x80) != 0))
+			|| 
+			g_Rkey)) {//TourBox サイドボタン＋右矢印ボタン
 			s_dsbuttonup[parentbuttonid] = 0;
 			s_dsbuttonup[sisterbuttonid] = 0;
 			s_dsbuttonup[childbuttonid] = 0;
