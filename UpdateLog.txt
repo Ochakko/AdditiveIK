@@ -2,6 +2,11 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/05/11
+　TourBoxのトールボタン＋右丸ボタンを押して詳細回転モードにしたときに
+　３Dウインドウの左上にカメのマーク(PreciseMark1)を表示
+
+
 2025/05/04
 　AdditiveIK 1.0.0.43 release
 　　1.0.0.42からの変更点

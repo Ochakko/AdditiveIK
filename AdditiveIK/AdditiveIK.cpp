@@ -1618,6 +1618,7 @@ static Texture* s_spritetex94 = 0;
 static Texture* s_spritetex95 = 0;
 static Texture* s_spritetex96 = 0;
 static Texture* s_spritetex97 = 0;
+static Texture* s_spritetex98 = 0;
 
 static Texture* s_spritetex_pushed1 = 0;
 static Texture* s_spritetex_pushed2 = 0;
@@ -1706,6 +1707,7 @@ static CSpGUISW s_sprefpos;
 static CSpGUISW s_splimiteul;
 static CSpGUISW s_spscraping;
 static CSpElem s_mousecenteron;
+static CSpElem s_sppreciserot;
 static CSpGUISW s_spcameramode;
 static CSpGUISW3 s_spcamerainherit;
 static InstancedSprite s_bcircle;
@@ -2691,6 +2693,7 @@ static int SetSpMenuAimBarParams();
 static int SetSpAxisParams();
 static int SetSpUndoParams();
 static int SetSpMouseCenterParams();
+static int SetSpPreciseRotParams();
 static int PickSpAxis(POINT srcpos);
 static int PickSpUndo(POINT srcpos);
 static int PickBone(UIPICKINFO* ppickinfo, bool calcfirstdiff);
@@ -19602,6 +19605,7 @@ int SetSpParams()
 	//SetSpBtParams();
 	SetSpMouseHereParams();
 	SetSpMouseCenterParams();//SetSpCamParamsよりも後で呼ぶ　位置を参照しているから
+	SetSpPreciseRotParams();
 	SetSpCameraModeSWParams();
 	SetSpCameraInheritSWParams();
 	
@@ -20081,6 +20085,49 @@ int SetSpMouseCenterParams()
 	return 0;
 
 }
+
+int SetSpPreciseRotParams()
+{
+
+	//fpsspriteの下に描画するのでfpsspriteのサイズを計算に使う
+	int spgshift = 6;
+	float spawidth = 16.0f;
+	float spaheight = 16.0f;
+	//int spashift = 1;
+	int offsetx = 32;
+	int offsety = 40;
+	//m_point[1].x = m_point[0].x + (int)spawidth * 2 + spashift;
+	//m_point[1].y = m_point[0].y;
+
+
+	_ASSERT(s_3dwnd);
+	RECT clientrect;
+	::GetClientRect(s_3dwnd, &clientrect);
+
+	
+	s_sppreciserot.dispcenter.x = offsetx + (int)spawidth + spgshift;
+	s_sppreciserot.dispcenter.y = offsety + (int)(spaheight * 1.50f) + spgshift;
+
+	ChaVector3 disppos;
+	disppos.x = (float)(s_sppreciserot.dispcenter.x);
+	disppos.y = (float)(s_sppreciserot.dispcenter.y);
+	disppos.z = 0.0f;
+
+	ChaVector2 dispsize;
+	//dispsize.SetParams(s_spsize, s_spsize);
+	if (g_4kresolution) {
+		dispsize.SetParams(97, 44);
+	}
+	else {
+		dispsize.SetParams(48, 22);
+	}
+
+	s_sppreciserot.sprite.UpdateScreen(disppos, dispsize);
+
+	return 0;
+
+}
+
 
 int SetSpSel3DParams()
 {
@@ -31772,6 +31819,17 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		rendersprite.psprite = s_mousecenteron.GetSpriteForRender();
 		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
+
+	//Mouse Middle Button Mark
+	if (g_preciseRotation) {
+		//s_mousecenteron.sprite.DrawScreen(pRenderContext);
+		myRenderer::RENDERSPRITE rendersprite;
+		rendersprite.Init();
+		rendersprite.psprite = s_sppreciserot.GetSpriteForRender();
+		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+	}
+
+
 
 	////aimbar
 	//if (g_enableDS && (s_dsdeviceid >= 0)) {
@@ -45090,6 +45148,14 @@ int CreateSprites()
 	spriteinitdata.m_textures[0] = s_spritetex79;
 	s_mousecenteron.sprite.Init(spriteinitdata, screenvertexflag);
 	
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\PreciseMark1.png");
+	s_spritetex98 = new Texture();
+	s_spritetex98->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex98;
+	s_sppreciserot.sprite.Init(spriteinitdata, screenvertexflag);
+
+
 	return 0;
 }
 
@@ -45195,6 +45261,7 @@ void InitSprites()
 	s_spritetex95 = 0;
 	s_spritetex96 = 0;
 	s_spritetex97 = 0;
+	s_spritetex98 = 0;
 }
 
 void DestroySprites()
@@ -45611,6 +45678,10 @@ void DestroySprites()
 		delete s_spritetex97;
 		s_spritetex97 = 0;
 	}
+	if (s_spritetex98) {
+		delete s_spritetex98;
+		s_spritetex98 = 0;
+	}
 
 
 
@@ -45829,6 +45900,7 @@ void DestroySprites()
 	s_splimiteul.DestroyObjs();
 	s_spscraping.DestroyObjs();
 	s_mousecenteron.DestroyObjs();
+	s_sppreciserot.DestroyObjs();
 	s_spcameramode.DestroyObjs();
 	s_spcamerainherit.DestroyObjs();
 	//static InstancedSprite s_bcircle;
