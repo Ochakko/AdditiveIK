@@ -35217,7 +35217,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.43 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.44 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -38570,7 +38570,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.43 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.44 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && s_chascene) {

@@ -288,6 +288,8 @@ Smooth平滑化<br>
 [MOA2.0 2025/01/13](https://youtu.be/GFEmF8dnV_M "Usage example12")<br>
 
 [SonyDualSenseでリアルタイム階段接地 2025/02/11](https://youtu.be/WTpdyVGKlcs "Usage example13")<br>
+
+[ちょっと前のAdditiveIKのオペ画面 2025/05/06](https://youtu.be/40jmur2J2CY "Usage example14")<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
