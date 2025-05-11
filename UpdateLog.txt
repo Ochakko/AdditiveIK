@@ -2,6 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/05/11その２
+　実は、キーボードでも動くようにしてあります
+
+　キーボードでも各軸回転可能なのでドキュメントに説明
+　　Documents/TroubleShooting/0_ShortCutKey.docx
+　　
+　立ち上げてプロジェクトファイル読み込み後の右ペインにも説明追加
+　
+
 2025/05/11
 　TourBoxのトールボタン＋右丸ボタンを押して詳細回転モードにしたときに
 　３Dウインドウの左上にカメのマーク(PreciseMark1)を表示
