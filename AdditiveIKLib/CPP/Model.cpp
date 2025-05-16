@@ -12847,16 +12847,16 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 						bool keynum1flag = false;
 						bool skip_ikconstraint_flag = false;
 						bool fromiktarget = false;
-						//ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
-						//	keyno, 
-						//	parentbone, 
-						//	//parentbone,
-						//	parentbone->GetParent(false),
-						//	curmotid, applyframe, startframe, applyframe,
-						//	rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
-						//	&saveapplyframemat, savestartframetraanimmat
-						//	//nullptr
-						//);
+						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
+							keyno, 
+							parentbone, 
+							//parentbone,
+							parentbone->GetParent(false),
+							curmotid, applyframe, startframe, applyframe,
+							rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
+							&saveapplyframemat, savestartframetraanimmat
+							//nullptr
+						);
 
 						keyno++;
 					}
@@ -12864,16 +12864,16 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 						bool keynum1flag = true;
 						bool skip_ikconstraint_flag = false;
 						bool fromiktarget = false;
-						//ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
-						//	0, 
-						//	parentbone, 
-						//	//parentbone, 
-						//	parentbone->GetParent(false),
-						//	curmotid, GetCurrentFrame(), startframe, applyframe,
-						//	rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
-						//	&saveapplyframemat, savestartframetraanimmat
-						//	//nullptr
-						//);
+						ismovable2 = chacalcfunc.IKRotateOneFrame(this, limitdegflag, wallscrapingikflag, erptr,
+							0, 
+							parentbone, 
+							//parentbone, 
+							parentbone->GetParent(false),
+							curmotid, GetCurrentFrame(), startframe, applyframe,
+							rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget, 
+							&saveapplyframemat, savestartframetraanimmat
+							//nullptr
+						);
 					}
 
 

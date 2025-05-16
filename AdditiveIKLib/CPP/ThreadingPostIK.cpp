@@ -126,7 +126,7 @@ int CThreadingPostIK::ThreadFunc()
 								else {
 									dummykeyno = 1;
 								}
-								//if (IsEqualRoundingTime(curframe, applyframe) == false) {
+								if (IsEqualRoundingTime(curframe, applyframe) == false) {
 									chacalcfunc.IKRotateOneFrame(m_model, limitdegflag, wallscrapingikflag, erptr,
 										dummykeyno,
 										rotbone, 
@@ -135,7 +135,7 @@ int CThreadingPostIK::ThreadFunc()
 										motid, curframe, startframe, applyframe,
 										rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget,
 										&applymat, startmat);
-								//}
+								}
 							}
 						}
 					}
@@ -192,15 +192,16 @@ int CThreadingPostIK::ThreadFunc()
 									dummykeyno = 1;
 								}
 								if (IsEqualRoundingTime(curframe, applyframe) == false) {
-									//if (fabs(curframe - applyframe) > 1e-4) {
-									chacalcfunc.IKRotateOneFrame(m_model, limitdegflag, wallscrapingikflag, erptr,
-										dummykeyno,
-										rotbone, 
-										//rotbone, 
-										parentbone,
-										motid, curframe, startframe, applyframe,
-										rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget,
-										&applymat, startmat);
+									if (fabs(curframe - applyframe) > 1e-4) {
+										chacalcfunc.IKRotateOneFrame(m_model, limitdegflag, wallscrapingikflag, erptr,
+											dummykeyno,
+											rotbone,
+											//rotbone, 
+											parentbone,
+											motid, curframe, startframe, applyframe,
+											rotq0, keynum1flag, skip_ikconstraint_flag, fromiktarget,
+											&applymat, startmat);
+									}
 								}
 							}
 						}
