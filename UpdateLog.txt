@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/05/17
-　AdditiveIK 1.0.0.44 RC1(リリース候補1)
+　AdditiveIK 1.0.0.44 release
 　　1.0.0.43からの変更点
 　　　不具合修正
 　　　　マルチスレッド・アディティブIK(MT-AdditiveIK)復活
@@ -11,6 +11,14 @@ https://github.com/Ochakko/AdditiveIK
 　　　　　　タイマー処理とマウスアップ処理のタイミング問題でした
 　　　　　　マウスドラッグによるIK操作をマルチスレッドに.
 　　　　　　(TourBoxによる操作は開始と終了の合図が無いのでシングルスレッドのままです)
+　　　　　　
+　　　キーボードでも各軸回転可能なのでドキュメントに説明
+　　　　Documents/TroubleShooting/0_ShortCutKey.docx
+　　　　立ち上げてプロジェクトファイル読み込み後の右ペインにも説明追加
+
+　　　TourBoxのトールボタン＋右丸ボタンを押して詳細回転モードにしたときに
+　　　　３Dウインドウの左上にカメのマーク(PreciseMark1)を表示
+　　　　　　
 　　RC1:
 　　　Documents/MT-AdditiveIK_CalcProblemSolvingMemo.docx
 　　　今朝の変更でTourBoxでカレントフレームしか動かなくなっていたのを修正
