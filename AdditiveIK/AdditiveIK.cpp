@@ -8616,18 +8616,15 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		int editmotionflag = s_editmotionflag;
 		int editcameraflag = s_editcameraflag;//camera
 
+
+		//2025/05/17
+		//フラグ以外の中身はOnMouseMoveFunc()内に移動
+		//UnderIK()とPostIK()を同じ関数(OnMouseMoveFunc())内で実行することにより計算回数が一致
 		if (g_edittarget != EDITTARGET_CAMERA) {
 			if (ChkEnableIK() && (s_undoFlag == false) && (s_redoFlag == false)) {
 				if (s_oprigflag == 0) {
 					if ((s_ikkind == IKKIND_ROTATE) && (editmotionflag >= 0)) {
 						if (s_pickinfo.buttonflag == PICK_CENTER) {
-							//HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
-							//s_editmotionflag = GetCurrentModel()->IKRotatePostIK(g_limitdegflag, g_wallscrapingikflag,
-							//	&s_editrange, s_pickinfo.pickobjno, g_iklevel);
-
-							//if (oldcursor != NULL) {
-							//	SetCursor(oldcursor);
-							//}
 							s_ikdoneflag = true;
 						}
 						else if ((s_pickinfo.buttonflag == PICK_X) ||
@@ -8636,37 +8633,11 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							(s_pickinfo.buttonflag == PICK_SPA_X) ||
 							(s_pickinfo.buttonflag == PICK_SPA_Y) ||
 							(s_pickinfo.buttonflag == PICK_SPA_Z)) {
-							//HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-							//s_editmotionflag = GetCurrentModel()->IKRotateAxisDeltaPostIK(
-							//	g_limitdegflag, g_wallscrapingikflag,
-							//	&s_editrange, s_pickinfo.buttonflag, s_pickinfo.pickobjno,
-							//	g_iklevel, s_ikcnt);
-
-
-							//if (oldcursor != NULL) {
-							//	SetCursor(oldcursor);
-							//}
 							s_ikdoneflag = true;
 						}
 					}
 					else if ((s_ikkind == IKKIND_MOVE) && (editmotionflag >= 0)) {
 						if (s_pickinfo.buttonflag == PICK_CENTER) {
-							//HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-							////g_underPostFKTra = true;
-							//GetCurrentModel()->SetUnderPostFKTra(true);
-
-							//GetCurrentModel()->FKBoneTraPostFK(g_limitdegflag, g_wallscrapingikflag,
-							//	&s_editrange, s_curboneno);
-							//s_editmotionflag = s_curboneno;
-
-							////g_underPostFKTra = false;
-							//GetCurrentModel()->SetUnderPostFKTra(false);
-
-							//if (oldcursor != NULL) {
-							//	SetCursor(oldcursor);
-							//}
 							s_ikdoneflag = true;
 						}
 						else if ((s_pickinfo.buttonflag == PICK_X) ||
@@ -8675,22 +8646,6 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							(s_pickinfo.buttonflag == PICK_SPA_X) ||
 							(s_pickinfo.buttonflag == PICK_SPA_Y) ||
 							(s_pickinfo.buttonflag == PICK_SPA_Z)) {
-							//HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-							////g_underPostFKTra = true;
-							//GetCurrentModel()->SetUnderPostFKTra(true);
-
-							//GetCurrentModel()->FKBoneTraAxisPostFK(
-							//	g_limitdegflag, g_wallscrapingikflag,
-							//	&s_editrange, s_curboneno);
-							//s_editmotionflag = s_curboneno;
-
-							////g_underPostFKTra = false;
-							//GetCurrentModel()->SetUnderPostFKTra(false);
-
-							//if (oldcursor != NULL) {
-							//	SetCursor(oldcursor);
-							//}
 							s_ikdoneflag = true;
 						}
 					}
@@ -8698,27 +8653,6 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 				else {
 					if (s_customrigbone && (s_customrigno >= 0) && (editmotionflag >= 0)) {
-
-						//HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-						//s_ikcustomrig = s_customrigbone->GetCustomRig(s_customrigno);
-						//GetCurrentModel()->RigControlPostRig(g_limitdegflag, g_wallscrapingikflag,
-						//	0, &s_editrange, s_pickinfo.pickobjno,
-						//	0,
-						//	s_ikcustomrig, s_pickinfo.buttonflag);
-						//ChaMatrix tmpwm = GetCurrentModel()->GetWorldMat();
-						//GetCurrentModel()->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
-						//GetCurrentModel()->RigControlPostRig(g_limitdegflag, g_wallscrapingikflag,
-						//	0, &s_editrange, s_pickinfo.pickobjno,
-						//	1,
-						//	s_ikcustomrig, s_pickinfo.buttonflag);
-						//tmpwm = GetCurrentModel()->GetWorldMat();
-						//GetCurrentModel()->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
-						//s_editmotionflag = s_curboneno;
-
-						//if (oldcursor != NULL) {
-						//	SetCursor(oldcursor);
-						//}
 						s_ikdoneflag = true;
 					}
 				}
@@ -8750,132 +8684,6 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			g_previewFlag = 0;
 			GetCurrentModel()->ApplyPhysIkRec(g_limitdegflag, g_wallscrapingikflag);
 		}
-
-
-
-		HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
-
-
-		//2023/08/09
-		//自動フィルターは選択フレーム数が少ないときに動かなくなる　また　他の制限を満たしているジョイントの角度まで小さくなる
-		//よって　自動フィルターは止めてみる　手動でSmoothボタンを押すことに
-		//
-		//2023/02/13
-		//IKRot終了時　LimitEulオンで　編集ボーンがあった場合
-		//グラフが波打つことは分かっているので(XYZどれか１つでも制限に掛かると　XYZ全て動かなくなるため)
-		//自動で　フィルターを掛けて　滑らかにする
-		//if ((((s_ikkind == 0) || (s_ikkind == 1)) || ((s_oprigflag != 0) && s_customrigbone)) &&
-		//	(g_limitdegflag == true) && 
-		//	(s_editmotionflag >= 0) &&
-		//	(ikframenum >= 14)) {
-		//	//ギザギザを平滑化
-		//	bool copylw2w = false;
-		//	FilterNoDlg(copylw2w);
-		//}
-
-
-		//if ((s_undoFlag == false) && (s_redoFlag == false)) {
-
-		//	//2023//11/06 CopyLimitedWorldToWorldよりも後ろに移動
-		//	//if (GetCurrentModel() && s_ikdoneflag) {
-		//	//	//############################################################################################################
-		//	//	//2023/10/16 - 2023/10/19
-		//	//	//マルチスレッドのコンテクストを　揃っている情報と要求される計算順序によって決めた
-		//	//	//親のボーンの姿勢を使う階層順の計算では　フレーム番号単位のマルチスレッド
-		//	//	//全ボーンの姿勢が揃った後で　前のフレームの姿勢を元にオイラー角を計算する際には　ボーンごとのマルチスレッド
-		//	//	// 
-		//	//	//befeul.currentframeeulでオイラーは　フレーム番号ごとのマルチスレッドで計算されている状態
-		//	//	// ！！！！！　g_underIKRot = falseとした後で　！！！！！
-		//	//	//後処理として　befeul.befframeeulで　ボーンごとのマルチスレッドで計算して正しいオイラーにする
-		//	//	//############################################################################################################
-		//	//	MOTINFO* curmi = GetCurrentModel()->GetCurMotInfo();
-		//	//	if (curmi) {
-		//	//		GetCurrentModel()->CalcBoneEul(g_limitdegflag, curmi->motid);
-		//	//	}
-		//	//}
-
-		//	//2023/02/04
-		//	//LimitEulにチェックを入れて編集したモーション部分を　角度制限無しの姿勢にベイクする
-		//	//if ((g_limitdegflag == true) && (s_editmotionflag >= 0)) {
-		//	if ((g_limitdegflag == true) && s_ikdoneflag && (g_edittarget != EDITTARGET_CAMERA)) {
-		//		bool allframeflag = false;
-		//		bool setcursorflag = true;
-		//		bool onpasteflag = false;
-
-
-		//		//CopyLimitedWorldToWorld(GetCurrentModel(), allframeflag, setcursorflag, s_editmotionflag, onpasteflag);
-
-		//		//2023/03/04
-		//		//rigの場合や　IKTargetの場合があるので　operatingjointnoはTopBoneの番号
-		//		CopyLimitedWorldToWorld(GetCurrentModel(), allframeflag, setcursorflag,
-		//			GetCurrentModel()->GetTopBone(false)->GetBoneNo(), onpasteflag);
-		//	}
-
-		//	//if (s_cameramodel && (g_edittarget == EDITTARGET_CAMERA) && ikdoneflag) {
-		//	//	s_cameramodel->CalcBoneEul(g_limitdegflag, s_cameramodel->GetCameraMotionId());
-		//	//}
-		//	//2023//11/06 CopyLimitedWorldToWorldよりも後ろに移動
-		//	//else 
-		//	if (GetCurrentModel() && s_ikdoneflag) {
-		//		//############################################################################################################
-		//		//2023/10/16 - 2023/10/19
-		//		//マルチスレッドのコンテクストを　揃っている情報と要求される計算順序によって決めた
-		//		//親のボーンの姿勢を使う階層順の計算では　フレーム番号単位のマルチスレッド
-		//		//全ボーンの姿勢が揃った後で　前のフレームの姿勢を元にオイラー角を計算する際には　ボーンごとのマルチスレッド
-		//		// 
-		//		//befeul.currentframeeulでオイラーは　フレーム番号ごとのマルチスレッドで計算されている状態
-		//		// ！！！！！　g_underIKRot = falseとした後で　！！！！！
-		//		//後処理として　befeul.befframeeulで　ボーンごとのマルチスレッドで計算して正しいオイラーにする
-		//		//############################################################################################################
-		//		if (GetCurrentModel()->ExistCurrentMotion()) {
-		//			if (g_edittarget != EDITTARGET_CAMERA) {
-		//				GetCurrentModel()->CalcBoneEul(g_limitdegflag, GetCurrentModel()->GetCurrentMotID());
-		//			}
-		//			else if (s_cameramodel) {
-		//				s_cameramodel->CalcBoneEul(false, s_cameramodel->GetCameraMotionId());
-		//			}
-		//		}
-		//	}
-
-
-
-		//	UpdateEditedEuler();
-		//	//refreshEulerGraph();
-
-		//	//2024/07/09 場所移動　undoFlag, redoFlagによらずに実行するべき
-		//	//if (oldcursor != NULL) {
-		//	//	SetCursor(oldcursor);
-		//	//}
-		//	//s_pickinfo.buttonflag = 0;
-		//	//s_ikcnt = 0;
-		//	//s_onragdollik = 0;
-
-		//	//if ((s_editmotionflag >= 0) || (g_btsimurecflag == true)) {
-		//	if (s_ikdoneflag || (g_btsimurecflag == true)) {
-		//		PrepairUndo();//３Dウインドウでの編集後状態保存を想定		
-		//	}
-
-		//}
-
-
-		//if (oldcursor != NULL) {
-		//	SetCursor(oldcursor);
-		//}
-		//s_pickinfo.buttonflag = 0;
-		//s_ikcnt = 0;
-		//s_onragdollik = 0;
-
-
-		////s_cameraeditkind = CAMERAANIMEDIT_NONE;//コメントアウト：グラフ表示を保持するために初期化しない
-
-		////else {//2024/06/18 OnFrameToolWnd()に移動
-		////	s_pickinfo.buttonflag = 0;
-		////	s_ikcnt = 0;
-		////	s_onragdollik = 0;
-		////
-		////	OnSpriteUndo();
-		////}
-
 	}
 	else if (uMsg == WM_RBUTTONDOWN) {
 
@@ -15590,7 +15398,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.43\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.44\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -35757,14 +35565,14 @@ int OnMouseMoveFunc()
 
 
 	////2024/01/19
-	//if (g_fpsforce30) {
-	//	double difftime = s_fTime - s_mousemoveBefTime;//s_fElapsedTimeは表示に関する時間なのでここでは使わない
-	//	if (difftime < (1.0 / 33.0)) {
-	//		s_doingflag = false;
-	//		return 0;//!!!!!!!!!!!!!! 強制30fpsフラグが経っている場合には 30fps以上の計算(IK計算)はしない
-	//	}
-	//	s_mousemoveBefTime = s_fTime;
-	//}
+	if (g_fpsforce30) {
+		double difftime = s_fTime - s_mousemoveBefTime;//s_fElapsedTimeは表示に関する時間なのでここでは使わない
+		if (difftime < (1.0 / 33.0)) {
+			s_doingflag = false;
+			return 0;//!!!!!!!!!!!!!! 強制30fpsフラグが経っている場合には 30fps以上の計算(IK計算)はしない
+		}
+		s_mousemoveBefTime = s_fTime;
+	}
 
 
 	if (s_ikdoneflag == false) {
@@ -35805,14 +35613,17 @@ int OnMouseMoveFunc()
 			}
 		}
 
-		//###################
+		//######################################
 		//TourBoxNEO ここから
-		//###################
+		//マウスドラッグよりも先に記述しないと動かない
+		//######################################
 		else if ((g_graphicsEngine != nullptr) &&
 			(s_curboneno > 0) &&
 			(g_altkey == false) &&//TourBox : Alt+Wheel->Bone Twist
 			(g_tb_XPlus || g_tb_XMinus || g_tb_YPlus || g_tb_YMinus || g_tb_ZPlus || g_tb_ZMinus)
 			) {
+
+			GetCurrentModel()->SetUnderIKRot(false);//!!!!!!!!
 
 			static int s_callingcount = 0;
 			s_callingcount++;
@@ -35921,6 +35732,10 @@ int OnMouseMoveFunc()
 		//TourBoxNEO ここまで
 		//###################
 
+
+		//####################
+		//マウスドラッグによるIK
+		//####################
 		else if ((s_pickinfo.pickobjno >= 0) && (s_pickinfo.buttonflag == PICK_CENTER)) {
 			if (GetCurrentModel()) {
 				if (g_previewFlag == 0) {
@@ -36233,9 +36048,10 @@ int OnMouseMoveFunc()
 		}
 	}
 	else {
-//###################
+//################################
 //マウスドラッグ終了処理
-//###################
+// カレントフレーム以外のフレームの計算
+//################################
 		GetCurrentModel()->SetUnderIKRot(false);
 
 		int editmotionflag = s_editmotionflag;
@@ -36350,13 +36166,13 @@ int OnMouseMoveFunc()
 			}
 		}
 		else {
-			if ((s_undoFlag == false) && (s_redoFlag == false)) {
-				//if (((s_ikkind == 0) || (s_ikkind == 1) || (s_ikkind == 2)) && (s_editcameraflag >= 0)) {//2024/06/16 ドリー編集も対象に
-				//if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editmotionflag >= 0)) {//2024/08/05 s_cameraeditkind : OnCameraAnimMouseMove()呼び出し時のopekind
-				if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editcameraflag >= 0)) {//2024/08/14 editCAMERAflag
-					//ikdoneflag = true;
-				}
-			}
+			//if ((s_undoFlag == false) && (s_redoFlag == false)) {
+			//	//if (((s_ikkind == 0) || (s_ikkind == 1) || (s_ikkind == 2)) && (s_editcameraflag >= 0)) {//2024/06/16 ドリー編集も対象に
+			//	//if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editmotionflag >= 0)) {//2024/08/05 s_cameraeditkind : OnCameraAnimMouseMove()呼び出し時のopekind
+			//	if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editcameraflag >= 0)) {//2024/08/14 editCAMERAflag
+			//		//ikdoneflag = true;
+			//	}
+			//}
 		}
 
 
