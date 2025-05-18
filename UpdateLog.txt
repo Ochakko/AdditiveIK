@@ -2,6 +2,14 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/05/18
+　TourBoxによる回転処理の修正
+　　滑らかに回転するように修正
+　　　縦ホイールだけ滑らかでノブとダイヤルの回転が粗かったので、３つとも滑らかに回転するように.
+　　TourBox設定用のPresetをTest/TourBox_Presetフォルダに.
+　　Documents/TroubleShooting/0_ShortCutKey.docx更新
+
+
 2025/05/17
 　AdditiveIK 1.0.0.44 release
 　　1.0.0.43からの変更点

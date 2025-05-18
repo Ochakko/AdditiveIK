@@ -7717,13 +7717,13 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		}
 	}
 	else if (uMsg == WM_MOUSEWHEEL) {
-		if (((g_keybuf['T'] & 0x80) != 0) || g_altkey) {
+		if (((g_keybuf['T'] & 0x80) != 0) || g_altkey || g_controlkey) {
 			//if (GetCurrentModel() && (s_curboneno > 0) && ChkEnableIK()) {
 				s_tkeyflag = 1;
 
 				float twistvalue = 0.5f;
 				float delta;
-				if (g_altkey) {
+				if (g_altkey || g_controlkey) {
 					//TourBox
 					float wheelvalue = GET_WHEEL_DELTA_WPARAM(wParam);
 					if (wheelvalue >= 0.0f) {
@@ -7742,16 +7742,51 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 				s_ikselectmat = s_selm;
 
+
+				int axiskind = PICK_X;
+				if (g_altkey && g_controlkey) {//TourBoxダイヤル
+					axiskind = PICK_Y;
+					if (delta >= 0.0f) {
+						g_tb_YPlus = true;
+					}
+					else {
+						g_tb_YMinus = true;
+					}
+				}
+				else if (g_altkey) {//TourBox縦ホイール
+					axiskind = PICK_X;
+					if (delta >= 0.0f) {
+						g_tb_XPlus = true;
+					}
+					else {
+						g_tb_XMinus = true;
+					}
+				}
+				else if (g_controlkey) {//TourBoxノブ
+					axiskind = PICK_Z;
+					if (delta >= 0.0f) {
+						g_tb_ZPlus = true;
+					}
+					else {
+						g_tb_ZMinus = true;
+					}
+				}
+				else {
+					axiskind = PICK_X;
+				}
+
+				GetCurrentModel()->SetUnderIKRot(false);//!!!!!!!!TourBox操作はシングルスレッドなのでfalseに設定
+
 				//シングルスレッド　TourBoxから呼び出す用
 				if ((g_edittarget == EDITTARGET_BONE) && !g_Ikey) {
 					if (ChkEnableIK()) {
 						s_pickinfo.pickobjno = s_curboneno;
-						IKOperateJointAxisDelta(PICK_X, delta);
+						IKOperateJointAxisDelta(axiskind, delta);
 						s_pickinfo.pickobjno = -1;
 					}
 				}
 				else if ((g_edittarget == EDITTARGET_CAMERA) || g_Ikey) {
-					IKOperateCameraAxisDelta(PICK_X, delta);
+					IKOperateCameraAxisDelta(axiskind, delta);
 				}
 				s_befdeltax = delta;
 				s_ikcnt++;
@@ -24997,18 +25032,18 @@ int OnFrameKeyboard()
 		
 	//TourBox
 		if (s_timelinembuttonFlag == false) {//ホイールボタンオフの場合　ジョイントとカメラ操作
-			if ((g_keybuf[VK_OEM_COMMA] & 0x80) || (g_keybuf[','] & 0x80)) {//ダイヤル
-				g_tb_YPlus = true;
-			}
-			else if ((g_keybuf[VK_OEM_PERIOD] & 0x80) || (g_keybuf['.'] & 0x80)) {//ダイヤル
-				g_tb_YMinus = true;
-			}
-			else if ((g_keybuf['O'] & 0x80)) {//ノブ
-				g_tb_ZPlus = true;
-			}
-			else if ((g_keybuf['P'] & 0x80)) {//ノブ
-				g_tb_ZMinus = true;
-			}
+			//if ((g_keybuf[VK_OEM_COMMA] & 0x80) || (g_keybuf[','] & 0x80)) {//ダイヤル
+			//	g_tb_YPlus = true;
+			//}
+			//else if ((g_keybuf[VK_OEM_PERIOD] & 0x80) || (g_keybuf['.'] & 0x80)) {//ダイヤル
+			//	g_tb_YMinus = true;
+			//}
+			//else if ((g_keybuf['O'] & 0x80)) {//ノブ
+			//	g_tb_ZPlus = true;
+			//}
+			//else if ((g_keybuf['P'] & 0x80)) {//ノブ
+			//	g_tb_ZMinus = true;
+			//}
 
 			//X回転はスクロールによるホイールメッセージ　
 			//else if ((g_keybuf['N'] & 0x80)) {
@@ -30429,19 +30464,21 @@ int CreatePlaceFolderWnd()
 			L" ",
 			L" When BoneMode pushing FrogButton at TimeLine",
 			L"  Alt + MouseWheel: Rotate(Move,Scale) the selected joint around the X-axis.",
-			L"  , or . : Rotate(Move,Scale) the selected joint around the Y-axis.",
-			L"  O or P : Rotate(Move,Scale) the selected joint around the Z-axis.",//120
+			L"  Control + MouseWheel: Rotate(Move,Scale) the selected joint around the Z-axis.",
+			L"  Control + Alt + MouseWheel: Rotate(Move,Scale) the selected joint around the Y-axis.",//120
 			
 			L" ",
 			L" When CameraAnimMode pushing FrogButton at TimeLine",
 			L"  Alt + MouseWheel: Rotate(Move,Scale) current CameraAnim around the X-axis.",
-			L"  , or .: Rotate(Move,Scale) current CameraAnim around the Y-axis.",
-			L"  O or P : Rotate(Move,Scale) current CameraAnim around the Z-axis.",
+			L"  Control + MouseWheel: Rotate(Move,Scale) current CameraAnim around the Z-axis.",
+			L"  Control + Alt + MouseWheel: Rotate(Move,Scale) current CameraAnim around the Y-axis.",
 			L" ",
 			L" When KeepPushing I key",
 			L"  Alt + MouseWheel: Rotate(Move,Scale) CameraForEditting around the X-axis.",
-			L"  , or .: Rotate(Move,Scale) CameraForEditting around the Y-axis.",
-			L"  O or P : Rotate(Move,Scale) CameraForEditting around the Z-axis.",//130
+			L"  Control + MouseWheel: Rotate(Move,Scale) CameraForEditting around the Z-axis.",
+			L"  Control + Alt + MouseWheel: Rotate(Move,Scale) CameraForEditting around the Y-axis.",//130
+
+
 
 			L" ",
 			L" Whether to rotate, move, or scale depends on the IK mode.",
@@ -35031,49 +35068,85 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_MOUSEWHEEL:
 	{
-		if (((g_keybuf['T'] & 0x80) != 0) || g_altkey) {
+		if (((g_keybuf['T'] & 0x80) != 0) || g_altkey || g_controlkey) {
 			//if (GetCurrentModel() && (s_curboneno > 0) && ChkEnableIK()) {
-				s_tkeyflag = 1;
+			s_tkeyflag = 1;
 
-				float twistvalue = 0.5f;
-				float delta;
-				if (g_altkey) {
-					//TourBox
-					float wheelvalue = GET_WHEEL_DELTA_WPARAM(wParam);
-					if (wheelvalue >= 0.0f) {
-						delta = twistvalue;
-					}
-					else {
-						delta = -twistvalue;
-					}
+			float twistvalue = 0.5f;
+			float delta;
+			if (g_altkey || g_controlkey || g_shiftkey) {
+				//TourBox
+				float wheelvalue = GET_WHEEL_DELTA_WPARAM(wParam);
+				if (wheelvalue >= 0.0f) {
+					delta = twistvalue;
 				}
 				else {
-					delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
+					delta = -twistvalue;
 				}
-				if (g_preciseRotation){
-					delta *= 0.25f;
-				}
+			}
+			else {
+				delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
+			}
+			if (g_preciseRotation) {
+				delta *= 0.25f;
+			}
 
-				s_ikselectmat = s_selm;
+			s_ikselectmat = s_selm;
 
-				//シングルスレッド　TourBoxから呼び出す用
-				if ((g_edittarget == EDITTARGET_BONE) && !g_Ikey) {
-					if (ChkEnableIK()) {
-						s_pickinfo.pickobjno = s_curboneno;
-						IKOperateJointAxisDelta(PICK_X, delta);
-						s_pickinfo.pickobjno = -1;
-					}
-				}
-				else if ((g_edittarget == EDITTARGET_CAMERA) || g_Ikey) {
-					IKOperateCameraAxisDelta(PICK_X, delta);
-				}
-				s_befdeltax = delta;
-				s_ikcnt++;
-				s_editmotionflag = -1;//シングルスレッドなので　IK中では無い
 
-				//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
-				//UpdateEditedEuler();
-			//}
+			int axiskind = PICK_X;
+			if (g_altkey && g_controlkey) {//TourBoxダイヤル
+				axiskind = PICK_Y;
+				if (delta >= 0.0f) {
+					g_tb_YPlus = true;
+				}
+				else {
+					g_tb_YMinus = true;
+				}
+			}
+			else if (g_altkey) {//TourBox縦ホイール
+				axiskind = PICK_X;
+				if (delta >= 0.0f) {
+					g_tb_XPlus = true;
+				}
+				else {
+					g_tb_XMinus = true;
+				}
+			}
+			else if (g_controlkey) {//TourBoxノブ
+				axiskind = PICK_Z;
+				if (delta >= 0.0f) {
+					g_tb_ZPlus = true;
+				}
+				else {
+					g_tb_ZMinus = true;
+				}
+			}
+			else {
+				axiskind = PICK_X;
+			}
+
+			GetCurrentModel()->SetUnderIKRot(false);//!!!!!!!!TourBox操作はシングルスレッドなのでfalseに設定
+
+			//シングルスレッド　TourBoxから呼び出す用
+			if ((g_edittarget == EDITTARGET_BONE) && !g_Ikey) {
+				if (ChkEnableIK()) {
+					s_pickinfo.pickobjno = s_curboneno;
+					IKOperateJointAxisDelta(axiskind, delta);
+					s_pickinfo.pickobjno = -1;
+				}
+			}
+			else if ((g_edittarget == EDITTARGET_CAMERA) || g_Ikey) {
+				IKOperateCameraAxisDelta(axiskind, delta);
+			}
+			s_befdeltax = delta;
+			s_ikcnt++;
+			s_editmotionflag = -1;//シングルスレッドなので　IK中では無い
+
+
+			//ClearLimitedWM(GetCurrentModel());//これが無いとIK時にグラフにおかしな値が入り　おかしな値がある時間に合わせると直る
+			//UpdateEditedEuler();
+		//}
 		}
 	}
 	break;
@@ -35184,7 +35257,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.44 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.45 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -35544,8 +35617,8 @@ int OnMouseMoveFunc()
 	if (g_previewFlag != 0) {
 		return 0;
 	}
-	if ((s_LButtonDown == false) && (s_ikdoneflag == false) &&
-		!(g_tb_XPlus || g_tb_XMinus || g_tb_YPlus || g_tb_YMinus || g_tb_ZPlus || g_tb_ZMinus)) {
+	if (((s_LButtonDown == false) && (s_ikdoneflag == false)) ||
+		(g_tb_XPlus || g_tb_XMinus || g_tb_YPlus || g_tb_YMinus || g_tb_ZPlus || g_tb_ZMinus)) {
 		return 0;
 	}
 
@@ -35616,118 +35689,119 @@ int OnMouseMoveFunc()
 		//######################################
 		//TourBoxNEO ここから
 		//マウスドラッグよりも先に記述しないと動かない
+		//2025/05/18　Timer頻度の関係で滑らかさが足りないので、WM_MOUSEWHEELで処理することで滑らかに.
 		//######################################
-		else if ((g_graphicsEngine != nullptr) &&
-			(s_curboneno > 0) &&
-			(g_altkey == false) &&//TourBox : Alt+Wheel->Bone Twist
-			(g_tb_XPlus || g_tb_XMinus || g_tb_YPlus || g_tb_YMinus || g_tb_ZPlus || g_tb_ZMinus)
-			) {
-
-			GetCurrentModel()->SetUnderIKRot(false);//!!!!!!!!
-
-			static int s_callingcount = 0;
-			s_callingcount++;
-
-			if (GetCurrentModel()) {
-				if (g_previewFlag == 0) {
-
-					//s_pickinfo.clickpos = ptCursor;
-					//s_pickinfo.mousepos = ptCursor;
-					//s_pickinfo.mousebefpos = ptCursor;
-					s_pickinfo.diffmouse.SetParams(0.0f, 0.0f);
-					s_pickinfo.firstdiff.SetParams(0.0f, 0.0f);
-					s_pickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
-					s_pickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
-					s_pickinfo.pickrange = PICKRANGE;
-					s_pickinfo.pickobjno = s_curboneno;//!!!!!!!!!!
-
-					float value = 2.0f;
-					float twistvalue = 0.50f;
-					float deltax = value;
-
-					int buttonflagForIkFunc = PICK_X;
-					if (g_tb_XPlus) {
-						buttonflagForIkFunc = PICK_X;
-						deltax = twistvalue;
-					}
-					else if (g_tb_XMinus) {
-						buttonflagForIkFunc = PICK_X;
-						deltax = -twistvalue;
-					}
-					else if (g_tb_YPlus) {
-						buttonflagForIkFunc = PICK_Y;
-						deltax = value;
-					}
-					else if (g_tb_YMinus) {
-						buttonflagForIkFunc = PICK_Y;
-						deltax = -value;
-					}
-					else if (g_tb_ZPlus) {
-						buttonflagForIkFunc = PICK_Z;
-						deltax = value;
-					}
-					else if (g_tb_ZMinus) {
-						buttonflagForIkFunc = PICK_Z;
-						deltax = -value;
-					}
-
-					if (g_preciseRotation) {
-						deltax *= 0.25f;
-					}
-
-					s_pickinfo.mousebefpos = s_pickinfo.mousepos;
-					POINT ptCursor;
-					GetCursorPos(&ptCursor);
-					::ScreenToClient(s_3dwnd, &ptCursor);
-					s_pickinfo.mousepos = ptCursor;
-
-					ChaVector3 tmpsc;
-					GetCurrentModel()->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
-					s_pickinfo.clickpos.x = (int)s_pickinfo.objscreen.x;//!!!!!!!!!!
-					s_pickinfo.clickpos.y = (int)s_pickinfo.objscreen.y;//!!!!!!!!!!
-
-					s_ikselectmat = s_selm;//!!!!!!!
-
-					if (g_previewFlag == 0) {
-
-						if ((g_edittarget == EDITTARGET_MORPH) && !g_Ikey) {
-							//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!",
-							//	L"Current mode is not for editing BoneMotion.", MB_OK);
-							OutputToInfoWnd(INFOCOLOR_WARNING, L"### EdittingMorph mode now. ###");
-							OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change graph mode! ###");
-						}
-						else if ((g_edittarget == EDITTARGET_BONE) && !g_Ikey) {
-							if (ChkEnableIK()) {
-								CBone* chkbone = GetCurrentModel()->GetBoneByID(s_curboneno);
-								if (chkbone && chkbone->IsHipsBone()) {
-									if ((s_callingcount % 3) == 0) {//Hipsジョイント編集を　シングルスレッドで実行すると重くて待ちが長いので　3回に１回だけ実行
-										s_editmotionflag = IKOperateJointAxisDelta(buttonflagForIkFunc, deltax);
-									}
-								}
-								else {
-									s_editmotionflag = IKOperateJointAxisDelta(buttonflagForIkFunc, deltax);
-								}
-							}
-						}
-						else if ((g_edittarget == EDITTARGET_CAMERA) || g_Ikey) {
-							IKOperateCameraAxisDelta(buttonflagForIkFunc, deltax);
-						}
-
-						s_befdeltax = deltax;
-						s_ikcnt++;
-						s_editmotionflag = -1;//シングルスレッドなので　IK中では無い
-					}
-
-					s_pickinfo.pickobjno = -1;//!!!!!!!!!!
-				}
-				else if (g_previewFlag == 5) {
-					if (GetCurrentModel()) {
-						s_onragdollik = 3;
-					}
-				}
-			}
-
-		}
+		//else if ((g_graphicsEngine != nullptr) &&
+		//	(s_curboneno > 0) &&
+		//	(g_altkey == false) &&//TourBox : Alt+Wheel->Bone Twist
+		//	(g_tb_XPlus || g_tb_XMinus || g_tb_YPlus || g_tb_YMinus || g_tb_ZPlus || g_tb_ZMinus)
+		//	) {
+		//
+		//	GetCurrentModel()->SetUnderIKRot(false);//!!!!!!!!
+		//
+		//	static int s_callingcount = 0;
+		//	s_callingcount++;
+		//
+		//	if (GetCurrentModel()) {
+		//		if (g_previewFlag == 0) {
+		//
+		//			//s_pickinfo.clickpos = ptCursor;
+		//			//s_pickinfo.mousepos = ptCursor;
+		//			//s_pickinfo.mousebefpos = ptCursor;
+		//			s_pickinfo.diffmouse.SetParams(0.0f, 0.0f);
+		//			s_pickinfo.firstdiff.SetParams(0.0f, 0.0f);
+		//			s_pickinfo.winx = (int)g_graphicsEngine->GetFrameBufferWidth();
+		//			s_pickinfo.winy = (int)g_graphicsEngine->GetFrameBufferHeight();
+		//			s_pickinfo.pickrange = PICKRANGE;
+		//			s_pickinfo.pickobjno = s_curboneno;//!!!!!!!!!!
+		//
+		//			float value = 2.0f;
+		//			float twistvalue = 0.50f;
+		//			float deltax = value;
+		//
+		//			int buttonflagForIkFunc = PICK_X;
+		//			if (g_tb_XPlus) {
+		//				buttonflagForIkFunc = PICK_X;
+		//				deltax = twistvalue;
+		//			}
+		//			else if (g_tb_XMinus) {
+		//				buttonflagForIkFunc = PICK_X;
+		//				deltax = -twistvalue;
+		//			}
+		//			else if (g_tb_YPlus) {
+		//				buttonflagForIkFunc = PICK_Y;
+		//				deltax = value;
+		//			}
+		//			else if (g_tb_YMinus) {
+		//				buttonflagForIkFunc = PICK_Y;
+		//				deltax = -value;
+		//			}
+		//			else if (g_tb_ZPlus) {
+		//				buttonflagForIkFunc = PICK_Z;
+		//				deltax = value;
+		//			}
+		//			else if (g_tb_ZMinus) {
+		//				buttonflagForIkFunc = PICK_Z;
+		//				deltax = -value;
+		//			}
+		//
+		//			if (g_preciseRotation) {
+		//				deltax *= 0.25f;
+		//			}
+		//
+		//			s_pickinfo.mousebefpos = s_pickinfo.mousepos;
+		//			POINT ptCursor;
+		//			GetCursorPos(&ptCursor);
+		//			::ScreenToClient(s_3dwnd, &ptCursor);
+		//			s_pickinfo.mousepos = ptCursor;
+		//
+		//			ChaVector3 tmpsc;
+		//			GetCurrentModel()->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
+		//			s_pickinfo.clickpos.x = (int)s_pickinfo.objscreen.x;//!!!!!!!!!!
+		//			s_pickinfo.clickpos.y = (int)s_pickinfo.objscreen.y;//!!!!!!!!!!
+		//
+		//			s_ikselectmat = s_selm;//!!!!!!!
+		//
+		//			if (g_previewFlag == 0) {
+		//
+		//				if ((g_edittarget == EDITTARGET_MORPH) && !g_Ikey) {
+		//					//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!",
+		//					//	L"Current mode is not for editing BoneMotion.", MB_OK);
+		//					OutputToInfoWnd(INFOCOLOR_WARNING, L"### EdittingMorph mode now. ###");
+		//					OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change graph mode! ###");
+		//				}
+		//				else if ((g_edittarget == EDITTARGET_BONE) && !g_Ikey) {
+		//					if (ChkEnableIK()) {
+		//						CBone* chkbone = GetCurrentModel()->GetBoneByID(s_curboneno);
+		//						if (chkbone && chkbone->IsHipsBone()) {
+		//							if ((s_callingcount % 3) == 0) {//Hipsジョイント編集を　シングルスレッドで実行すると重くて待ちが長いので　3回に１回だけ実行
+		//								s_editmotionflag = IKOperateJointAxisDelta(buttonflagForIkFunc, deltax);
+		//							}
+		//						}
+		//						else {
+		//							s_editmotionflag = IKOperateJointAxisDelta(buttonflagForIkFunc, deltax);
+		//						}
+		//					}
+		//				}
+		//				else if ((g_edittarget == EDITTARGET_CAMERA) || g_Ikey) {
+		//					IKOperateCameraAxisDelta(buttonflagForIkFunc, deltax);
+		//				}
+		//
+		//				s_befdeltax = deltax;
+		//				s_ikcnt++;
+		//				s_editmotionflag = -1;//シングルスレッドなので　IK中では無い
+		//			}
+		//
+		//			s_pickinfo.pickobjno = -1;//!!!!!!!!!!
+		//		}
+		//		else if (g_previewFlag == 5) {
+		//			if (GetCurrentModel()) {
+		//				s_onragdollik = 3;
+		//			}
+		//		}
+		//	}
+		//
+		//}
 		//###################
 		//TourBoxNEO ここまで
 		//###################
@@ -38703,7 +38777,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.44 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.45 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && s_chascene) {
