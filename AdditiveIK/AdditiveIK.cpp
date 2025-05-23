@@ -1300,7 +1300,8 @@ static OWP_Separator* s_placesp = 0;
 //#define SHORTCUTTEXTNUM	49
 //#define SHORTCUTTEXTNUM	50
 //#define SHORTCUTTEXTNUM	101
-#define SHORTCUTTEXTNUM	156
+//#define SHORTCUTTEXTNUM	156
+#define SHORTCUTTEXTNUM	164
 static OWP_Label* s_shortcuttext[SHORTCUTTEXTNUM];
 
 static bool s_skyparamsFlag = false;
@@ -7717,7 +7718,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		}
 	}
 	else if (uMsg == WM_MOUSEWHEEL) {
-		if (((g_keybuf['T'] & 0x80) != 0) || g_altkey || g_controlkey) {
+		if (g_altkey || g_controlkey) {
 			//if (GetCurrentModel() && (s_curboneno > 0) && ChkEnableIK()) {
 				s_tkeyflag = 1;
 
@@ -15433,7 +15434,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.44\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.45\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -24786,6 +24787,29 @@ int OnFrameKeyboard()
 		else {
 			g_spacekey = false;
 		}
+
+
+		//TourBox
+		if (!g_controlkey && (g_keybuf['U'] & 0x80) && ((g_savekeybuf['U'] & 0x80) == 0)) {//TourBox 左矢印ボタン　アンドゥデータ作成
+			PrepairUndo();
+		}
+
+		//2025/05/23 TourBoxでのIK操作時は自動的にはUndoPointを作らない　LeftArrowButton押下でUndoPointを作成する
+		//end of BoneTwist on MouseWheel 
+		//if ((s_tkeyflag != 0) && (s_editmotionflag >= 0) && ((g_keybuf['T'] & 0x80) == 0)) {
+		//	s_tkeyflag = 0;
+		//	PrepairUndo();//ツイスト保存
+		//}
+
+
+		if ((g_keybuf[VK_OEM_PERIOD] & 0x80) && ((g_savekeybuf[VK_OEM_PERIOD] & 0x80) == 0)) {//TourBox サイドボタンダブルクリック
+			GUISetVisible_CameraAndIK();//toggle disp GUI
+		}
+		if ((g_keybuf[VK_OEM_COMMA] & 0x80) && ((g_savekeybuf[VK_OEM_COMMA] & 0x80) == 0)) {//TourBox トールボタンダブルクリック
+			//カメラアニメ　トグル
+			ChangeCameraMode(0);
+		}
+
 		if (g_keybuf['L'] & 0x80) {//TourBox Tourボタン
 			g_Lkey = true;
 		}
@@ -25024,12 +25048,6 @@ int OnFrameKeyboard()
 			s_skey = false;
 		}
 
-
-	//TourBox
-		if (!g_controlkey && (g_keybuf['U'] & 0x80) && ((g_savekeybuf['U'] & 0x80) == 0)) {//TourBox 左矢印ボタン　アンドゥデータ作成
-			PrepairUndo();
-		}
-		
 	//TourBox
 		if (s_timelinembuttonFlag == false) {//ホイールボタンオフの場合　ジョイントとカメラ操作
 			//if ((g_keybuf[VK_OEM_COMMA] & 0x80) || (g_keybuf[','] & 0x80)) {//ダイヤル
@@ -25053,7 +25071,6 @@ int OnFrameKeyboard()
 			//	g_tb_XMinus = true;
 			//}
 		}
-
 		
 		//ApplyFrameの移動　Tourボタン+ノブ
 		if (RoundingTime(g_motionbrush_startframe) != (RoundingTime(g_motionbrush_endframe))) {
@@ -25109,47 +25126,43 @@ int OnFrameKeyboard()
 		}
 
 
+		if (g_controlkey == false) {//Ctrl + 1 : Redo
+			if ((g_keybuf[VK_NUMPAD1] & 0x80) || (g_keybuf['1'] & 0x80)) {
+				g_pickorder = 1;
+			}
+			else if ((g_keybuf[VK_NUMPAD2] & 0x80) || (g_keybuf['2'] & 0x80)) {
+				g_pickorder = 2;
+			}
+			else if ((g_keybuf[VK_NUMPAD3] & 0x80) || (g_keybuf['3'] & 0x80)) {
+				g_pickorder = 3;
+			}
+			else if ((g_keybuf[VK_NUMPAD4] & 0x80) || (g_keybuf['4'] & 0x80)) {
+				g_pickorder = 4;
+			}
+			else if ((g_keybuf[VK_NUMPAD5] & 0x80) || (g_keybuf['5'] & 0x80)) {
+				g_pickorder = 5;
+			}
+			else if ((g_keybuf[VK_NUMPAD6] & 0x80) || (g_keybuf['6'] & 0x80)) {
+				g_pickorder = 6;
+			}
+			else if ((g_keybuf[VK_NUMPAD7] & 0x80) || (g_keybuf['7'] & 0x80)) {
+				g_pickorder = 7;
+			}
+			else if ((g_keybuf[VK_NUMPAD8] & 0x80) || (g_keybuf['8'] & 0x80)) {
+				g_pickorder = 8;
+			}
+			else if ((g_keybuf[VK_NUMPAD9] & 0x80) || (g_keybuf['9'] & 0x80)) {
+				g_pickorder = 9;
+			}
+			else if ((g_keybuf[VK_NUMPAD0] & 0x80) || (g_keybuf['0'] & 0x80)) {
+				g_pickorder = 10;
+			}
+			else {
+				g_pickorder = 1;
+			}
+		}
+		
 
-		if ((g_keybuf[VK_NUMPAD1] & 0x80) || (g_keybuf['1'] & 0x80)) {
-			g_pickorder = 1;
-		}
-		else if ((g_keybuf[VK_NUMPAD2] & 0x80) || (g_keybuf['2'] & 0x80)) {
-			g_pickorder = 2;
-		}
-		else if ((g_keybuf[VK_NUMPAD3] & 0x80) || (g_keybuf['3'] & 0x80)) {
-			g_pickorder = 3;
-		}
-		else if ((g_keybuf[VK_NUMPAD4] & 0x80) || (g_keybuf['4'] & 0x80)) {
-			g_pickorder = 4;
-		}
-		else if ((g_keybuf[VK_NUMPAD5] & 0x80) || (g_keybuf['5'] & 0x80)) {
-			g_pickorder = 5;
-		}
-		else if ((g_keybuf[VK_NUMPAD6] & 0x80) || (g_keybuf['6'] & 0x80)) {
-			g_pickorder = 6;
-		}
-		else if ((g_keybuf[VK_NUMPAD7] & 0x80) || (g_keybuf['7'] & 0x80)) {
-			g_pickorder = 7;
-		}
-		else if ((g_keybuf[VK_NUMPAD8] & 0x80) || (g_keybuf['8'] & 0x80)) {
-			g_pickorder = 8;
-		}
-		else if ((g_keybuf[VK_NUMPAD9] & 0x80) || (g_keybuf['9'] & 0x80)) {
-			g_pickorder = 9;
-		}
-		else if ((g_keybuf[VK_NUMPAD0] & 0x80) || (g_keybuf['0'] & 0x80)) {
-			g_pickorder = 10;
-		}
-		else {
-			g_pickorder = 1;
-		}
-
-
-		//end of BoneTwist on MouseWheel 
-		if ((s_tkeyflag != 0) && (s_editmotionflag >= 0) && ((g_keybuf['T'] & 0x80) == 0)) {
-			s_tkeyflag = 0;
-			PrepairUndo();//ツイスト保存
-		}
 
 		/*
 		if (g_controlkey == false){
@@ -29140,18 +29153,19 @@ int OnFrameUndo(bool fromds, int fromdskind)
 	}
 	//keyboard event
 	else if (GetCurrentModel() && g_controlkey && (g_keybuf['Z'] & 0x80) && !(g_savekeybuf['Z'] & 0x80)) {
-
-		if ((g_keybuf[VK_SHIFT] & 0x80) && (s_undoFlag == false) && (s_redoFlag == false)) {
-			//redo
-			s_redoFlag = true;
-			//s_spundo[1].ButtonDown();
-			//s_SpriteButtonDownUndoRedo = true;
-			OnSpriteUndo();
-		}
-		else if ((s_undoFlag == false) && (s_redoFlag == false)) {
+		if ((s_undoFlag == false) && (s_redoFlag == false)) {
 			//undo
 			s_undoFlag = true;
 			//s_spundo[0].ButtonDown();
+			//s_SpriteButtonDownUndoRedo = true;
+			OnSpriteUndo();
+		}
+	}
+	else if (GetCurrentModel() && g_controlkey && (g_keybuf['1'] & 0x80) && !(g_savekeybuf['1'] & 0x80)) {//Shiftを押すとIK modeが変わるので　Ctrl + Shift + Zは使えない
+		if ((s_undoFlag == false) && (s_redoFlag == false)) {
+			//redo
+			s_redoFlag = true;
+			//s_spundo[1].ButtonDown();
 			//s_SpriteButtonDownUndoRedo = true;
 			OnSpriteUndo();
 		}
@@ -30316,7 +30330,7 @@ int CreatePlaceFolderWnd()
 			return 1;
 		}
 		//要素数が変わったときには指定し忘れないように！！！
-		s_placescrollWnd->setLineDataSize(156 + 3);
+		s_placescrollWnd->setLineDataSize(164 + 3);
 		s_placescrollWnd->setSize(WindowSize(s_sidewidth, s_sideheight - 30));
 		s_placefolderWnd->addParts(*s_placescrollWnd);
 		s_placefolderWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
@@ -30444,72 +30458,76 @@ int CreatePlaceFolderWnd()
 			L"  SideButton + RightArrow : SelChange to brother joint.(between_L_ and _R_)",//100
 
 			L" ",
+			L" Toggle Mode",
+			L"  DoubleClick SideButton : Toggle Disp GUI.",
+			L"  DoubleClick TallButton : Toggle CameraAnim.",
+			L" ",//105
 
-			L"With KeyBoard",//102
+			L"With KeyBoard",//106
 			L" It is better to hover the mouse over the window you are operating.",
 			L" ",
 			L" Change PlateMenu",
-			L"  Space : Change 2ndMenu at LowerWindow.",
+			L"  Space : Change 2ndMenu at LowerWindow.",//110
+
 			L"  Pushing C + Space: Select 2ndMenu at LowerWindow.",
 			L"  Pushing V + Space: Change CommandMenu at UpperWindow.",
 			L" ",
-			L" Change IK Mode",//110
-
-
+			L" Change IK Mode",
 			L"  Shift : Switch modes in the order of rotation, movement, and scale.",
 			L" ",
 			L" Change Precise Mode",
 			L"  X : PreciseMode Off(NormalMode).",
 			L"  B : PreciseMode On(PreciseMode).",
-			L" ",
+			L" ",//120
+
 			L" When BoneMode pushing FrogButton at TimeLine",
 			L"  Alt + MouseWheel: Rotate(Move,Scale) the selected joint around the X-axis.",
 			L"  Control + MouseWheel: Rotate(Move,Scale) the selected joint around the Z-axis.",
 			L"  Control + Alt + MouseWheel: Rotate(Move,Scale) the selected joint around the Y-axis.",//120
-			
 			L" ",
 			L" When CameraAnimMode pushing FrogButton at TimeLine",
 			L"  Alt + MouseWheel: Rotate(Move,Scale) current CameraAnim around the X-axis.",
 			L"  Control + MouseWheel: Rotate(Move,Scale) current CameraAnim around the Z-axis.",
 			L"  Control + Alt + MouseWheel: Rotate(Move,Scale) current CameraAnim around the Y-axis.",
-			L" ",
+			L" ",//130
+
 			L" When KeepPushing I key",
 			L"  Alt + MouseWheel: Rotate(Move,Scale) CameraForEditting around the X-axis.",
 			L"  Control + MouseWheel: Rotate(Move,Scale) CameraForEditting around the Z-axis.",
 			L"  Control + Alt + MouseWheel: Rotate(Move,Scale) CameraForEditting around the Y-axis.",//130
-
-
-
 			L" ",
 			L" Whether to rotate, move, or scale depends on the IK mode.",
 			L" In ScaleMode, scaling all axis is default, scaling each axis with pushing SideButton",
 			L" ",
 			L" Change ApplyFrame of EditRange",
-			L"  N or M : Change ApplyFrame.",
+			L"  N or M : Change ApplyFrame.",//140
+
 			L" ",
 			L" When hover the mouse over the LongTimeLine",
 			L"  MouseWheel : Change current frame of LongTimeLine.",
-			L" ",//140
-
+			L" ",
 			L" Undo and Redo",
 			L"  Ctrl + Z : Undo.",
-			L"  Ctrl + Shift + Z : Redo.",
+			L"  Ctrl + 1 : Redo.",
 			L"  U : Make a UndoPoint.",
 			L" ",
-			L" Lock the camera target",
+			L" Lock the camera target",//150
+
 			L"  T : Lock to Selected Joint.",
 			L"  Y : Lock to Selected Joint Once.",
 			L"  G : the manipulator at target.",
-			L" ",//150
-
-
+			L" ",
 			L" SelectChange JointTreeView",
 			L"  Q : SelChange to parent joint.",
 			L"  W : SelChange to child joint.",
 			L"  E : SelChange to sister joint.(between_L_ and _R_)",
-			L"  R : SelChange to brother joint.(between_L_ and _R_)",//100
-			L" "//156
+			L"  R : SelChange to brother joint.(between_L_ and _R_)",
+			L" ",//160
 
+			L" Toggle Mode",
+			L"  . Button : Toggle Disp GUI.",
+			L"  , Button : Toggle CameraAnim.",
+			L" "//164
 		};
 
 
@@ -30527,7 +30545,7 @@ int CreatePlaceFolderWnd()
 			//red color new line
 			//if (textno == 25) {
 			//if ((textno == 19) || (textno == 20)) {
-			if ((textno == 0) || (textno == 46) || (textno == 101)) {
+			if ((textno == 0) || (textno == 46) || (textno == 105)) {
 				COLORREF colred = RGB(168, 129, 129);
 				s_shortcuttext[textno]->setTextColor(colred);
 			}
@@ -35068,7 +35086,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_MOUSEWHEEL:
 	{
-		if (((g_keybuf['T'] & 0x80) != 0) || g_altkey || g_controlkey) {
+		if (g_altkey || g_controlkey) {
 			//if (GetCurrentModel() && (s_curboneno > 0) && ChkEnableIK()) {
 			s_tkeyflag = 1;
 
