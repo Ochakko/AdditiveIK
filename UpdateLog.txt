@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/05/23
-　AdditiveIK 1.0.0.45 RC1(リリース候補1)
+　AdditiveIK 1.0.0.45 RC2(リリース候補2)
 　　1.0.0.44からの変更点
 　　　TourBoxによる回転処理の修正
 　　　　滑らかに回転するように修正
@@ -20,7 +20,10 @@ https://github.com/Ochakko/AdditiveIK
 　　　　　
 　　　TourBox設定用のPresetをTest/TourBox_Presetフォルダに.
 　　　
-
+　　RC2:
+　　　Tourボタン＋ノブ回転修正
+　　　　ApplyFrameの移動が選択範囲の半分より後ろに動かないことがある不具合を修正
+　　　
 
 2025/05/18
 　TourBoxによる回転処理の修正

@@ -2828,6 +2828,7 @@ static int TimelineCursorToMotion();
 int OnTimeLineCursor();
 static int OnTimeLineButtonSelectFromSelectStartEnd(int tothelastflag);
 static int OnTimeLineSelectFromSelectedKey();
+static int SetStartEndFromSelectedkey();
 static int OnTimeLineMButtonDown(bool ctrlshiftflag);
 static int OnTimeLineWheel();
 static int AddEditRangeHistory();
@@ -25048,66 +25049,28 @@ int OnFrameKeyboard()
 			s_skey = false;
 		}
 
-	//TourBox
-		if (s_timelinembuttonFlag == false) {//ホイールボタンオフの場合　ジョイントとカメラ操作
-			//if ((g_keybuf[VK_OEM_COMMA] & 0x80) || (g_keybuf[','] & 0x80)) {//ダイヤル
-			//	g_tb_YPlus = true;
-			//}
-			//else if ((g_keybuf[VK_OEM_PERIOD] & 0x80) || (g_keybuf['.'] & 0x80)) {//ダイヤル
-			//	g_tb_YMinus = true;
-			//}
-			//else if ((g_keybuf['O'] & 0x80)) {//ノブ
-			//	g_tb_ZPlus = true;
-			//}
-			//else if ((g_keybuf['P'] & 0x80)) {//ノブ
-			//	g_tb_ZMinus = true;
-			//}
-
-			//X回転はスクロールによるホイールメッセージ　
-			//else if ((g_keybuf['N'] & 0x80)) {
-			//	g_tb_XPlus = true;
-			//}
-			//else if ((g_keybuf['M'] & 0x80)) {
-			//	g_tb_XMinus = true;
-			//}
-		}
-		
 		//ApplyFrameの移動　Tourボタン+ノブ
-		if (RoundingTime(g_motionbrush_startframe) != (RoundingTime(g_motionbrush_endframe))) {
-			bool applyFrameMove = false;
-			int deltaApplyFrame = 0;
-			if ((g_keybuf['N'] & 0x80)) {
-				applyFrameMove = true;
-				deltaApplyFrame = -1;
-			}
-			else if ((g_keybuf['M'] & 0x80)) {
-				applyFrameMove = true;
-				deltaApplyFrame = 1;
-			}
-			if (applyFrameMove) {
-				double tempapplyframe;
-				if (g_applyrate == 0.0) {
-					tempapplyframe = s_buttonselectstart;
+		if ((g_keybuf['N'] & 0x80) || (g_keybuf['M'] & 0x80)) {
+			double tempapplyframe = 0.0;
+			SetStartEndFromSelectedkey();
+
+			if (RoundingTime(s_buttonselectstart) != RoundingTime(s_buttonselectend)) {
+
+				int deltaApplyFrame = 0;
+				if ((g_keybuf['N'] & 0x80)) {
+					deltaApplyFrame = -1;
 				}
-				else if (g_applyrate == 100.0) {
-					tempapplyframe = s_buttonselectend;
-				}
-				else {
-					tempapplyframe = (double)((int)(s_buttonselectstart + (s_buttonselectend - s_buttonselectstart) * (g_applyrate / 100.0)));//editrangeと同じ式
+				else if ((g_keybuf['M'] & 0x80)) {
+					deltaApplyFrame = 1;
 				}
 
-				if ((RoundingTime(tempapplyframe + deltaApplyFrame) >= RoundingTime(s_buttonselectstart)) &&
-					(RoundingTime(tempapplyframe + deltaApplyFrame) <= RoundingTime(s_buttonselectend))) {
+				double newapplyframe = RoundingTime(g_motionbrush_applyframe + deltaApplyFrame);
+				if ((newapplyframe >= RoundingTime(s_buttonselectstart)) &&
+					(newapplyframe <= RoundingTime(s_buttonselectend))) {
 
-					g_motionbrush_applyframe = RoundingTime(tempapplyframe + deltaApplyFrame);
-
-
-					double currenttime = g_motionbrush_applyframe;
-					s_owpTimeline->setCurrentTime(currenttime, false);
-					s_owpEulerGraph->setCurrentTime(currenttime, false);//eulergraphとshowpostimeも同期
-
-
+					g_motionbrush_applyframe = newapplyframe;
 					g_applyrate = (g_motionbrush_applyframe - RoundingTime(s_buttonselectstart)) * 100.0 / (RoundingTime(s_buttonselectend) - RoundingTime(s_buttonselectstart));
+					
 					if (s_editmotionflag < 0) {//IK中でないとき
 						int result = CreateMotionBrush(s_buttonselectstart, s_buttonselectend, false);
 						if ((result != 0) && (result != 2)) {//result==2はマウス操作でフレームが範囲外に出たときなど通常使用で起きる
@@ -25121,8 +25084,6 @@ int OnFrameKeyboard()
 					refreshEulerGraph();
 				}
 			}
-			//g_playingstart = g_motionbrush_startframe;
-			//g_playingend = g_motionbrush_endframe;
 		}
 
 
@@ -34315,6 +34276,36 @@ int OnTimeLineSelectFromSelectedKey()
 
 	return 0;
 }
+
+
+int SetStartEndFromSelectedkey()
+{
+	s_editrange.Clear();
+	if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
+		if (s_owpTimeline && s_owpLTimeline && s_owpEulerGraph) {
+			s_editrange.SetRange(s_owpLTimeline->getSelectedKey(), s_owpLTimeline->getCurrentTime());
+			//CEditRange::SetApplyRate(g_applyrate);
+
+			int keynum;
+			double startframe, endframe, applyframe;
+			s_editrange.GetRange(&keynum, &startframe, &endframe, &applyframe);
+
+			double roundingstartframe = RoundingTime(startframe);
+			double roundingendframe = RoundingTime(endframe);
+
+			s_buttonselectstart = roundingstartframe;
+			s_buttonselectend = roundingendframe;
+			g_motionbrush_startframe = roundingstartframe;
+			g_motionbrush_endframe = roundingendframe;
+			g_playingstart = roundingstartframe;
+			g_playingend = roundingendframe;
+
+			g_motionbrush_applyframe = RoundingTime(applyframe);
+		}
+	}
+	return 0;
+}
+
 
 int OnTimeLineButtonSelectFromSelectStartEnd(int tothelastflag)
 {
