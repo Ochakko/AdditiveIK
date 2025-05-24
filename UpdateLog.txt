@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/05/23
-　AdditiveIK 1.0.0.45 RC2(リリース候補2)
+　AdditiveIK 1.0.0.45 release
 　　1.0.0.44からの変更点
 　　　TourBoxによる回転処理の修正
 　　　　滑らかに回転するように修正
