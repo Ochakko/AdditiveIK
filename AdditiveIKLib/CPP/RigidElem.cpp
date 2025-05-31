@@ -156,23 +156,31 @@ ChaMatrix CRigidElem::GetCapsulematForColiShape(bool limitdegflag, int calczerof
 	retmat.SetIdentity();
 
 	if (m_endbone && m_endbone->GetParent(false)) {
-		bool dir2xflag;
-		if (m_endbone->GetParModel() && m_endbone->GetParModel()->GetRokDeBoneUser()) {
-			//##########################################
-			//2025/05/31
-			//RokDeBone2のNodeMatはIdentityなので
-			//X軸をあわせてあげる必要有
-			//#########################################
-			dir2xflag = true;
-		}
-		else {
-			//##########################################
-			//2025/05/31
-			//NodeMatによりX軸の向きは合っているものとする
-			//X軸合わせはしない
-			//##########################################
-			dir2xflag = false;
-		}
+
+		//bool dir2xflag;
+		//if (m_endbone->GetParModel() && m_endbone->GetParModel()->GetRokDeBoneUser()) {
+		//	//##########################################
+		//	//2025/05/31
+		//	//RokDeBone2のNodeMatはIdentityなので
+		//	//X軸をあわせてあげる必要有
+		//	//#########################################
+		//	dir2xflag = true;
+		//}
+		//else {
+		//	//##########################################
+		//	//2025/05/31
+		//	//NodeMatによりX軸の向きは合っているものとする
+		//	//X軸合わせはしない
+		//	//##########################################
+		//	dir2xflag = false;
+		//}
+
+
+		//2025/05/31 1.0.0.46 RC2
+		//VRoidにおいて体の左右でX軸の向きが異なる場合があり、そのままだと剛体が反対向きを向く
+		//よってGetRokDeBoneUser() == FALSEの場合にもdir2xflagはtrueとする
+		bool dir2xflag = true;
+
 		m_endbone->GetParent(false)->CalcAxisMatX_RigidBody(limitdegflag, dir2xflag, 0, 
 			calcslotflag,
 			m_endbone, &retmat, calczeroframe);

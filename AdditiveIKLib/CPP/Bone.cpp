@@ -2324,7 +2324,7 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 	//位置は　ボーンの親の位置　つまりカレントジョイントの位置
 	//#########################################################
 
-	if (GetParModel() && GetParModel()->GetRokDeBoneUser()) {
+	//if (GetParModel() && GetParModel()->GetRokDeBoneUser()) {
 		//##########################################
 		//2025/05/31
 		//RokDeBone2のNodeMatはIdentityなので
@@ -2347,20 +2347,20 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 			//#####################################################################################################
 			dstmat->SetTranslation(aftbonepos);
 		}
-	}
-	else {
-		//##########################################
-		//2025/05/31
-		//NodeMatによりX軸の向きは合っているものとする
-		//X軸合わせはしない
-		//##########################################
+	//}
+	//else {
+	//	//##########################################
+	//	//2025/05/31
+	//	//NodeMatによりX軸の向きは合っているものとする
+	//	//X軸合わせはしない
+	//	//##########################################
 
-		*dstmat = convmat;
-		//#####################################################################################################
-		//位置は　ボーンの(呼び出すときの)親の位置　つまり(呼び出されたインスタンスの)カレントジョイントの位置
-		//#####################################################################################################
-		dstmat->SetTranslation(aftbonepos);
-	}
+	//	*dstmat = convmat;
+	//	//#####################################################################################################
+	//	//位置は　ボーンの(呼び出すときの)親の位置　つまり(呼び出されたインスタンスの)カレントジョイントの位置
+	//	//#####################################################################################################
+	//	dstmat->SetTranslation(aftbonepos);
+	//}
 
 	return retleng;
 }
@@ -2431,23 +2431,29 @@ float CBone::CalcAxisMatX_NodeMat(CBone* childbone, ChaMatrix* dstmat)
 	//位置は　ボーンの親の位置　つまりカレントジョイントの位置
 	//#########################################################
 
-	if (GetParModel() && GetParModel()->GetRokDeBoneUser()) {
-		//##########################################
-		//2025/05/31
-		//RokDeBone2のNodeMatはIdentityなので
-		//X軸をあわせてあげる必要有
-		//#########################################
-		*dstmat = CalcAxisMatX(bonevec, aftbonepos, convmat);//ChaVecCalc.cpp
-	}
-	else {
-		//##########################################
-		//2025/05/31
-		//NodeMatによりX軸の向きは合っているものとする
-		//X軸合わせはしない
-		//##########################################
-		*dstmat = convmat;
-		dstmat->SetTranslation(aftbonepos);
-	}
+	//if (GetParModel() && GetParModel()->GetRokDeBoneUser()) {
+	//	//##########################################
+	//	//2025/05/31
+	//	//RokDeBone2のNodeMatはIdentityなので
+	//	//X軸をあわせてあげる必要有
+	//	//#########################################
+	//	*dstmat = CalcAxisMatX(bonevec, aftbonepos, convmat);//ChaVecCalc.cpp
+	//}
+	//else {
+	//	//##########################################
+	//	//2025/05/31
+	//	//NodeMatによりX軸の向きは合っているものとする
+	//	//X軸合わせはしない
+	//	//##########################################
+	//	*dstmat = convmat;
+	//	dstmat->SetTranslation(aftbonepos);
+	//}
+
+	//2025/05/31 1.0.0.46 RC2
+	//VRoidにおいて体の左右でX軸の向きが異なる場合があり、そのままだと剛体が反対向きを向く
+	//よってGetRokDeBoneUser() == FALSEの場合にもCalcAxisMatX()を呼ぶこととする
+	*dstmat = CalcAxisMatX(bonevec, aftbonepos, convmat);//ChaVecCalc.cpp
+
 	ChaVector3 diffvec = aftbonepos - aftchildpos;
 	float retleng = (float)ChaVector3LengthDbl(&diffvec);
 
