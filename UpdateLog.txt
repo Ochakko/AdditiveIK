@@ -2,6 +2,14 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/05/31
+　マニピュレータ軸の修正
+　　RokDeBone2で作成したfbxとそれ以外のfbxとで処理分け
+　　　RokDeBone2で作成したfbxのNodeMatはIdentityなので、マニピュレータ計算時にX軸合わせが必要
+　　　それ以外のfbxにおいては、NodeMatにより既にX軸があっているものとする
+　　　(RokDeBone2以外のfbxに対してX軸合わせをすると、X軸の向きがNodeMatのX軸の向きと正負反対向きになることがあった)
+
+
 2025/05/23
 　AdditiveIK 1.0.0.45 release
 　　1.0.0.44からの変更点

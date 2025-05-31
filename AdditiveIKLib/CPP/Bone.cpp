@@ -2241,85 +2241,58 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 
 	ChaMatrix convmat;
 	convmat.SetIdentity();
-
-	//if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-		ChaVector3TransformCoord(&aftparentpos, &zeropos, &tmpparentlimwm);//2025/05/30 BONEAXIS_PARENTのときのCalcAxisMatX()で使用する
-		ChaVector3TransformCoord(&aftbonepos, &zeropos, &tmplimwm);
-		ChaVector3TransformCoord(&aftchildpos, &zeropos, &tmpchildlimwm);
-	//}
-	//else {
-	//	//ChaVector3TransformCoord(&aftparentpos, &zeropos, &tmpparentbtmat);
-	//	ChaVector3TransformCoord(&aftbonepos, &zeropos, &tmpbtmat);
-	//	ChaVector3TransformCoord(&aftchildpos, &zeropos, &tmpchildbtmat);
-	//}
+	ChaVector3TransformCoord(&aftparentpos, &zeropos, &tmpparentlimwm);//2025/05/30 BONEAXIS_PARENTのときのCalcAxisMatX()で使用する
+	ChaVector3TransformCoord(&aftbonepos, &zeropos, &tmplimwm);
+	ChaVector3TransformCoord(&aftchildpos, &zeropos, &tmpchildlimwm);
 
 
+	ChaVector3 startpos, endpos;
 	float retleng;
+	//2025/05/31
+	//Fbx形式においては、ボーンは自分自身の位置をpivotとして自分自身が保持している行列で回転する
+	if ((srcboneaxis == BONEAXIS_CURRENT) || (srcboneaxis == BONEAXIS_BINDPOSE)) {
+		convmat = tmplimwm;
 
-	//if (ishipsjoint == false) {
+		ChaVector3 vecforleng;
+		vecforleng = aftchildpos - aftbonepos;
+		retleng = (float)ChaVector3LengthDbl(&vecforleng);
 
-		//hipsjointではない場合
+		startpos = aftbonepos;
+		endpos = aftchildpos;
+	}
+	else if (srcboneaxis == BONEAXIS_PARENT) {
+		convmat = tmpparentlimwm;
 
-		if ((srcboneaxis == BONEAXIS_CURRENT) || (srcboneaxis == BONEAXIS_BINDPOSE)) {
-			////////current bone axis
-			//////if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-			//////	convmat = tmplimwm;
-			//////}
-			//////else {
-			//////	convmat = tmpbtmat;
-			//////}
-			////current bone axis
-			////if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-			//	convmat = tmpchildlimwm;//2024/01/03
-			////}
-			////else {
-			////	convmat = tmpchildbtmat;//2024/01/03
-			////}
+		ChaVector3 vecforleng;
+		vecforleng = aftbonepos - aftparentpos;
+		retleng = (float)ChaVector3LengthDbl(&vecforleng);
 
-			convmat = tmplimwm;
+		startpos = aftparentpos;
+		endpos = aftbonepos;
+	}
+	else if (srcboneaxis == BONEAXIS_GLOBAL) {
+		//global axis
+		convmat.SetIdentity();
 
-			ChaVector3 vecforleng;
-			vecforleng = aftchildpos - aftbonepos;
-			retleng = (float)ChaVector3LengthDbl(&vecforleng);
-		}
-		else if (srcboneaxis == BONEAXIS_PARENT) {
-			////////parent bone axis
-			//////if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-			//////	convmat = tmpparentlimwm;
-			//////}
-			//////else {
-			//////	convmat = tmpparentbtmat;
-			//////}
-			//////parent bone axis
-			////if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
-			//	convmat = tmplimwm;//2024/01/03
-			////}
-			////else {
-			////	convmat = tmpbtmat;//2024/01/03
-			////}
+		ChaVector3 vecforleng;
+		vecforleng = aftchildpos - aftbonepos;
+		retleng = (float)ChaVector3LengthDbl(&vecforleng);
 
-			convmat = tmpparentlimwm;
+		startpos = aftbonepos;
+		endpos = aftchildpos;
+	}
+	else {
+		_ASSERT(0);
+		convmat = tmplimwm;
 
-			ChaVector3 vecforleng;
-			vecforleng = aftbonepos - aftparentpos;
-			retleng = (float)ChaVector3LengthDbl(&vecforleng);
+		ChaVector3 vecforleng;
+		vecforleng = aftchildpos - aftbonepos;
+		retleng = (float)ChaVector3LengthDbl(&vecforleng);
 
-		}
-		else if (srcboneaxis == BONEAXIS_GLOBAL) {
-			//global axis
-			convmat.SetIdentity();
+		startpos = aftbonepos;
+		endpos = aftchildpos;
+	}
 
-			ChaVector3 vecforleng;
-			vecforleng = aftchildpos - aftbonepos;
-			retleng = (float)ChaVector3LengthDbl(&vecforleng);
-		}
-		else {
-			convmat = tmplimwm;
-
-			ChaVector3 vecforleng;
-			vecforleng = aftchildpos - aftbonepos;
-			retleng = (float)ChaVector3LengthDbl(&vecforleng);
-		}
 	//}
 	//else {
 	//	//2023/01/14
@@ -2327,8 +2300,6 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 	//	//global axis
 	//	convmat.SetIdentity();
 	//}
-
-
 
 
 	//if ((aftbonepos == aftchildpos) || (srcboneaxis == BONEAXIS_GLOBAL) || (ishipsjoint == true)) {
@@ -2344,86 +2315,52 @@ float CBone::CalcAxisMatX_Manipulator(bool limitdegflag, int srcboneaxis, int bi
 		return retleng;//!!!!!!!!!!!!!!!!!!!!!!!!!! return
 	}
 
-	ChaVector3 startpos, endpos;
-
-	if ((srcboneaxis == BONEAXIS_CURRENT) || (srcboneaxis == BONEAXIS_BINDPOSE)) {
-		//current bone axis
-		startpos = aftbonepos;
-		endpos = aftchildpos;
-	}
-	else if (srcboneaxis == BONEAXIS_PARENT) {
-		//parent bone axis
-		startpos = aftparentpos;
-		endpos = aftbonepos;
-	}
-	else if (srcboneaxis == BONEAXIS_GLOBAL) {
-		//global axis
-
-		_ASSERT(0);//上方でIdentity回転をセットしてリターンしているので　ここは通らない
-		dstmat->SetIdentity();
-		//#########################################################
-		//位置は　ボーンの親の位置　つまりカレントジョイントの位置
-		//#########################################################
-		dstmat->SetTranslation(aftbonepos);
-
-		return retleng;//!!!!!!!!!!!!!!!!!!!!!!!!!! return
-	}
-	else {
-		_ASSERT(0);//想定外
-		dstmat->SetIdentity();
-		//#########################################################
-		//位置は　ボーンの親の位置　つまりカレントジョイントの位置
-		//#########################################################
-		dstmat->SetTranslation(aftbonepos);
-
-		return retleng;//!!!!!!!!!!!!!!!!!!!!!!!!!! return
-	}
-
-
 	//カレント変換したボーン軸
 	ChaVector3 bonevec;
 	bonevec = endpos - startpos;
 	ChaVector3Normalize(&bonevec, &bonevec);
 
-
-	//###########################################################################################
-	//convmatのvecxをbonevecにする　それに合わせて３軸が互いに垂直になるようにvecy, veczを求める
-	//###########################################################################################
 	//#########################################################
 	//位置は　ボーンの親の位置　つまりカレントジョイントの位置
 	//#########################################################
 
-	//if (srcboneaxis != BONEAXIS_BINDPOSE) {//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! BINDPOSEの時は　オートフィットしない
-	//	//ボーン軸をX軸に　オートフィット
-	//	//*dstmat = CalcAxisMatX(bonevec, aftbonepos, convmat);//ChaVecCalc.cpp
-	//	*dstmat = CalcAxisMatX(bonevec, startpos, convmat);//2025/05/30 BONEAXIS_PARENTのときにも機能するように
-	//}
-	//else {
-	//	//BONEAXIS_BINDPOSEの場合には　ボーン軸をX軸には合わせずに　BindPoseそのままの向きを返す
-	//	*dstmat = convmat;
-	//
-	//	//#####################################################################################################
-	//	//位置は　ボーンの(呼び出すときの)親の位置　つまり(呼び出されたインスタンスの)カレントジョイントの位置
-	//	//#####################################################################################################
-	//	dstmat->SetTranslation(aftbonepos);
-	//}
-	
-	////if (srcboneaxis != BONEAXIS_BINDPOSE) {//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! BINDPOSEの時は　オートフィットしない
-	//if (srcboneaxis == BONEAXIS_CURRENT) {//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! BINDPOSEの時は　オートフィットしない
-	//	//ボーン軸をX軸に　オートフィット
-	//	*dstmat = CalcAxisMatX(bonevec, aftbonepos, convmat);//ChaVecCalc.cpp
-	//}
-	//else {
-		//BONEAXIS_BINDPOSEの場合には　ボーン軸をX軸には合わせずに　BindPoseそのままの向きを返す
-		*dstmat = convmat;
+	if (GetParModel() && GetParModel()->GetRokDeBoneUser()) {
+		//##########################################
+		//2025/05/31
+		//RokDeBone2のNodeMatはIdentityなので
+		//X軸をあわせてあげる必要有
+		//ただしBINDPOSE指定時にはX軸合わせをしない
+		//##########################################
+		if (srcboneaxis != BONEAXIS_BINDPOSE) {//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! BINDPOSEの時は　オートフィットしない
+			//ボーン軸をX軸に　オートフィット
+			//###########################################################################################
+			//convmatのvecxをbonevecにする　それに合わせて３軸が互いに垂直になるようにvecy, veczを求める
+			//###########################################################################################
+			*dstmat = CalcAxisMatX(bonevec, startpos, convmat);//ChaVecCalc.cpp
+		}
+		else {
+			//BONEAXIS_BINDPOSEの場合には　ボーン軸をX軸には合わせずに　BindPoseそのままの向きを返す
+			*dstmat = convmat;
 
+			//#####################################################################################################
+			//位置は　ボーンの(呼び出すときの)親の位置　つまり(呼び出されたインスタンスの)カレントジョイントの位置
+			//#####################################################################################################
+			dstmat->SetTranslation(aftbonepos);
+		}
+	}
+	else {
+		//##########################################
+		//2025/05/31
+		//NodeMatによりX軸の向きは合っているものとする
+		//X軸合わせはしない
+		//##########################################
+
+		*dstmat = convmat;
 		//#####################################################################################################
 		//位置は　ボーンの(呼び出すときの)親の位置　つまり(呼び出されたインスタンスの)カレントジョイントの位置
 		//#####################################################################################################
 		dstmat->SetTranslation(aftbonepos);
-	//}
-
-
+	}
 
 	return retleng;
 }
@@ -2494,8 +2431,23 @@ float CBone::CalcAxisMatX_NodeMat(CBone* childbone, ChaMatrix* dstmat)
 	//位置は　ボーンの親の位置　つまりカレントジョイントの位置
 	//#########################################################
 
-	*dstmat = CalcAxisMatX(bonevec, aftbonepos, convmat);//ChaVecCalc.cpp
-
+	if (GetParModel() && GetParModel()->GetRokDeBoneUser()) {
+		//##########################################
+		//2025/05/31
+		//RokDeBone2のNodeMatはIdentityなので
+		//X軸をあわせてあげる必要有
+		//#########################################
+		*dstmat = CalcAxisMatX(bonevec, aftbonepos, convmat);//ChaVecCalc.cpp
+	}
+	else {
+		//##########################################
+		//2025/05/31
+		//NodeMatによりX軸の向きは合っているものとする
+		//X軸合わせはしない
+		//##########################################
+		*dstmat = convmat;
+		dstmat->SetTranslation(aftbonepos);
+	}
 	ChaVector3 diffvec = aftbonepos - aftchildpos;
 	float retleng = (float)ChaVector3LengthDbl(&diffvec);
 
@@ -2637,6 +2589,7 @@ float CBone::CalcAxisMatX_RigidBody(bool limitdegflag, bool dir2xflag, int bindf
 	}
 	else {
 		*dstmat = convmat;
+		dstmat->SetTranslation(aftbonepos);
 	}
 	
 	ChaVector3 diffvec = aftbonepos - aftchildpos;

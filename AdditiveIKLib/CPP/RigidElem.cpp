@@ -156,7 +156,23 @@ ChaMatrix CRigidElem::GetCapsulematForColiShape(bool limitdegflag, int calczerof
 	retmat.SetIdentity();
 
 	if (m_endbone && m_endbone->GetParent(false)) {
-		bool dir2xflag = true;
+		bool dir2xflag;
+		if (m_endbone->GetParModel() && m_endbone->GetParModel()->GetRokDeBoneUser()) {
+			//##########################################
+			//2025/05/31
+			//RokDeBone2‚ÌNodeMat‚ÍIdentity‚È‚Ì‚Å
+			//XŽ²‚ð‚ ‚í‚¹‚Ä‚ ‚°‚é•K—v—L
+			//#########################################
+			dir2xflag = true;
+		}
+		else {
+			//##########################################
+			//2025/05/31
+			//NodeMat‚É‚æ‚èXŽ²‚ÌŒü‚«‚Í‡‚Á‚Ä‚¢‚é‚à‚Ì‚Æ‚·‚é
+			//XŽ²‡‚í‚¹‚Í‚µ‚È‚¢
+			//##########################################
+			dir2xflag = false;
+		}
 		m_endbone->GetParent(false)->CalcAxisMatX_RigidBody(limitdegflag, dir2xflag, 0, 
 			calcslotflag,
 			m_endbone, &retmat, calczeroframe);
