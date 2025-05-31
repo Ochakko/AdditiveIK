@@ -1,4 +1,4 @@
-#ifndef REFILEH
+﻿#ifndef REFILEH
 #define REFILEH
 
 //#include <d3dx9.h>

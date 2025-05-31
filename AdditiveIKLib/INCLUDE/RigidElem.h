@@ -1,4 +1,4 @@
-#ifndef RIGIDELEMH
+ï»¿#ifndef RIGIDELEMH
 #define RIGIDELEMH
 
 //#include <d3dx9.h>
@@ -178,30 +178,30 @@ private:
 	int m_skipflag;
 
 	float m_boneleng;
-	float m_mass;//¿—Ê
+	float m_mass;//è³ªé‡
 
-	float m_sphr;//‹…”¼Œa
-	float m_sphrate;//‹…”¼Œa”ä—¦A‚Â‚Ü‚è‘È‰~‚Ì—¦
-	float m_boxz;//” ‚Ì•Ó‚Ì’·‚³
-	float m_boxzrate;//’¼•û‘Ì‚Ì•Ó‚Ì”ä—¦
-	float m_cylileng;//ƒVƒŠƒ“ƒ_[‚Ì’·‚³
+	float m_sphr;//çƒåŠå¾„
+	float m_sphrate;//çƒåŠå¾„æ¯”ç‡ã€ã¤ã¾ã‚Šæ¥•å††ã®ç‡
+	float m_boxz;//ç®±ã®è¾ºã®é•·ã•
+	float m_boxzrate;//ç›´æ–¹ä½“ã®è¾ºã®æ¯”ç‡
+	float m_cylileng;//ã‚·ãƒªãƒ³ãƒ€ãƒ¼ã®é•·ã•
 
-	int m_l_kindex;//ˆÚ“®‚Î‚Ë’è”(e‚Æ‚ÌÚ‘±)‚ÌƒvƒŠƒZƒbƒg—pƒCƒ“ƒfƒbƒNƒX
-	int m_a_kindex;//‰ñ“]‚Î‚Ë’è”‚ÌƒvƒŠƒZƒbƒg—pƒCƒ“ƒfƒbƒNƒX
+	int m_l_kindex;//ç§»å‹•ã°ã­å®šæ•°(è¦ªã¨ã®æ¥ç¶š)ã®ãƒ—ãƒªã‚»ãƒƒãƒˆç”¨ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+	int m_a_kindex;//å›è»¢ã°ã­å®šæ•°ã®ãƒ—ãƒªã‚»ãƒƒãƒˆç”¨ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
 
-	float m_cus_lk;//ƒJƒXƒ^ƒ€‚ÌˆÚ“®‚Î‚Ë’è”
-	float m_cus_ak;//ƒJƒXƒ^ƒ€‚Ì‰ñ“]‚Î‚Ë’è”
+	float m_cus_lk;//ã‚«ã‚¹ã‚¿ãƒ æ™‚ã®ç§»å‹•ã°ã­å®šæ•°
+	float m_cus_ak;//ã‚«ã‚¹ã‚¿ãƒ æ™‚ã®å›è»¢ã°ã­å®šæ•°
 
-	float m_l_damping;//ˆÚ“®Œ¸Š—¦
-	float m_a_damping;//‰ñ“]Œ¸Š—¦
+	float m_l_damping;//ç§»å‹•æ¸›è¡°ç‡
+	float m_a_damping;//å›è»¢æ¸›è¡°ç‡
 	float m_dampanim_l;
 	float m_dampanim_a;
 
-	float m_btg;//ƒ‰ƒOƒh[ƒ‹‚Ìd—Í
+	float m_btg;//ãƒ©ã‚°ãƒ‰ãƒ¼ãƒ«æ™‚ã®é‡åŠ›
 
-	int m_groupid;//ƒRƒŠƒWƒ‡ƒ“—p@©•ª‚ÌƒOƒ‹[ƒvID
-	std::vector<int> m_coliids;//ƒRƒŠƒWƒ‡ƒ“—p@Õ“Ë”»’è‚·‚éƒOƒ‹[ƒvID‚Ì”z—ñ
-	//int m_myselfflag;//ƒRƒŠƒWƒ‡ƒ“—p@©•ª‚ÆÕ“Ë”»’è‚·‚é‚©‚Ç‚¤‚©‚Ìƒtƒ‰ƒO
+	int m_groupid;//ã‚³ãƒªã‚¸ãƒ§ãƒ³ç”¨ã€€è‡ªåˆ†ã®ã‚°ãƒ«ãƒ¼ãƒ—ID
+	std::vector<int> m_coliids;//ã‚³ãƒªã‚¸ãƒ§ãƒ³ç”¨ã€€è¡çªåˆ¤å®šã™ã‚‹ã‚°ãƒ«ãƒ¼ãƒ—IDã®é…åˆ—
+	//int m_myselfflag;//ã‚³ãƒªã‚¸ãƒ§ãƒ³ç”¨ã€€è‡ªåˆ†ã¨è¡çªåˆ¤å®šã™ã‚‹ã‹ã©ã†ã‹ã®ãƒ•ãƒ©ã‚°
 
 	float m_restitution;
 	float m_friction;

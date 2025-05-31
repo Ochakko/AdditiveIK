@@ -21712,9 +21712,9 @@ int PickSpCameraModeSW(POINT srcpos)
 		//非表示中
 		return 0;
 	}
-	if (g_previewFlag != 0) {
-		return 0;
-	}
+	//if (g_previewFlag != 0) {
+	//	return 0;
+	//}
 
 	//if (g_previewFlag == 5){
 	//	return 0;
@@ -22397,10 +22397,10 @@ int PickSpCameraDolly(POINT srcpos)
 		//非表示中
 		return 0;
 	}
-	if (g_previewFlag != 0) {
-		//preview中は　押さない
-		return 0;
-	}
+	//if (g_previewFlag != 0) {
+	//	//preview中は　押さない
+	//	return 0;
+	//}
 
 	if (s_toolspritemode != 2) {
 		return 0;
@@ -35629,9 +35629,16 @@ int OnMouseMoveFunc()
 
 	//static int s_dbgcount = 0;
 
-	if (g_previewFlag != 0) {
-		return 0;
-	}
+
+	//###############################################################
+	//2025/05/31 1.0.0.46 RC3 : CameraForEditはプレビュー中も操作可能に.
+	//###############################################################
+	//if (g_previewFlag != 0) {
+	//	return 0;
+	//}
+
+
+
 	if (((s_LButtonDown == false) && (s_ikdoneflag == false)) ||
 		(g_tb_XPlus || g_tb_XMinus || g_tb_YPlus || g_tb_YMinus || g_tb_ZPlus || g_tb_ZMinus)) {
 		return 0;
@@ -35925,65 +35932,56 @@ int OnMouseMoveFunc()
 		else if ((s_pickinfo.pickobjno >= 0) &&
 			((s_pickinfo.buttonflag == PICK_X) || (s_pickinfo.buttonflag == PICK_Y) || (s_pickinfo.buttonflag == PICK_Z))
 			) {
-			if (GetCurrentModel()) {
-				if (g_previewFlag == 0) {
-					static int s_callingcount0 = 0;
-					s_callingcount0++;
+			if (GetCurrentModel() && (g_previewFlag == 0)) {
+				static int s_callingcount0 = 0;
+				s_callingcount0++;
 
-					s_pickinfo.mousebefpos = s_pickinfo.mousepos;
-					POINT ptCursor;
-					GetCursorPos(&ptCursor);
-					::ScreenToClient(s_3dwnd, &ptCursor);
-					s_pickinfo.mousepos = ptCursor;
+				s_pickinfo.mousebefpos = s_pickinfo.mousepos;
+				POINT ptCursor;
+				GetCursorPos(&ptCursor);
+				::ScreenToClient(s_3dwnd, &ptCursor);
+				s_pickinfo.mousepos = ptCursor;
 
-					ChaVector3 tmpsc;
-					GetCurrentModel()->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
+				ChaVector3 tmpsc;
+				GetCurrentModel()->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
 
-					if (g_previewFlag == 0) {
-						float deltax = (float)((s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) + (s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y)) * 0.5f;
-						if (g_preciseRotation == true) {
-							deltax *= 0.250f;
-						}
+				float deltax = (float)((s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) + (s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y)) * 0.5f;
+				if (g_preciseRotation == true) {
+					deltax *= 0.250f;
+				}
 
-						if (g_edittarget == EDITTARGET_MORPH) {
-							//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!",
-							//	L"Current mode is not for editing BoneMotion.", MB_OK);
-							OutputToInfoWnd(INFOCOLOR_WARNING, L"### EdittingMorph mode now. ###");
-							OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change graph mode! ###");
-						}
-						else if (g_edittarget == EDITTARGET_BONE) {
-							if (ChkEnableIK()) {
-								s_editmotionflag = IKOperateJointAxisDelta(s_pickinfo.buttonflag, deltax);
-							}
-						}
-						else if (g_edittarget == EDITTARGET_CAMERA) {
-							switch (s_ikkind) {
-							case IKKIND_ROTATE:
-								s_cameraeditkind = CAMERAANIMEDIT_ROT;
-								break;
-							case IKKIND_MOVE:
-								s_cameraeditkind = CAMERAANIMEDIT_MV;
-								break;
-							case IKKIND_SCALE:
-								s_cameraeditkind = CAMERAANIMEDIT_DIST;
-								break;
-							default:
-								_ASSERT(0);
-								s_cameraeditkind = CAMERAANIMEDIT_ROT;
-								break;
-							}
-							OnCameraAnimMouseMove(s_cameraeditkind, s_pickinfo.buttonflag, deltax);
-						}
-						s_befdeltax = deltax;
-
-						s_ikcnt++;
+				if (g_edittarget == EDITTARGET_MORPH) {
+					//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!",
+					//	L"Current mode is not for editing BoneMotion.", MB_OK);
+					OutputToInfoWnd(INFOCOLOR_WARNING, L"### EdittingMorph mode now. ###");
+					OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change graph mode! ###");
+				}
+				else if (g_edittarget == EDITTARGET_BONE) {
+					if (ChkEnableIK() && (g_previewFlag == 0)) {
+						s_editmotionflag = IKOperateJointAxisDelta(s_pickinfo.buttonflag, deltax);
 					}
 				}
-				else if (g_previewFlag == 5) {
-					if (GetCurrentModel()) {
-						s_onragdollik = 2;
+				else if (g_edittarget == EDITTARGET_CAMERA) {
+					switch (s_ikkind) {
+					case IKKIND_ROTATE:
+						s_cameraeditkind = CAMERAANIMEDIT_ROT;
+						break;
+					case IKKIND_MOVE:
+						s_cameraeditkind = CAMERAANIMEDIT_MV;
+						break;
+					case IKKIND_SCALE:
+						s_cameraeditkind = CAMERAANIMEDIT_DIST;
+						break;
+					default:
+						_ASSERT(0);
+						s_cameraeditkind = CAMERAANIMEDIT_ROT;
+						break;
 					}
+					OnCameraAnimMouseMove(s_cameraeditkind, s_pickinfo.buttonflag, deltax);
 				}
+				s_befdeltax = deltax;
+
+				s_ikcnt++;
 			}
 		}
 		else if ((s_pickinfo.pickobjno >= 0) &&
@@ -35992,75 +35990,66 @@ int OnMouseMoveFunc()
 
 			//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 2");
 
-			if (GetCurrentModel()) {
-				if (g_previewFlag == 0) {
-					static int s_callingcount1 = 0;
-					s_callingcount1++;
+			if (GetCurrentModel() && (g_previewFlag == 0)) {
+				static int s_callingcount1 = 0;
+				s_callingcount1++;
 
 
-					//s_pickinfo.buttonflag = s_pickinfo.buttonflag - PICK_SPA_X + PICK_X;
-					int buttonflagForIkFunc = s_pickinfo.buttonflag - PICK_SPA_X + PICK_X;
+				//s_pickinfo.buttonflag = s_pickinfo.buttonflag - PICK_SPA_X + PICK_X;
+				int buttonflagForIkFunc = s_pickinfo.buttonflag - PICK_SPA_X + PICK_X;
 
 
-					s_pickinfo.mousebefpos = s_pickinfo.mousepos;
-					POINT ptCursor;
-					GetCursorPos(&ptCursor);
-					::ScreenToClient(s_3dwnd, &ptCursor);
-					s_pickinfo.mousepos = ptCursor;
+				s_pickinfo.mousebefpos = s_pickinfo.mousepos;
+				POINT ptCursor;
+				GetCursorPos(&ptCursor);
+				::ScreenToClient(s_3dwnd, &ptCursor);
+				s_pickinfo.mousepos = ptCursor;
 
-					ChaVector3 tmpsc;
-					GetCurrentModel()->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
+				ChaVector3 tmpsc;
+				GetCurrentModel()->TransformBone(s_pickinfo.winx, s_pickinfo.winy, s_curboneno, &s_pickinfo.objworld, &tmpsc, &s_pickinfo.objscreen);
 
-					//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 3");
+				//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 3");
 
 
-					if (g_previewFlag == 0) {
-						float deltax = (float)((s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) + (s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y)) * 0.5f;
-						if (g_preciseRotation == true) {
-							deltax *= 0.250f;
-						}
+				float deltax = (float)((s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) + (s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y)) * 0.5f;
+				if (g_preciseRotation == true) {
+					deltax *= 0.250f;
+				}
 
-						//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 4");
+				//OutputToInfoWnd(INFOCOLOR_INFO, L"AdditiveIK.cpp : MouseMoveFunc 4");
 
-						if (g_edittarget == EDITTARGET_MORPH) {
-							//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!",
-							//	L"Current mode is not for editing BoneMotion.", MB_OK);
-							OutputToInfoWnd(INFOCOLOR_WARNING, L"### EdittingMorph mode now. ###");
-							OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change graph mode! ###");
-						}
-						else if (g_edittarget == EDITTARGET_BONE) {
-							if (ChkEnableIK()) {
-								s_editmotionflag = IKOperateJointAxisDelta(buttonflagForIkFunc, deltax);
-							}
-						}
-						else if (g_edittarget == EDITTARGET_CAMERA) {
-							switch (s_ikkind) {
-							case IKKIND_ROTATE:
-								s_cameraeditkind = CAMERAANIMEDIT_ROT;
-								break;
-							case IKKIND_MOVE:
-								s_cameraeditkind = CAMERAANIMEDIT_MV;
-								break;
-							case IKKIND_SCALE:
-								s_cameraeditkind = CAMERAANIMEDIT_DIST;
-								break;
-							default:
-								_ASSERT(0);
-								s_cameraeditkind = CAMERAANIMEDIT_ROT;
-								break;
-							}
-							OnCameraAnimMouseMove(s_cameraeditkind, buttonflagForIkFunc, deltax);
-						}
-
-						s_befdeltax = deltax;
-						s_ikcnt++;
+				if (g_edittarget == EDITTARGET_MORPH) {
+					//::MessageBox(s_3dwnd, L"EdittingMorph mode now. \nClick red frog and change graph mode!",
+					//	L"Current mode is not for editing BoneMotion.", MB_OK);
+					OutputToInfoWnd(INFOCOLOR_WARNING, L"### EdittingMorph mode now. ###");
+					OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change graph mode! ###");
+				}
+				else if (g_edittarget == EDITTARGET_BONE) {
+					if (ChkEnableIK()) {
+						s_editmotionflag = IKOperateJointAxisDelta(buttonflagForIkFunc, deltax);
 					}
 				}
-				else if (g_previewFlag == 5) {
-					if (GetCurrentModel()) {
-						s_onragdollik = 3;
+				else if (g_edittarget == EDITTARGET_CAMERA) {
+					switch (s_ikkind) {
+					case IKKIND_ROTATE:
+						s_cameraeditkind = CAMERAANIMEDIT_ROT;
+						break;
+					case IKKIND_MOVE:
+						s_cameraeditkind = CAMERAANIMEDIT_MV;
+						break;
+					case IKKIND_SCALE:
+						s_cameraeditkind = CAMERAANIMEDIT_DIST;
+						break;
+					default:
+						_ASSERT(0);
+						s_cameraeditkind = CAMERAANIMEDIT_ROT;
+						break;
 					}
+					OnCameraAnimMouseMove(s_cameraeditkind, buttonflagForIkFunc, deltax);
 				}
+
+				s_befdeltax = deltax;
+				s_ikcnt++;
 			}
 		}
 

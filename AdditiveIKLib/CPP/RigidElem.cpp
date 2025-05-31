@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <math.h>
@@ -149,7 +149,7 @@ ChaMatrix CRigidElem::GetCapsulematForColiShape(bool limitdegflag, int calczerof
 {
 	//######################################################################################
 	//2023/01/18
-	//RigidBody‚ÌŒ`ó‚Ì•\Ž¦—p‚ÌŽp¨ŒvŽZ‚ðdir2xflag = true‚Ås‚¤@(ƒ‚[ƒVƒ‡ƒ“‚Æ‚ÍŽ²‚ªˆÙ‚È‚é)
+	//RigidBodyã®å½¢çŠ¶ã®è¡¨ç¤ºç”¨ã®å§¿å‹¢è¨ˆç®—ã‚’dir2xflag = trueã§è¡Œã†ã€€(ãƒ¢ãƒ¼ã‚·ãƒ§ãƒ³ã¨ã¯è»¸ãŒç•°ãªã‚‹)
 	//######################################################################################
 
 	ChaMatrix retmat;
@@ -161,24 +161,24 @@ ChaMatrix CRigidElem::GetCapsulematForColiShape(bool limitdegflag, int calczerof
 		//if (m_endbone->GetParModel() && m_endbone->GetParModel()->GetRokDeBoneUser()) {
 		//	//##########################################
 		//	//2025/05/31
-		//	//RokDeBone2‚ÌNodeMat‚ÍIdentity‚È‚Ì‚Å
-		//	//XŽ²‚ð‚ ‚í‚¹‚Ä‚ ‚°‚é•K—v—L
+		//	//RokDeBone2ã®NodeMatã¯Identityãªã®ã§
+		//	//Xè»¸ã‚’ã‚ã‚ã›ã¦ã‚ã’ã‚‹å¿…è¦æœ‰
 		//	//#########################################
 		//	dir2xflag = true;
 		//}
 		//else {
 		//	//##########################################
 		//	//2025/05/31
-		//	//NodeMat‚É‚æ‚èXŽ²‚ÌŒü‚«‚Í‡‚Á‚Ä‚¢‚é‚à‚Ì‚Æ‚·‚é
-		//	//XŽ²‡‚í‚¹‚Í‚µ‚È‚¢
+		//	//NodeMatã«ã‚ˆã‚ŠXè»¸ã®å‘ãã¯åˆã£ã¦ã„ã‚‹ã‚‚ã®ã¨ã™ã‚‹
+		//	//Xè»¸åˆã‚ã›ã¯ã—ãªã„
 		//	//##########################################
 		//	dir2xflag = false;
 		//}
 
 
 		//2025/05/31 1.0.0.46 RC2
-		//VRoid‚É‚¨‚¢‚Ä‘Ì‚Ì¶‰E‚ÅXŽ²‚ÌŒü‚«‚ªˆÙ‚È‚éê‡‚ª‚ ‚èA‚»‚Ì‚Ü‚Ü‚¾‚Æ„‘Ì‚ª”½‘ÎŒü‚«‚ðŒü‚­
-		//‚æ‚Á‚ÄGetRokDeBoneUser() == FALSE‚Ìê‡‚É‚àdir2xflag‚Ítrue‚Æ‚·‚é
+		//VRoidã«ãŠã„ã¦ä½“ã®å·¦å³ã§Xè»¸ã®å‘ããŒç•°ãªã‚‹å ´åˆãŒã‚ã‚Šã€ãã®ã¾ã¾ã ã¨å‰›ä½“ãŒåå¯¾å‘ãã‚’å‘ã
+		//ã‚ˆã£ã¦GetRokDeBoneUser() == FALSEã®å ´åˆã«ã‚‚dir2xflagã¯trueã¨ã™ã‚‹
 		bool dir2xflag = true;
 
 		m_endbone->GetParent(false)->CalcAxisMatX_RigidBody(limitdegflag, dir2xflag, 0, 
@@ -206,9 +206,9 @@ CRigidElem* CRigidElem::GetNewRigidElem()
 	curpoollen = (int)s_rigidelempool.size();
 
 
-	//if ((s_befheadno != (s_rigidelempool.size() - 1)) || (s_befelemno != (REPOOLBLKLEN - 1))) {//‘O‰ñƒŠƒŠ[ƒX‚µ‚½ƒ|ƒCƒ“ƒ^‚ªÅŒã”ö‚Å‚Í‚È‚¢ê‡
+	//if ((s_befheadno != (s_rigidelempool.size() - 1)) || (s_befelemno != (REPOOLBLKLEN - 1))) {//å‰å›žãƒªãƒªãƒ¼ã‚¹ã—ãŸãƒã‚¤ãƒ³ã‚¿ãŒæœ€å¾Œå°¾ã§ã¯ãªã„å ´åˆ
 
-	//‘O‰ñƒŠƒŠ[ƒX‚µ‚½ƒ|ƒCƒ“ƒ^‚ÌŽŸ‚Ìƒƒ“ƒo[‚ðƒ`ƒFƒbƒN‚µ‚Ä–¢Žg—p‚¾‚Á‚½‚çƒŠƒŠ[ƒX
+	//å‰å›žãƒªãƒªãƒ¼ã‚¹ã—ãŸãƒã‚¤ãƒ³ã‚¿ã®æ¬¡ã®ãƒ¡ãƒ³ãƒãƒ¼ã‚’ãƒã‚§ãƒƒã‚¯ã—ã¦æœªä½¿ç”¨ã ã£ãŸã‚‰ãƒªãƒªãƒ¼ã‚¹
 		int chkheadno;
 		chkheadno = s_befheadno;
 		int chkelemno;
@@ -241,7 +241,7 @@ CRigidElem* CRigidElem::GetNewRigidElem()
 		}
 
 		//if ((chkheadno >= 0) && (chkheadno < curpoollen)) {
-			//ƒv[ƒ‹‚ðæ“ª‚©‚çŒŸõ‚µ‚Ä–¢Žg—p‚ª‚Ý‚Â‚©‚ê‚Î‚»‚ê‚ðƒŠƒŠ[ƒX
+			//ãƒ—ãƒ¼ãƒ«ã‚’å…ˆé ­ã‹ã‚‰æ¤œç´¢ã—ã¦æœªä½¿ç”¨ãŒã¿ã¤ã‹ã‚Œã°ãã‚Œã‚’ãƒªãƒªãƒ¼ã‚¹
 		int rigidelemno;
 		for (rigidelemno = 0; rigidelemno < curpoollen; rigidelemno++) {
 			CRigidElem* currigidelemhead = s_rigidelempool[rigidelemno];
@@ -268,7 +268,7 @@ CRigidElem* CRigidElem::GetNewRigidElem()
 		//}
 	//}
 
-	//–¢Žg—prigidelem‚ªpool‚É–³‚©‚Á‚½ê‡AƒAƒƒP[ƒg‚µ‚ÄƒAƒƒP[ƒg‚µ‚½æ“ª‚Ìƒ|ƒCƒ“ƒ^‚ðƒŠƒŠ[ƒX
+	//æœªä½¿ç”¨rigidelemãŒpoolã«ç„¡ã‹ã£ãŸå ´åˆã€ã‚¢ãƒ­ã‚±ãƒ¼ãƒˆã—ã¦ã‚¢ãƒ­ã‚±ãƒ¼ãƒˆã—ãŸå…ˆé ­ã®ãƒã‚¤ãƒ³ã‚¿ã‚’ãƒªãƒªãƒ¼ã‚¹
 	CRigidElem* allocrigidelem;
 	allocrigidelem = new CRigidElem[REPOOLBLKLEN];
 	if (!allocrigidelem) {
@@ -305,7 +305,7 @@ CRigidElem* CRigidElem::GetNewRigidElem()
 			return 0;
 		}
 	}
-	s_rigidelempool.push_back(allocrigidelem);//allocate block(ƒAƒƒP[ƒgŽž‚Ìæ“ªƒ|ƒCƒ“ƒ^)‚ðŠi”[
+	s_rigidelempool.push_back(allocrigidelem);//allocate block(ã‚¢ãƒ­ã‚±ãƒ¼ãƒˆæ™‚ã®å…ˆé ­ãƒã‚¤ãƒ³ã‚¿)ã‚’æ ¼ç´
 
 	allocrigidelem->SetUseFlag(1);
 
