@@ -764,6 +764,7 @@ static bool s_BrushMirrorVCheckBoxFlag = false;//UTDialogの
 static bool s_IfMirrorVDiv2CheckBoxFlag = false;//UTDialogの
 static bool s_LimitDegCheckBoxFlag = false;//UTDialogの
 static bool s_WallScrapingCheckBoxFlag = false;//UTDialogの
+static bool s_IkKindSpriteFlag = false;
 
 typedef struct tag_enumdist
 {
@@ -2631,6 +2632,7 @@ static int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu);
 static int OnChangeModel(CModel* selmodel, bool forceflag, bool callundo);
 static int OnChangeModel(int selindex, bool forceflag, bool callundo);
 static int OnChangePreviewMOA();
+static int OnChangeIKKind(bool callfromUndo);
 static int SetTimelineHasRigFlag();
 static int OnREMenu(int selindex, int callbymenu);
 static int OnRgdMenu(int selindex, int callbymenu);
@@ -4355,6 +4357,7 @@ void InitApp()
 	s_IfMirrorVDiv2CheckBoxFlag = false;//UTDialogの
 	s_LimitDegCheckBoxFlag = false;
 	s_WallScrapingCheckBoxFlag = false;
+	s_IkKindSpriteFlag = false;
 
 	//s_totalmb.center.SetParams(0.0f, 0.0f, 0.0f);
 	//s_totalmb.max.SetParams(5.0f, 5.0f, 5.0f);
@@ -6688,6 +6691,7 @@ void PrepairUndo_BlendShape(CBlendShapeElem srcblendshapeelem)
 	brushstate.motionbrush_method = g_motionbrush_method;
 	brushstate.wallscrapingikflag = g_wallscrapingikflag;
 	brushstate.brushrepeats = g_brushrepeats;
+	brushstate.ikkind = s_ikkind;//2025/05/31
 
 	UNDOCAMERA undocamera;
 	undocamera.Init();
@@ -6763,6 +6767,7 @@ void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel)
 	brushstate.motionbrush_method = g_motionbrush_method;
 	brushstate.wallscrapingikflag = g_wallscrapingikflag;
 	brushstate.brushrepeats = g_brushrepeats;
+	brushstate.ikkind = s_ikkind;//2025/05/31
 
 	UNDOCAMERA undocamera;
 	undocamera.Init();
@@ -6838,6 +6843,7 @@ void PrepairUndo()
 			brushstate.motionbrush_method = g_motionbrush_method;
 			brushstate.wallscrapingikflag = g_wallscrapingikflag;
 			brushstate.brushrepeats = g_brushrepeats;
+			brushstate.ikkind = s_ikkind;//2025/05/31
 
 			UNDOCAMERA undocamera;
 			undocamera.Init();
@@ -8003,30 +8009,15 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				pickikmodeflag = PickSpIkModeSW(ptCursor);
 				if (pickikmodeflag == 1) {
 					s_ikkind = IKKIND_ROTATE;
-					s_spikmodesw[0].state = true;
-					s_spikmodesw[1].state = false;
-					s_spikmodesw[2].state = false;
-					SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
-					refreshEulerGraph();
-					pickflag = true;
+					OnChangeIKKind(false);
 				}
 				else if (pickikmodeflag == 2) {
 					s_ikkind = IKKIND_MOVE;
-					s_spikmodesw[0].state = false;
-					s_spikmodesw[1].state = true;
-					s_spikmodesw[2].state = false;
-					SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
-					refreshEulerGraph();
-					pickflag = true;
+					OnChangeIKKind(false);
 				}
 				else if (pickikmodeflag == 3) {
 					s_ikkind = IKKIND_SCALE;
-					s_spikmodesw[0].state = false;
-					s_spikmodesw[1].state = false;
-					s_spikmodesw[2].state = true;
-					SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
-					refreshEulerGraph();
-					pickflag = true;
+					OnChangeIKKind(false);
 				}
 			}
 			if (pickflag == false) {
@@ -13144,6 +13135,38 @@ int OnChangePreviewMOA()
 	return 0;
 }
 
+int OnChangeIKKind(bool callfromUndo)
+{
+	switch (s_ikkind) {
+	case IKKIND_ROTATE:
+		s_spikmodesw[0].state = true;
+		s_spikmodesw[1].state = false;
+		s_spikmodesw[2].state = false;
+		break;
+	case IKKIND_MOVE:
+		s_spikmodesw[0].state = false;
+		s_spikmodesw[1].state = true;
+		s_spikmodesw[2].state = false;
+		break;
+	case IKKIND_SCALE:
+		s_spikmodesw[0].state = false;
+		s_spikmodesw[1].state = false;
+		s_spikmodesw[2].state = true;
+		break;
+	default:
+		_ASSERT(0);
+		break;
+	}
+	SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
+	refreshEulerGraph();
+
+	if (callfromUndo == false) {
+		s_IkKindSpriteFlag = true;//PrepairUndo()が呼ばれる
+	}
+
+	return 0;
+}
+
 
 int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 {
@@ -15435,7 +15458,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.45\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.46\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -24934,29 +24957,7 @@ int OnFrameKeyboard()
 			if (s_ikkind >= IKKIND_MAX) {
 				s_ikkind = IKKIND_ROTATE;
 			}
-
-			switch (s_ikkind) {
-			case IKKIND_ROTATE:
-				s_spikmodesw[0].state = true;
-				s_spikmodesw[1].state = false;
-				s_spikmodesw[2].state = false;
-				break;
-			case IKKIND_MOVE:
-				s_spikmodesw[0].state = false;
-				s_spikmodesw[1].state = true;
-				s_spikmodesw[2].state = false;
-				break;
-			case IKKIND_SCALE:
-				s_spikmodesw[0].state = false;
-				s_spikmodesw[1].state = false;
-				s_spikmodesw[2].state = true;
-				break;
-			default:
-				_ASSERT(0);
-				break;
-			}
-			SetLTimelineMark(s_curboneno);//グラフの操作ジョイント名表示も
-			refreshEulerGraph();
+			OnChangeIKKind(false);
 		}
 		
 		//TourBox
@@ -25299,6 +25300,11 @@ int OnFrameUtCheckBox()
 		}
 		s_limiteuldlg.SetBefLimitDegFlag(g_limitdegflag);
 		s_LimitDegCheckBoxFlag = false;
+	}
+
+	if (s_IkKindSpriteFlag) {
+		PrepairUndo();
+		s_IkKindSpriteFlag = false;
 	}
 
 
@@ -41747,6 +41753,9 @@ void RollbackBrushState(BRUSHSTATE srcbrushstate)
 	g_motionbrush_method = srcbrushstate.motionbrush_method;
 	g_wallscrapingikflag = srcbrushstate.wallscrapingikflag;
 	g_brushrepeats = srcbrushstate.brushrepeats;
+
+	s_ikkind = srcbrushstate.ikkind;//2025/05/31
+	OnChangeIKKind(true);//2025/05/31
 
 	//if (s_BrushMirrorUCheckBox) {
 	//	s_BrushMirrorUCheckBox->SetChecked((bool)g_brushmirrorUflag);

@@ -1342,6 +1342,7 @@ typedef struct tag_brushstate
 	int brushmirrorVflag;
 	int ifmirrorVDiv2flag;
 	int brushrepeats;
+	int ikkind;
 
 	void Init() {
 		motionbrush_method = 0;
@@ -1351,6 +1352,7 @@ typedef struct tag_brushstate
 		brushmirrorVflag = 0;
 		ifmirrorVDiv2flag = 0;
 		brushrepeats = 1;
+		ikkind = IKKIND_ROTATE;
 	};
 
 	tag_brushstate()

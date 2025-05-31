@@ -1015,7 +1015,8 @@ public:
 	int ResetBt();
 
 	int InitUndoMotion( int saveflag );
-	int SaveUndoMotion(UNDOSELECT srcundoselect, bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno,
+	int SaveUndoMotion(UNDOSELECT srcundoselect, 
+		bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno,
 		int srcedittarget, CEditRange* srcer, double srcapplyrate, 
 		BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, 
 		CBlendShapeElem srcblendshapeelem, bool allframeflag);

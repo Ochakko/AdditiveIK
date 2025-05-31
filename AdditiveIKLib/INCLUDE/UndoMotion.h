@@ -130,7 +130,8 @@ public:
 	~CUndoMotion();
 
 	int ClearData();
-	int SaveUndoMotion(UNDOSELECT srcundoselect, bool LimitDegCheckBoxFlag, bool limitdegflag, CModel* pmodel, 
+	int SaveUndoMotion(UNDOSELECT srcundoselect, 
+		bool LimitDegCheckBoxFlag, bool limitdegflag, CModel* pmodel, 
 		int selectedboneno, int curbaseno,
 		int srcedittarget,//アプリケーションのedittargetモード
 		bool undocameraflag,//カメラアニメのUndoとして呼び出す場合にtrue

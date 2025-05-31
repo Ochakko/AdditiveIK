@@ -19389,7 +19389,8 @@ int CModel::SaveUndoBlendShapeMotion(
 
 	return 0;
 }
-int CModel::SaveUndoMotion(UNDOSELECT srcundoselect, bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno, 
+int CModel::SaveUndoMotion(UNDOSELECT srcundoselect, 
+	bool LimitDegCheckBoxFlag, bool limitdegflag, int curboneno, int curbaseno, 
 	int srcedittarget, CEditRange* srcer,
 	double srcapplyrate, 
 	BRUSHSTATE srcbrushstate, UNDOCAMERA srcundocamera, 
@@ -19413,7 +19414,8 @@ int CModel::SaveUndoMotion(UNDOSELECT srcundoselect, bool LimitDegCheckBoxFlag, 
 
 	//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
 	bool undocameraflag1 = false;
-	int result1 = m_undomotion[m_undo_writepoint].SaveUndoMotion(srcundoselect, LimitDegCheckBoxFlag, limitdegflag, 
+	int result1 = m_undomotion[m_undo_writepoint].SaveUndoMotion(srcundoselect, 
+		LimitDegCheckBoxFlag, limitdegflag, 
 		this,//!!!!!!!
 		GetSelectedBoneNo(), curbaseno, 
 		srcedittarget,
@@ -19428,7 +19430,8 @@ int CModel::SaveUndoMotion(UNDOSELECT srcundoselect, bool LimitDegCheckBoxFlag, 
 		bool limitdegcamera = false;
 		int selectedcameraboneno = 0;
 		int curbasenocamera = 0;
-		result2 = m_undocamera[m_undo_writepoint].SaveUndoMotion(srcundoselect, limitdegchkbox, limitdegcamera, 
+		result2 = m_undocamera[m_undo_writepoint].SaveUndoMotion(srcundoselect, 
+			limitdegchkbox, limitdegcamera, 
 			srcundocamera.cameramodel,//!!!!!!
 			selectedcameraboneno, curbasenocamera,
 			srcedittarget,
