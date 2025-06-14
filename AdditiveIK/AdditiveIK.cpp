@@ -9296,7 +9296,10 @@ int OpenREFile()
 	}
 
 	CRigidElemFile refile;
-	CallF(refile.LoadRigidElemFile(g_tmpmqopath, GetCurrentModel()), return 1);
+	int result1 = refile.LoadRigidElemFile(g_tmpmqopath, GetCurrentModel());
+	if (result1 != 0) {
+		return result1;
+	}
 
 
 	int renum = GetCurrentModel()->GetRigidElemInfoSize();
@@ -10865,8 +10868,23 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 					chkret = OpenREFile();
 					_ASSERT(chkret == 0);
 
-
 					wcscpy_s(g_tmpmqopath, MAX_PATH, savetmpmqopath);
+
+
+					if (chkret != 0) {//20250614
+						GetCurrentModel()->CreateRigidElem(nullptr, 1, nullptr, 0);
+
+						//m_reindexmap[m_model]
+						int renum = GetCurrentModel()->GetRigidElemInfoSize();
+						if (renum > 0) {
+							OnREMenu(renum - 1, 0);
+							OnRgdMenu(renum - 1, 0);
+						}
+						else {
+							OnREMenu(-1, 0);
+							OnRgdMenu(-1, 0);
+						}
+					}
 				}
 			}
 		}
@@ -35272,7 +35290,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.46 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.47 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -38781,7 +38799,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.46 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.47 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && s_chascene) {

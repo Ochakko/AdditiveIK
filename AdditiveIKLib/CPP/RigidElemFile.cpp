@@ -241,6 +241,7 @@ int CRigidElemFile::LoadRigidElemFile( WCHAR* strpath, CModel* srcmodel )
 	ZeroMemory( mfilename, sizeof( char ) * MAX_PATH );
 	WideCharToMultiByte( CP_ACP, 0, wfilename, -1, mfilename, MAX_PATH, NULL, NULL );
 
+
 	BOOL bexist;
 	bexist = PathFileExists(strpath);
 	if (!bexist)
@@ -259,12 +260,10 @@ int CRigidElemFile::LoadRigidElemFile( WCHAR* strpath, CModel* srcmodel )
 	CallF( SetBuffer(), return 1 );
 
 
-
-
 	m_rename = mfilename;
 	CBone* topbone = srcmodel->GetTopBone(false);
 	if( topbone ){
-		srcmodel->CreateRigidElemReq(topbone, 1, m_rename, 0, srcmodel->GetDefaultImpName());
+		srcmodel->CreateRigidElem(m_rename.c_str(), 1, srcmodel->GetDefaultImpName(), 0);
 		//CreateBtObjectReq(NULL, startbone, startbone->GetChild());
 	}
 
@@ -275,32 +274,32 @@ int CRigidElemFile::LoadRigidElemFile( WCHAR* strpath, CModel* srcmodel )
 
 	int posstep = 0;
 	float scbtg = 0.0f;
-	int getscbtg;
-	getscbtg = Read_Float( &m_xmliobuf, "<SCBTG>", "</SCBTG>", &scbtg );
+	int getscbtg = 1;
+	getscbtg = Read_Float(&m_xmliobuf, "<SCBTG>", "</SCBTG>", &scbtg);
 	if( getscbtg == 0 ){
 		reinfo.btgscale = scbtg;
 	}else{
 		reinfo.btgscale = 1.0f;
 	}
 
-
 	int findflag = 1;
-	while( findflag ){
+	while (findflag) {
 		XMLIOBUF bonebuf;
-		ZeroMemory( &bonebuf, sizeof( XMLIOBUF ) );
+		ZeroMemory(&bonebuf, sizeof(XMLIOBUF));
 		int ret;
-		ret = SetXmlIOBuf( &m_xmliobuf, "<Bone>", "</Bone>", &bonebuf );
-		if( ret == 0 ){
-			CallF( ReadBone( &bonebuf ), return 1 );
-		}else{
+		ret = SetXmlIOBuf(&m_xmliobuf, "<Bone>", "</Bone>", &bonebuf);
+		if (ret == 0) {
+			CallF(ReadBone(&bonebuf), return 1);
+		}
+		else {
 			findflag = 0;
 		}
 	}
 
 	srcmodel->PushBackRigidElemInfo( reinfo );
 
-	int reinfoindex = srcmodel->GetRigidElemInfoSize() - 1;
-	srcmodel->SetCurrentRigidElem( reinfoindex );
+	int reinfoindex;
+	srcmodel->GetCurrentRigidElemInfo(&reinfoindex);
 
 	srcmodel->SetBtGScale(scbtg, reinfoindex);//CModel::m_rigideleminfoへのaddが済んでから。
 	srcmodel->SetBtObjectVec();//2024/06/16

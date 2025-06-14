@@ -3124,7 +3124,7 @@ int CBone::CreateRigidElem( CBone* parentbone, int reflag, std::string rename, i
 		newre->SetBone(parentbone);
 		newre->SetEndbone(this);
 		SetGroupNoByName(newre, this);
-		parentbone->SetRigidElemOfMap(rename, this, newre);
+		parentbone->SetRigidElemOfMap(rename, this, newre);//SetRigidElemOfMap内でrenameに対応する古いrigidelemをinvalidateしてからセットする
 	}
 
 //////////////
@@ -3148,36 +3148,107 @@ int CBone::CreateRigidElem( CBone* parentbone, int reflag, std::string rename, i
 	return 0;
 }
 
-int CBone::SetGroupNoByName( CRigidElem* curre, CBone* childbone )
+int CBone::SetGroupNoByName(CRigidElem* curre, CBone* childbone)
 {
+	if (!curre || !childbone) {
+		_ASSERT(0);
+		return 1;
+	}
+
 	//2023/04/28
 	if (IsNotSkeleton()) {
 		return 0;
 	}
 
+	int bonenamelen = (int)strlen(childbone->m_bonename);
+	char uppername[1024] = { 0 };
+	if ((bonenamelen > 2) && (bonenamelen < 1024)) {
+		strcpy_s(uppername, 1024, childbone->m_bonename);
+		CharUpperA(uppername);
 
-	char* groupmark = strstr( childbone->m_bonename, "_G_" );
-	if( groupmark ){
-		char* numstart = groupmark + 3;
-		char* numend = strstr( numstart, "_" );
-		if( numend ){
-			int numleng = (int)(numend - numstart);
-			if( (numleng > 0) && (numleng <= 2) ){
-				char strnum[5];
-				ZeroMemory( strnum, sizeof( char ) * 5 );
-				strncpy_s( strnum, 5, numstart, numleng );
-				int gno = (int)atoi( strnum );
-				if( (gno >= 1) && (gno <= COLIGROUPNUM) ){
-					curre->SetGroupid( gno ); 
+		char* groupmark = strstr(uppername, "_G_");
+		if (groupmark) {
+			char* numstart = groupmark + 3;
+			char* numend = strstr(numstart, "_");
+			if (numend) {
+				int numleng = (int)(numend - numstart);
+				if ((numleng > 0) && (numleng <= 2)) {
+					char strnum[5];
+					ZeroMemory(strnum, sizeof(char) * 5);
+					strncpy_s(strnum, 5, numstart, numleng);
+					int gno = (int)atoi(strnum);
+					if ((gno >= 1) && (gno <= COLIGROUPNUM)) {
+						curre->SetGroupid(gno);
+					}
 				}
 			}
 		}
-	}
-	int cmpbt = strncmp( childbone->m_bonename, "BT_", 3 );
-	if( cmpbt == 0 ){
-		m_btforce = 1;
-	}
+		else if (strstr(uppername, "CLOTH") != nullptr) {
+			curre->SetGroupid(4);//2^bitno
+			curre->ClearColiids();
+			curre->PushBackColiids(2);//bitno+1
+			curre->PushBackColiids(4);//bitno+1
+			curre->PushBackColiids(5);//bitno+1
+			curre->PushBackColiids(6);//bitno+1
+			curre->PushBackColiids(7);//bitno+1
+		}
+		else if (strstr(uppername, "HAIR") != nullptr) {
+			curre->SetGroupid(8);//2^bitno
+			curre->ClearColiids();
+			curre->PushBackColiids(2);//bitno+1
+			curre->PushBackColiids(3);//bitno+1
+			curre->PushBackColiids(5);//bitno+1
+			curre->PushBackColiids(6);//bitno+1
+			curre->PushBackColiids(7);//bitno+1
+		}
+		else if (strstr(uppername, "PLATE") != nullptr) {
+			curre->SetGroupid(16);//2^bitno
+			curre->ClearColiids();
+			curre->PushBackColiids(2);//bitno+1
+			curre->PushBackColiids(3);//bitno+1
+			curre->PushBackColiids(4);//bitno+1
+			curre->PushBackColiids(6);//bitno+1
+			curre->PushBackColiids(7);//bitno+1
+		}
+		else if (strstr(uppername, "TAIL") != nullptr) {
+			curre->SetGroupid(32);//2^bitno
+			curre->ClearColiids();
+			curre->PushBackColiids(2);//bitno+1
+			curre->PushBackColiids(3);//bitno+1
+			curre->PushBackColiids(4);//bitno+1
+			curre->PushBackColiids(5);//bitno+1
+			curre->PushBackColiids(7);//bitno+1
+		}
+		else if (strstr(uppername, "SKIRT") != nullptr) {
+			curre->SetGroupid(64);//2^bitno
+			curre->ClearColiids();
+			curre->PushBackColiids(2);//bitno+1
+			curre->PushBackColiids(3);//bitno+1
+			curre->PushBackColiids(4);//bitno+1
+			curre->PushBackColiids(5);//bitno+1
+			curre->PushBackColiids(6);//bitno+1
+		}
+		else {
+			curre->SetGroupid(2);//2^bitno
+			curre->ClearColiids();
+			curre->PushBackColiids(3);//bitno+1
+			curre->PushBackColiids(4);//bitno+1
+			curre->PushBackColiids(5);//bitno+1
+			curre->PushBackColiids(6);//bitno+1
+			curre->PushBackColiids(7);//bitno+1
+		}
 
+
+		int cmpbt = strncmp(uppername, "BT_", 3);
+		if (cmpbt == 0) {
+			m_btforce = 1;
+		}
+	}
+	else {
+		_ASSERT(0);
+		curre->SetGroupid(2);
+		curre->ClearColiids();
+	}
 	return 0;
 }
 

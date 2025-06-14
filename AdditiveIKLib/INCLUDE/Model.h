@@ -999,10 +999,9 @@ public:
 
 	//int SetRagdollKinFlag(int selectbone, int physicsmvkind = 0);
 	int SetKinematicFlag();
-	int CreateRigidElem();
+	int CreateRigidElem(const char* rename, int refflag, const char* impname, int impflag);
 	int SetCurrentRigidElem( int curindex );
 	REINFO GetCurrentRigidElemInfo(int* retindex);
-	void CreateRigidElemReq( CBone* curbone, int reflag, std::string rename, int impflag, std::string impname );
 	int SetBtEquilibriumPoint(bool limitdegflag);
 	int SetBtEquilibriumPointReq(bool limitdegflag, CBtObject* srcbto);
 	void SetDofRotAxisReq(CBtObject* srcbto, int srcaxiskind);
@@ -1239,6 +1238,8 @@ private:
 	int InitParams();
 	int DestroyObjs();
 
+	void CreateRigidElemReq(CBone* curbone, int reflag, std::string rename, int impflag, std::string impname);
+
 	MODELBOUND CalcBoneBound();
 	int AddModelBound( MODELBOUND* mb, MODELBOUND* addmb );
 	int CreateChkInView();
@@ -1293,6 +1294,7 @@ private:
 	//int InitFBXManager( FbxManager** ppSdkManager, FbxImporter** ppImporter, FbxScene** ppScene, char* utfname );
 	void CreateFBXCameraReq(FbxNode* pNode);
 	int CreateFBXMeshReq(FbxNode* pNode);
+	int TriangulateMeshReq(FbxNode* pNode);//2025/06/08
 	void CreateNodeOnLoadReq(CNodeOnLoad* newnodeonload);
 	void DestroyNodeOnLoadReq(CNodeOnLoad* delnodeonload);
 
@@ -1847,7 +1849,9 @@ public: //accesser
 			return m_rigideleminfo[srcindex].btgscale;
 		}
 		else{
-			_ASSERT(0);
+			if(srcindex != 0){
+				_ASSERT(0);
+			}
 			return 0.0f;
 		}
 	};

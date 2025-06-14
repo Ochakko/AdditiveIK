@@ -214,10 +214,9 @@ int CImpFile::LoadImpFile( WCHAR* strpath, CModel* srcmodel )
 
 	CallF( SetBuffer(), return 1 );
 
-
 	CBone* topbone = srcmodel->GetTopBone(false);
 	if( topbone ){
-		srcmodel->CreateRigidElemReq( topbone, 0, srcmodel->GetDefaultReName(), 1, m_strimp );
+		srcmodel->CreateRigidElem(srcmodel->GetDefaultReName(), 0, m_strimp.c_str(), 1);
 	}
 
 	int posstep = 0;

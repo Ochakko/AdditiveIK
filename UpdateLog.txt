@@ -2,6 +2,20 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/06/14
+　物理シミュ用剛体処理の修正
+　　
+　　剛体作成に関するリファクタリング
+　　　剛体作成結果格納処理など修正
+　　
+　　剛体衝突判定用のビット番号に関する修正
+　　　剛体を初めて作成する場合の衝突判定設定を変更
+　　　　ボーン名にCLOTH, HAIR, PLATE, TAIL, SKIRTが含まれている場合の衝突判定対象を初期値として設定
+　　　　完全な設定ではありませんが、デフォルトで大まかに済む感じです
+　　　　設定をやり直したい場合は、(fbx名).refファイルの名前をリネームしてからプロジェクトを読み込み、
+　　　　RigidメニューでValid/Invalidにチェック後ToAllボタンを押下. 揺らしたいボーンを選択してRigidBodySimulationチェックボックスにチェック
+　　　　
+　　　　
 2025/05/31
 　AdditiveIK 1.0.0.46 release
 　　1.0.0.45からの変更点

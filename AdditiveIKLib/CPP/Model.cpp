@@ -1206,11 +1206,14 @@ int CModel::LoadFBX(int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, cons
 	}
 
 
+	//FbxNode *pRootNode0 = pScene->GetRootNode();
+	//TriangulateMeshReq(pRootNode0);//2025/06/08
 
 
 	m_bone2node.clear();
-	FbxNode *pRootNode = pScene->GetRootNode();
 	m_topbone = 0;
+	FbxNode* pRootNode = pScene->GetRootNode();
+
 
 
 	CreateFBXBoneReq(pScene, pRootNode, 0);
@@ -1288,6 +1291,7 @@ _ASSERT(m_bonelist[0]);
 		CreateRetargetThreads();
 		CreateInitMpThreads();
 	}
+
 
 
 	ChaMatrix firstmeshmat;
@@ -1461,21 +1465,10 @@ _ASSERT(m_bonelist[0]);
 		m_impinfo.clear();
 
 		if (skipdefref == 0) {
-			REINFO reinfo;
-			::ZeroMemory(&reinfo, sizeof(REINFO));
-			strcpy_s(reinfo.filename, MAX_PATH, m_defaultrename);
-			reinfo.btgscale = 9.07f;
-			m_rigideleminfo.push_back(reinfo);
-			m_impinfo.push_back(m_defaultimpname);
-
 			//if (GetTopBone()) {
 			if (GetNoBoneFlag() == false) {
-				CreateRigidElemReq(GetTopBone(false), 1, m_defaultrename, 1, m_defaultimpname);
-				SetCurrentRigidElem(0);
+				CreateRigidElem(m_defaultrename, 1, m_defaultimpname, 1);
 			}
-
-			m_curreindex = 0;
-			m_curimpindex = 0;
 		}
 	}
 
@@ -4945,6 +4938,36 @@ void CModel::CreateFBXCameraReq(FbxNode* pNode)
 }
 
 
+//int CModel::TriangulateMeshReq(FbxNode* pNode)
+//{
+//	if (!pNode) {
+//		return 0;
+//	}
+//
+//	FbxNodeAttribute* pAttrib = pNode->GetNodeAttribute();
+//	if (pAttrib) {
+//		
+//		FbxNodeAttribute::EType type = (FbxNodeAttribute::EType)(pAttrib->GetAttributeType());
+//		if(type == FbxNodeAttribute::eMesh)
+//		{	
+//			FbxGeometryConverter lConverter(pNode->GetFbxManager());
+//			lConverter.Triangulate(pAttrib, true, true);
+//		}
+//
+//		int childNodeNum;
+//		childNodeNum = pNode->GetChildCount();
+//		for (int i = 0; i < childNodeNum; i++)
+//		{
+//			FbxNode* pChild = pNode->GetChild(i);  // 子ノードを取得
+//			if (pChild) {
+//				TriangulateMeshReq(pChild);
+//			}
+//		}
+//	}
+//
+//	return 0;
+//}
+
 
 int CModel::CreateFBXMeshReq( FbxNode* pNode)
 {
@@ -4957,8 +4980,7 @@ int CModel::CreateFBXMeshReq( FbxNode* pNode)
 	FbxNodeAttribute *pAttrib = pNode->GetNodeAttribute();
 	if ( pAttrib ) {
 		FbxNodeAttribute::EType type = (FbxNodeAttribute::EType)(pAttrib->GetAttributeType());
-        //FbxGeometryConverter lConverter(pNode->GetFbxManager());
-
+		
 		//char mes[256];
 
 		int shapecnt;
@@ -5027,6 +5049,7 @@ int CModel::CreateFBXMeshReq( FbxNode* pNode)
 				//	}
 
 				//}
+				//lConverter.TriangulateInPlace(pNode);
 
 				newobj = GetFBXMesh(pNode, pAttrib);     // メッシュを作成
 				if (newobj){
@@ -5277,7 +5300,9 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 	}
 
 	FbxMesh *pMesh = (FbxMesh*)pAttrib;
-	if (strcmp("RootNode", pAttrib->GetName()) == 0){
+	char attribname0[1024] = { 0 };
+	strcpy_s(attribname0, 1024, pAttrib->GetName());
+	if (strcmp("RootNode", attribname0) == 0){
 		_ASSERT(0);
 		return 0;
 	}
@@ -11067,16 +11092,50 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto,
 //	}
 //}
 
-int CModel::CreateRigidElem()
+int CModel::CreateRigidElem(const char* rename, int refflag, const char* impname, int impflag)
 {
-	if (GetTopBone()) {
-		//CreateRigidElemReq(m_topbone, 1, m_defaultrename, 1, m_defaultimpname);
-		CreateRigidElemReq(GetTopBone(false), 1, m_defaultrename, 0, m_defaultimpname);
+
+	const char* setrename;
+	if (rename) {
+		setrename = rename;
+	}
+	else {
+		setrename = m_defaultrename;
 	}
 
-	//SetCurrentRigidElem(0);
-	m_curreindex = 0;
-	m_curimpindex = 0;
+	const char* setimpname;
+	if (impname) {
+		setimpname = impname;
+	}
+	else {
+		setimpname = m_defaultimpname;
+	}
+
+
+	if (GetTopBone()) {
+		CreateRigidElemReq(GetTopBone(false), refflag, setrename, impflag, setimpname);
+	}
+
+	if (refflag) {
+		m_curreindex = GetRigidElemInfoSize();
+	}
+	if (impflag) {
+		m_curimpindex = GetImpInfoSize();
+	}
+
+
+	//2025/06/14
+	REINFO reinfo;
+	::ZeroMemory(&reinfo, sizeof(REINFO));
+	strcpy_s(reinfo.filename, MAX_PATH, m_defaultrename);
+	reinfo.btgscale = 9.07f;
+	m_rigideleminfo.push_back(reinfo);
+	m_impinfo.push_back(m_defaultimpname);
+	
+	//2025/06/14
+	SetRigidElemInfo(m_curreindex, reinfo);//!!!!!
+	SetCurrentRigidElem(m_curreindex);
+
 
 	return 0;
 }

@@ -100,11 +100,12 @@ public: //accesser
 
 	int GetColiidsSize(){ return (int)m_coliids.size(); };
 	int GetColiids( int srcindex ){ return m_coliids[ srcindex ]; };
+	void ClearColiids() { m_coliids.clear(); };
 	void PushBackColiids( int srcid ){ m_coliids.push_back( srcid ); };
 	//void CopyColiids(CRigidElem* srcre) { m_coliids = srcre->m_coliids; SetMyselfflag(srcre->GetMyselfflag()); };
-	void CopyColiids(CRigidElem* srcre) { m_coliids = srcre->m_coliids; };
-	void CopyColiids( std::vector<int>& srcids ){ m_coliids = srcids; };
-	void CopyColiids2Dstvec( std::vector<int>& dstids ){ dstids = m_coliids; };
+	void CopyColiids(CRigidElem* srcre) { m_coliids.clear();  m_coliids = srcre->m_coliids; };
+	void CopyColiids( std::vector<int>& srcids ){ m_coliids.clear(); m_coliids = srcids; };
+	void CopyColiids2Dstvec(std::vector<int>& dstids) { dstids.clear();  dstids = m_coliids; };
 
 
 
