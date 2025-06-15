@@ -212,8 +212,13 @@ btRigidBody* CBtObject::localCreateRigidBody( CRigidElem* curre, const btTransfo
 			coliid = curre->GetColiID();
 		}
 
-
-		m_btWorld->addRigidBody(body, myid, coliid);
+		if (!curre->GetSkipflag()) {
+			m_btWorld->addRigidBody(body, myid, coliid);
+		}
+		else {
+			//skipflagが立っている場合には　衝突判定しない
+			m_btWorld->addRigidBody(body, 65536, 0);
+		}
 	}
 	else{
 		bool isDynamic = false;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -242,8 +247,13 @@ btRigidBody* CBtObject::localCreateRigidBody( CRigidElem* curre, const btTransfo
 		int myid = 1;
 		int coliid = 0;
 
-		m_btWorld->addRigidBody(body, myid, coliid);
-
+		if (!curre->GetSkipflag()) {
+			m_btWorld->addRigidBody(body, myid, coliid);
+		}
+		else {
+			//skipflagが立っている場合には　衝突判定しない
+			m_btWorld->addRigidBody(body, 65536, 0);
+		}
 	}
 	return body;
 }
