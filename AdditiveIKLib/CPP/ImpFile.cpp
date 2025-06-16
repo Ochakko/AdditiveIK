@@ -242,9 +242,10 @@ int CImpFile::LoadImpFile( WCHAR* strpath, CModel* srcmodel )
 		}
 	}
 
-
-	srcmodel->PushBackImpInfo( mfilename );
-	srcmodel->SetCurImpIndex( srcmodel->GetImpInfoSize() - 1 );
+	int newindex = srcmodel->CalcNewImpInfoIndexByName(mfilename);
+	if (newindex >= 0) {
+		srcmodel->SetCurImpIndex(newindex);
+	}
 
 	return 0;
 }

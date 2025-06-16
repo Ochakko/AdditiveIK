@@ -1,6 +1,12 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2025/06/16
+　物理設定が多重に読み込まれて、設定によりさらにデータエントリーが増える不具合を修正
+　　6/14からの不具合
+　　(不具合が気になったので平日特別対応w)
+
+
 2025/06/15
 　物理シミュの修正
 　　Rigidメニューで剛体をInvalidateして非表示にした場合には

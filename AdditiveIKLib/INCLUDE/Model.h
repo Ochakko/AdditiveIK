@@ -2321,11 +2321,82 @@ public: //accesser
 		}
 		
 	};
-	void PushBackRigidElemInfo( REINFO srcinfo ){
-		m_rigideleminfo.push_back( srcinfo );
-	};
+	//void PushBackRigidElemInfo( REINFO srcinfo ){
+	//	m_rigideleminfo.push_back( srcinfo );
+	//};
 	void SetRigidElemInfo( int srcindex, REINFO srcinfo ){
-		m_rigideleminfo[ srcindex ] = srcinfo;
+		if (srcindex < m_rigideleminfo.size()) {
+			m_rigideleminfo[srcindex] = srcinfo;
+		}
+		else {
+			m_rigideleminfo.push_back(srcinfo);
+		}
+	};
+	int GetRigidElemInfoIndexByName(const char* srcrigidname)//すでに存在すればそのindexを返す.なければマイナスの値を返す.
+	{
+		if (!srcrigidname) {
+			_ASSERT(0);
+			return -1;
+		}
+		else {
+			int rigidnum = (int)m_rigideleminfo.size();
+			int rigidindex;
+			for (rigidindex = 0; rigidindex < rigidnum; rigidindex++) {
+				REINFO chkinfo = m_rigideleminfo[rigidindex];
+				if ((chkinfo.filename[0] != 0) && (strcmp(srcrigidname, chkinfo.filename) == 0)) {
+					return rigidindex;
+				}
+			}
+			return -2;
+		}
+	};
+	int GetRigidElemInfoIndexByNameW(const WCHAR* srcrigidname)//すでに存在すればそのindexを返す.なければマイナスの値を返す.
+	{
+		if (!srcrigidname) {
+			_ASSERT(0);
+			return -1;
+		}
+		else {
+			int rigidnum = (int)m_rigideleminfo.size();
+			int rigidindex;
+			for (rigidindex = 0; rigidindex < rigidnum; rigidindex++) {
+				REINFO chkinfo = m_rigideleminfo[rigidindex];
+				if (chkinfo.filename[0] != 0) {
+					WCHAR chkwname[MAX_PATH] = { 0L };
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, chkinfo.filename, MAX_PATH, chkwname, MAX_PATH);
+					if (wcscmp(srcrigidname, chkwname) == 0) {
+						return rigidindex;//!!!!!!!!!!
+					}
+				}
+			}
+			return -2;
+		}
+	};
+	int CalcNewRigidElemInfoIndexByName(const char* srcrigidname) {//RigidElemInfoをAddする場合の新しいindex
+		int currentindex = GetRigidElemInfoIndexByName(srcrigidname);
+		if (currentindex >= 0) {
+			return currentindex;
+		}
+		else if (currentindex == -2) {
+			return GetRigidElemInfoSize();
+		}
+		else {
+			_ASSERT(0);
+			return -1;
+		}
+	};
+	int CalcNewRigidElemInfoIndexByNameW(const WCHAR * srcrigidname) {//RigidElemInfoをAddする場合の新しいindex
+		int currentindex = GetRigidElemInfoIndexByNameW(srcrigidname);
+		if (currentindex >= 0) {
+			return currentindex;
+		}
+		else if (currentindex == -2) {
+			return GetRigidElemInfoSize();
+		}
+		else {
+			_ASSERT(0);
+			return -1;
+		}
 	};
 
 	int GetImpInfoSize(){
@@ -2345,9 +2416,84 @@ public: //accesser
 			return strerror;
 		}
 	};
-	void PushBackImpInfo( std::string srcname )
+	//void PushBackImpInfo( std::string srcname )
+	//{
+	//	m_impinfo.push_back( srcname );
+	//};
+	void SetImpInfo(int srcindex, std::string srcinfo) {
+		if (srcindex < m_impinfo.size()) {
+			m_impinfo[srcindex] = srcinfo;
+		}
+		else {
+			m_impinfo.push_back(srcinfo);
+		}
+	};
+	int GetImpInfoIndexByName(const char* srcimpname)//すでに存在すればそのindexを返す.なければマイナスの値を返す.
 	{
-		m_impinfo.push_back( srcname );
+		if (!srcimpname) {
+			_ASSERT(0);
+			return -1;
+		}
+		else {
+			int impnum = (int)m_impinfo.size();
+			int impindex;
+			for (impindex = 0; impindex < impnum; impindex++) {
+				std::string chkinfo = m_impinfo[impindex];
+				if (((chkinfo.c_str())[0] != 0) && (strcmp(srcimpname, chkinfo.c_str()) == 0)) {
+					return impindex;
+				}
+			}
+			return -2;
+		}
+	};
+	int GetImpInfoIndexByNameW(const WCHAR* srcimpname)//すでに存在すればそのindexを返す.なければマイナスの値を返す.
+	{
+		if (!srcimpname) {
+			_ASSERT(0);
+			return -1;
+		}
+		else {
+			int impnum = (int)m_impinfo.size();
+			int impindex;
+			for (impindex = 0; impindex < impnum; impindex++) {
+				std::string chkinfo = m_impinfo[impindex];
+
+				if ((chkinfo.c_str())[0] != 0) {
+					WCHAR chkwname[MAX_PATH] = { 0L };
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, chkinfo.c_str(), MAX_PATH, chkwname, MAX_PATH);
+					if (wcscmp(srcimpname, chkwname) == 0) {
+						return impindex;//!!!!!!!!!!
+					}
+				}
+			}
+			return -2;
+		}
+	};
+	int CalcNewImpInfoIndexByName(const char* srcimpname) {//ImpInfoをAddする場合の新しいindex
+		int currentindex = GetImpInfoIndexByName(srcimpname);
+		if (currentindex >= 0) {
+			return currentindex;
+		}
+		else if (currentindex == -2) {
+			return GetImpInfoSize();
+		}
+		else {
+			_ASSERT(0);
+			return -1;
+		}
+	};
+	int CalcNewImpInfoIndexByNameW(const WCHAR* srcimpname) {//ImpInfoをAddする場合の新しいindex
+		int currentindex = GetImpInfoIndexByNameW(srcimpname);
+		if (currentindex >= 0) {
+			return currentindex;
+		}
+		else if (currentindex == -2) {
+			return GetImpInfoSize();
+		}
+		else {
+			_ASSERT(0);
+			return -1;
+		}
 	};
 
 

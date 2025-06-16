@@ -9302,18 +9302,10 @@ int OpenREFile()
 	}
 
 
-	int renum = GetCurrentModel()->GetRigidElemInfoSize();
-	if (renum > 0) {
-
-		//RgidElemFileのLoad時にしている
-		//if (GetCurrentModel() && (renum == 1)) {//初回のref読み込み後にRigidElemを作成
-		//	int chkret;
-		//	chkret = GetCurrentModel()->CreateRigidElem();
-		//	_ASSERT(!chkret);
-		//}
-
-		OnREMenu(renum - 1, 0);
-		OnRgdMenu(renum - 1, 0);
+	int reindex = GetCurrentModel()->GetRigidElemInfoIndexByNameW(g_tmpmqopath);
+	if (reindex >= 0) {
+		OnREMenu(reindex, 0);
+		OnRgdMenu(reindex, 0);
 	}
 	else {
 		OnREMenu(-1, 0);
@@ -10875,10 +10867,13 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 						GetCurrentModel()->CreateRigidElem(nullptr, 1, nullptr, 0);
 
 						//m_reindexmap[m_model]
-						int renum = GetCurrentModel()->GetRigidElemInfoSize();
-						if (renum > 0) {
-							OnREMenu(renum - 1, 0);
-							OnRgdMenu(renum - 1, 0);
+						int reindex;
+						//REINFO reinfo;
+						//reinfo = GetCurrentModel()->GetCurrentRigidElemInfo(&reindex);
+						reindex = GetCurrentModel()->GetRigidElemInfoIndexByNameW(g_tmpmqopath);
+						if (reindex >= 0) {
+							OnREMenu(reindex, 0);
+							OnRgdMenu(reindex, 0);
 						}
 						else {
 							OnREMenu(-1, 0);

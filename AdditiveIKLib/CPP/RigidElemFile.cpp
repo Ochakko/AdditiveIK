@@ -296,13 +296,14 @@ int CRigidElemFile::LoadRigidElemFile( WCHAR* strpath, CModel* srcmodel )
 		}
 	}
 
-	srcmodel->PushBackRigidElemInfo( reinfo );
+	int newindex = srcmodel->CalcNewRigidElemInfoIndexByName(reinfo.filename);
+	if (newindex >= 0) {
+		srcmodel->SetRigidElemInfo(newindex, reinfo);
+		srcmodel->SetCurrentRigidElem(newindex);
 
-	int reinfoindex;
-	srcmodel->GetCurrentRigidElemInfo(&reinfoindex);
-
-	srcmodel->SetBtGScale(scbtg, reinfoindex);//CModel::m_rigideleminfoへのaddが済んでから。
-	srcmodel->SetBtObjectVec();//2024/06/16
+		srcmodel->SetBtGScale(scbtg, newindex);//CModel::m_rigideleminfoへのaddが済んでから。
+		srcmodel->SetBtObjectVec();//2024/06/16
+	}
 
 	//_ASSERT(0);
 
