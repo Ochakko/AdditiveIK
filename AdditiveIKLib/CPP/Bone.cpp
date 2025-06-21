@@ -3191,6 +3191,13 @@ int CBone::SetGroupNoByName(CRigidElem* curre, CBone* childbone)
 			curre->PushBackColiids(5);//bitno+1
 			curre->PushBackColiids(6);//bitno+1
 			curre->PushBackColiids(7);//bitno+1
+
+			if (strstr(uppername, "CLOTH_01") != nullptr) {
+				m_btforce = 0;//根本は揺らさない
+			}
+			else {
+				m_btforce = 1;
+			}
 		}
 		else if (strstr(uppername, "HAIR") != nullptr) {
 			curre->SetGroupid(8);//2^bitno
@@ -3200,6 +3207,13 @@ int CBone::SetGroupNoByName(CRigidElem* curre, CBone* childbone)
 			curre->PushBackColiids(5);//bitno+1
 			curre->PushBackColiids(6);//bitno+1
 			curre->PushBackColiids(7);//bitno+1
+
+			if (strstr(uppername, "HAIR_01") != nullptr) {
+				m_btforce = 0;//根本は揺らさない
+			}
+			else {
+				m_btforce = 1;
+			}
 		}
 		else if (strstr(uppername, "PLATE") != nullptr) {
 			curre->SetGroupid(16);//2^bitno
@@ -3209,6 +3223,13 @@ int CBone::SetGroupNoByName(CRigidElem* curre, CBone* childbone)
 			curre->PushBackColiids(4);//bitno+1
 			curre->PushBackColiids(6);//bitno+1
 			curre->PushBackColiids(7);//bitno+1
+
+			if (strstr(uppername, "PLATE_01") != nullptr) {
+				m_btforce = 0;//根本は揺らさない
+			}
+			else {
+				m_btforce = 1;
+			}
 		}
 		else if (strstr(uppername, "TAIL") != nullptr) {
 			curre->SetGroupid(32);//2^bitno
@@ -3218,6 +3239,13 @@ int CBone::SetGroupNoByName(CRigidElem* curre, CBone* childbone)
 			curre->PushBackColiids(4);//bitno+1
 			curre->PushBackColiids(5);//bitno+1
 			curre->PushBackColiids(7);//bitno+1
+
+			if (strstr(uppername, "TAIL_01") != nullptr) {
+				m_btforce = 0;//根本は揺らさない
+			}
+			else {
+				m_btforce = 1;
+			}
 		}
 		else if (strstr(uppername, "SKIRT") != nullptr) {
 			curre->SetGroupid(64);//2^bitno
@@ -3227,6 +3255,13 @@ int CBone::SetGroupNoByName(CRigidElem* curre, CBone* childbone)
 			curre->PushBackColiids(4);//bitno+1
 			curre->PushBackColiids(5);//bitno+1
 			curre->PushBackColiids(6);//bitno+1
+
+			if (strstr(uppername, "SKIRT_01") != nullptr) {
+				m_btforce = 0;//根本は揺らさない
+			}
+			else {
+				m_btforce = 1;
+			}
 		}
 		else {
 			curre->SetGroupid(2);//2^bitno
@@ -3236,6 +3271,8 @@ int CBone::SetGroupNoByName(CRigidElem* curre, CBone* childbone)
 			curre->PushBackColiids(5);//bitno+1
 			curre->PushBackColiids(6);//bitno+1
 			curre->PushBackColiids(7);//bitno+1
+
+			m_btforce = 0;
 		}
 
 
@@ -3248,7 +3285,13 @@ int CBone::SetGroupNoByName(CRigidElem* curre, CBone* childbone)
 		_ASSERT(0);
 		curre->SetGroupid(2);
 		curre->ClearColiids();
+
+		m_btforce = 0;
 	}
+
+	curre->SetBtg(9.80f);
+	curre->SetSkipflag(0);
+
 	return 0;
 }
 

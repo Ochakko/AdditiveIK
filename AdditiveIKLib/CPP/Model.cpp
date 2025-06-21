@@ -9712,6 +9712,8 @@ int CModel::CreateBtObject(bool limitdegflag, int onfirstcreate )
 
 	SetCreateBtFlag(true);
 
+	SetBtObjectVec();//2025/06/22
+
 	return 0;          
 }
 
@@ -9884,7 +9886,7 @@ void CModel::SetBtObjectVecReq(CBtObject* srcbto)
 				if ((strstr(childbone->GetBoneName(), "J_Sec_L_CoatSkirt") != 0) ||
 					(strstr(childbone->GetBoneName(), "J_Sec_R_CoatSkirt") != 0))
 				{
-					curre->SetSkipflag(1);//足の横にあるスカート用のジョイントの剛体は自動でスキップ(Invalidate)
+					//curre->SetSkipflag(1);//足の横にあるスカート用のジョイントの剛体は自動でスキップ(Invalidate)
 				}
 				else {
 					m_btovec.push_back(srcbto);//2024/06/16
@@ -11128,7 +11130,9 @@ int CModel::CreateRigidElem(const char* rename, int refflag, const char* impname
 	REINFO reinfo;
 	::ZeroMemory(&reinfo, sizeof(REINFO));
 	strcpy_s(reinfo.filename, MAX_PATH, setrename);
-	reinfo.btgscale = 9.07f;
+	//reinfo.btgscale = 9.07f;
+	reinfo.btgscale = -1.0f;
+
 	//m_rigideleminfo.push_back(reinfo);
 	//m_impinfo.push_back(setimpname);
 	
