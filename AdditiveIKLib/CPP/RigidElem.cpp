@@ -92,7 +92,7 @@ int CRigidElem::InitParams()
 	m_restitution = 0.5f;
 	m_friction = 0.5f;
 
-	m_btg = -0.09f;
+	m_btg = -1.0f;
 
 	return 0;
 }

@@ -11130,8 +11130,7 @@ int CModel::CreateRigidElem(const char* rename, int refflag, const char* impname
 	REINFO reinfo;
 	::ZeroMemory(&reinfo, sizeof(REINFO));
 	strcpy_s(reinfo.filename, MAX_PATH, setrename);
-	//reinfo.btgscale = 9.07f;
-	reinfo.btgscale = -1.0f;
+	reinfo.btgscale = 9.8f;
 
 	//m_rigideleminfo.push_back(reinfo);
 	//m_impinfo.push_back(setimpname);
@@ -12361,7 +12360,7 @@ REINFO CModel::GetCurrentRigidElemInfo(int* retindex)
 	}
 	else {
 		*retindex = -1;
-		retinfo.btgscale = 1.0f;
+		retinfo.btgscale = 9.8f;
 		strcpy_s(retinfo.filename, 256, "unknown");
 	}
 

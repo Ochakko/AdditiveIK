@@ -811,7 +811,7 @@ typedef struct tag_reinfo
 	float btgscale;
 	void Init() {
 		ZeroMemory(filename, sizeof(char) * MAX_PATH);
-		btgscale = 1.0f;
+		btgscale = 9.8f;
 	};
 	tag_reinfo() {
 		Init();

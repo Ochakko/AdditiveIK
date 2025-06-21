@@ -50,6 +50,7 @@ int CRigidElemFile::InitParams()
 	CXMLIO::InitParams();
 
 	m_model = 0;
+	m_btgscale = 9.8f;
 	return 0;
 }
 
@@ -279,7 +280,7 @@ int CRigidElemFile::LoadRigidElemFile( WCHAR* strpath, CModel* srcmodel )
 	if( getscbtg == 0 ){
 		reinfo.btgscale = scbtg;
 	}else{
-		reinfo.btgscale = 1.0f;
+		reinfo.btgscale = 9.8f;
 	}
 
 	int findflag = 1;

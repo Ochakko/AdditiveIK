@@ -3289,7 +3289,7 @@ int CBone::SetGroupNoByName(CRigidElem* curre, CBone* childbone)
 		m_btforce = 0;
 	}
 
-	curre->SetBtg(9.80f);
+	curre->SetBtg(-1.0f);
 	curre->SetSkipflag(0);
 
 	return 0;

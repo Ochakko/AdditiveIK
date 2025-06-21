@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/06/22
-　AdditiveIK 1.0.0.47 RC1(リリース候補１)
+　AdditiveIK 1.0.0.47 RC2(リリース候補２)
 　　1.0.0.46からの変更点
 
 　　　剛体作成に関するリファクタリング
