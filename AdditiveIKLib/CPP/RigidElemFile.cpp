@@ -261,7 +261,12 @@ int CRigidElemFile::LoadRigidElemFile( WCHAR* strpath, CModel* srcmodel )
 	CallF( SetBuffer(), return 1 );
 
 
-	m_rename = mfilename;
+	REINFO reinfo;
+	reinfo.Init();
+	reinfo.SetFileName(mfilename);
+
+
+	m_rename = reinfo.filename;
 	CBone* topbone = srcmodel->GetTopBone(false);
 	if( topbone ){
 		srcmodel->CreateRigidElem(m_rename.c_str(), 1, srcmodel->GetDefaultImpName(), 0);
@@ -269,16 +274,13 @@ int CRigidElemFile::LoadRigidElemFile( WCHAR* strpath, CModel* srcmodel )
 	}
 
 
-	REINFO reinfo;
-	ZeroMemory( &reinfo, sizeof( REINFO ) );
-	strcpy_s( reinfo.filename, MAX_PATH, mfilename );
 
 	int posstep = 0;
-	float scbtg = 0.0f;
+	//float scbtg = 9.8f;
 	int getscbtg = 1;
-	getscbtg = Read_Float(&m_xmliobuf, "<SCBTG>", "</SCBTG>", &scbtg);
+	getscbtg = Read_Float(&m_xmliobuf, "<SCBTG>", "</SCBTG>", &m_btgscale);
 	if( getscbtg == 0 ){
-		reinfo.btgscale = scbtg;
+		reinfo.btgscale = m_btgscale;
 	}else{
 		reinfo.btgscale = 9.8f;
 	}
@@ -302,7 +304,7 @@ int CRigidElemFile::LoadRigidElemFile( WCHAR* strpath, CModel* srcmodel )
 		srcmodel->SetRigidElemInfo(newindex, reinfo);
 		srcmodel->SetCurrentRigidElem(newindex);
 
-		srcmodel->SetBtGScale(scbtg, newindex);//CModel::m_rigideleminfoへのaddが済んでから。
+		srcmodel->SetBtGScale(m_btgscale, newindex);//CModel::m_rigideleminfoへのaddが済んでから。
 		srcmodel->SetBtObjectVec();//2024/06/16
 	}
 

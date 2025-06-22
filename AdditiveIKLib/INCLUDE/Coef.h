@@ -816,6 +816,23 @@ typedef struct tag_reinfo
 	tag_reinfo() {
 		Init();
 	};
+	int SetFileName(const char* srcname) {
+		//ファイル名部分だけを格納
+		if (srcname != nullptr) {
+			const char* lasten = strrchr(srcname, '\\');
+			if (lasten) {
+				strcpy_s(filename, MAX_PATH, lasten + 1);
+			}
+			else {
+				strcpy_s(filename, MAX_PATH, srcname);
+			}
+			return 0;
+		}
+		else {
+			_ASSERT(0);
+			return 1;
+		}
+	}
 }REINFO;
 
 typedef struct tag_boneinfluence

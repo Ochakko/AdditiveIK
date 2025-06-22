@@ -244,6 +244,7 @@ int CImpFile::LoadImpFile( WCHAR* strpath, CModel* srcmodel )
 
 	int newindex = srcmodel->CalcNewImpInfoIndexByName(mfilename);
 	if (newindex >= 0) {
+		srcmodel->SetImpInfo(newindex, mfilename);
 		srcmodel->SetCurImpIndex(newindex);
 	}
 

@@ -1849,9 +1849,7 @@ public: //accesser
 			return m_rigideleminfo[srcindex].btgscale;
 		}
 		else{
-			if(srcindex != 0){
-				_ASSERT(0);
-			}
+			_ASSERT(0);
 			return 0.0f;
 		}
 	};
@@ -2325,11 +2323,26 @@ public: //accesser
 	//	m_rigideleminfo.push_back( srcinfo );
 	//};
 	void SetRigidElemInfo( int srcindex, REINFO srcinfo ){
-		if (srcindex < m_rigideleminfo.size()) {
-			m_rigideleminfo[srcindex] = srcinfo;
+		REINFO setinfo;
+		setinfo.Init();
+
+		//ファイル名部分だけを格納
+		char* lasten = strrchr(srcinfo.filename, '\\');
+		if (lasten) {
+			strcpy_s(setinfo.filename, MAX_PATH, lasten + 1);
 		}
 		else {
-			m_rigideleminfo.push_back(srcinfo);
+			strcpy_s(setinfo.filename, MAX_PATH, srcinfo.filename);
+		}
+
+		//btgScale
+		setinfo.btgscale = srcinfo.btgscale;
+
+		if (srcindex < m_rigideleminfo.size()) {
+			m_rigideleminfo[srcindex] = setinfo;
+		}
+		else {
+			m_rigideleminfo.push_back(setinfo);
 		}
 	};
 	int GetRigidElemInfoIndexByName(const char* srcrigidname)//すでに存在すればそのindexを返す.なければマイナスの値を返す.
@@ -2421,11 +2434,25 @@ public: //accesser
 	//	m_impinfo.push_back( srcname );
 	//};
 	void SetImpInfo(int srcindex, std::string srcinfo) {
-		if (srcindex < m_impinfo.size()) {
-			m_impinfo[srcindex] = srcinfo;
+
+		char chkname[MAX_PATH] = { 0 };
+		strcpy_s(chkname, MAX_PATH, (const char*)srcinfo.c_str());
+
+		//ファイル名部分だけを格納
+		std::string setname;
+		char* lasten = strrchr(chkname, '\\');
+		if (lasten) {
+			setname = lasten + 1;
 		}
 		else {
-			m_impinfo.push_back(srcinfo);
+			setname = chkname;
+		}
+
+		if (srcindex < m_impinfo.size()) {
+			m_impinfo[srcindex] = setname;
+		}
+		else {
+			m_impinfo.push_back(setname);
 		}
 	};
 	int GetImpInfoIndexByName(const char* srcimpname)//すでに存在すればそのindexを返す.なければマイナスの値を返す.

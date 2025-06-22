@@ -11120,26 +11120,32 @@ int CModel::CreateRigidElem(const char* rename, int refflag, const char* impname
 
 	if (refflag) {
 		m_curreindex = CalcNewRigidElemInfoIndexByName(setrename);
+
+		int chkindex = GetRigidElemInfoIndexByName(setrename);
+		if (chkindex < 0) {//2025/06/22
+			//2025/06/14
+			REINFO reinfo;
+			reinfo.Init();
+			strcpy_s(reinfo.filename, MAX_PATH, setrename);
+			reinfo.btgscale = 9.8f;
+
+			//m_rigideleminfo.push_back(reinfo);
+			//m_impinfo.push_back(setimpname);
+
+			//2025/06/14
+			SetRigidElemInfo(m_curreindex, reinfo);//!!!!!
+			SetCurrentRigidElem(m_curreindex);
+		}
 	}
 	if (impflag) {
 		m_curimpindex = CalcNewImpInfoIndexByName(setimpname);
+
+		int chkindex = GetImpInfoIndexByName(setimpname);
+		if (chkindex < 0) {//2025/06/22
+			SetImpInfo(m_curimpindex, setimpname);//!!!!!
+			SetCurImpIndex(m_curimpindex);
+		}
 	}
-
-
-	//2025/06/14
-	REINFO reinfo;
-	::ZeroMemory(&reinfo, sizeof(REINFO));
-	strcpy_s(reinfo.filename, MAX_PATH, setrename);
-	reinfo.btgscale = 9.8f;
-
-	//m_rigideleminfo.push_back(reinfo);
-	//m_impinfo.push_back(setimpname);
-	
-	//2025/06/14
-	SetRigidElemInfo(m_curreindex, reinfo);//!!!!!
-	SetCurrentRigidElem(m_curreindex);
-
-	SetImpInfo(m_curimpindex, setimpname);//!!!!!
 
 	return 0;
 }
