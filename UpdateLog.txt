@@ -2,6 +2,20 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/06/29
+　FantasyAnimalのテクスチャファイル名に対応
+　　Albedo, Albedo_Normal, Albedo_MetalicのようにAlbedoがすべてに付く場合に対応
+　　
+　Skelton階層構造の途中にeNullがある場合、そのeNullはSkeleton扱いするように修正
+　　リターゲット時にGUI表示が無いと不都合が生じるため
+　　
+　リターゲット設定ファイル追加
+　　Test/RetargetSettingFileExample/FantasyAnimal_FantasyAnimal.rtg
+　　
+　既知の不具合(調査中)
+　　親ノードがeNullのSkeletonノードにジョイントの方向が設定されていて回転の順序がXYZで無い場合に
+　　　Fbx保存するとそのノードの姿勢がオリジナルと異なってしまう
+　　　
 2025/06/22
 　AdditiveIK 1.0.0.47 release
 　　1.0.0.46からの変更点

@@ -3406,6 +3406,11 @@ int CModel::FillTimeLine(OrgWinGUI::OWP_Timeline& timeline, map<int, int>& linen
 		CBone* curbone = itrbone->second;
 		_ASSERT( curbone );
 
+		//if (strstr(curbone->GetBoneName(), "Collar") != 0) {
+		//	int chktype = curbone->GetType();
+		//	int dbgflag1 = 1;
+		//}
+
 		//if (curbone) {
 		if (curbone && (curbone->IsSkeleton()) && (strstr(curbone->GetBoneName(), "Root") == 0)) {//2023/04/27
 			//eNullはTreeViewに表示しない　Root, RootNodeもTreeViewに表示しない　TreeViewに表示しないものにはモーションも付けない
@@ -4822,14 +4827,24 @@ void CModel::CreateNodeOnLoadReq(CNodeOnLoad* newnodeonload)
 			break;
 		case FbxNodeAttribute::eNull:
 		{
-			newnodeonload->SetType(NOL_NULL);
 			CBone* pbone = FindBoneByNode(pNode);
 			if (pbone) {
-				newnodeonload->SetBone(pbone);
+				CBone* parentbone = pbone->GetParent(false);
+				if (parentbone && parentbone->IsSkeleton()) {
+					//2025/06/29
+					//eNullの場合にも　parentがSkeletonの場合には　Skeleton扱いしないとTimeLineGUIの都合でリターゲット出来ない
+					newnodeonload->SetType(NOL_SKELETON);
+					newnodeonload->SetBone(pbone);
+				}
+				else {
+					//eNull
+					newnodeonload->SetType(NOL_NULL);
+					newnodeonload->SetBone(pbone);
+				}
 			}
 			else {
 				newnodeonload->SetBone(0);
-			}		
+			}
 		}
 			break;
 		default:
@@ -6567,13 +6582,6 @@ int CModel::SetMaterialTexNames(int textype, CMQOMaterial* newmqomat, char* temp
 		newmqomat->SetAddressU_emissive(addressU);
 		newmqomat->SetAddressV_emissive(addressV);
 	}
-	else if ((newmqomat->GetAlbedoTex() && !(newmqomat->GetAlbedoTex()[0])) &&
-		(strstr(temptexname, "albedo") != 0) || (strstr(temptexname, "Albedo") != 0) || 
-		(strstr(temptexname, "_Base") != 0)) {
-		newmqomat->SetAlbedoTex(temptexname);
-		newmqomat->SetAddressU_albedo(addressU);
-		newmqomat->SetAddressV_albedo(addressV);
-	}
 	else if ((newmqomat->GetNormalTex() && !(newmqomat->GetNormalTex()[0])) &&
 		(strstr(temptexname, "normal") != 0) || (strstr(temptexname, "Normal") != 0)) {
 		newmqomat->SetNormalTex(temptexname);
@@ -6585,6 +6593,16 @@ int CModel::SetMaterialTexNames(int textype, CMQOMaterial* newmqomat, char* temp
 		newmqomat->SetMetalTex(temptexname);
 		newmqomat->SetAddressU_metal(addressU);
 		newmqomat->SetAddressV_metal(addressV);
+	}
+
+	//2025/06/28 if文順番変更　テクスチャファイル名にAlbedo_Normal, Albedo_Metalicと付くものがあるので　albedo判定はNormal,Metalよりも後でする
+	else if ((newmqomat->GetAlbedoTex() && !(newmqomat->GetAlbedoTex()[0])) &&
+		(strstr(temptexname, "albedo") != 0) || (strstr(temptexname, "Albedo") != 0) ||
+		(strstr(temptexname, "_Base") != 0)) {
+		newmqomat->SetAlbedoTex(temptexname);
+		newmqomat->SetAddressU_albedo(addressU);
+		newmqomat->SetAddressV_albedo(addressV);
+
 	}else if (newmqomat->GetTex() && !(newmqomat->GetTex()[0]) && (strstr(temptexname, "NoneBlack") == nullptr)) {
 		//TexNameに一回もセットされていない場合に　TexNameにtemptexnameをセット
 		newmqomat->SetTex(temptexname);
@@ -6795,6 +6813,9 @@ CBone* CModel::CreateNewFbxBone(FbxNodeAttribute::EType type, FbxNode* curnode, 
 	m_bonename[newbone->GetBoneName()] = newbone;
 
 
+	CBone* parentbone = FindBoneByNode(parnode);
+
+
 	//2023/07/21 SetIKStopFlag()に移動　chaファイルで指定した名前のジョイントにセット
 	//2023/02/19
 	//とりあえず　ジョイント名をみて　自動でIKStopFlagをセット
@@ -6825,7 +6846,6 @@ CBone* CModel::CreateNewFbxBone(FbxNodeAttribute::EType type, FbxNode* curnode, 
 	else if (type == FbxNodeAttribute::eSkeleton) {
 		newbone->SetType(FBXBONE_SKELETON);
 
-
 		//2023/10/26 GetBoneByName()高速化用
 		const char* pjoint = strstr(newbonename, "_Joint");
 		if (pjoint) {
@@ -6840,11 +6860,32 @@ CBone* CModel::CreateNewFbxBone(FbxNodeAttribute::EType type, FbxNode* curnode, 
 		else {
 			m_withoutStrJoint++;
 		}
-
-
 	}
 	else if (type == FbxNodeAttribute::eNull) {
-		newbone->SetType(FBXBONE_NULL);
+		if (parentbone && (parentbone->IsSkeleton())) {
+
+			//2025/06/29 eNullの場合も　parentがSkeletonの場合にはSkeleton扱いをする.　そうしないとTimeLineGUIの都合でリターゲット出来ない
+
+			newbone->SetType(FBXBONE_SKELETON);
+
+			//2023/10/26 GetBoneByName()高速化用
+			const char* pjoint = strstr(newbonename, "_Joint");
+			if (pjoint) {
+				size_t strjointlen = strlen(pjoint);
+				if (strjointlen == strlen("_Joint")) {
+					m_withStrJoint++;
+				}
+				else {
+					m_withoutStrJoint++;
+				}
+			}
+			else {
+				m_withoutStrJoint++;
+			}
+		}
+		else {
+			newbone->SetType(FBXBONE_NULL);
+		}
 	}
 	else if (type == FbxNodeAttribute::eCamera) {
 		newbone->SetType(FBXBONE_CAMERA);//2023/05/23
@@ -6877,7 +6918,7 @@ CBone* CModel::CreateNewFbxBone(FbxNodeAttribute::EType type, FbxNode* curnode, 
 		//TermJointRepeats(parentbonename);
 		//CBone* parentbone = m_bonename[parentbonename];
 
-		CBone* parentbone = FindBoneByNode(parnode);
+		//CBone* parentbone = FindBoneByNode(parnode);
 		if (parentbone) {
 			parentbone->AddChild(newbone);
 			//_ASSERT(0);

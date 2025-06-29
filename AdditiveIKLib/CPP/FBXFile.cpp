@@ -774,8 +774,12 @@ int CopyNodePosture(FbxNode* srcnode, FbxNode* psavenode)
 		switch (type)
 		{
 		case FbxNodeAttribute::eMesh:
-		case FbxNodeAttribute::eNull:
+		//case FbxNodeAttribute::eNull:
 		case FbxNodeAttribute::eCamera:
+			useorgorder = true;
+			break;
+
+		case FbxNodeAttribute::eNull:
 			useorgorder = true;
 			break;
 		default:
@@ -822,14 +826,16 @@ int CopyNodePosture(FbxNode* srcnode, FbxNode* psavenode)
 		////変換すると保存したものが変になる　そのままXYZ順としてセットするとなぜかうまくいく　なぞ
 		////CBone::CalcLocalNodePosture()内で　読み込み時に　rotationorderの通りに計算すると　カメラの動きが改善した　のに
 		//if (rotationorder != eEulerXYZ) {
-		//	roteulxyz = roteul.ConvRotOrder2XYZ(rotationorder);
+		//	//roteulxyz = roteul.ConvRotOrder2XYZ(rotationorder);
+		//	roteulxyz = fbxLclRot;//2025/06/29
 		//	preroteulxyz = preroteul.ConvRotOrder2XYZ(rotationorder);
-		//	postroteulxyz = postroteul.ConvRotOrder2XYZ(rotationorder);
+		//	//postroteulxyz = postroteul.ConvRotOrder2XYZ(rotationorder);
+		//	postroteulxyz = fbxPostRot;//2025/06/29
 		//}
 		//else {
-			roteulxyz = fbxLclRot;
-			preroteulxyz = fbxPreRot;
-			postroteulxyz = fbxPostRot;
+			//roteulxyz = fbxLclRot;
+			//preroteulxyz = fbxPreRot;
+			//postroteulxyz = fbxPostRot;
 		//}
 
 		//##################################################################################################################################################
@@ -6282,7 +6288,7 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 		curbone->SetNodeAnimMat(nodeanimmat);
 
 		curbone->SetGlobalPosMat(lGlobalPosition);
-		nodeonload->SetBindMat(lGlobalPosition);//boneではなくnodeonload 再帰処理におけるparentmatとして使用
+		nodeonload->SetBindMat(lGlobalPosition);//boneではなくnodeonload. 再帰処理におけるparentmatとして使用
 
 		ChaVector3 zeropos(0.0f, 0.0f, 0.0f);
 		ChaVector3 tmppos;
@@ -6294,7 +6300,7 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 	else {//2024/01/26 1005RC4
 		//!curbone
 		//WriteBindPoseReq()で全ノードのbindpose書き出し時に使う
-		nodeonload->SetBindMat(lGlobalPosition);//boneではなくnodeonload 再帰処理におけるparentmatとして使用
+		nodeonload->SetBindMat(lGlobalPosition);//boneではなくnodeonload. 再帰処理におけるparentmatとして使用
 	}
 	
 	if (nodeonload) {

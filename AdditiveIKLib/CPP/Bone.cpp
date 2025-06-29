@@ -9740,7 +9740,6 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcfra
 	lclQ.SetRotation(rotationorder, 0, ChaVector3(fbxLclRot));//##### at fbxtime
 	postQ.SetRotationXYZ(0, ChaVector3(m_fbxPostRot));//
 
-
 	rotQ1 = preQ * lclQ * postQ;
 	rotQ2 = preQ * postQ;
 
