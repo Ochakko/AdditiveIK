@@ -1199,6 +1199,15 @@ public: //accesser
 	}
 	bool HasCameraParent();
 	
+	void SetENullConvertFlag(bool srcval)
+	{
+		m_enullconvertflag = srcval;
+	}
+	bool GetENullConvertFlag()
+	{
+		return m_enullconvertflag;
+	}
+
 	//IsCamera()&&ボーンの名前がモーション名と一致した場合にtrue
 	bool IsConcernedCamera(const char* motionname);
 
@@ -1921,6 +1930,7 @@ private:
 	bool m_pastedoneflag;
 	int m_matrixindex;//for constant buffer
 
+	bool m_enullconvertflag;
 
 	CBone* m_parent;
 	CBone* m_child;

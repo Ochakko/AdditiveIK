@@ -450,6 +450,7 @@ int CBone::InitParams()
 	m_getanimflag = 0;
 
 	m_type = FBXBONE_NONE;
+	m_enullconvertflag = false;
 
 	ChaMatrixIdentity(&m_nodemat);
 	ChaMatrixIdentity(&m_nodeanimmat);

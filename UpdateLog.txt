@@ -2,6 +2,19 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/07/06
+　今回の週末は試行錯誤をしました(成果無しですが報告)
+　　FBX SDK 2020.3.7のテスト(現在使用しているのは2020.3.4)
+　　　2020.3.7の良い点：
+　　　　カメラの子供のスケルトンの保存がうまくいくようだ(何回かテストしただけだが).
+　　　2020.3.7の問題点
+　　　　eNullに対するFbxTimeを引数にとるEvaluate*関数が返す結果にnanが含まれることが多い
+　　　　キーの有無が原因かと思いAnimationRecursiveを呼んでから試しても改善せず
+　　　　カメラに対する位置、ターゲット位置、UpVec取得用のEvaluate関数も同様にnanを返すことが多い
+　　　　上記Evaluateのnanの件は、読み込みfbxにも依存しているようだ.AssetStoreの複雑なfbxで高確率でEvaluateがnanになる
+　　　次のバージョンを待ちます
+　
+
 2025/06/29
 　FantasyAnimalのテクスチャファイル名に対応
 　　Albedo, Albedo_Normal, Albedo_MetalicのようにAlbedoがすべてに付く場合に対応

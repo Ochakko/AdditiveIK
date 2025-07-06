@@ -826,16 +826,14 @@ int CopyNodePosture(FbxNode* srcnode, FbxNode* psavenode)
 		////変換すると保存したものが変になる　そのままXYZ順としてセットするとなぜかうまくいく　なぞ
 		////CBone::CalcLocalNodePosture()内で　読み込み時に　rotationorderの通りに計算すると　カメラの動きが改善した　のに
 		//if (rotationorder != eEulerXYZ) {
-		//	//roteulxyz = roteul.ConvRotOrder2XYZ(rotationorder);
-		//	roteulxyz = fbxLclRot;//2025/06/29
-		//	preroteulxyz = preroteul.ConvRotOrder2XYZ(rotationorder);
-		//	//postroteulxyz = postroteul.ConvRotOrder2XYZ(rotationorder);
-		//	postroteulxyz = fbxPostRot;//2025/06/29
+		//	roteulxyz = roteul.ConvRotOrder2XYZ(rotationorder);
+		//	preroteulxyz = fbxPreRot;
+		//	postroteulxyz = fbxPostRot;
 		//}
 		//else {
-			//roteulxyz = fbxLclRot;
-			//preroteulxyz = fbxPreRot;
-			//postroteulxyz = fbxPostRot;
+			roteulxyz = fbxLclRot;
+			preroteulxyz = fbxPreRot;
+			postroteulxyz = fbxPostRot;
 		//}
 
 		//##################################################################################################################################################
@@ -850,9 +848,9 @@ int CopyNodePosture(FbxNode* srcnode, FbxNode* psavenode)
 		// 読み書き読み書き読みテストで表示が変わらないようにするには　書き出し時には　prerot, postrot, lclrotをそのままセットしなければならなかった
 		// (なぞ)
 		//##################################################################################################################################################
-		roteulxyz = fbxLclRot;
-		preroteulxyz = fbxPreRot;
-		postroteulxyz = fbxPostRot;
+		//roteulxyz = fbxLclRot;
+		//preroteulxyz = fbxPreRot;
+		//postroteulxyz = fbxPostRot;
 
 
 		psavenode->LclTranslation.Set(fbxLclPos);
@@ -861,10 +859,10 @@ int CopyNodePosture(FbxNode* srcnode, FbxNode* psavenode)
 		psavenode->LclScaling.Set(fbxLclScl);
 		psavenode->SetRotationOffset(FbxNode::eSourcePivot, fbxRotOff);
 		psavenode->SetRotationPivot(FbxNode::eSourcePivot, fbxRotPiv);
-		//psavenode->SetPreRotation(FbxNode::eSourcePivot, fbxPreRot);
-		//psavenode->SetPostRotation(FbxNode::eSourcePivot, fbxPostRot);
-		psavenode->SetPreRotation(FbxNode::eSourcePivot, preroteulxyz);
-		psavenode->SetPostRotation(FbxNode::eSourcePivot, postroteulxyz);
+		psavenode->SetPreRotation(FbxNode::eSourcePivot, fbxPreRot);
+		psavenode->SetPostRotation(FbxNode::eSourcePivot, fbxPostRot);
+		//psavenode->SetPreRotation(FbxNode::eSourcePivot, preroteulxyz);
+		//psavenode->SetPostRotation(FbxNode::eSourcePivot, postroteulxyz);
 		psavenode->SetScalingOffset(FbxNode::eSourcePivot, fbxSclOff);
 		psavenode->SetScalingPivot(FbxNode::eSourcePivot, fbxSclPiv);
 		psavenode->SetRotationActive(fbxrotationActive);
@@ -3863,7 +3861,7 @@ void AnimateBoneReq(bool limitdegflag, FbxNode* pNode, FbxAnimLayer* lAnimLayer,
 				//カメラの０フレーム姿勢はアニメーションが無い場合のデフォルト位置としても使用しているので
 				//カメラのデフォルト位置が意図せずに初期化されてしまう
 				//よって書き出すモーションがカメラモーションでない場合には、カメラノードの姿勢を書き出さない
-				if (curbone->IsSkeleton()) {
+				if (curbone->IsSkeleton() && !curbone->GetENullConvertFlag()) {//2025/07/05 type not eNull
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_X);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Y);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Z);

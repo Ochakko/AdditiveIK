@@ -3694,7 +3694,7 @@ int CModel::SetCurrentMotion( int srcmotid )
 			CBone* curbone = itrbone->second;
 			if (curbone){
 				//if (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
-				if (curbone->IsSkeleton()) {
+				if (curbone->IsSkeleton() || curbone->IsNull()) {
 					curbone->SetCurrentMotion(srcmotid, m_curmotinfo->frameleng);
 				}
 				//else if (curbone->IsCamera()) {
@@ -6862,11 +6862,30 @@ CBone* CModel::CreateNewFbxBone(FbxNodeAttribute::EType type, FbxNode* curnode, 
 		}
 	}
 	else if (type == FbxNodeAttribute::eNull) {
-		if (parentbone && (parentbone->IsSkeleton())) {
+
+		bool haveCameraChild = false;
+		int childNodeNum;
+		childNodeNum = curnode->GetChildCount();
+		for (int i = 0; i < childNodeNum; i++)
+		{
+			FbxNode* pChild = curnode->GetChild(i);  // 子ノードを取得
+			FbxNodeAttribute* childAttrib = pChild->GetNodeAttribute();
+			if (childAttrib) {
+				FbxNodeAttribute::EType childtype = (FbxNodeAttribute::EType)(childAttrib->GetAttributeType());
+				if (childtype == FbxNodeAttribute::eCamera) {
+					haveCameraChild = true;
+					break;
+				}
+			}
+		}
+
+		if (!haveCameraChild && parentbone && (parentbone->IsSkeleton())) {
 
 			//2025/06/29 eNullの場合も　parentがSkeletonの場合にはSkeleton扱いをする.　そうしないとTimeLineGUIの都合でリターゲット出来ない
+			//2025/07/06 Cameraを子供に持つeNullはeNullのままとする
 
 			newbone->SetType(FBXBONE_SKELETON);
+			newbone->SetENullConvertFlag(true);//2025/07/05
 
 			//2023/10/26 GetBoneByName()高速化用
 			const char* pjoint = strstr(newbonename, "_Joint");
@@ -7147,6 +7166,10 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 
 			//pScene->GetRootNode()->ConvertPivotAnimationRecursive( mAnimStackNameArray[animno]->Buffer(), FbxNode::eDestinationPivot, 30.0, true );
 			//pScene->GetRootNode()->ConvertPivotAnimationRecursive( mAnimStackNameArray[animno]->Buffer(), FbxNode::eSourcePivot, 30.0, true );
+			
+			//pScene->GetRootNode()->ConvertPivotAnimationRecursive(lCurrentAnimationStack, FbxNode::eSourcePivot, GetFbxTimeScale(), true);
+			//pScene->GetRootNode()->ConvertPivotAnimationRecursive(lCurrentAnimationStack, FbxNode::eDestinationPivot, GetFbxTimeScale(), true);
+
 			//const char* cameraname = pScene->GlobalCameraSettings().GetDefaultCamera();
 
 
