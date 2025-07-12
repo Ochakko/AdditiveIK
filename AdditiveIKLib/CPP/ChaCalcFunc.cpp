@@ -1947,7 +1947,7 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 
 	CQuaternion eulq;
 
-	if (srcbone->IsSkeleton()) {
+	if (srcbone->IsSkeleton() && !srcbone->GetENullConvertFlag()) {
 
 		//###########################
 		//skeletonの場合
@@ -1964,21 +1964,18 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 				ChaMatrix parentwm, eulmat;
 
 				//parentがeNullの場合はある
-				if (parentbone->IsSkeleton()) {
+				if (parentbone->IsSkeleton() && !parentbone->GetENullConvertFlag()) {//2025/07/12 !ENullConvertFlag
 					parentwm = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 					eulq = ChaMatrix2Q(ChaMatrixInv(parentwm)) * ChaMatrix2Q(curwm);
 				}
 				else if (parentbone->IsNull() || parentbone->IsCamera()) {
-					//2023/05/16 eNullにもIdentity以外のNodeMatが設定されたため修正
-					//parentwm = ChaMatrixInv(parentbone->GetNodeMat()) * parentbone->GetENullMatrix();//ENullMatrixにはNodeMatが掛かっている
+					////2023/05/16 eNullにもIdentity以外のNodeMatが設定されたため修正
+					////parentwm = ChaMatrixInv(parentbone->GetNodeMat()) * parentbone->GetENullMatrix();//ENullMatrixにはNodeMatが掛かっている
 
-					//2023/06/26 書き出し時にworldmat (InvNodeMat * EvaluateGlobalTransform)にenullの　回転の　影響は入っていない? NodeMatに入っている？　？？？
-					//モデルのeNullをY180度回転したモデルの読み書き読み書き読みテストで確認
-					//下記のように変更しないと　eNullをY180度回転したモデルの読み書き読み時にオイラー角表現が変質し　読み書き読み書き読みテストで　モデル向きが反対を向く
-					//eulq = ChaMatrix2Q(curwm);
-
-
-
+					////2023/06/26 書き出し時にworldmat (InvNodeMat * EvaluateGlobalTransform)にenullの　回転の　影響は入っていない? NodeMatに入っている？　？？？
+					////モデルのeNullをY180度回転したモデルの読み書き読み書き読みテストで確認
+					////下記のように変更しないと　eNullをY180度回転したモデルの読み書き読み時にオイラー角表現が変質し　読み書き読み書き読みテストで　モデル向きが反対を向く
+					////eulq = ChaMatrix2Q(curwm);
 
 					//2023/06/29 eNullもアニメーション可能にしたので
 					//GetENullMatrixを修正してCalcEnullMatReqで計算するようにしたところが2023/06/26から変わったところ
@@ -1991,6 +1988,10 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 					//補足：NodeMatはジョイントの位置である　NodeMatを途中で変えることはジョイント位置を途中で変えることであり　通常NodeMatは変えない
 					parentwm = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 					eulq = ChaMatrix2Q(ChaMatrixInv(parentwm)) * ChaMatrix2Q(curwm);
+				}
+				else if (parentbone->GetENullConvertFlag()) {//2025/07/12 ENullConvertFlag
+					//2025/07/12
+					eulq = ChaMatrix2Q(curwm);
 				}
 				else {
 					eulq = ChaMatrix2Q(curwm);
@@ -2135,6 +2136,24 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 			else {
 				return cureul;
 			}
+		}
+	}
+	else if (srcbone->GetENullConvertFlag()) {
+		CMotionPoint* curmp = 0;
+		curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
+		if (curmp) {
+			ChaMatrix curwm, parentwm;
+			curwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp);
+			if (parentbone) {
+				parentwm = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+				eulq = ChaMatrix2Q(ChaMatrixInv(parentwm)) * ChaMatrix2Q(curwm);
+			}
+			else {
+				eulq = ChaMatrix2Q(curwm);
+			}
+		}
+		else {
+			eulq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 		}
 	}
 	else {

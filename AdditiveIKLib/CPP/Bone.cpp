@@ -10135,7 +10135,7 @@ ChaMatrix CBone::CalcFbxLocalMatrix(bool limitdegflag, int srcmotid, double srcf
 	CBone* parentbone = GetParent(false);
 	if (parentbone) {
 		//書き出し中に parentが eNullの場合はある
-		if (parentbone->IsSkeleton()) {
+		if (parentbone->IsSkeleton() && !parentbone->GetENullConvertFlag()) {//2025/07/12 !ENullConvertFlag
 			ChaMatrix parentwmanim = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 			parentfbxwm = parentbone->GetNodeMat() * parentwmanim;
 			localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
@@ -10154,6 +10154,12 @@ ChaMatrix CBone::CalcFbxLocalMatrix(bool limitdegflag, int srcmotid, double srcf
 			//parentfbxwm = parentbone->GetTransformMat(roundingframe, true);
 
 			parentfbxwm = parentbone->GetTransformMat(srcmotid, 0.0, true);
+			localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
+		}
+		else if (parentbone->GetENullConvertFlag()) {//2025/07/12 ENullConvertFlag
+			////2025/07/12
+			ChaMatrix parentwmanim = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+			parentfbxwm = parentbone->GetNodeMat() * parentwmanim;
 			localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
 		}
 		//else if (parentbone->IsCamera()) {

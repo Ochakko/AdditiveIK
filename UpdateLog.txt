@@ -1,7 +1,15 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
-
+2025/07/12
+　Skelton階層構造の途中にeNullがある場合のFBX出力修正
+　　Skeletonの子供にeNullがあってその子供にSkeletonが続く場合の読み書き改善
+　　上記条件の際に最初の読み込みはうまくいっていたが、保存すると変質する不具合を修正
+　　UnityAsset FantasyAnimalの読-->書-->読-->書テストOK
+　　
+　(注意)上記条件の時のeNullの子供Skeletonのモーション編集はまだおかしいです
+　(注意)カメラの子供のスケルトンの書き出しはまだ直っていません
+　
 2025/07/06
 　今回の週末は試行錯誤をしました(成果無しですが報告)
 　　FBX SDK 2020.3.7のテスト(現在使用しているのは2020.3.4)
