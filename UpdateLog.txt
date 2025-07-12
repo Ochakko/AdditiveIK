@@ -1,6 +1,13 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+
+2025/07/13
+　Skelton階層構造の途中にeNullがある場合のモーション編集対応
+　　eNullノードに対してはIKStopFlagを設定してIKを禁止に.
+　　親がeNullノードであるようなSkeletonに対するモーション編集対応.
+　　UnityAsset FantasyAnimalのモーション編集が可能に.
+
 2025/07/12
 　Skelton階層構造の途中にeNullがある場合のFBX出力修正
 　　Skeletonの子供にeNullがあってその子供にSkeletonが続く場合の読み書き改善

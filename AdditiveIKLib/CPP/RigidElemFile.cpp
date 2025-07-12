@@ -613,6 +613,12 @@ int CRigidElemFile::ReadRE( XMLIOBUF* xmlbuf, CBone* curbone )
 				curre->SetRestitution(rest);
 				curre->SetFriction(fric);
 
+				//if (curbone->GetENullConvertFlag()) {
+				//	curre->SetForbidRotFlag(1);//2025/07/12
+				//}
+				//else {
+				//	curre->SetForbidRotFlag(forbidrot);
+				//}
 				curre->SetForbidRotFlag(forbidrot);
 
 				curre->SetDampanimL(dmpanimL);

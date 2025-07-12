@@ -3124,6 +3124,9 @@ int CBone::CreateRigidElem( CBone* parentbone, int reflag, std::string rename, i
 		}
 		newre->SetBone(parentbone);
 		newre->SetEndbone(this);
+		//if (GetENullConvertFlag()) {
+		//	newre->SetForbidRotFlag(1);//2025/07/12
+		//}
 		SetGroupNoByName(newre, this);
 		parentbone->SetRigidElemOfMap(rename, this, newre);//SetRigidElemOfMap内でrenameに対応する古いrigidelemをinvalidateしてからセットする
 	}
@@ -9153,32 +9156,14 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 
 			ChaMatrix chaGlobalSRT;
 			chaGlobalSRT.SetIdentity();
-
-			//#####  2022/11/01  ################################################################################################
-			//サブスレッド１つだけで計算することにした(CriticalSection回数が多すぎて遅くなる)ので　CriticalSectionコメントアウト
-			//スレッド数(LOADFBXANIMTHREAD)を１以外にする場合には　CriticalSection必須
-			//###################################################################################################################
-			FbxAMatrix lGlobalSRT;
-			//EnterCriticalSection(&(GetParModel()->m_CritSection_Node));//#######################
-			lGlobalSRT = pNode->EvaluateGlobalTransform(fbxtime, FbxNode::eSourcePivot, true, true);
-			//LeaveCriticalSection(&(GetParModel()->m_CritSection_Node));//#######################
-			chaGlobalSRT = ChaMatrixFromFbxAMatrix(lGlobalSRT);
-
-			//################################################
-			//cameraについては　この関数よりも後で改めて値をセットする
-			//################################################
-
-
-
-
-			////##############
-			////Add MotionPoint
-			////##############
 			ChaMatrix localmat;
 			ChaMatrixIdentity(&localmat);
 			ChaMatrix globalmat;
 			ChaMatrixIdentity(&globalmat);
 
+			////##############
+			////Add MotionPoint
+			////##############
 			CMotionPoint* curmp = 0;
 			int existflag = 0;
 			//curmp = curbone->AddMotionPoint(motid, framecnt, &existflag);
@@ -9197,8 +9182,6 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 			//###############
 			//calc globalmat
 			//###############
-
-
 			//FbxAnimLayer* panimlayer = GetParModel()->GetCurrentAnimLayer();
 			//if (panimlayer) {
 			//	const char* strChannel;
@@ -9250,11 +9233,22 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 			//}
 			//
 			
+
+			//#####  2022/11/01  ################################################################################################
+			//サブスレッド１つだけで計算することにした(CriticalSection回数が多すぎて遅くなる)ので　CriticalSectionコメントアウト
+			//スレッド数(LOADFBXANIMTHREAD)を１以外にする場合には　CriticalSection必須
+			//###################################################################################################################
+			FbxAMatrix lGlobalSRT;
+			//EnterCriticalSection(&(GetParModel()->m_CritSection_Node));//#######################
+			lGlobalSRT = pNode->EvaluateGlobalTransform(fbxtime, FbxNode::eSourcePivot, true, true);
+			//LeaveCriticalSection(&(GetParModel()->m_CritSection_Node));//#######################
+			chaGlobalSRT = ChaMatrixFromFbxAMatrix(lGlobalSRT);
+
 			//2023/05/07
 			//eNullにアニメーションは無いので　上方で(eSkeleton || eCamera)以外はリターンしている
 			//いろいろ直した結果　lCurveが0の場合にも　同じ数式でOKに
 			globalmat = (ChaMatrixInv(GetNodeMat()) * chaGlobalSRT);
-			
+
 
 #ifndef NDEBUG
 			//for debug
@@ -9681,15 +9675,16 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcfra
 	FbxDouble3 fbxLclRot;
 	FbxDouble3 fbxLclScl;
 	//if (srcframe == 0.0) {
-	//	fbxLclPos = pNode->LclTranslation.Get();
-	//	fbxLclRot = pNode->LclRotation.Get();
-	//	fbxLclScl = pNode->LclScaling.Get();
-	//}
-	//else {
+	if (bindposeflag) {//2025/07/13
+		fbxLclPos = pNode->LclTranslation.Get();
+		fbxLclRot = pNode->LclRotation.Get();
+		fbxLclScl = pNode->LclScaling.Get();
+	}
+	else {
 		fbxLclPos = pNode->EvaluateLocalTranslation(fbxtime, FbxNode::eSourcePivot, true, true);
 		fbxLclRot = pNode->EvaluateLocalRotation(fbxtime, FbxNode::eSourcePivot, true, true);
 		fbxLclScl = pNode->EvaluateLocalScaling(fbxtime, FbxNode::eSourcePivot, true, true);
-	//}
+	}
 
 
 
@@ -10141,7 +10136,9 @@ ChaMatrix CBone::CalcFbxLocalMatrix(bool limitdegflag, int srcmotid, double srcf
 			localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
 		}
 		else if (parentbone->IsNullAndChildIsCamera() || parentbone->IsCamera()) {
-			ChaMatrix parentwmanim = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+			//ChaMatrix parentwmanim = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+			//localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
+			parentfbxwm = parentbone->GetTransformMat(srcmotid, roundingframe, true);
 			localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
 		}
 		else if (parentbone->IsNull()) {
@@ -10153,7 +10150,8 @@ ChaMatrix CBone::CalcFbxLocalMatrix(bool limitdegflag, int srcmotid, double srcf
 
 			//parentfbxwm = parentbone->GetTransformMat(roundingframe, true);
 
-			parentfbxwm = parentbone->GetTransformMat(srcmotid, 0.0, true);
+			//parentfbxwm = parentbone->GetTransformMat(srcmotid, 0.0, true);
+			parentfbxwm = parentbone->GetTransformMat(srcmotid, roundingframe, true);
 			localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
 		}
 		else if (parentbone->GetENullConvertFlag()) {//2025/07/12 ENullConvertFlag

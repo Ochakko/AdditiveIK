@@ -1988,6 +1988,9 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 					//補足：NodeMatはジョイントの位置である　NodeMatを途中で変えることはジョイント位置を途中で変えることであり　通常NodeMatは変えない
 					parentwm = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 					eulq = ChaMatrix2Q(ChaMatrixInv(parentwm)) * ChaMatrix2Q(curwm);
+
+					//parentwm = parentbone->GetTransformMat(srcmotid, roundingframe, true);
+					//eulq = ChaMatrix2Q(ChaMatrixInv(parentwm)) * ChaMatrix2Q(curwm);
 				}
 				else if (parentbone->GetENullConvertFlag()) {//2025/07/12 ENullConvertFlag
 					//2025/07/12
@@ -2965,38 +2968,45 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 		//CalcLocalEulXYZ()の検証で　ParentがeNullのときには　parentwmはIdentityにするべきだったので　それに合わせる
 		//curmat.SetIdentity();
 
-		if (srcmp) {
-			if (limitdegflag == false) {
-				curmat = srcmp->GetWorldMat();
-				if (dsteul) {
-					*dsteul = srcmp->GetLocalEul();
-				}
-			}
-			else {
-				curmat = srcmp->GetLimitedWM();
-				if (dsteul) {
-					*dsteul = srcmp->GetLimitedLocalEul();
-				}
-			}
+		
+		if (g_underWriteFbx == false) {//2025/07/12 IK計算時のparentとしてのeNullのworldmatはIdentity.
+			curmat.SetIdentity();
 		}
 		else {
-			CMotionPoint* curmp;
-			curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
-			if (curmp) {
+			if (srcmp) {
 				if (limitdegflag == false) {
-					curmat = curmp->GetWorldMat();
+					curmat = srcmp->GetWorldMat();
 					if (dsteul) {
-						*dsteul = curmp->GetLocalEul();
+						*dsteul = srcmp->GetLocalEul();
 					}
 				}
 				else {
-					curmat = curmp->GetLimitedWM();
+					curmat = srcmp->GetLimitedWM();
 					if (dsteul) {
-						*dsteul = curmp->GetLimitedLocalEul();
+						*dsteul = srcmp->GetLimitedLocalEul();
 					}
 				}
-			}else{
-				curmat.SetIdentity();	
+			}
+			else {
+				CMotionPoint* curmp;
+				curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
+				if (curmp) {
+					if (limitdegflag == false) {
+						curmat = curmp->GetWorldMat();
+						if (dsteul) {
+							*dsteul = curmp->GetLocalEul();
+						}
+					}
+					else {
+						curmat = curmp->GetLimitedWM();
+						if (dsteul) {
+							*dsteul = curmp->GetLimitedLocalEul();
+						}
+					}
+				}
+				else {
+					curmat.SetIdentity();
+				}
 			}
 		}
 		return curmat;
@@ -3048,42 +3058,49 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 		return curmat;
 	}
 	else if (srcbone->IsSkeleton()) {
-		if (srcmp) {
-			if (limitdegflag == false) {
-				curmat = srcmp->GetWorldMat();
-				if (dsteul) {
-					*dsteul = srcmp->GetLocalEul();
-				}
-			}
-			else {
-				curmat = srcmp->GetLimitedWM();
-				if (dsteul) {
-					*dsteul = srcmp->GetLimitedLocalEul();
-				}
-			}
+
+		if ((g_underWriteFbx == false) && srcbone->GetENullConvertFlag()) {//2025/07/12 "IK計算時" の parentとしてのeNull のworldmatはIdentity.
+			curmat.SetIdentity();
 		}
 		else {
-			CMotionPoint* curmp;
-			curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
-			if (curmp) {
+			if (srcmp) {
 				if (limitdegflag == false) {
-					curmat = curmp->GetWorldMat();
+					curmat = srcmp->GetWorldMat();
 					if (dsteul) {
-						*dsteul = curmp->GetLocalEul();
+						*dsteul = srcmp->GetLocalEul();
 					}
 				}
 				else {
-					curmat = curmp->GetLimitedWM();
+					curmat = srcmp->GetLimitedWM();
 					if (dsteul) {
-						*dsteul = curmp->GetLimitedLocalEul();
+						*dsteul = srcmp->GetLimitedLocalEul();
 					}
 				}
-			}else{
-				curmat.SetIdentity();	
+			}
+			else {
+				CMotionPoint* curmp;
+				curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
+				if (curmp) {
+					if (limitdegflag == false) {
+						curmat = curmp->GetWorldMat();
+						if (dsteul) {
+							*dsteul = curmp->GetLocalEul();
+						}
+					}
+					else {
+						curmat = curmp->GetLimitedWM();
+						if (dsteul) {
+							*dsteul = curmp->GetLimitedLocalEul();
+						}
+					}
+				}
+				else {
+					curmat.SetIdentity();
+				}
 			}
 		}
-		return curmat;
 
+		return curmat;
 	}
 	else {
 		curmat.SetIdentity();

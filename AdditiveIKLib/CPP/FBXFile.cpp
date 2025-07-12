@@ -6145,20 +6145,20 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 		//bindposeを計算から求める
 		//########################
 		if (pNode) {
-			//bool cameraanimflag;
-			//int firstmotid;
-			//if (curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
-			//	cameraanimflag = true;
-			//}
-			//else {
-			//	cameraanimflag = false;
-			//}
-			
-			////2024/06/08
-			////この関数はモーションを１つも読み込んでいない状態で呼ばれる
-			////ボーンのポジション計算時には、他のノードの影響も計算できるようにcameraanimflag=falseでGetFirstValidMotInfo()を呼ぶことにした
-			//firstmotid = pmodel->GetFirstValidMotInfo(false).motid;
-			//2024/06/09 CalcLocalNodeMatはcurrentのFbxAnimationに対して処理されるのでmotidは使っていない
+			////bool cameraanimflag;
+			////int firstmotid;
+			////if (curbone->IsCamera() || curbone->IsNullAndChildIsCamera()) {
+			////	cameraanimflag = true;
+			////}
+			////else {
+			////	cameraanimflag = false;
+			////}
+			//
+			//////2024/06/08
+			//////この関数はモーションを１つも読み込んでいない状態で呼ばれる
+			//////ボーンのポジション計算時には、他のノードの影響も計算できるようにcameraanimflag=falseでGetFirstValidMotInfo()を呼ぶことにした
+			////firstmotid = pmodel->GetFirstValidMotInfo(false).motid;
+			////2024/06/09 CalcLocalNodeMatはcurrentのFbxAnimationに対して処理されるのでmotidは使っていない
 			ChaMatrix localnodemat, localnodeanimmat;
 			//CalcLocalNodeMat(firstmotid, pmodel, curbone, &localnodemat, &localnodeanimmat);//2022/12/21 support prerot postrot ...etc.
 			CalcLocalNodeMat(pmodel, curbone, &localnodemat, &localnodeanimmat);//2022/12/21 support prerot postrot ...etc.
@@ -6171,49 +6171,48 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 			}
 
 
-			//if (curbone->IsSkeleton() || curbone->IsCamera()) {
-			//	//calcnodemat = localnodemat * parentnodemat;
-			//	//2023/07/03
-			//	//BindPoseとcluster検索を無効にしてNodeMat計算だけでテスト(TheHunt City1 Camera_1, Camera8)した結果　NodeMatには回転が入っている必要があった
-			//	//GetNodeMatとGetNodeAnimMatは同じ結果を返すことになった
-			//	//この変更後にRetargetもテスト　Spring1とbvh121,Rokoko  TheHunt Charactorとbvh121
-			//	calcnodemat = localnodeanimmat * parentnodeanimmat;
-			//	calcnodeanimmat = localnodeanimmat * parentnodeanimmat;
-			//}
-			//else {
-			//	//eNull
-			//	
-			//	//2023/07/03
-			//	//BindPoseとcluster検索を無効にしてNodeMat計算だけでテスト(TheHunt City1 Camera_1, Camera8)した結果　NodeMatには回転が入っている必要があった
-			//	//GetNodeMatとGetNodeAnimMatは同じ結果を返すことになった
-			//	//この変更後にRetargetもテスト　Spring1とbvh121,Rokoko  TheHunt Charactorとbvh121
-			//	calcnodeanimmat = localnodeanimmat * parentnodeanimmat;
-			//	calcnodemat = calcnodeanimmat;//rot入りと同じ
-			//}
+			////if (curbone->IsSkeleton() || curbone->IsCamera()) {
+			////	//calcnodemat = localnodemat * parentnodemat;
+			////	//2023/07/03
+			////	//BindPoseとcluster検索を無効にしてNodeMat計算だけでテスト(TheHunt City1 Camera_1, Camera8)した結果　NodeMatには回転が入っている必要があった
+			////	//GetNodeMatとGetNodeAnimMatは同じ結果を返すことになった
+			////	//この変更後にRetargetもテスト　Spring1とbvh121,Rokoko  TheHunt Charactorとbvh121
+			////	calcnodemat = localnodeanimmat * parentnodeanimmat;
+			////	calcnodeanimmat = localnodeanimmat * parentnodeanimmat;
+			////}
+			////else {
+			////	//eNull
+			////	
+			////	//2023/07/03
+			////	//BindPoseとcluster検索を無効にしてNodeMat計算だけでテスト(TheHunt City1 Camera_1, Camera8)した結果　NodeMatには回転が入っている必要があった
+			////	//GetNodeMatとGetNodeAnimMatは同じ結果を返すことになった
+			////	//この変更後にRetargetもテスト　Spring1とbvh121,Rokoko  TheHunt Charactorとbvh121
+			////	calcnodeanimmat = localnodeanimmat * parentnodeanimmat;
+			////	calcnodemat = calcnodeanimmat;//rot入りと同じ
+			////}
 
 
-			//2023/07/03
-			//BindPoseとcluster検索を無効にしてNodeMat計算だけでテスト(TheHunt City1 Camera_1, Camera8)した結果　NodeMatには回転が入っている必要があった
-			//GetNodeMatとGetNodeAnimMatは同じ結果を返すことになった
-			//この変更後にRetargetもテスト　Spring1とbvh121,Rokoko  TheHunt Charactorとbvh121
+			////2023/07/03
+			////BindPoseとcluster検索を無効にしてNodeMat計算だけでテスト(TheHunt City1 Camera_1, Camera8)した結果　NodeMatには回転が入っている必要があった
+			////GetNodeMatとGetNodeAnimMatは同じ結果を返すことになった
+			////この変更後にRetargetもテスト　Spring1とbvh121,Rokoko  TheHunt Charactorとbvh121
 
 
-			//2023/07/04 More Tests And Modify CBone::CalcLocalNodePosture()
-			//	NodeMat計算部分(CBone::CalcLocalNodePosture())について　テストケースを増やして　更に修正
-			//	NodeMatをlclrot入りにするかかどうかは　原則としてGetRotationActive()依存　ただしSkeletonの場合はlclrot無し
-			//	読み書き読み書き読みテスト
-			//	Rokoko womandance BP無し 0frameAnim在り, left90 BP無し 0frameAnim在り
-			//	bvh121
-			//	Spring1
-			//	TheHunt City1 Camera1 Camera8
-			//	TheHunt Street1 Camera1 Camera2 Camera3
-			//	Spring1にbvh121とRokokoBP在り無しをリターゲット
-			//	Rokoko womandanceとbvh121について　読み書き読み書き読みテストで　lclrot無しにしないとうまくいかなかった
-			//	TheHuntCity1 Camera1のCameraの子供のスキンメッシュには　BPがあるが　lclrot無しにしないと読み書き読み書き読みで形が崩れた
-			//	よってBPの有無に関わらず　Skeletonの場合にはlclrot無しとした
+			////2023/07/04 More Tests And Modify CBone::CalcLocalNodePosture()
+			////	NodeMat計算部分(CBone::CalcLocalNodePosture())について　テストケースを増やして　更に修正
+			////	NodeMatをlclrot入りにするかかどうかは　原則としてGetRotationActive()依存　ただしSkeletonの場合はlclrot無し
+			////	読み書き読み書き読みテスト
+			////	Rokoko womandance BP無し 0frameAnim在り, left90 BP無し 0frameAnim在り
+			////	bvh121
+			////	Spring1
+			////	TheHunt City1 Camera1 Camera8
+			////	TheHunt Street1 Camera1 Camera2 Camera3
+			////	Spring1にbvh121とRokokoBP在り無しをリターゲット
+			////	Rokoko womandanceとbvh121について　読み書き読み書き読みテストで　lclrot無しにしないとうまくいかなかった
+			////	TheHuntCity1 Camera1のCameraの子供のスキンメッシュには　BPがあるが　lclrot無しにしないと読み書き読み書き読みで形が崩れた
+			////	よってBPの有無に関わらず　Skeletonの場合にはlclrot無しとした
 			calcnodemat = localnodemat * parentnodemat;
 			calcnodeanimmat = localnodeanimmat * parentnodeanimmat;
-
 		}
 	}
 	else {

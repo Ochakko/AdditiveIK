@@ -6886,6 +6886,7 @@ CBone* CModel::CreateNewFbxBone(FbxNodeAttribute::EType type, FbxNode* curnode, 
 
 			newbone->SetType(FBXBONE_SKELETON);
 			newbone->SetENullConvertFlag(true);//2025/07/05
+			newbone->SetIKStopFlag(true);//2025/07/12
 
 			//2023/10/26 GetBoneByName()高速化用
 			const char* pjoint = strstr(newbonename, "_Joint");
@@ -12893,7 +12894,8 @@ int CModel::IKRotateUnderIK(bool limitdegflag, int wallscrapingikflag, CEditRang
 
 			//CBone* parentbone = curbone->GetParent();
 			CBone* parentbone = lastpar->GetParent(false);
-			if (parentbone && parentbone->IsSkeleton() && (curbone->GetJointFPos() != parentbone->GetJointFPos())) {
+			if (parentbone && parentbone->IsSkeleton() && !parentbone->GetIKStopFlag() &&//2025/07/12 Check IKStopFlag
+				(curbone->GetJointFPos() != parentbone->GetJointFPos())) {
 				//UpdateMatrix(limitdegflag, &m_matWorld, &m_matVP);//curmp更新
 
 				CRigidElem* curre = GetRigidElem(lastpar->GetBoneNo());
@@ -13372,7 +13374,8 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 
 			//CBone* parentbone = curbone->GetParent();
 			CBone* parentbone = lastpar->GetParent(false);
-			if( parentbone && parentbone->IsSkeleton() && (curbone->GetJointFPos() != parentbone->GetJointFPos()) ){
+			if( parentbone && parentbone->IsSkeleton() && !parentbone->GetIKStopFlag() &&//2025/07/12 Check IKStopFlag
+				(curbone->GetJointFPos() != parentbone->GetJointFPos()) ){
 				//UpdateMatrix(limitdegflag, &m_matWorld, &m_matVP);//curmp更新
 
 				CRigidElem* curre = GetRigidElem(lastpar->GetBoneNo());
@@ -17764,7 +17767,7 @@ int CModel::IKRotateAxisDeltaUnderIK(
 				aplybone = curbone;
 			}
 
-			if (aplybone->IsNotSkeleton()) {
+			if (aplybone->IsNotSkeleton() || aplybone->GetIKStopFlag()) {//2025/07/12 Check IKStopFlag
 				//eNullの場合処理をスキップ
 				currate = (float)pow((double)ikrate, (double)g_ikfirst * (double)levelcnt);
 				lastbone = curbone;
@@ -22979,7 +22982,7 @@ int CModel::SetIKStopFlag()
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* srcbone = itrbone->second;
 		if (srcbone) {
-			if (IsIKStopName(srcbone->GetBoneName())) {
+			if (IsIKStopName(srcbone->GetBoneName()) || srcbone->GetENullConvertFlag()) {//2025/07/12 ENullConvertFlag
 				srcbone->SetIKStopFlag(true);
 			}
 			else {
