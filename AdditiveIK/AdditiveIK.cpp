@@ -6544,9 +6544,9 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 
 			OnRenderBoneMark(re, rc);
 
-			if ((s_dispselect || s_camtargetdisp) && s_select) {
+			//if ((s_dispselect || s_camtargetdisp) && s_select) {//2025/07/13 SelectMark非表示時にもIK軸の計算をするためにOnRenderSelect()を実行する
 				OnRenderSelect(re, rc);
-			}
+			//}
 
 
 		}
@@ -31553,12 +31553,14 @@ int OnRenderSelect(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		return 0;
 	}
 
+	int renderflag = ((s_dispselect || s_camtargetdisp) && (s_select != nullptr)) ? 1 : 0;
+
 	if (s_camtargetdisp == false) {
 		if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
 			if (s_select && (s_curboneno >= 0) && (g_previewFlag == 0) && (GetCurrentModel() && GetCurrentModel()->GetModelDisp()) && (g_bonemarkflag != 0)) {//underchecking
 				//SetSelectCol();
 				SetSelectState();
-				RenderSelectMark(re, pRenderContext, 1);
+				RenderSelectMark(re, pRenderContext, renderflag);
 			}
 		}
 		//else if ((g_previewFlag == 5) && (s_oprigflag == 1)){
@@ -31566,14 +31568,14 @@ int OnRenderSelect(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 			if (s_select && (s_curboneno >= 0) && (GetCurrentModel() && GetCurrentModel()->GetModelDisp())) {
 				//SetSelectCol();
 				SetSelectState();
-				RenderSelectMark(re, pRenderContext, 1);
+				RenderSelectMark(re, pRenderContext, renderflag);
 			}
 		}
 	}
 	else {
 		if (g_previewFlag == 0) {
 			SetSelectState();
-			RenderSelectMark(re, pRenderContext, 1);
+			RenderSelectMark(re, pRenderContext, renderflag);
 		}
 	}
 

@@ -8,6 +8,14 @@ https://github.com/Ochakko/AdditiveIK
 　　親がeNullノードであるようなSkeletonに対するモーション編集対応.
 　　UnityAsset FantasyAnimalのモーション編集が可能に.
 
+　ブラシ調整
+　　Rectブラシの選択開始フレームでのウェイトが１になっていなかった不具合を修正
+　　(GUIの1フレームを示すそれぞれの四角の左端縦線がフレーム位置を示しています)
+
+　ジョイント位置に操作軸非表示の時にも操作軸の計算をするように修正
+　　操作軸非表示でIKした際に、軸が異なっていた不具合を修正
+
+
 2025/07/12
 　Skelton階層構造の途中にeNullがある場合のFBX出力修正
 　　Skeletonの子供にeNullがあってその子供にSkeletonが続く場合の読み書き改善

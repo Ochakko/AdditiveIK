@@ -188,27 +188,39 @@ MBPLUGIN_EXPORT int MBCreateMotionBrush(double srcstartframe, double srcendframe
 						//}
 						if ((framecnt == startframe) && (framecnt != applyframe)) {//applyframeのときは１．０
 							if (repeatscnt == 0) {
-								curscale = 0.0f;
+								//curscale = 0.0f;
+								
+								//2025/07/13 矩形は両端も1.0
+								curscale = 1.0;
 							}
 							else {
 								if (div2) {
 									curscale = 0.5f;
 								}
 								else {
-									curscale = 0.0f;
+									//curscale = 0.0f;
+
+									//2025/07/13 矩形は両端も1.0
+									curscale = 1.0;
 								}
 							}
 						}
 						else if ((framecnt == endframe) && (framecnt != applyframe)) {//applyframeのときは１．０
 							if (repeatscnt == (repeats - 1)) {
-								curscale = 0.0f;
+								//curscale = 0.0f;
+
+								//2025/07/13 矩形は両端も1.0
+								curscale = 1.0;
 							}
 							else {
 								if (div2) {
 									curscale = 0.5f;
 								}
 								else {
-									curscale = 0.0f;
+									//curscale = 0.0f;
+
+									//2025/07/13 矩形は両端も1.0
+									curscale = 1.0;
 								}
 							}
 						}
