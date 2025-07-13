@@ -49,8 +49,8 @@
     <EmissiveDispRate>1.000000</EmissiveDispRate>
     <AmbientDispRate>1.000000</AmbientDispRate>
     <CustomIKStopName>1</CustomIKStopName>
-    <IKStopName>Shoulder</IKStopName>
-    <IKStopName>UpperLeg</IKStopName>
+    <IKStopName>_Shoulder</IKStopName>
+    <IKStopName>_UpperLeg</IKStopName>
     <RGDMORPH>0</RGDMORPH>
     <CURRE>0</CURRE>
     <RGD>0</RGD>
@@ -75,8 +75,8 @@
     <EmissiveDispRate>1.000000</EmissiveDispRate>
     <AmbientDispRate>1.000000</AmbientDispRate>
     <CustomIKStopName>1</CustomIKStopName>
-    <IKStopName>Shoulder</IKStopName>
-    <IKStopName>UpperLeg</IKStopName>
+    <IKStopName>_Shoulder</IKStopName>
+    <IKStopName>_UpperLeg</IKStopName>
     <RGDMORPH>0</RGDMORPH>
     <CURRE>0</CURRE>
     <RGD>0</RGD>

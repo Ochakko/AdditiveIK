@@ -2,6 +2,10 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/07/14早朝
+　Testフォルダのchaファイルの<IKStopName>の記述を修正
+　　IKStopフラグの位置を調整
+
 2025/07/13
 　Skelton階層構造の途中にeNullがある場合のモーション編集対応
 　　eNullノードに対してはIKStopFlagを設定してIKを禁止に.
