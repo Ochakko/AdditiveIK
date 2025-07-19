@@ -1,6 +1,27 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2025/07/19
+　AdditiveIK 1.0.0.48 RC1(リリース候補1)
+　　1.0.0.47からの変更点
+
+　　　Skelton階層構造の途中にeNullがあるFbxに対応
+　　　　eNullノードに対してはIKStopFlagを設定してIKを禁止に.
+　　　　(eNull自体にはモーションをつけない)
+　　　　親がeNullノードであるようなSkeletonに対するモーション編集対応.
+　　　　UnityAsset FantasyAnimalの読み書きモーション編集が可能に.
+
+　　　ブラシ調整
+　　　　Rectブラシの選択開始フレームでのウェイトが１になっていなかった不具合を修正
+　　　　(GUIの1フレームを示すそれぞれの四角の左端縦線がフレーム位置を示しています)
+
+　　　ジョイント位置に操作用軸非表示の時にも操作用軸の計算をするように修正
+　　　　操作用軸非表示でIKした際に、IK軸が異なっていた不具合を修正
+
+　　　リターゲット設定ファイル追加
+　　　　Test/RetargetSettingFileExample/FantasyAnimal_FantasyAnimal.rtg
+
+
 
 2025/07/14早朝
 　Testフォルダのchaファイルの<IKStopName>の記述を修正
