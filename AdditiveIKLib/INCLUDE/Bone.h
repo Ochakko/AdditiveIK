@@ -1747,6 +1747,13 @@ public: //accesser
 		return m_footrigupdated;
 	}
 
+	void SetPostureChildModel(CModel* srcmodel) {
+		m_posture_child_model = srcmodel;
+	}
+	CModel* GetPostureChildModel() {
+		return m_posture_child_model;
+	}
+
 public:
 	CRITICAL_SECTION m_CritSection_GetBefNext;
 	//CRITICAL_SECTION m_CritSection_GetBefNext2;
@@ -1931,6 +1938,8 @@ private:
 	int m_matrixindex;//for constant buffer
 
 	bool m_enullconvertflag;
+
+	CModel* m_posture_child_model;
 
 	CBone* m_parent;
 	CBone* m_child;

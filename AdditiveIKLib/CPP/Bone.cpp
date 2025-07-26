@@ -452,6 +452,8 @@ int CBone::InitParams()
 	m_type = FBXBONE_NONE;
 	m_enullconvertflag = false;
 
+	m_posture_child_model = nullptr;
+
 	ChaMatrixIdentity(&m_nodemat);
 	ChaMatrixIdentity(&m_nodeanimmat);
 	//m_bindmat.SetIdentity();
@@ -1097,7 +1099,12 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 			//modelのworldmatを掛ける
 				//skinmeshの変換の際にはシェーダーでg_hmWorldは掛けない　すでにg_hmWorldが掛かっている必要有
-			ChaMatrix tmpmat = newworldmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
+			//ChaMatrix tmpmat = newworldmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
+			
+			//2025/07/26 モデルがPostureParentMatを持っている場合にはそれをworldmatに掛ける
+			ChaMatrix postureparentmat = GetParModel()->GetPostureParentMat();
+			ChaMatrix tmpmat = newworldmat * postureparentmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
+			
 			SetWorldMat(limitdegflag, srcmotid, roundingframe, tmpmat, &(m_curmp[m_updateslot]));//roundingframe!!!!
 
 			if (limitdegflag == true) {
@@ -1175,6 +1182,12 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 		//ChaVector3TransformCoord(&m_childworld, &jpos, &(GetBtMat()));
 		ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);
+	}
+
+
+	if (GetPostureChildModel()) {
+		ChaMatrix posturemat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
+		GetPostureChildModel()->SetPostureParentMat(posturemat);
 	}
 
 	m_befupdatetime = srcframe;

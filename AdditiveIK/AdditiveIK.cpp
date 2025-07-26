@@ -2055,6 +2055,8 @@ ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わら�
 #define ID_RMENU_IKSTOP (ID_RMENU_PHYSICSCONSTRAINT + 16)
 #define ID_RMENU_COPY (ID_RMENU_PHYSICSCONSTRAINT + 17)
 #define ID_RMENU_PASTE (ID_RMENU_PHYSICSCONSTRAINT + 18)
+//SET_POSTURE_CHILDは子メニューを出すので　後ろのIDとしてにMAXMODELNUM分予約
+//#define ID_RMENU_SET_POSTURE_CHILD (ID_RMENU_PHYSICSCONSTRAINT + 19)
 
 
 
@@ -7322,6 +7324,24 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				refreshTimeline(*s_owpTimeline);
 			}
 		}
+
+		//SET_POSTURE_CHILD
+		else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_BONERCLICK + MAXRIGNUM * 3 + 1)) && 
+			(menuid < (ID_RMENU_0 + MENUOFFSET_BONERCLICK + MAXRIGNUM * 3 + 1 + MAXMODELNUM))) {
+			if (s_chascene && GetCurrentModel()) {
+				int subid = menuid - (ID_RMENU_0 + MENUOFFSET_BONERCLICK + MAXRIGNUM * 3 + 1);
+				MODELELEM childmodelelem = s_chascene->GetModelElem(subid);
+				if (childmodelelem.modelptr) {
+					CBone* parentbone = GetCurrentModel()->GetBoneByID(s_curboneno);
+					if (parentbone) {
+						parentbone->SetPostureChildModel(childmodelelem.modelptr);
+					}
+				}
+			}
+		}
+
+
+
 		//else if (menuid == (ID_RMENU_KINEMATIC_ON_LOWER + MENUOFFSET_BONERCLICK)) {
 		//	if (GetCurrentModel() && curbone) {
 		//		GetCurrentModel()->SetKinematicTmpLower(curbone, true);
@@ -33797,6 +33817,7 @@ int BoneRClick(int srcboneno)
 
 				CRMenuMain* rsubmenu[MAXRIGNUM];
 				ZeroMemory(rsubmenu, sizeof(CRMenuMain*) * MAXRIGNUM);
+				CRMenuMain* rsubmenu_posturechild = nullptr;
 
 
 				int menunum;
@@ -33839,26 +33860,23 @@ int BoneRClick(int srcboneno)
 						L"IK Stop OFF");
 				}
 
-				AppendMenu(submenu, MF_STRING, ID_RMENU_0 + MENUOFFSET_BONERCLICK, L"CreateNewRig");
-				int setmenuno = 1;
-				int rigno;
-				for (rigno = 0; rigno < MAXRIGNUM; rigno++) {
-					CUSTOMRIG currig = curbone->GetCustomRig(rigno);
-					if (currig.useflag == 2) {
-						int setmenuid = ID_RMENU_0 + setmenuno + MENUOFFSET_BONERCLICK;
+				if (s_chascene) {
+					int modelnum = s_chascene->GetModelNum();
+					if (modelnum > 0) {
+						//AppendMenu(submenu, MF_STRING, ID_RMENU_0 + MENUOFFSET_BONERCLICK + MAXRIGNUM * 3, L"Set PostureChildModel");
 
-						//AppendMenu(submenu, MF_STRING, setmenuid, currig.rigname);
-						s_customrigmenuindex[setmenuno] = rigno;
+						WCHAR parmenuname[MAX_PATH] = { 0L };
+						wcscpy_s(parmenuname, MAX_PATH, L"Set PostureChildModel");
 
-						rsubmenu[rigno] = new CRMenuMain(IDR_RMENU);
-						if (!rsubmenu[rigno]) {
+						rsubmenu_posturechild = new CRMenuMain(IDR_RMENU);
+						if (!rsubmenu_posturechild) {
 							return pickflag;
 						}
-						ret = rsubmenu[rigno]->CreatePopupMenu(parwnd, submenu, currig.rigname);
+						ret = rsubmenu_posturechild->CreatePopupMenu(parwnd, submenu, parmenuname);
 						if (ret) {
 							return pickflag;
 						}
-						HMENU subsubmenu = rsubmenu[rigno]->GetSubMenu();
+						HMENU subsubmenu = rsubmenu_posturechild->GetSubMenu();
 						int subsubmenunum;
 						subsubmenunum = GetMenuItemCount(subsubmenu);
 						int subsubmenuno;
@@ -33867,17 +33885,61 @@ int BoneRClick(int srcboneno)
 							RemoveMenu(subsubmenu, 0, MF_BYPOSITION);
 						}
 
-						int subsubid1 = setmenuid + MAXRIGNUM;
-						int subsubid2 = setmenuid + MAXRIGNUM * 2;
-						int subsubid3 = setmenuid + MAXRIGNUM * 3;
-						AppendMenu(subsubmenu, MF_STRING, subsubid1, L"SettingOfRig");
-						AppendMenu(subsubmenu, MF_STRING, subsubid2, L"Execute Rig");
-						AppendMenu(subsubmenu, MF_STRING, subsubid3, L"Invalidate Rig");
+						int setmenuid = ID_RMENU_0 + MENUOFFSET_BONERCLICK + MAXRIGNUM * 3 + 1;
 
-						setmenuno++;
+						int childindex;
+						for (childindex = 0; childindex < modelnum; childindex++) {
+							MODELELEM curme = s_chascene->GetModelElem(childindex);
+							if (curme.modelptr) {
+								WCHAR curname[MAX_PATH] = { 0L };
+								wcscpy_s(curname, MAX_PATH, curme.modelptr->GetFileName());
+								int subsubid = setmenuid + childindex;
+								AppendMenu(subsubmenu, MF_STRING, subsubid, (WCHAR*)curme.modelptr->GetFileName());
+							}
+						}
 					}
 				}
+				
+				{
+					AppendMenu(submenu, MF_STRING, ID_RMENU_0 + MENUOFFSET_BONERCLICK, L"CreateNewRig");
+					int setmenuno = 1;
+					int rigno;
+					for (rigno = 0; rigno < MAXRIGNUM; rigno++) {
+						CUSTOMRIG currig = curbone->GetCustomRig(rigno);
+						if (currig.useflag == 2) {
+							int setmenuid = ID_RMENU_0 + setmenuno + MENUOFFSET_BONERCLICK;
 
+							//AppendMenu(submenu, MF_STRING, setmenuid, currig.rigname);
+							s_customrigmenuindex[setmenuno] = rigno;
+
+							rsubmenu[rigno] = new CRMenuMain(IDR_RMENU);
+							if (!rsubmenu[rigno]) {
+								return pickflag;
+							}
+							ret = rsubmenu[rigno]->CreatePopupMenu(parwnd, submenu, currig.rigname);
+							if (ret) {
+								return pickflag;
+							}
+							HMENU subsubmenu = rsubmenu[rigno]->GetSubMenu();
+							int subsubmenunum;
+							subsubmenunum = GetMenuItemCount(subsubmenu);
+							int subsubmenuno;
+							for (subsubmenuno = 0; subsubmenuno < subsubmenunum; subsubmenuno++)
+							{
+								RemoveMenu(subsubmenu, 0, MF_BYPOSITION);
+							}
+
+							int subsubid1 = setmenuid + MAXRIGNUM;
+							int subsubid2 = setmenuid + MAXRIGNUM * 2;
+							int subsubid3 = setmenuid + MAXRIGNUM * 3;
+							AppendMenu(subsubmenu, MF_STRING, subsubid1, L"SettingOfRig");
+							AppendMenu(subsubmenu, MF_STRING, subsubid2, L"Execute Rig");
+							AppendMenu(subsubmenu, MF_STRING, subsubid3, L"Invalidate Rig");
+
+							setmenuno++;
+						}
+					}
+				}
 
 				POINT pt;
 				GetCursorPos(&pt);
@@ -33890,13 +33952,18 @@ int BoneRClick(int srcboneno)
 				int menuid;
 				menuid = rmenu->TrackPopupMenu(pt);
 
-
+				int rigno;
 				for (rigno = 0; rigno < MAXRIGNUM; rigno++) {
 					CRMenuMain* curmenu = rsubmenu[rigno];
 					if (curmenu) {
 						curmenu->Destroy();
 						delete curmenu;
 					}
+				}
+
+				if (rsubmenu_posturechild) {
+					rsubmenu_posturechild->Destroy();
+					delete rsubmenu_posturechild;
 				}
 
 				rmenu->Destroy();
@@ -35287,7 +35354,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.48 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.49 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -38796,7 +38863,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.48 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.49 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && s_chascene) {

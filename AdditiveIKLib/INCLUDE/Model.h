@@ -3549,6 +3549,12 @@ public: //accesser
 		}
 	};
 
+	void SetPostureParentMat(ChaMatrix srcmat) {
+		m_postureparentmat = srcmat;
+	}
+	ChaMatrix GetPostureParentMat() {
+		return m_postureparentmat;
+	}
 
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
@@ -3784,6 +3790,7 @@ private:
 
 	bool m_mocapwalk;
 
+	ChaMatrix m_postureparentmat;
 
 	std::vector<IKROTREC> m_ikrotrec;
 	std::vector<IKROTREC> m_ikrotrec_u;

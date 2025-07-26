@@ -1,6 +1,15 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+
+2025/07/27
+　PostureChild機能の実装開始(実装中)
+　　乗り物に人を載せたい場合などに、乗り物のボーンを右クリックしてSetPostureChildをドロップダウンして乗せたいモデル名を選択すると機能します
+　　まだオフにするGUIがありません
+　　まだ物理シミュに対応していません
+　　まだ乗せる位置のオフセット設定がありません
+
+
 2025/07/19
 　AdditiveIK 1.0.0.48 release
 　　1.0.0.47からの変更点
