@@ -2686,7 +2686,12 @@ public: //accesser
 	};
 	ChaMatrix GetWorldMat()
 	{
-		return m_matWorld;
+		if (GetPostureParentFlag()) {
+			return GetPostureParentMat();
+		}
+		else {
+			return m_matWorld;
+		}
 	};
 	ChaMatrix GetViewMat()
 	{
@@ -3551,9 +3556,13 @@ public: //accesser
 
 	void SetPostureParentMat(ChaMatrix srcmat) {
 		m_postureparentmat = srcmat;
+		m_postureparentflag = true;
 	}
 	ChaMatrix GetPostureParentMat() {
 		return m_postureparentmat;
+	}
+	bool GetPostureParentFlag() {
+		return m_postureparentflag;
 	}
 
 public:
@@ -3790,6 +3799,7 @@ private:
 
 	bool m_mocapwalk;
 
+	bool m_postureparentflag;
 	ChaMatrix m_postureparentmat;
 
 	std::vector<IKROTREC> m_ikrotrec;

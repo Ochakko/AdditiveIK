@@ -1099,12 +1099,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 			//modelのworldmatを掛ける
 				//skinmeshの変換の際にはシェーダーでg_hmWorldは掛けない　すでにg_hmWorldが掛かっている必要有
-			//ChaMatrix tmpmat = newworldmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
-			
-			//2025/07/26 モデルがPostureParentMatを持っている場合にはそれをworldmatに掛ける
-			ChaMatrix postureparentmat = GetParModel()->GetPostureParentMat();
-			ChaMatrix tmpmat = newworldmat * postureparentmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
-			
+			ChaMatrix tmpmat = newworldmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
 			SetWorldMat(limitdegflag, srcmotid, roundingframe, tmpmat, &(m_curmp[m_updateslot]));//roundingframe!!!!
 
 			if (limitdegflag == true) {

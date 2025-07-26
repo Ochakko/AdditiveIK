@@ -704,6 +704,7 @@ int CModel::InitParams()
 	m_mocapwalk = false;
 
 	m_postureparentmat.SetIdentity();
+	m_postureparentflag = false;
 
 	return 0;
 }
