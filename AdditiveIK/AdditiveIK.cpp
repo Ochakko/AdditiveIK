@@ -841,6 +841,7 @@ static HWND s_motpropdlghwnd = 0;
 static HWND s_materialratedlgwnd = 0;
 static HWND s_modelworldmatdlgwnd = 0;
 static HWND s_jumpgravitydlgwnd = 0;
+static HWND s_posturechilddlgwnd = 0;
 static HWND s_savechadlghwnd = 0;
 static HWND s_bvhdlghwnd = 0;
 static HWND s_saveredlghwnd = 0;
@@ -1181,6 +1182,9 @@ static CModel* s_gplane = NULL;
 static CModel* s_sky = NULL;
 
 static std::vector<CGrassElem*> s_grassElemVec;
+
+static CModel* s_posturechildmodel = nullptr;
+static CBone* s_postureparentbone = nullptr;
 
 
 static int s_rigsphere_num;
@@ -2325,6 +2329,8 @@ static int GetModelWorldMat(ChaVector3* dstpos, ChaVector3* dstrot);
 static int SetModelWorldMat();
 static int CreateJumpGravityWnd();
 static int ShowJumpGravityDlg();
+static int CreatePostureChildWnd();
+static int ShowPostureChildDlg();
 
 //static void CheckShaderTypeButton(HWND hDlgWnd, int srcshadertype);//DispAndLimitプレートメニュー用
 
@@ -2368,6 +2374,7 @@ LRESULT CALLBACK AboutDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK bvh2FbxBatchDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK RetargetBatchDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 LRESULT CALLBACK ProgressDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
+LRESULT CALLBACK PostureChildDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp);
 
 
 //static int OwnerDrawLightColorBar(HWND hDlgWnd, int lightindex, int idcolorbar);
@@ -3357,6 +3364,7 @@ INT WINAPI wWinMain(
 	CreateMaterialRateWnd();
 	CreateModelWorldMatWnd();
 	CreateJumpGravityWnd();
+	CreatePostureChildWnd();
 
 	//CreateCopyHistoryDlg();//s_modelが出来てから呼ぶ　OnModelMenu()に移動
 	CreateDollyHistoryDlg();//CheckResolution()より後、g_mainhwndがセットされた後で呼ぶ
@@ -3725,6 +3733,8 @@ void InitApp()
 	s_cancelRButtonDown = false;
 	s_LButtonDown = false;
 
+	s_posturechildmodel = nullptr;
+	s_postureparentbone = nullptr;
 
 	s_copyhistorydlg2.InitParams();
 
@@ -5449,6 +5459,11 @@ void OnDestroyDevice()
 		DestroyWindow(s_jumpgravitydlgwnd);
 		s_jumpgravitydlgwnd = 0;
 	}
+	if (s_posturechilddlgwnd) {
+		DestroyWindow(s_posturechilddlgwnd);
+		s_posturechilddlgwnd = 0;
+	}
+
 	//if (s_shadertypeparamsdlgwnd) {
 	//	DestroyWindow(s_shadertypeparamsdlgwnd);
 	//	s_shadertypeparamsdlgwnd = 0;
@@ -7338,11 +7353,19 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							//ONだったものをOFFに
 							posturebone->SetPostureChildModel(nullptr);
 							posturebone->SetPostureChildFlag(false);
+							childmodelelem.modelptr->SetPostureParentFlag(false);
 						}
 						else {
 							//セットしてONに
 							posturebone->SetPostureChildModel(childmodelelem.modelptr);
 							posturebone->SetPostureChildFlag(true);
+							childmodelelem.modelptr->SetPostureParentFlag(true);
+
+							//PostureChildDlgProc()内で使用
+							s_posturechildmodel = childmodelelem.modelptr;
+							s_postureparentbone = posturebone;
+
+							ShowPostureChildDlg();
 						}
 					}
 				}
@@ -24177,6 +24200,91 @@ LRESULT CALLBACK JumpGravityDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp
 	return TRUE;
 
 }
+
+LRESULT CALLBACK PostureChildDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+
+	//s_posturechildmodel = childmodelelem.modelptr;
+	//s_postureparentbone = posturebone;
+
+
+	WCHAR strval[256] = { 0L };
+
+
+	switch (msg) {
+	case WM_INITDIALOG:
+	{
+		//SetDlgPosDesktopCenter(hDlgWnd, HWND_TOPMOST);
+
+		s_posturechilddlgwnd = hDlgWnd;
+
+
+		return FALSE;
+	}
+	break;
+
+	case WM_HSCROLL:
+		if ((s_posturechildmodel != nullptr) && (s_postureparentbone != nullptr)) {
+			if (GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_X) == (HWND)lp) {
+				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_X), TBM_GETPOS, 0, 0);
+				float currentoffset = (float)((double)cursliderpos * 0.1);
+
+				swprintf_s(strval, 256, L"Offset Position X : %.2f", (double)currentoffset);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_X, strval);
+
+				ChaVector3 currentposoffset = s_postureparentbone->GetPostureChildPosOffset();
+				currentposoffset.x = currentoffset;
+				s_postureparentbone->SetPostureChildPosOffset(currentposoffset);
+			}
+			else if (GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Y) == (HWND)lp) {
+				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Y), TBM_GETPOS, 0, 0);
+				float currentoffset = (float)((double)cursliderpos * 0.1);
+
+				swprintf_s(strval, 256, L"Offset Position Y : %.2f", (double)currentoffset);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_Y, strval);
+
+				ChaVector3 currentposoffset = s_postureparentbone->GetPostureChildPosOffset();
+				currentposoffset.y = currentoffset;
+				s_postureparentbone->SetPostureChildPosOffset(currentposoffset);
+			}
+			else if (GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Z) == (HWND)lp) {
+				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Z), TBM_GETPOS, 0, 0);
+				float currentoffset = (float)((double)cursliderpos * 0.1);
+
+				swprintf_s(strval, 256, L"Offset Position Z : %.2f", (double)currentoffset);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_Z, strval);
+
+				ChaVector3 currentposoffset = s_postureparentbone->GetPostureChildPosOffset();
+				currentposoffset.z = currentoffset;
+				s_postureparentbone->SetPostureChildPosOffset(currentposoffset);
+			}
+		}
+		break;
+
+	case WM_COMMAND:
+		switch (LOWORD(wp)) {
+		case IDOK:
+		case IDC_BUTTON_OK:
+			ShowWindow(hDlgWnd, SW_HIDE);
+			break;
+		case IDCANCEL:
+			ShowWindow(hDlgWnd, SW_HIDE);
+			break;
+		default:
+			return FALSE;
+		}
+		break;
+	case WM_CLOSE:
+		ShowWindow(hDlgWnd, SW_HIDE);
+		break;
+	default:
+		DefWindowProc(hDlgWnd, msg, wp, lp);
+		return FALSE;
+	}
+	return TRUE;
+
+}
+
 
 LRESULT CALLBACK MaterialRateDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
@@ -43256,6 +43364,19 @@ int CreateJumpGravityWnd()
 	return 0;
 }
 
+int CreatePostureChildWnd()
+{
+	HWND hDlgWnd = CreateDialogW((HMODULE)GetModuleHandle(NULL),
+		MAKEINTRESOURCE(IDD_POSTURECHILDDLG), s_3dwnd, (DLGPROC)PostureChildDlgProc);
+	if (hDlgWnd == NULL) {
+		return 1;
+	}
+	s_posturechilddlgwnd = hDlgWnd;
+	ShowWindow(s_posturechilddlgwnd, SW_HIDE);
+
+	return 0;
+}
+
 int OnFrameBlendShape()
 {
 
@@ -43579,6 +43700,46 @@ int ShowJumpGravityDlg()
 	return 0;
 }
 
+int ShowPostureChildDlg()
+{
+
+	if (s_posturechilddlgwnd) {
+		if (GetCurrentModel()) {
+			HWND hDlgWnd = s_posturechilddlgwnd;
+			WCHAR strval[256] = { 0L };
+
+			if ((s_posturechildmodel != nullptr) && (s_postureparentbone != nullptr)) {
+				ChaVector3 currentposoffset = s_postureparentbone->GetPostureChildPosOffset();
+
+				swprintf_s(strval, 256, L"Offset Position X : %.2f", (double)currentposoffset.x);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_X, strval);
+				int sliderposx = int(max(-5000.0, min(5000.0, (double)currentposoffset.x * 10.0)));
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_X), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-5000);
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_X), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)5000);
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_X), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderposx);
+
+				swprintf_s(strval, 256, L"Offset Position Y : %.2f", (double)currentposoffset.y);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_Y, strval);
+				int sliderposy = int(max(-5000.0, min(5000.0, (double)currentposoffset.y * 10.0)));
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Y), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-5000);
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Y), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)5000);
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Y), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderposy);
+
+				swprintf_s(strval, 256, L"Offset Position Z : %.2f", (double)currentposoffset.z);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_Z, strval);
+				int sliderposz = int(max(-5000.0, min(5000.0, (double)currentposoffset.z * 10.0)));
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Z), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-5000);
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Z), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)5000);
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Z), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderposz);
+			}
+
+			ShowWindow(s_posturechilddlgwnd, SW_SHOW);
+			UpdateWindow(s_posturechilddlgwnd);
+		}
+	}
+
+	return 0;
+}
 
 int ShowShaderTypeParamsDlg(bool srcflag)
 {

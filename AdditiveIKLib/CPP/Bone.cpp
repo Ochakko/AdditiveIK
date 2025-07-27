@@ -454,6 +454,7 @@ int CBone::InitParams()
 
 	m_posture_child_flag = false;
 	m_posture_child_model = nullptr;
+	m_posture_child_pos_offset.SetZeroVec3();
 
 	ChaMatrixIdentity(&m_nodemat);
 	ChaMatrixIdentity(&m_nodeanimmat);
@@ -1182,8 +1183,18 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 
 	if (GetPostureChildModel()) {
-		if (GetPostureChildFlag()) {
+		if (GetPostureChildFlag() && GetPostureChildModel()->GetPostureParentFlag()) {
 			ChaMatrix posturemat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
+
+			ChaMatrix posturerotmat = ChaMatrixRot(posturemat);
+
+			ChaVector3 postureposoffset = GetPostureChildPosOffset();
+			ChaVector3 rotatedposoffset;
+			ChaVector3TransformCoord(&rotatedposoffset, &postureposoffset, &posturerotmat);
+			posturemat.data[MATI_41] += rotatedposoffset.x;
+			posturemat.data[MATI_42] += rotatedposoffset.y;
+			posturemat.data[MATI_43] += rotatedposoffset.z;
+
 			GetPostureChildModel()->SetPostureParentMat(posturemat);
 			GetPostureChildModel()->SetPostureParentFlag(true);
 		}

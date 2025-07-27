@@ -1784,6 +1784,13 @@ public: //accesser
 		}
 	}
 
+	void SetPostureChildPosOffset(ChaVector3 srcoffset) {
+		m_posture_child_pos_offset = srcoffset;
+	}
+	ChaVector3 GetPostureChildPosOffset() {
+		return m_posture_child_pos_offset;
+	}
+
 public:
 	CRITICAL_SECTION m_CritSection_GetBefNext;
 	//CRITICAL_SECTION m_CritSection_GetBefNext2;
@@ -1971,6 +1978,7 @@ private:
 
 	bool m_posture_child_flag;
 	CModel* m_posture_child_model;
+	ChaVector3 m_posture_child_pos_offset;
 
 	CBone* m_parent;
 	CBone* m_child;
