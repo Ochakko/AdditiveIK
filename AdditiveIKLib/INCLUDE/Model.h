@@ -3556,10 +3556,12 @@ public: //accesser
 
 	void SetPostureParentMat(ChaMatrix srcmat) {
 		m_postureparentmat = srcmat;
-		m_postureparentflag = true;
 	}
 	ChaMatrix GetPostureParentMat() {
 		return m_postureparentmat;
+	}
+	void SetPostureParentFlag(bool srcflag) {
+		m_postureparentflag = srcflag;
 	}
 	bool GetPostureParentFlag() {
 		return m_postureparentflag;

@@ -1,10 +1,14 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+
+2025/07/27 その３
+　PostureChild機能の実装の続き
+　　右クリックメニューからオンオフ可能に.
+
 2025/07/27 その２
 　PostureChild機能の実装の続き
 　　物理シミュに対応
-
 
 2025/07/27
 　PostureChild機能の実装開始(実装中)

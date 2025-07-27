@@ -7332,9 +7332,18 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				int subid = menuid - (ID_RMENU_0 + MENUOFFSET_BONERCLICK + MAXRIGNUM * 3 + 1);
 				MODELELEM childmodelelem = s_chascene->GetModelElem(subid);
 				if (childmodelelem.modelptr) {
-					CBone* parentbone = GetCurrentModel()->GetBoneByID(s_curboneno);
-					if (parentbone) {
-						parentbone->SetPostureChildModel(childmodelelem.modelptr);
+					CBone* posturebone = GetCurrentModel()->GetBoneByID(s_curboneno);
+					if (posturebone) {
+						if (posturebone->GetPostureChildModel() == childmodelelem.modelptr) {
+							//ONだったものをOFFに
+							posturebone->SetPostureChildModel(nullptr);
+							posturebone->SetPostureChildFlag(false);
+						}
+						else {
+							//セットしてONに
+							posturebone->SetPostureChildModel(childmodelelem.modelptr);
+							posturebone->SetPostureChildFlag(true);
+						}
 					}
 				}
 			}
@@ -33892,9 +33901,14 @@ int BoneRClick(int srcboneno)
 							MODELELEM curme = s_chascene->GetModelElem(childindex);
 							if (curme.modelptr) {
 								WCHAR curname[MAX_PATH] = { 0L };
-								wcscpy_s(curname, MAX_PATH, curme.modelptr->GetFileName());
+								if (curbone->GetPostureChildModel() == curme.modelptr) {
+									swprintf_s(curname, MAX_PATH, L"%s OFF", curme.modelptr->GetFileName());
+								}
+								else {
+									swprintf_s(curname, MAX_PATH, L"%s ON", curme.modelptr->GetFileName());
+								}
 								int subsubid = setmenuid + childindex;
-								AppendMenu(subsubmenu, MF_STRING, subsubid, (WCHAR*)curme.modelptr->GetFileName());
+								AppendMenu(subsubmenu, MF_STRING, subsubid, curname);
 							}
 						}
 					}

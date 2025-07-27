@@ -452,6 +452,7 @@ int CBone::InitParams()
 	m_type = FBXBONE_NONE;
 	m_enullconvertflag = false;
 
+	m_posture_child_flag = false;
 	m_posture_child_model = nullptr;
 
 	ChaMatrixIdentity(&m_nodemat);
@@ -1181,8 +1182,17 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 
 	if (GetPostureChildModel()) {
-		ChaMatrix posturemat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
-		GetPostureChildModel()->SetPostureParentMat(posturemat);
+		if (GetPostureChildFlag()) {
+			ChaMatrix posturemat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
+			GetPostureChildModel()->SetPostureParentMat(posturemat);
+			GetPostureChildModel()->SetPostureParentFlag(true);
+		}
+		else {
+			ChaMatrix inimat;
+			inimat.SetIdentity();
+			GetPostureChildModel()->SetPostureParentMat(inimat);
+			GetPostureChildModel()->SetPostureParentFlag(false);
+		}
 	}
 
 	m_befupdatetime = srcframe;

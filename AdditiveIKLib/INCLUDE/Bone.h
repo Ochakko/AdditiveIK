@@ -1748,10 +1748,40 @@ public: //accesser
 	}
 
 	void SetPostureChildModel(CModel* srcmodel) {
-		m_posture_child_model = srcmodel;
+		if (GetPostureChildModel()) {
+			//古い設定のフラグをリセット
+			GetPostureChildModel()->SetPostureParentFlag(false);
+			SetPostureChildFlag(false);
+		}
+		
+		if (srcmodel) {
+			m_posture_child_model = srcmodel;
+			//新しい設定のフラグをON
+			m_posture_child_model->SetPostureParentFlag(true);
+			SetPostureChildFlag(true);
+		}
+		else {
+			//srcmodelがnullptrの場合　リセット
+			m_posture_child_model = nullptr;
+			SetPostureChildFlag(false);
+		}
 	}
 	CModel* GetPostureChildModel() {
 		return m_posture_child_model;
+	}
+	void SetPostureChildFlag(bool srcflag) {
+		m_posture_child_flag = srcflag;
+	}
+	bool GetPostureChildFlag() {
+		return m_posture_child_flag;
+	}
+	bool IsEnablePostureChildModel(CModel* srcmodel) {
+		if ((srcmodel != nullptr) && (GetPostureChildModel() == srcmodel) && (GetPostureChildFlag() == true)) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 public:
@@ -1939,6 +1969,7 @@ private:
 
 	bool m_enullconvertflag;
 
+	bool m_posture_child_flag;
 	CModel* m_posture_child_model;
 
 	CBone* m_parent;
