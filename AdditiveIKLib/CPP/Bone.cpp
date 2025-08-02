@@ -67,7 +67,7 @@ extern int g_previewFlag;
 */
 
 extern CRITICAL_SECTION g_CritSection_FbxSdk;
-
+extern ChaScene* g_chascene;
 
 //global
 void InitCustomRig(CUSTOMRIG* dstcr, CBone* parentbone, int rigno);
@@ -414,7 +414,7 @@ int CBone::InitParams()
 	m_upkind = UPVEC_NONE;
 	m_motmark.clear();
 
-	m_parmodel = 0;
+	m_parmodel = nullptr;
 	m_validflag = 1;
 	m_rigidelemname.clear();
 	m_btobject.clear();
@@ -857,7 +857,7 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 
 	int existflag = 0;
 
-	if ((g_previewFlag != 5) || (m_parmodel && (m_parmodel->GetBtCnt() == 0))){
+	if ((g_previewFlag != 5) || (GetParModel() && (GetParModel()->GetBtCnt() == 0))) {
 		if (srcframe >= 0.0) {
 			ChaMatrix newworldmat;
 			ChaMatrixIdentity(&newworldmat);
@@ -935,7 +935,7 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 		//}
 
 
-		if (m_parmodel && (m_parmodel->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
+		if (GetParModel() && (GetParModel()->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
 			bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
 			SetBtMat(GetWorldMat(limitdegflag, srcmotid, roundingframe, &m_targetmp), settobothflag);
 			SetBtFlag(1);
@@ -1050,7 +1050,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 	int existflag = 0;
 
-	if ((g_previewFlag != 5) || (m_parmodel && (m_parmodel->GetBtCnt() == 0))) {
+	if ((g_previewFlag != 5) || (GetParModel() && (GetParModel()->GetBtCnt() == 0))) {
 		if (srcframe >= 0.0) {
 			ChaMatrix newworldmat;
 			ChaMatrixIdentity(&newworldmat);
@@ -1089,7 +1089,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 
 			//2025/01/05
-			if (GetParModel()->GetUnderBlending()) {
+			if (GetParModel() && GetParModel()->GetUnderBlending()) {
 				newworldmat = newworldmat * m_targetrate1 + m_targetmp.GetAnimMat() * (1.0 - m_targetrate1);
 			}
 
@@ -1135,7 +1135,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 		//}
 
 
-		if (m_parmodel && (m_parmodel->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
+		if (GetParModel() && (GetParModel()->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
 			bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
 			SetBtMat(GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot])), settobothflag);
 			SetBtFlag(1);
@@ -1278,7 +1278,7 @@ int CBone::UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, 
 		m_curmp[m_updateslot].SetLimitedWM(*wmat);//modelwmが掛かっている
 	}
 
-	if (m_parmodel && (m_parmodel->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
+	if (GetParModel() && (GetParModel()->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
 		bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
 		SetBtMat(GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot])), settobothflag);
 		SetBtFlag(1);
@@ -1329,7 +1329,7 @@ int CBone::UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, 
 
 	//int existflag = 0;
 
-	//if ((g_previewFlag != 5) || (m_parmodel && (m_parmodel->GetBtCnt() == 0))) {
+	//if ((g_previewFlag != 5) || (GetParModel() && (GetParModel()->GetBtCnt() == 0))) {
 	//	ChaMatrix newworldmat;
 	//	ChaMatrixIdentity(&newworldmat);
 
@@ -1350,7 +1350,7 @@ int CBone::UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, 
 	//	ChaMatrix wvpmat = tmpmat * vpmat;
 	//	ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);//wmatで変換した位置に対して　vp変換
 
-	//	if (m_parmodel && (m_parmodel->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
+	//	if (GetParModel() && (GetParModel()->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
 	//		bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
 	//		SetBtMat(GetWorldMat(false, srcmotid, roundingframe, &(m_curmp[m_updateslot])), settobothflag);
 	//	}
@@ -1572,7 +1572,7 @@ int CBone::ClearLimitedWorldMat(int srcmotid, double srcframe0)
 //{
 //	int existflag = 0;
 //
-//	if ((g_previewFlag != 5) || (m_parmodel && (m_parmodel->GetBtCnt() == 0))) {
+//	if ((g_previewFlag != 5) || (GetParModel() && (GetParModel()->GetBtCnt() == 0))) {
 //
 //
 //		if (srcframe >= 0.0) {
@@ -1604,7 +1604,7 @@ int CBone::ClearLimitedWorldMat(int srcmotid, double srcframe0)
 //			m_curmp.SetWorldMat(*wmat);
 //		}
 //
-//		if (m_parmodel->GetBtCnt() == 0) {
+//		if (GetParModel()->GetBtCnt() == 0) {
 //			SetBtMat(m_curmp.GetWorldMat());
 //		}
 //
@@ -4584,8 +4584,8 @@ int CBone::CalcBoneDepth()
 
 ChaVector3 CBone::GetJointFPos()
 {
-	if (m_parmodel) {
-		if (m_parmodel->GetOldAxisFlagAtLoading() == 0) {
+	if (GetParModel()) {
+		if (GetParModel()->GetOldAxisFlagAtLoading() == 0) {
 			return m_jointfpos;
 		}
 		else {
@@ -4932,8 +4932,8 @@ ChaMatrix CBone::CalcLocalRotMatFromEul(ChaVector3 srceul)
 //
 //	int curmotid = 0;
 //	double curframe = 0;
-//	if (m_parmodel) {
-//		MOTINFO* curmi = m_parmodel->GetCurMotInfo();
+//	if (GetParModel()) {
+//		MOTINFO* curmi = GetParModel()->GetCurMotInfo();
 //		if (curmi) {
 //			curmotid = curmi->motid;
 //			curframe = RoundingTime(curmi->curframe);
@@ -6171,10 +6171,15 @@ CUSTOMRIG CBone::GetCustomRig(string strrig)
 }
 void CBone::SetCustomRig(CUSTOMRIG srccr)
 {
-	int isvalid = IsValidCustomRig(m_parmodel, srccr, this);
-	if (isvalid == 1){
-		m_customrig[srccr.rigno] = srccr;
-		m_customrig[srccr.rigno].useflag = 2;//2 : valid mark
+	if (GetParModel()) {
+		int isvalid = IsValidCustomRig(GetParModel(), srccr, this);
+		if (isvalid == 1) {
+			m_customrig[srccr.rigno] = srccr;
+			m_customrig[srccr.rigno].useflag = 2;//2 : valid mark
+		}
+	}
+	else {
+		_ASSERT(0);
 	}
 }
 
@@ -6490,12 +6495,16 @@ ChaMatrix CBone::CalcLocalSymScaleRotMat(bool limitdegflag, int rotcenterflag, i
 	if (IsNotSkeleton()) {
 		return retmat;
 	}
+	if (!GetParModel()) {
+		_ASSERT(0);
+		return retmat;
+	}
 
 	int symboneno = 0;
 	int existflag = 0;
-	m_parmodel->GetSymBoneNo(GetBoneNo(), &symboneno, &existflag);
+	GetParModel()->GetSymBoneNo(GetBoneNo(), &symboneno, &existflag);
 	if (symboneno >= 0){
-		CBone* symbone = m_parmodel->GetBoneByID(symboneno);
+		CBone* symbone = GetParModel()->GetBoneByID(symboneno);
 		_ASSERT(symbone);
 		if (symbone){
 			//if (symbone == this){
@@ -6595,14 +6604,17 @@ ChaVector3 CBone::CalcLocalSymScaleVec(bool limitdegflag, int srcmotid, double s
 	if (IsNotSkeleton()) {
 		return retscale;
 	}
-
+	if (!GetParModel()) {
+		_ASSERT(0);
+		return retscale;
+	}
 
 
 	int symboneno = 0;
 	int existflag = 0;
-	m_parmodel->GetSymBoneNo(GetBoneNo(), &symboneno, &existflag);
+	GetParModel()->GetSymBoneNo(GetBoneNo(), &symboneno, &existflag);
 	if (symboneno >= 0) {
-		CBone* symbone = m_parmodel->GetBoneByID(symboneno);
+		CBone* symbone = GetParModel()->GetBoneByID(symboneno);
 		_ASSERT(symbone);
 		if (symbone) {
 			//if (symbone == this){
@@ -6690,12 +6702,16 @@ ChaVector3 CBone::CalcLocalSymTraAnim(bool limitdegflag, int srcmotid, double sr
 		return rettra;
 	}
 
+	if (!GetParModel()) {
+		_ASSERT(0);
+		return rettra;
+	}
 
 	int symboneno = 0;
 	int existflag = 0;
-	m_parmodel->GetSymBoneNo(GetBoneNo(), &symboneno, &existflag);
+	GetParModel()->GetSymBoneNo(GetBoneNo(), &symboneno, &existflag);
 	if (symboneno >= 0) {
-		CBone* symbone = m_parmodel->GetBoneByID(symboneno);
+		CBone* symbone = GetParModel()->GetBoneByID(symboneno);
 		_ASSERT(symbone);
 		if (symbone) {
 			//if (symbone == this){
@@ -7876,7 +7892,7 @@ CBone* CBone::GetNewBone(CModel* parmodel)
 			if (curbonehead) {
 				CBone* chkbone;
 				chkbone = curbonehead + chkelemno;
-				if (chkbone && (chkbone->GetParModel() == parmodel)) {//parmodelが同じ必要有。
+				if (chkbone && (chkbone->GetParModel() != nullptr) && (chkbone->GetParModel() == parmodel)) {//parmodelが同じ必要有。
 					if (chkbone->GetUseFlag() == 0) {
 						chkbone->InitParamsForReUse(parmodel);//
 
@@ -7886,7 +7902,7 @@ CBone* CBone::GetNewBone(CModel* parmodel)
 						return chkbone;
 					}
 				}
-				else if (chkbone && (chkbone->GetParModel() == 0)) {
+				else if (chkbone && (chkbone->GetParModel() == nullptr)) {
 					chkbone->InitParamsForReUse(parmodel);//
 
 					s_befheadno = chkheadno;
@@ -7907,7 +7923,7 @@ CBone* CBone::GetNewBone(CModel* parmodel)
 				for (elemno = 0; elemno < BONEPOOLBLKLEN; elemno++) {
 					CBone* curbone;
 					curbone = curbonehead + elemno;
-					if (curbone && (curbone->GetParModel() == parmodel)) {//parmodelが同じ必要有。
+					if (curbone && (curbone->GetParModel() != nullptr) && (curbone->GetParModel() == parmodel)) {//parmodelが同じ必要有。
 						if (curbone->GetUseFlag() == 0) {
 							curbone->InitParamsForReUse(parmodel);
 
@@ -7917,7 +7933,7 @@ CBone* CBone::GetNewBone(CModel* parmodel)
 							return curbone;
 						}
 					}
-					else if (curbone && (curbone->GetParModel() == 0)) {
+					else if (curbone && (curbone->GetParModel() == nullptr)) {
 						if (curbone->GetUseFlag() == 0) {
 							curbone->InitParamsForReUse(parmodel);
 
@@ -8045,9 +8061,9 @@ void CBone::OnDelModel(CModel* srcparmodel)
 			for (elemno = 0; elemno < BONEPOOLBLKLEN; elemno++) {
 				CBone* curbone;
 				curbone = curbonehead + elemno;
-				if (curbone && (curbone->GetParModel() == srcparmodel)) {//parmodelが同じ必要有。
+				if (curbone && (curbone->GetParModel() != nullptr) && (curbone->GetParModel() == srcparmodel)) {//parmodelが同じ必要有。
 					//if (curbone && (curbone->GetUseFlag() == 0)) {//srcparmodelに関して再利用を防ぐ
-						curbone->m_parmodel = 0;
+						curbone->m_parmodel = nullptr;
 						curbone->SetUseFlag(0);
 					//}
 				}
@@ -8865,8 +8881,8 @@ int CBone::AdditiveCurrentToAngleLimit()
 	}
 
 
-	//if (m_parmodel) {
-	//	MOTINFO* curmi = m_parmodel->GetCurMotInfo();
+	//if (GetParModel()) {
+	//	MOTINFO* curmi = GetParModel()->GetCurMotInfo();
 	//	if (curmi) {
 	//		int curmotid = curmi->motid;
 	//		int curframe = curmi->curframe;
@@ -8973,8 +8989,8 @@ int CBone::AdditiveAllMotionsToAngleLimit()
 	}
 
 
-	//if (m_parmodel) {
-	//	MOTINFO* curmi = m_parmodel->GetCurMotInfo();
+	//if (GetParModel()) {
+	//	MOTINFO* curmi = GetParModel()->GetCurMotInfo();
 	//	if (curmi) {
 	//		int curmotid = curmi->motid;
 	//		int curframe = curmi->curframe;
@@ -10404,6 +10420,26 @@ bool CBone::IsConcerned(int srcmotid)
 	}
 	else {
 		return false;
+	}
+}
+
+CModel* CBone::GetPostureChildModel() 
+{
+	if ((g_chascene != nullptr) && (m_posture_child_model != nullptr)) {
+		//2025/08/02 m_posture_child_modelが削除されていないことを確認する
+		int chkmodelindex = g_chascene->FindModelIndex(m_posture_child_model);
+		if (chkmodelindex >= 0) {
+			return m_posture_child_model;
+		}
+		else {
+			//m_posture_child_modelは既に削除済
+			_ASSERT(0);
+			return nullptr;
+		}
+	}
+	else {
+		_ASSERT(0);
+		return nullptr;
 	}
 }
 

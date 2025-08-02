@@ -1,7 +1,10 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
-
+2025/08/02
+　GetPostureChildModel()の修正
+　　設定したモデルが削除されてないことをチェックするように.
+　　
 
 2025/07/27
 　PostureChild機能の実装開始(実装中)

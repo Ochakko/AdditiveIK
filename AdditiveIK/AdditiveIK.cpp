@@ -556,6 +556,7 @@ public:
 //2023/12/01 mqofileのmaterialno読込対応時に　マテリアルが被らないようにモデル単位に変更
 //TResourceBank<CMQOMaterial> g_materialbank;
 
+ChaScene* g_chascene = nullptr;
 IShaderResource* g_shadowmapforshader = nullptr;
 CColDlg g_coldlg;
 
@@ -1803,7 +1804,7 @@ static WindowPos s_camerapanelpos;
 static map<int, int> s_lineno2boneno;
 static map<int, int> s_boneno2lineno;
 
-static ChaScene* s_chascene = 0;
+//static ChaScene* g_chascene = 0;
 //static vector<MODELELEM> s_modelindex;
 //static MODELBOUND	s_totalmb;
 static int s_curmodelmenuindex = -1;
@@ -3256,13 +3257,13 @@ INT WINAPI wWinMain(
 #define SPAIMBARNUM	5
 */
 
-	s_chascene = new ChaScene();
-	if (!s_chascene) {
+	g_chascene = new ChaScene();
+	if (!g_chascene) {
 		_ASSERT(0);
 		return 1;
 	}
-	s_chascene->SetFootRigDlg(&s_footrigdlg);
-	s_motchangedlg.SetChaScene(s_chascene);
+	g_chascene->SetFootRigDlg(&s_footrigdlg);
+	s_motchangedlg.SetChaScene(g_chascene);
 	s_motchangedlg.Create(g_mainhwnd);
 	SetParent(s_motchangedlg.m_hWnd, g_mainhwnd);
 	s_motchangedlg.SetVisible(false);
@@ -3447,7 +3448,7 @@ INT WINAPI wWinMain(
 	int dbgcount = 0;
 	while (DispatchWindowMessage())
 	{
-		if (s_chascene && (g_underloading == false)) {
+		if (g_chascene && (g_underloading == false)) {
 			// レンダリング開始
 			auto& renderContext = g_graphicsEngine->GetRenderContext();
 
@@ -3480,8 +3481,8 @@ INT WINAPI wWinMain(
 
 				//2024/08/09
 				//リターゲットバッチ中にタイミングでエラー　OnUserFrameMove()の中に入れて バッチ中はスキップ
-				//s_chascene->SetUpdateSlot();//2023/03/13 
-				////s_chascene->ResetCSFirstDispatchFlag();
+				//g_chascene->SetUpdateSlot();//2023/03/13 
+				////g_chascene->ResetCSFirstDispatchFlag();
 
 				//ドキュメント更新
 				int loopstartflag = 0;
@@ -3719,6 +3720,7 @@ void InitApp()
 {
 	s_hhook = NULL;
 	g_hWnd = NULL;
+	g_chascene = nullptr;
 	//g_shadertype = -1;//マテリアル毎に設定することに
 
 	InitializeCriticalSection(&s_CritSection_LTimeline);
@@ -4076,7 +4078,7 @@ void InitApp()
 		}
 	}
 
-	s_chascene = 0;
+	g_chascene = 0;
 
 	s_dispfontfortip = false;
 	s_dispPickfortip = false;
@@ -5502,9 +5504,9 @@ void OnDestroyDevice()
 	s_selbonedlgmap.clear();
 
 
-	if (s_chascene) {
-		delete s_chascene;
-		s_chascene = nullptr;
+	if (g_chascene) {
+		delete g_chascene;
+		g_chascene = nullptr;
 	}
 	//s_model = nullptr;
 
@@ -5966,7 +5968,7 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 
 	//2024/08/09
 	//リターゲットバッチ中にタイミングでエラー(ChaSceneのm_modelindexのCModel*の値が不正)　OnUserFrameMove()の中に入れて バッチ中はスキップ
-	s_chascene->SetUpdateSlot();
+	g_chascene->SetUpdateSlot();
 
 
 	SetCameraModel();
@@ -6115,9 +6117,9 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		////Set Updated Params
 		////###################
 		////FLOAT fObjectRadius;
-		////if (s_chascene) {
-		////	g_vCenter = s_chascene->GetTotalModelBound().center;
-		////	fObjectRadius = s_chascene->GetTotalModelBound().r;
+		////if (g_chascene) {
+		////	g_vCenter = g_chascene->GetTotalModelBound().center;
+		////	fObjectRadius = g_chascene->GetTotalModelBound().r;
 		////}
 		////else {
 		////	_ASSERT(0);
@@ -6461,11 +6463,11 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 	//	return;
 	//}
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		_ASSERT(0);
 		return;
 	}
-	if ((s_chascene->GetModelNum() > 0) && 
+	if ((g_chascene->GetModelNum() > 0) && 
 		GetCurrentModel() && GetCurrentModel()->GetLoadedFlag() && (s_nowloading == false)) {
 		SetCamera3DFromEyePos();
 	}
@@ -6532,22 +6534,22 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 			if (GetCurrentModel()) {
 				if (s_sprefpos.state) {
 					//GetCurrentModel()->SetRefPosFlag(true);
-					s_chascene->SetRefPosFlag(GetCurrentModel());//s_modelにtrue, 他のモデルにfalse
+					g_chascene->SetRefPosFlag(GetCurrentModel());//s_modelにtrue, 他のモデルにfalse
 					g_refposflag = true;
 				}
 				else {
 					//GetCurrentModel()->SetRefPosFlag(false);
-					s_chascene->SetRefPosFlag(nullptr);
+					g_chascene->SetRefPosFlag(nullptr);
 					g_refposflag = false;
 				}
 			}
 			bool calcslotflag = false;
 			//bool calcslotflag = true;
-			s_chascene->SetBoneMatrixForShader(btflag, calcslotflag);
+			g_chascene->SetBoneMatrixForShader(btflag, calcslotflag);
 			if (GetCurrentModel() && s_sprefpos.state) {
 				OnRenderRefPos(re, GetCurrentModel());
 			}
-			s_chascene->RenderModels(re, lightflag, diffusemult, btflag);
+			g_chascene->RenderModels(re, lightflag, diffusemult, btflag);
 
 
 			if (s_ground) {
@@ -6614,7 +6616,7 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 		//	renderfont.rotation = 0.0f;
 		//	renderfont.scale = 1.0f;
 		//	renderfont.pivot = Vector2(0.0f, 0.0f);
-		//	s_chascene->AddFontToForwardRenderPass(renderfont);
+		//	g_chascene->AddFontToForwardRenderPass(renderfont);
 		//}
 	}
 	else {
@@ -6634,12 +6636,12 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 
 
 	//レンダリングエンジンを実行
-	re->Execute(rc, s_chascene);
+	re->Execute(rc, g_chascene);
 	// レンダリング終了
-	g_engine->EndFrame(s_chascene);
+	g_engine->EndFrame(g_chascene);
 
-	//s_chascene->CopyCSDeform();
-	s_chascene->ClearRenderObjs();//CopyCSDeform()よりも後で呼ぶ
+	//g_chascene->CopyCSDeform();
+	g_chascene->ClearRenderObjs();//CopyCSDeform()よりも後で呼ぶ
 
 	//s_dispPickfortip = GetResultOfPickRay();//EndFrame()よりも後で呼ぶ
 
@@ -7027,8 +7029,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		WORD menuid;
 		menuid = LOWORD(wParam);
 		int modelnum;
-		if (s_chascene) {
-			modelnum = s_chascene->GetModelNum();
+		if (g_chascene) {
+			modelnum = g_chascene->GetModelNum();
 		}
 		else {
 			modelnum = 0;
@@ -7062,8 +7064,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		if ((menuid >= (ID_RMENU_0 + MENUOFFSET_SETCONVBONEBVH)) && (menuid < (ID_RMENU_0 + modelnum + MENUOFFSET_SETCONVBONEBVH))) {
 			int modelindex = menuid - ID_RMENU_0 - MENUOFFSET_SETCONVBONEBVH;
-			if (s_chascene) {
-				s_retargetdlg.SetRetargetBvh(s_chascene->GetModel(modelindex));
+			if (g_chascene) {
+				s_retargetdlg.SetRetargetBvh(g_chascene->GetModel(modelindex));
 			}
 			else {
 				s_retargetdlg.SetRetargetBvh(nullptr);
@@ -7343,9 +7345,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		//SET_POSTURE_CHILD
 		else if ((menuid >= (ID_RMENU_0 + MENUOFFSET_BONERCLICK + MAXRIGNUM * 3 + 1)) && 
 			(menuid < (ID_RMENU_0 + MENUOFFSET_BONERCLICK + MAXRIGNUM * 3 + 1 + MAXMODELNUM))) {
-			if (s_chascene && GetCurrentModel()) {
+			if (g_chascene && GetCurrentModel()) {
 				int subid = menuid - (ID_RMENU_0 + MENUOFFSET_BONERCLICK + MAXRIGNUM * 3 + 1);
-				MODELELEM childmodelelem = s_chascene->GetModelElem(subid);
+				MODELELEM childmodelelem = g_chascene->GetModelElem(subid);
 				if (childmodelelem.modelptr) {
 					CBone* posturebone = GetCurrentModel()->GetBoneByID(s_curboneno);
 					if (posturebone) {
@@ -9547,7 +9549,7 @@ int RetargetFile(char* fbxpath)
 {
 	//RenderContext* pRenderContext = DXUTGetD3D11DeviceContext();
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -9559,11 +9561,11 @@ int RetargetFile(char* fbxpath)
 	pfind = strrchr(fbxpath, '\\');
 	if (pfind) {
 
-		if (s_chascene && (s_chascene->GetModelNum() > 0)) {
-			//OnModelMenu(false, s_chascene->GetModelNum() - 1, 1);
+		if (g_chascene && (g_chascene->GetModelNum() > 0)) {
+			//OnModelMenu(false, g_chascene->GetModelNum() - 1, 1);
 			bool forceflag = true;
 			bool callundo = false;
-			OnChangeModel(s_chascene->GetModelNum() - 1, forceflag, callundo);
+			OnChangeModel(g_chascene->GetModelNum() - 1, forceflag, callundo);
 		}
 
 		unsigned int dirpathlen;
@@ -10233,11 +10235,11 @@ int OpenFile()
 			s_filterindex = 1;
 		}
 		else if (cmpfbx == 0) {
-			if (s_chascene && (s_chascene->GetModelNum() > 0)) {
-				//OnModelMenu(false, s_chascene->GetModelNum() - 1, 1);
+			if (g_chascene && (g_chascene->GetModelNum() > 0)) {
+				//OnModelMenu(false, g_chascene->GetModelNum() - 1, 1);
 				bool forceflag = true;//2024/06/26 各ダイアログ作成のためにforceflag必要
 				bool callundo = true;
-				OnChangeModel(s_chascene->GetModelNum() - 1, forceflag, callundo);
+				OnChangeModel(g_chascene->GetModelNum() - 1, forceflag, callundo);
 			}
 			std::vector<std::string> ikstopname;
 			ikstopname.clear();
@@ -10251,11 +10253,11 @@ int OpenFile()
 			s_filterindex = 1;
 		}
 		else if (cmpmqo == 0) {
-			if (s_chascene && (s_chascene->GetModelNum() > 0)) {
-				//OnModelMenu(false, s_chascene->GetModelNum() - 1, 1);
+			if (g_chascene && (g_chascene->GetModelNum() > 0)) {
+				//OnModelMenu(false, g_chascene->GetModelNum() - 1, 1);
 				bool forceflag = true;//2024/06/26 各ダイアログ作成のためにforceflag必要
 				bool callundo = true;
-				OnChangeModel(s_chascene->GetModelNum() - 1, forceflag, callundo);
+				OnChangeModel(g_chascene->GetModelNum() - 1, forceflag, callundo);
 			}
 
 			newmodel = OpenMQOFile();
@@ -10319,11 +10321,11 @@ int OpenFile()
 			if (cmpfbx == 0) {
 				//WCHAR* nexttopchar = topchar + leng2 + 1;
 				//if (*nexttopchar != TEXT('\0')) {
-				if (s_chascene && (s_chascene->GetModelNum() > 0)) {
-					//OnModelMenu(false, s_chascene->GetModelNum() - 1, 1);
+				if (g_chascene && (g_chascene->GetModelNum() > 0)) {
+					//OnModelMenu(false, g_chascene->GetModelNum() - 1, 1);
 					bool forceflag = true;//2024/06/26 各ダイアログ作成のためにforceflag必要
 					bool callundo = true;
-					OnChangeModel(s_chascene->GetModelNum() - 1, forceflag, callundo);
+					OnChangeModel(g_chascene->GetModelNum() - 1, forceflag, callundo);
 				}
 
 				std::vector<std::string> ikstopname;
@@ -10343,11 +10345,11 @@ int OpenFile()
 				s_filterindex = 1;
 			}
 			else if (cmpmqo == 0) {
-				if (s_chascene && (s_chascene->GetModelNum() > 0)) {
-					//OnModelMenu(false, s_chascene->GetModelNum() - 1, 1);
+				if (g_chascene && (g_chascene->GetModelNum() > 0)) {
+					//OnModelMenu(false, g_chascene->GetModelNum() - 1, 1);
 					bool forceflag = true;//2024/06/26 各ダイアログ作成のためにforceflag必要
 					bool callundo = true;
-					OnChangeModel(s_chascene->GetModelNum() - 1, forceflag, callundo);
+					OnChangeModel(g_chascene->GetModelNum() - 1, forceflag, callundo);
 				}
 
 				newmodel = OpenMQOFile();
@@ -10439,9 +10441,9 @@ CModel* OpenMQOFile()
 			return 0;
 		}
 	}
-	//if (GetCurrentModel() && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
-	//	s_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
-	//	s_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
+	//if (GetCurrentModel() && (s_curmodelmenuindex >= 0) && g_chascene && (g_chascene->GetModelNum() != 0)) {
+	//	g_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
+	//	g_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
 	//}
 
 	DestroyTimeLine(1);
@@ -10471,8 +10473,8 @@ CModel* OpenMQOFile()
 	CallF(GetCurrentModel()->DbgDump(), return 0);
 
 	int mindex;
-	if (s_chascene) {
-		mindex = s_chascene->GetModelNum();
+	if (g_chascene) {
+		mindex = g_chascene->GetModelNum();
 	}
 	else {
 		mindex = 0;
@@ -10480,8 +10482,8 @@ CModel* OpenMQOFile()
 	MODELELEM modelelem;
 	modelelem.modelptr = GetCurrentModel();
 	modelelem.motmenuindex = 0;
-	if (s_chascene) {
-		s_chascene->AddModelElem(modelelem);
+	if (g_chascene) {
+		g_chascene->AddModelElem(modelelem);
 	}
 
 
@@ -10510,9 +10512,9 @@ CModel* OpenMQOFile()
 
 	CallF(AddMotion(0), return 0);
 
-	if (s_chascene) {
-		s_chascene->SetTimelineArray(mindex, s_tlarray);
-		s_chascene->SetLineno2Boneno(mindex, s_lineno2boneno, s_boneno2lineno);
+	if (g_chascene) {
+		g_chascene->SetTimelineArray(mindex, s_tlarray);
+		g_chascene->SetLineno2Boneno(mindex, s_lineno2boneno, s_boneno2lineno);
 	}
 	else {
 		_ASSERT(0);
@@ -10532,8 +10534,8 @@ int SetCameraModel()
 
 	s_cameramodel = 0;
 
-	if (s_chascene) {
-		s_cameramodel = s_chascene->GetTheLastCameraModel();
+	if (g_chascene) {
+		s_cameramodel = g_chascene->GetTheLastCameraModel();
 	}
 
 
@@ -10571,8 +10573,8 @@ void CalcTotalBound()
 
 	SetCameraModel();
 
-	if (s_chascene) {
-		s_chascene->CalcTotalModelBound();//計算する　重い
+	if (g_chascene) {
+		g_chascene->CalcTotalModelBound();//計算する　重い
 	}
 
 
@@ -10581,10 +10583,10 @@ void CalcTotalBound()
 	}
 
 	FLOAT fObjectRadius;
-	if (s_chascene) {
+	if (g_chascene) {
 		MODELBOUND totalmb;
 		totalmb.Init();
-		totalmb = s_chascene->GetTotalModelBound();
+		totalmb = g_chascene->GetTotalModelBound();
 		if (totalmb.IsValid()) {
 			g_vCenter = totalmb.center;
 			fObjectRadius = totalmb.r;
@@ -10699,9 +10701,9 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 			return 0;
 		}
 	}
-	//if (GetCurrentModel() && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
-	//	s_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
-	//	s_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
+	//if (GetCurrentModel() && (s_curmodelmenuindex >= 0) && g_chascene && (g_chascene->GetModelNum() != 0)) {
+	//	g_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
+	//	g_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
 	//}
 
 
@@ -10794,8 +10796,8 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	}
 
 	int mindex;
-	if (s_chascene) {
-		mindex = s_chascene->GetModelNum();
+	if (g_chascene) {
+		mindex = g_chascene->GetModelNum();
 	}
 	else {
 		mindex = 0;
@@ -10803,8 +10805,8 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	MODELELEM modelelem;
 	modelelem.modelptr = GetCurrentModel();
 	modelelem.motmenuindex = 0;
-	if (s_chascene) {
-		s_chascene->AddModelElem(modelelem);
+	if (g_chascene) {
+		g_chascene->AddModelElem(modelelem);
 	}
 
 	//   CDXUTComboBox* pComboBox = g_SampleUI.GetComboBox( IDC_COMBO_BONE );
@@ -10829,9 +10831,9 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 
 	//CalcTotalBound();//下で呼んでる
 
-	//if (s_chascene) {
-	//	s_chascene->SetTimelineArray(mindex, s_tlarray);
-	//	s_chascene->SetLineno2Boneno(mindex, s_lineno2boneno, s_boneno2lineno);
+	//if (g_chascene) {
+	//	g_chascene->SetTimelineArray(mindex, s_tlarray);
+	//	g_chascene->SetLineno2Boneno(mindex, s_lineno2boneno, s_boneno2lineno);
 	//}
 	//else {
 	//	_ASSERT(0);
@@ -10977,7 +10979,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 			bool cameraanimflag = false;
 			MOTINFO firstvalidmi = GetCurrentModel()->GetFirstValidMotInfo(cameraanimflag);
 			if (firstvalidmi.motid > 0) {
-				int selindex = s_chascene->MotID2SelIndex(s_chascene->FindModelIndex(GetCurrentModel()), firstvalidmi.motid);
+				int selindex = g_chascene->MotID2SelIndex(g_chascene->FindModelIndex(GetCurrentModel()), firstvalidmi.motid);
 				if (selindex >= 0) {
 					OnAnimMenu(dorefreshtl, selindex);
 				}
@@ -11005,9 +11007,9 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	//if ((motnum == 0) && (GetCurrentModel()->GetNoBoneFlag() == false)) {
 	if (motnum == 0) {
 		CallF(AddMotion(0), return 0);//モーション無しfbxを読み込んだ場合のInitMP呼び出しでモーションポイント作成
-		if (s_chascene) {
-			s_chascene->SetTimelineArray(mindex, s_tlarray);
-			s_chascene->SetLineno2Boneno(mindex, s_lineno2boneno, s_boneno2lineno);
+		if (g_chascene) {
+			g_chascene->SetTimelineArray(mindex, s_tlarray);
+			g_chascene->SetLineno2Boneno(mindex, s_lineno2boneno, s_boneno2lineno);
 		}
 		else {
 			_ASSERT(0);
@@ -11253,7 +11255,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 	//EraseKeyList();
 	////if (GetCurrentModel() && GetCurrentModel()->GetBoneListSize() > 0) {
 	//if (GetCurrentModel() && (GetCurrentModel()->GetBoneForMotionSize() > 0)) {
-	if (GetCurrentModel() && s_chascene) {
+	if (GetCurrentModel() && g_chascene) {
 		if (!s_owpTimeline) {
 			//OWP_Timeline* owpTimeline = 0;
 			//タイムラインのGUIパーツを生成
@@ -11321,12 +11323,12 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 		}
 
 		if (s_owpTimeline) {
-			int currentmodelindex = s_chascene->FindModelIndex(GetCurrentModel());
+			int currentmodelindex = g_chascene->FindModelIndex(GetCurrentModel());
 			if (currentmodelindex >= 0) {
 				//#######################################################
 				//2024/06/27 s_tlarrayの操作前にカレントモデルのtlarrayを取得
 				//#######################################################
-				s_chascene->GetTimelineArray(currentmodelindex, s_tlarray);
+				g_chascene->GetTimelineArray(currentmodelindex, s_tlarray);
 
 				int nextindex;
 				nextindex = (int)s_tlarray.size();
@@ -11336,7 +11338,7 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 				newtle.motionid = newmotid;
 				s_tlarray.push_back(newtle);
 
-				s_chascene->SetTimelineArray(currentmodelindex, s_tlarray);
+				g_chascene->SetTimelineArray(currentmodelindex, s_tlarray);
 				GetCurrentModel()->SetCurrentMotion(newmotid);
 			}
 		}
@@ -13138,12 +13140,12 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 
 int OnChangeModel(int selindex, bool forceflag, bool callundo)
 {
-	if (!s_chascene) {
+	if (!g_chascene) {
 		_ASSERT(0);
 		return 1;
 	}
 
-	CModel* setmodel = s_chascene->GetModel(selindex);
+	CModel* setmodel = g_chascene->GetModel(selindex);
 	if (setmodel) {
 		return OnChangeModel(setmodel, forceflag, callundo);
 	}
@@ -13154,7 +13156,7 @@ int OnChangeModel(int selindex, bool forceflag, bool callundo)
 }
 int OnChangeModel(CModel* selmodel, bool forceflag, bool callundo)
 {
-	if (!s_chascene || !GetCurrentModel()) {
+	if (!g_chascene || !GetCurrentModel()) {
 		return 0;
 	}
 
@@ -13170,17 +13172,17 @@ int OnChangeModel(CModel* selmodel, bool forceflag, bool callundo)
 	}
 
 
-	//int modelnum = s_chascene->GetModelNum();
+	//int modelnum = g_chascene->GetModelNum();
 	//int modelindex;
 	//int selmodelindex = -1;
 	//for (modelindex = 0; modelindex < modelnum; modelindex++) {
-	//	CModel* chkmodel = s_chascene->GetModel(modelindex);
+	//	CModel* chkmodel = g_chascene->GetModel(modelindex);
 	//	if (chkmodel && (chkmodel == selmodel)) {
 	//		selmodelindex = modelindex;
 	//		break;
 	//	}
 	//}
-	int selmodelindex = s_chascene->FindModelIndex(selmodel);
+	int selmodelindex = g_chascene->FindModelIndex(selmodel);
 
 	if (selmodelindex >= 0) {
 		ActivatePanel(0);
@@ -13271,9 +13273,9 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 
 
 	//if (callbymenu == 1) {
-	//	if (GetCurrentModel() && (s_curmodelmenuindex >= 0) && s_chascene && (s_chascene->GetModelNum() != 0)) {
-	//		s_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
-	//		s_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
+	//	if (GetCurrentModel() && (s_curmodelmenuindex >= 0) && g_chascene && (g_chascene->GetModelNum() != 0)) {
+	//		g_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
+	//		g_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
 	//	}
 	//}
 
@@ -13318,8 +13320,8 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		return 0;//!!!!!!!!!
 	}
 
-	if (s_chascene) {
-		cMdlSets = s_chascene->GetModelNum();
+	if (g_chascene) {
+		cMdlSets = g_chascene->GetModelNum();
 	}
 	else {
 		cMdlSets = 0;
@@ -13356,8 +13358,8 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 		const WCHAR* wname;
 		for (iMdlSet = 0; iMdlSet < cMdlSets; iMdlSet++)
 		{
-			if (s_chascene) {
-				wname = s_chascene->GetModelFileName(iMdlSet);
+			if (g_chascene) {
+				wname = g_chascene->GetModelFileName(iMdlSet);
 				if (*wname != 0)
 					AppendMenu(s_modelmenu, MF_STRING, 61000 + iMdlSet, wname);
 				else
@@ -13370,20 +13372,20 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 
 		CheckMenuItem(s_mainmenu, 61000 + selindex, MF_CHECKED);
 
-		if (s_chascene) {
-			SetCurrentModel(s_chascene->GetModel(selindex));
+		if (g_chascene) {
+			SetCurrentModel(g_chascene->GetModel(selindex));
 		}
 		else {
 			_ASSERT(0);
-			////chascene null : s_chascene->SetCurrentModel(nullptr);
+			////chascene null : g_chascene->SetCurrentModel(nullptr);
 		}
 
 		SetModel2Dlgs(GetCurrentModel());
 
-		if (GetCurrentModel() && s_chascene) {
-			s_chascene->GetTimelineArray(selindex, s_tlarray);
-			s_motmenuindexmap[GetCurrentModel()] = s_chascene->GetMotMenuIndex(selindex);
-			s_chascene->GetLineno2Boneno(selindex, s_lineno2boneno, s_boneno2lineno);
+		if (GetCurrentModel() && g_chascene) {
+			g_chascene->GetTimelineArray(selindex, s_tlarray);
+			s_motmenuindexmap[GetCurrentModel()] = g_chascene->GetMotMenuIndex(selindex);
+			g_chascene->GetLineno2Boneno(selindex, s_lineno2boneno, s_boneno2lineno);
 
 			//s_dispobj = false;
 			DispObjPanel();
@@ -13639,7 +13641,7 @@ int OnDelMotion(int delmenuindex, bool ondelbutton)//default : ondelbutton = fal
 
 	//s_underdelmotion = true;
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -13690,9 +13692,9 @@ int OnDelMotion(int delmenuindex, bool ondelbutton)//default : ondelbutton = fal
 
 
 	//2022/09/13
-	int currentmodelindex = s_chascene->FindModelIndex(GetCurrentModel());
-	if (s_chascene && (currentmodelindex >= 0)) {
-		s_chascene->SetTimelineArray(currentmodelindex, s_tlarray);
+	int currentmodelindex = g_chascene->FindModelIndex(GetCurrentModel());
+	if (g_chascene && (currentmodelindex >= 0)) {
+		g_chascene->SetTimelineArray(currentmodelindex, s_tlarray);
 	}
 
 
@@ -13713,8 +13715,8 @@ int OnDelMotion(int delmenuindex, bool ondelbutton)//default : ondelbutton = fal
 int OnDispModel(int modelcnt)
 {
 	int mdlnum;
-	if (s_chascene) {
-		mdlnum = s_chascene->GetModelNum();
+	if (g_chascene) {
+		mdlnum = g_chascene->GetModelNum();
 	}
 	else {
 		mdlnum = 0;
@@ -13724,8 +13726,8 @@ int OnDispModel(int modelcnt)
 	}
 
 	CModel* dispmodel;
-	if (s_chascene) {
-		dispmodel = s_chascene->GetModel(modelcnt);
+	if (g_chascene) {
+		dispmodel = g_chascene->GetModel(modelcnt);
 	}
 	else {
 		dispmodel = 0;
@@ -13741,7 +13743,7 @@ int OnDispModel(int modelcnt)
 int OnDelModel(int delmenuindex, bool ondelbutton)//default : ondelbutton == false
 {
 	//s_underdelmodel = true;
-	if (!s_chascene) {
+	if (!g_chascene) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -13749,7 +13751,7 @@ int OnDelModel(int delmenuindex, bool ondelbutton)//default : ondelbutton == fal
 	StopBt();//2023/11/03
 
 	int mdlnum;
-	mdlnum = s_chascene->GetModelNum();
+	mdlnum = g_chascene->GetModelNum();
 	if ((mdlnum <= 0) || (delmenuindex < 0) || (delmenuindex >= mdlnum)) {
 		//s_underdelmodel = false;
 		return 0;
@@ -13761,11 +13763,11 @@ int OnDelModel(int delmenuindex, bool ondelbutton)//default : ondelbutton == fal
 		return 0;
 	}
 
-	s_chascene->DelModel(delmenuindex, s_grassElemVec);
+	g_chascene->DelModel(delmenuindex, s_grassElemVec);
 
 	SetCameraModel();
 
-	if (s_chascene->ModelEmpty()) {
+	if (g_chascene->ModelEmpty()) {
 		s_curboneno = -1;
 		SetCurrentModel(nullptr);
 		s_curmodelmenuindex = -1;
@@ -13777,12 +13779,12 @@ int OnDelModel(int delmenuindex, bool ondelbutton)//default : ondelbutton == fal
 	}
 	else {
 		s_curboneno = -1;
-		SetCurrentModel(s_chascene->GetModel(0));
+		SetCurrentModel(g_chascene->GetModel(0));
 		if (GetCurrentModel()) {
-			s_motmenuindexmap[GetCurrentModel()] = s_chascene->GetMotMenuIndex(0);
+			s_motmenuindexmap[GetCurrentModel()] = g_chascene->GetMotMenuIndex(0);
 		}
-		s_chascene->GetTimelineArray(0, s_tlarray);
-		s_chascene->GetLineno2Boneno(0, s_lineno2boneno, s_boneno2lineno);
+		g_chascene->GetTimelineArray(0, s_tlarray);
+		g_chascene->GetLineno2Boneno(0, s_lineno2boneno, s_boneno2lineno);
 	}
 
 
@@ -13804,7 +13806,7 @@ int OnDelModel(int delmenuindex, bool ondelbutton)//default : ondelbutton == fal
 
 int OnDelAllModel()
 {
-	if (!s_chascene) {
+	if (!g_chascene) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -13813,7 +13815,7 @@ int OnDelAllModel()
 
 	OrgWindowListenMouse(false);
 
-	s_chascene->DelAllModel();
+	g_chascene->DelAllModel();
 
 	//SetCameraModel();
 	s_cameramodel = 0;//2023/06/02
@@ -14077,11 +14079,11 @@ int RenderSelectMark(myRenderer::RenderingEngine* re, RenderContext* pRenderCont
 
 int RenderSelectFunc(myRenderer::RenderingEngine* re)
 {
-	if (!s_select || !s_chascene) {
+	if (!s_select || !g_chascene) {
 		return 0;
 	}
 
-	s_chascene->UpdateMatrixOneModel(s_select, g_limitdegflag, &s_selectmat, &s_matView, &s_matProj, 0.0, 0);
+	g_chascene->UpdateMatrixOneModel(s_select, g_limitdegflag, &s_selectmat, &s_matView, &s_matProj, 0.0, 0);
 	if (s_dispselect) {
 		int lightflag = 1;
 		//ChaVector4 diffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.7f);
@@ -14093,7 +14095,7 @@ int RenderSelectFunc(myRenderer::RenderingEngine* re)
 		int btflag = 0;
 		bool zcmpalways = true;
 		bool zenable = false;
-		s_chascene->RenderOneModel(s_select, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
+		g_chascene->RenderOneModel(s_select, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
 		//s_select->OnRender(withalpha, pRenderContext, lightflag, diffusemult);
 	}
 	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
@@ -14104,11 +14106,11 @@ int RenderSelectFunc(myRenderer::RenderingEngine* re)
 
 int RenderSelectPostureFunc(myRenderer::RenderingEngine* re)
 {
-	if (!s_select_posture || !s_chascene) {
+	if (!s_select_posture || !g_chascene) {
 		return 0;
 	}
 
-	s_chascene->UpdateMatrixOneModel(s_select_posture, g_limitdegflag, &s_selectmat_posture, &s_matView, &s_matProj, 0.0, 0);
+	g_chascene->UpdateMatrixOneModel(s_select_posture, g_limitdegflag, &s_selectmat_posture, &s_matView, &s_matProj, 0.0, 0);
 	if (s_dispselect) {
 		int lightflag = 1;
 		//ChaVector4 diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
@@ -14119,7 +14121,7 @@ int RenderSelectPostureFunc(myRenderer::RenderingEngine* re)
 		int btflag = 0;
 		bool zcmpalways = true;
 		bool zenable = false;
-		s_chascene->RenderOneModel(s_select_posture, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
+		g_chascene->RenderOneModel(s_select_posture, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
 		//s_select_posture->OnRender(withalpha, pRenderContext, lightflag, diffusemult);
 	}
 	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
@@ -14314,7 +14316,7 @@ int RenderGrass(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 				&tmpwm, &s_matView, &s_matProj, true, 0);
 
 			curgrasselem->SetInstancingParams(s_matVP);
-			curgrasselem->RenderInstancingModel(s_chascene);
+			curgrasselem->RenderInstancingModel(g_chascene);
 		}
 	}
 
@@ -14389,22 +14391,22 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 		bool zenable = true;
 
 		if (s_rigsphere_num > 0) {
-			s_chascene->RenderInstancingModel(s_rigopemark_sphere, forcewithalpha, lightflag, diffusemult, btflag, 
+			g_chascene->RenderInstancingModel(s_rigopemark_sphere, forcewithalpha, lightflag, diffusemult, btflag, 
 				zcmpalways, zenable,
 				RENDERKIND_INSTANCING_LINE);
 		}
 		if (s_rigringX_num > 0) {
-			s_chascene->RenderInstancingModel(s_rigopemark_ringX, forcewithalpha, lightflag, diffusemult, btflag, 
+			g_chascene->RenderInstancingModel(s_rigopemark_ringX, forcewithalpha, lightflag, diffusemult, btflag, 
 				zcmpalways, zenable,
 				RENDERKIND_INSTANCING_LINE);
 		}
 		if (s_rigringY_num > 0) {
-			s_chascene->RenderInstancingModel(s_rigopemark_ringY, forcewithalpha, lightflag, diffusemult, btflag, 
+			g_chascene->RenderInstancingModel(s_rigopemark_ringY, forcewithalpha, lightflag, diffusemult, btflag, 
 				zcmpalways, zenable,
 				RENDERKIND_INSTANCING_LINE);
 		}
 		if (s_rigringZ_num > 0) {
-			s_chascene->RenderInstancingModel(s_rigopemark_ringZ, forcewithalpha, lightflag, diffusemult, btflag, 
+			g_chascene->RenderInstancingModel(s_rigopemark_ringZ, forcewithalpha, lightflag, diffusemult, btflag, 
 				zcmpalways, zenable,
 				RENDERKIND_INSTANCING_LINE);
 		}
@@ -16916,12 +16918,12 @@ int CreateModelPanel()
 	DestroyModelPanel();
 
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		_ASSERT(0);
 		return 1;
 	}
 
-	int modelnum = s_chascene->GetModelNum();
+	int modelnum = g_chascene->GetModelNum();
 	//if (modelnum <= 0) {
 	//	return 0;
 	//}
@@ -16999,7 +17001,7 @@ int CreateModelPanel()
 		if (modelnum > 0) {
 
 			for (modelcnt = 0; modelcnt < modelnum; modelcnt++) {
-				CModel* curmodel = s_chascene->GetModel(modelcnt);
+				CModel* curmodel = g_chascene->GetModel(modelcnt);
 				if (curmodel) {
 
 					//2024/07/12
@@ -17049,7 +17051,7 @@ int CreateModelPanel()
 
 
 			for (modelcnt = 0; modelcnt < modelnum; modelcnt++) {
-				CModel* curmodel = s_chascene->GetModel(modelcnt);
+				CModel* curmodel = g_chascene->GetModel(modelcnt);
 				if (curmodel) {
 					OWP_CheckBoxA* owpCheckBox = new OWP_CheckBoxA(L"Show", curmodel->GetModelDisp(), 20, false);
 					if (owpCheckBox) {
@@ -17143,9 +17145,9 @@ int CreateModelPanel()
 		for (modelcnt = 0; modelcnt < modelnum; modelcnt++) {
 			if (s_modelpanel.checkvec[modelcnt]) {
 				s_modelpanel.checkvec[modelcnt]->setButtonListener([modelcnt]() {
-					if (GetCurrentModel() && s_chascene) {
-						if (modelcnt < s_chascene->GetModelNum()) {
-							CModel* curmodel = s_chascene->GetModel(modelcnt);
+					if (GetCurrentModel() && g_chascene) {
+						if (modelcnt < g_chascene->GetModelNum()) {
+							CModel* curmodel = g_chascene->GetModel(modelcnt);
 							if ((s_underdelmotion == false) && (s_opedelmotioncnt < 0) && //Motion削除と同時は禁止 
 								!s_underdelmodel && (s_opedelmodelcnt < 0) && 
 								curmodel && !s_underdispmodel) {
@@ -17162,9 +17164,9 @@ int CreateModelPanel()
 
 			if (s_modelpanel.delbutton[modelcnt]) {
 				s_modelpanel.delbutton[modelcnt]->setButtonListener([modelcnt]() {
-					if (GetCurrentModel() && s_chascene) {
-						if ((modelcnt < s_chascene->GetModelNum()) && (s_chascene->GetModelNum() >= 2)) {//全部消すときはメインメニューから
-							CModel* curmodel = s_chascene->GetModel(modelcnt);
+					if (GetCurrentModel() && g_chascene) {
+						if ((modelcnt < g_chascene->GetModelNum()) && (g_chascene->GetModelNum() >= 2)) {//全部消すときはメインメニューから
+							CModel* curmodel = g_chascene->GetModel(modelcnt);
 							if ((s_underdelmotion == false) && (s_opedelmotioncnt < 0) && //Motion削除と同時は禁止 
 								(s_opedelmodelcnt < 0) && curmodel && !s_underdelmodel) {
 								s_underdelmodel = true;
@@ -17186,11 +17188,11 @@ int CreateModelPanel()
 
 		if (s_modelpanel.radiobutton) {
 			s_modelpanel.radiobutton->setSelectListener([]() {
-				if (GetCurrentModel() && s_chascene) {
+				if (GetCurrentModel() && g_chascene) {
 					int curindex = s_modelpanel.radiobutton->getSelectIndex();
 					if ((s_opeselectmodelcnt < 0) && !s_underselectmodel && 
 						(s_underdelmotion == false) && (s_opedelmotioncnt < 0) &&
-						(curindex >= 0) && (curindex < s_chascene->GetModelNum())) {
+						(curindex >= 0) && (curindex < g_chascene->GetModelNum())) {
 
 						//s_modelpanel.modelindex = curindex;
 						//OnModelMenu(true, s_modelpanel.modelindex, 1);
@@ -17299,12 +17301,12 @@ int CreateCameraPanel()
 	}
 	DestroyCameraPanel();
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		_ASSERT(0);
 		return 1;
 	}
 
-	int modelnum = s_chascene->GetModelNum();
+	int modelnum = g_chascene->GetModelNum();
 	//if (modelnum <= 0) {
 	//	return 0;
 	//}
@@ -17621,12 +17623,12 @@ int CreateMotionPanel()
 	DestroyMotionPanel();
 
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		_ASSERT(0);
 		return 1;
 	}
 
-	int modelnum = s_chascene->GetModelNum();
+	int modelnum = g_chascene->GetModelNum();
 	//if (modelnum <= 0) {
 	//	return 0;
 	//}
@@ -17960,12 +17962,12 @@ int CreateMotionPanel()
 int SetConvBoneBvh()
 {
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		_ASSERT(0);
 		return 0;
 	}
 
-	int modelnum = s_chascene->GetModelNum();
+	int modelnum = g_chascene->GetModelNum();
 
 	if (modelnum <= 0) {
 		return 0;
@@ -18005,7 +18007,7 @@ int SetConvBoneBvh()
 
 	int modelno;
 	for (modelno = 0; modelno < modelnum; modelno++) {
-		CModel* curmodel = s_chascene->GetModel(modelno);
+		CModel* curmodel = g_chascene->GetModel(modelno);
 		if (curmodel) {
 			const WCHAR* modelname = curmodel->GetFileName();
 			if (modelname) {
@@ -18043,12 +18045,12 @@ int SetConvBone(int cbno)
 {
 	s_retargetdlg.SetRetargetBvhBoneCBNo(cbno);
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		_ASSERT(0);
 		return 1;
 	}
 
-	int modelnum = s_chascene->GetModelNum();
+	int modelnum = g_chascene->GetModelNum();
 	if (modelnum <= 0) {
 		return 0;
 	}
@@ -18688,12 +18690,12 @@ int OnAddMotion(int srcmotid, bool dorefreshtl)
 
 int StopBt()
 {
-	if (!s_chascene) {
+	if (!g_chascene) {
 		_ASSERT(0);
 		return 0;
 	}
 
-	s_chascene->StopBt();
+	g_chascene->StopBt();
 
 
 	//g_previewFlag = 0;
@@ -18714,7 +18716,7 @@ int StopBt()
 
 int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 {
-	if (!GetCurrentModel() || !curmodel || !s_chascene) {
+	if (!GetCurrentModel() || !curmodel || !g_chascene) {
 		return 0;
 	}
 
@@ -18738,7 +18740,7 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 		//プレビューを止めないとtimelineはスタートフレームになるが姿勢がスタートフレームにならない。
 		//flag == 0で呼ぶとシミュが動かない。
 
-		s_chascene->StopBt();
+		g_chascene->StopBt();
 
 		g_previewFlag = 0;//!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -18800,10 +18802,10 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 	}
 
 
-	int modelnum = s_chascene->GetModelNum();
+	int modelnum = g_chascene->GetModelNum();
 	int modelcount;
 	for (modelcount = 0; modelcount < modelnum; modelcount++) {
-		CModel* pmodel = s_chascene->GetModel(modelcount);
+		CModel* pmodel = g_chascene->GetModel(modelcount);
 
 		if (pmodel) {
 
@@ -19071,7 +19073,7 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 
 
 	//全モデルシミュ開始
-	s_chascene->StartBt();
+	g_chascene->StartBt();
 
 
 	return 0;
@@ -19080,11 +19082,11 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 
 int SaveProject()
 {
-	if (!s_bpWorld || !s_chascene) {
+	if (!s_bpWorld || !g_chascene) {
 		return 0;
 	}
 
-	if (s_chascene->ModelEmpty()) {
+	if (g_chascene->ModelEmpty()) {
 		return 0;
 	}
 
@@ -19102,10 +19104,10 @@ int SaveProject()
 	HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
 
-	int modelnum = s_chascene->GetModelNum();
+	int modelnum = g_chascene->GetModelNum();
 	int modelcount;
 	for (modelcount = 0; modelcount < modelnum; modelcount++) {
-		CModel* curmodel = s_chascene->GetModel(modelcount);
+		CModel* curmodel = g_chascene->GetModel(modelcount);
 
 		if (curmodel && s_owpLTimeline && s_owpEulerGraph) {
 			s_owpLTimeline->setCurrentTime(0.0, true);
@@ -19126,7 +19128,7 @@ int SaveProject()
 	swprintf_s(saveprojpath, MAX_PATH, L"%s\\%s\\%s.cha", s_projectdir, s_projectname, s_projectname);
 
 	vector<MODELELEM> writemodelindex;
-	s_chascene->GetModelIndex(writemodelindex);
+	g_chascene->GetModelIndex(writemodelindex);
 	DOLLYELEM2 cameraonload;
 	cameraonload.Init();
 	cameraonload.elem1.camerapos = g_camEye;
@@ -19147,7 +19149,7 @@ int SaveProject()
 
 
 	//全てのモデルが書き込まれた後で*.friを書き込む
-	s_footrigdlg.SaveFootRigFile(s_projectdir, s_projectname, s_chascene);
+	s_footrigdlg.SaveFootRigFile(s_projectdir, s_projectname, g_chascene);
 
 
 	//書き込み処理が成功してから履歴を保存する。chaファイルだけ。
@@ -19365,10 +19367,10 @@ int PostOpenChaFile()
 	s_bulletdlg.ParamsToDlg();
 
 
-	if (s_chascene && 
+	if (g_chascene && 
 		((g_boneaxis < BONEAXIS_CURRENT) || (g_boneaxis > BONEAXIS_BINDPOSE))) {//g_boneaxisがchafileで設定されなかった場合
 		//2024/04/22
-		s_chascene->InitializeBoneAxisKind();
+		g_chascene->InitializeBoneAxisKind();
 	}
 
 
@@ -19504,7 +19506,7 @@ int OnSetMotSpeed()
 	//GetCurrentModel()->GetCurMotInfo()->speed = GetCurrentModel()->GetTmpMotSpeed();//!!!!!!!!!!!!!!!!!!!
 	//g_dspeed = GetCurrentModel()->GetTmpMotSpeed();
 
-	if (!GetCurrentModel() || !s_chascene) {
+	if (!GetCurrentModel() || !g_chascene) {
 		return 0;
 	}
 	if (!GetCurrentModel()->ExistCurrentMotion()) {
@@ -19537,7 +19539,7 @@ int OnSetMotSpeed()
 	////モーションが変わってもスライダー指定のスピードを維持するようにする
 	////g_dspeed = GetCurrentModel()->GetCurMotInfo()->speed;
 	//g_dspeed = GetCurrentModel()->GetTmpMotSpeed();
-	s_chascene->SetMotionSpeed(-1, g_dspeed);
+	g_chascene->SetMotionSpeed(-1, g_dspeed);
 
 
 	//g_SampleUI.GetSlider(IDC_SPEED)->SetValue((int)(g_dspeed * 100.0f));
@@ -23423,7 +23425,7 @@ int SetLTimelineMark(int curboneno)
 
 int ExportFBXFile()
 {
-	if (!GetCurrentModel() || !s_owpLTimeline || !s_chascene) {
+	if (!GetCurrentModel() || !s_owpLTimeline || !g_chascene) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -23432,7 +23434,7 @@ int ExportFBXFile()
 	s_owpLTimeline->setCurrentTime(0.0, true);
 
 	int loopstartflag = 1;
-	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, 0.0, loopstartflag);
+	g_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, 0.0, loopstartflag);
 	
 	WCHAR filename[MAX_PATH] = { 0L };
 	OPENFILENAME ofn1;
@@ -23539,7 +23541,7 @@ int ExportFBXFile()
 
 int ExportBntFile()
 {
-	if (!GetCurrentModel() || !s_owpLTimeline || !s_chascene) {
+	if (!GetCurrentModel() || !s_owpLTimeline || !g_chascene) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -23548,7 +23550,7 @@ int ExportBntFile()
 	s_owpLTimeline->setCurrentTime(0.0, true);
 
 	int loopstartflag = 1;
-	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, 0.0, loopstartflag);
+	g_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, 0.0, loopstartflag);
 
 
 
@@ -23600,11 +23602,11 @@ int ExportBntFile()
 	//char fbxpath[MAX_PATH] = {0};
 	//WideCharToMultiByte( CP_UTF8, 0, filename, -1, fbxpath, MAX_PATH, NULL, NULL );	
 
-	if (s_chascene->ModelEmpty()) {
+	if (g_chascene->ModelEmpty()) {
 		_ASSERT(0);
 		return 0;
 	}
-	MODELELEM wme = s_chascene->GetModelElem(0);
+	MODELELEM wme = g_chascene->GetModelElem(0);
 	CModel* curmodel = wme.modelptr;
 	if (!curmodel) {
 		return 0;
@@ -25670,7 +25672,7 @@ int OnFramePreviewCamera(double srcnextframe)
 {
 	double nextcameraframe = 0.0;
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return 0;
 	}
 
@@ -25680,7 +25682,7 @@ int OnFramePreviewCamera(double srcnextframe)
 	//}
 
 	//eNull用の時間は　カメラの時間と同じとする　(とりあえず)
-	s_chascene->SetENullTime(-1, srcnextframe);
+	g_chascene->SetENullTime(-1, srcnextframe);
 
 
 	if (g_cameraanimmode != 0) {//2023/05/29 2023/06/04
@@ -25749,7 +25751,7 @@ int OnFramePreviewCamera(double srcnextframe)
 
 int OnFramePreviewStop()
 {
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return 0;
 	}
 
@@ -25762,7 +25764,7 @@ int OnFramePreviewStop()
 	}
 	
 	int loopstartflag = 1;
-	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, currenttime, loopstartflag);
+	g_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, currenttime, loopstartflag);
 
 	//s_tum.UpdateMatrix(s_modelindex, &s_matVP);//ブロッキング
 
@@ -25771,7 +25773,7 @@ int OnFramePreviewStop()
 
 int OnFramePreviewNormal(double nextframe, double difftime, int endflag, int loopstartflag)
 {
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return 0;
 	}
 
@@ -25803,7 +25805,7 @@ int OnFramePreviewNormal(double nextframe, double difftime, int endflag, int loo
 	if (g_previewMOA != 0) {
 		SetNewPoseByMoa(&nextframe);
 	}
-	s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, nextframe, loopstartflag);
+	g_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, nextframe, loopstartflag);
 
 #ifndef SKIP_EULERGRAPH__
 	if (s_owpTimeline) {
@@ -25850,7 +25852,7 @@ int OnFramePreviewNormal(double nextframe, double difftime, int endflag, int loo
 
 int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopstartflag)
 {
-	if (!GetCurrentModel() || !s_chascene) {
+	if (!GetCurrentModel() || !g_chascene) {
 		return 0;
 	}
 
@@ -25863,10 +25865,10 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 	bool recstopflag = false;
 	BOOL firstmodelflag = TRUE;
 
-	int modelnum = s_chascene->GetModelNum();
+	int modelnum = g_chascene->GetModelNum();
 	int modelcount;
 	for (modelcount = 0; modelcount < modelnum; modelcount++) {
-		CModel* curmodel = s_chascene->GetModel(modelcount);
+		CModel* curmodel = g_chascene->GetModel(modelcount);
 		if (curmodel && (curmodel->GetNoBoneFlag() == false)) {//2023/11/03 NoBoneのときはスキップ
 
 			if (curmodel->GetBtCnt() <= INITTERM) {
@@ -25912,7 +25914,7 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 
 
 	//2023/11/03 モデル単位マルチスレッド＆ダブルバッファ
-	s_chascene->UpdateBtFunc(g_limitdegflag, nextframe, 
+	g_chascene->UpdateBtFunc(g_limitdegflag, nextframe, 
 		&s_matView, &s_matProj, loopstartflag, GetCurrentModel(), recstopflag, s_bpWorld, s_reccnt, StopBtRec);
 
 
@@ -26304,7 +26306,7 @@ int GetCurrentBoneFromTimeline(int* dstboneno)
 
 int TimelineCursorToMotion()
 {
-	if (s_chascene && s_owpTimeline && GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
+	if (g_chascene && s_owpTimeline && GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
 
 		GetCurrentBoneFromTimeline(&s_curboneno);
 
@@ -26313,7 +26315,7 @@ int TimelineCursorToMotion()
 			((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false)))) {//underchecking
 			double curframe = s_owpTimeline->getCurrentTime();// 選択時刻
 
-			s_chascene->SetMotionFrame(-1, curframe);
+			g_chascene->SetMotionFrame(-1, curframe);
 		}
 	}
 	return 0;
@@ -26609,9 +26611,9 @@ int OnFrameTimeLineWnd()
 		if (s_owpLTimeline) {
 			s_owpLTimeline->setCurrentTime(s_buttonselectstart, false);
 		}
-		if (s_chascene && (g_previewFlag != 4) && (g_previewFlag != 5)) {
+		if (g_chascene && (g_previewFlag != 4) && (g_previewFlag != 5)) {
 			int loopstartflag = 1;
-			s_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, s_buttonselectstart, loopstartflag);
+			g_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, s_buttonselectstart, loopstartflag);
 		}
 
 		s_limiteuldlg.Bone2AngleLimit(s_curboneno);
@@ -26819,11 +26821,11 @@ int OnFrameTimeLineWnd()
 	if (s_LcursorFlag) {
 		OnTimeLineCursor();
 
-		if (s_chascene && s_owpLTimeline && GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
+		if (g_chascene && s_owpLTimeline && GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
 			if ((g_previewFlag == 0) && 
 				((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false)))) {//underchecking
 				double curframe = s_owpLTimeline->getCurrentTime();// 選択時刻
-				s_chascene->SetMotionFrame(-1, curframe);
+				g_chascene->SetMotionFrame(-1, curframe);
 			}
 		}
 
@@ -28711,11 +28713,11 @@ int OnFrameBatchThread()
 		InterlockedExchange(&s_befbvh2fbxnum, 0);
 		InterlockedExchange(&s_befbvh2fbxcnt, 0);
 
-		if (s_chascene && (s_chascene->GetModelNum() > 0)) {
-			//OnModelMenu(false, s_chascene->GetModelNum() - 1, 1);
+		if (g_chascene && (g_chascene->GetModelNum() > 0)) {
+			//OnModelMenu(false, g_chascene->GetModelNum() - 1, 1);
 			bool forceflag = true;
 			bool callundo = true;
-			OnChangeModel(s_chascene->GetModelNum() - 1, forceflag, callundo);
+			OnChangeModel(g_chascene->GetModelNum() - 1, forceflag, callundo);
 		}
 	}
 
@@ -28863,7 +28865,7 @@ int OnSpriteUndo()
 	}
 	s_underoperation = true;
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		_ASSERT(0);
 		s_underoperation = false;
 		return 1;
@@ -28911,7 +28913,7 @@ int OnSpriteUndo()
 		//#########################################################################################
 		//2024/06/24 GetCurrentModel()->RollBackUndoMotion()は BoneMotionとCameraAnimの両方をRollBackするように.
 		//#########################################################################################
-		GetCurrentModel()->RollBackUndoMotion(s_chascene, g_limitdegflag, g_mainhwnd,
+		GetCurrentModel()->RollBackUndoMotion(g_chascene, g_limitdegflag, g_mainhwnd,
 			0, &newedittarget, &newselectedboneno, &s_curbaseno,
 			&undoselect,
 			&brushstate, &undocamera, &undomotid, &blendshapeelem);//!!!!!!!!!!!
@@ -28927,7 +28929,7 @@ int OnSpriteUndo()
 		//#########################################################################################
 		//2024/06/24 GetCurrentModel()->RollBackUndoMotion()は BoneMotionとCameraAnimの両方をRollBackするように.
 		//#########################################################################################
-		GetCurrentModel()->RollBackUndoMotion(s_chascene, g_limitdegflag, g_mainhwnd,
+		GetCurrentModel()->RollBackUndoMotion(g_chascene, g_limitdegflag, g_mainhwnd,
 			1, &newedittarget, &newselectedboneno, &s_curbaseno,
 			&undoselect,
 			&brushstate, &undocamera, &undomotid, &blendshapeelem);//!!!!!!!!!!!
@@ -28974,13 +28976,13 @@ int OnSpriteUndo()
 		}
 
 
-		int setmodelindex = s_chascene->FindModelIndex(setmodel);
+		int setmodelindex = g_chascene->FindModelIndex(setmodel);
 		if (setmodelindex >= 0) {//2024/06/26 モデルが削除されていないことを確認
 			bool forceflag = true;
 			bool callundo = false;
 			OnChangeModel(setmodel, forceflag, callundo);
 
-			int selindex = s_chascene->MotID2SelIndex(setmodelindex, setmotion);
+			int selindex = g_chascene->MotID2SelIndex(setmodelindex, setmotion);
 			if (selindex >= 0) {
 				bool dorefreshtl = true;
 				int saveundoflag = 0;
@@ -29021,7 +29023,7 @@ int OnSpriteUndo()
 			}
 
 
-			int selindex = s_chascene->MotID2SelIndex(s_chascene->FindModelIndex(GetCurrentModel()), undomotid.bonemotid);
+			int selindex = g_chascene->MotID2SelIndex(g_chascene->FindModelIndex(GetCurrentModel()), undomotid.bonemotid);
 			if (selindex >= 0) {
 				bool dorefreshtl = true;
 				int saveundoflag = 0;
@@ -31246,7 +31248,7 @@ s_layerWnd->setVisible(false);
 
 int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 {
-	if (!re || !curmodel || !s_chascene) {
+	if (!re || !curmodel || !g_chascene) {
 		return 0;
 	}
 
@@ -31312,8 +31314,8 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 						int btflag1 = 0;
 
 						GetCurrentModel()->SetMotionFrame(roundingrenderframe);
-						//GetCurrentModel()->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-						s_chascene->UpdateMatrixOneModel(GetCurrentModel(), g_limitdegflag, &modelwm, &s_matView, &s_matProj,
+						//GetCurrentModel()->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, g_chascene->GetUpdateSlot());
+						g_chascene->UpdateMatrixOneModel(GetCurrentModel(), g_limitdegflag, &modelwm, &s_matView, &s_matProj,
 							roundingrenderframe, refposindex);
 
 
@@ -31338,9 +31340,9 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 						int btflag = 0;
 						bool zcmpalways = true;
 						bool zenable = true;
-						//s_chascene->RenderOneModel(GetCurrentModel(), forcewithalpha, re,
+						//g_chascene->RenderOneModel(GetCurrentModel(), forcewithalpha, re,
 						//	lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
-						s_chascene->AddToRefPos(GetCurrentModel(), forcewithalpha, re,
+						g_chascene->AddToRefPos(GetCurrentModel(), forcewithalpha, re,
 							lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
 
 					}
@@ -31351,8 +31353,8 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							int btflag1 = 0;
 
 							GetCurrentModel()->SetMotionFrame(currentframe);
-							//GetCurrentModel()->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, s_chascene->GetUpdateSlot());
-							s_chascene->UpdateMatrixOneModel(GetCurrentModel(), g_limitdegflag, &modelwm, &s_matView, &s_matProj,
+							//GetCurrentModel()->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, g_chascene->GetUpdateSlot());
+							g_chascene->UpdateMatrixOneModel(GetCurrentModel(), g_limitdegflag, &modelwm, &s_matView, &s_matProj,
 								currentframe, refposindex);
 
 							bool calcslotflag;
@@ -31370,17 +31372,17 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							//bool zcmpalways = false;
 							bool zcmpalways = g_zalways;//2024/02/08 DispAndLimitsプレートメニューのチェックボックス
 							bool zenable = true;
-							//s_chascene->RenderOneModel(GetCurrentModel(), forcewithalpha, re,
+							//g_chascene->RenderOneModel(GetCurrentModel(), forcewithalpha, re,
 							//	lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
 
-							s_chascene->AddToRefPos(GetCurrentModel(), forcewithalpha, re,
+							g_chascene->AddToRefPos(GetCurrentModel(), forcewithalpha, re,
 								lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
 
 							refposindex++;
 						}
 					}
 
-					//s_chascene->RenderRefPos(re);//RenderModelsで一緒にレンダー
+					//g_chascene->RenderRefPos(re);//RenderModelsで一緒にレンダー
 
 
 					{
@@ -31392,7 +31394,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							arrowdiffusemult.SetParams(1.0f, 0.5f, 0.5f, 0.5f);
 
 							curbone->GetRefPosMark()->RenderRefArrow(g_limitdegflag,
-								re, s_chascene, s_matVP, curbone, arrowdiffusemult, 1, vecbonepos);
+								re, g_chascene, s_matVP, curbone, arrowdiffusemult, 1, vecbonepos);
 							//GetCurrentModel()->RenderBoneCircleOne(g_limitdegflag,
 							//	pRenderContext, s_bcircle, s_curboneno);
 						}
@@ -31425,7 +31427,7 @@ int OnRenderModel(RenderContext* pRenderContext)
 	//	return 0;
 	//}
 
-	//if (!GetCurrentModel() || !s_chascene) {
+	//if (!GetCurrentModel() || !g_chascene) {
 	//	return 0;
 	//}
 
@@ -31448,7 +31450,7 @@ int OnRenderModel(RenderContext* pRenderContext)
 	//	}
 	//}
 
-	//s_chascene->RenderModels(pRenderContext, lightflag, diffusemult, btflag);
+	//g_chascene->RenderModels(pRenderContext, lightflag, diffusemult, btflag);
 	//if (s_sprefpos.state) {
 	//	OnRenderLOD(pRenderContext, GetCurrentModel());
 	//}
@@ -31500,7 +31502,7 @@ int OnRenderOnlyOneObj(myRenderer::RenderingEngine* re, RenderContext* rc)
 			diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 			int btflag = 0;
 
-			curmodel->RenderTest(withalpha, s_chascene, g_lightflag, diffusemult, 
+			curmodel->RenderTest(withalpha, g_chascene, g_lightflag, diffusemult, 
 				s_dispgroupdlg.GetDispGroupOnlyOneObjNo());
 		}
 	}
@@ -31515,14 +31517,14 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 		return 1;
 	}
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return 0;
 	}
 
 	if (s_sky) {
 		MODELBOUND totalmb;
 		totalmb.Init();
-		totalmb = s_chascene->GetTotalModelBound();
+		totalmb = g_chascene->GetTotalModelBound();
 		ChaVector3 vCenter;
 		if (totalmb.IsValid()) {
 			vCenter = totalmb.center;
@@ -31533,7 +31535,7 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 			vCenter.SetParams(g_camEye.x, 0.0f, g_camEye.z);
 		}
 
-		//float fObjectRadius = s_chascene->GetTotalModelBound().r;
+		//float fObjectRadius = g_chascene->GetTotalModelBound().r;
 		//if (fObjectRadius < 0.1f) {
 		//	fObjectRadius = 10.0f;
 		//}
@@ -31549,7 +31551,7 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 
 
 		//g_projfarでクリッピングされないようにsky用のprojを使う
-		s_chascene->UpdateMatrixOneModel(s_sky, g_limitdegflag, &skymat, &s_matView, &s_matSkyProj, 0.0, 0);
+		g_chascene->UpdateMatrixOneModel(s_sky, g_limitdegflag, &skymat, &s_matView, &s_matSkyProj, 0.0, 0);
 		ChaVector4 diffusemult;
 		diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 		bool forcewithalpha = false;//2024/03/25 skyは一番最初に描画するために不透明である必要
@@ -31559,7 +31561,7 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 		//bool zcmpalways = true;
 		bool zenable = false;//2024/03/25 上書き可能な背景として描画するのでZは書き込まない
 		int lightflag = -1;
-		s_chascene->RenderOneModel(s_sky, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
+		g_chascene->RenderOneModel(s_sky, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
 	}
 
 	return 0;
@@ -31574,7 +31576,7 @@ int OnRenderGround(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		return 1;
 	}
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return 0;
 	}
 	if (!GetCurrentModel()) {
@@ -31586,14 +31588,14 @@ int OnRenderGround(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		//g_pEffect->SetMatrix(g_hmWorld, &(s_matWorld.D3DX()));
 		ChaMatrix initmat;
 		initmat.SetIdentity();
-		s_chascene->UpdateMatrixOneModel(s_ground, g_limitdegflag, &initmat, &s_matView, &s_matProj, 0.0, 0);
+		g_chascene->UpdateMatrixOneModel(s_ground, g_limitdegflag, &initmat, &s_matView, &s_matProj, 0.0, 0);
 		ChaVector4 diffusemult;
 		diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 		bool forcewithalpha = false;
 		int btflag = 0;
 		bool zcmpalways = false;
 		bool zenable = true;
-		s_chascene->RenderOneModel(s_ground, forcewithalpha, re, 0, diffusemult, btflag, zcmpalways, zenable);
+		g_chascene->RenderOneModel(s_ground, forcewithalpha, re, 0, diffusemult, btflag, zcmpalways, zenable);
 	}
 	//if (s_gplane && s_bpWorld && s_bpWorld->m_gplanedisp) {
 	//	ChaMatrix gpmat = s_inimat;
@@ -31649,7 +31651,7 @@ int OnRenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* rc)
 			if (GetCurrentModel() && GetCurrentModel()->GetModelDisp()) {
 				//if (s_ikkind >= 3){
 				GetCurrentModel()->RenderBoneMark(g_limitdegflag, &s_bcircle,
-					s_curboneno, s_chascene, s_matVP);
+					s_curboneno, g_chascene, s_matVP);
 
 				//}
 				//else{
@@ -31659,10 +31661,10 @@ int OnRenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* rc)
 			//}
 		//}
 		//else {
-			//int modelnum = s_chascene->GetModelNum();
+			//int modelnum = g_chascene->GetModelNum();
 			//int modelcount;
 			//for (modelcount = 0; modelcount < modelnum; modelcount++) {
-			//	CModel* curmodel = s_chascene->GetModel(modelcount);
+			//	CModel* curmodel = g_chascene->GetModel(modelcount);
 			//	if (curmodel) {
 			//		curmodel->RenderBoneMark(g_limitdegflag,
 			//			pRenderContext, s_bmark, s_bcircle, 0, s_curboneno);
@@ -31729,7 +31731,7 @@ int OnRenderSelect(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 
 int OnRenderFontForTip(myRenderer::RenderingEngine* re, RenderContext* rc)
 {
-	if (!re || !rc || !s_chascene) {
+	if (!re || !rc || !g_chascene) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -31783,7 +31785,7 @@ int OnRenderFontForTip(myRenderer::RenderingEngine* re, RenderContext* rc)
 		renderfont.rotation = 0.0f;
 		renderfont.scale = fontscale;
 		renderfont.pivot = fontpivot;
-		s_chascene->AddFontToForwardRenderPass(renderfont);
+		g_chascene->AddFontToForwardRenderPass(renderfont);
 	}
 
 	//s_dispfontfortip = false;
@@ -31794,7 +31796,7 @@ int OnRenderFontForTip(myRenderer::RenderingEngine* re, RenderContext* rc)
 
 int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 {
-	if (!re || !pRenderContext || !s_chascene) {
+	if (!re || !pRenderContext || !g_chascene) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -31844,7 +31846,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		myRenderer::RENDERSPRITE rendersprite;
 		rendersprite.Init();
 		rendersprite.psprite = s_spupperbar.GetSpriteForRender();
-		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+		g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 
@@ -31860,7 +31862,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		rendersprite.Init();
 		rendersprite.pfpssprite = &s_fpssprite;
 		rendersprite.userint1 = dispfps;
-		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+		g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 	////Undoの読み込みポイントW と書き込みポイントR を表示
@@ -31882,7 +31884,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		//	rendersprite.userint2 = s_cameramodel->GetCurrentUndoW();
 		//}
 		
-		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+		g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 
@@ -31891,7 +31893,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	myRenderer::RENDERSPRITE rendersprite;
 	rendersprite.Init();
 	rendersprite.psprite = s_spret2prev.GetSpriteForRender();
-	s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+	g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 
 
 	//Mouse Middle Button Mark
@@ -31900,7 +31902,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		myRenderer::RENDERSPRITE rendersprite;
 		rendersprite.Init();
 		rendersprite.psprite = s_mousecenteron.GetSpriteForRender();
-		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+		g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 	//Mouse Middle Button Mark
@@ -31909,7 +31911,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		myRenderer::RENDERSPRITE rendersprite;
 		rendersprite.Init();
 		rendersprite.psprite = s_sppreciserot.GetSpriteForRender();
-		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+		g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 
@@ -31945,7 +31947,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 	//		myRenderer::RENDERSPRITE rendersprite;
 	//		rendersprite.Init();
 	//		rendersprite.psprite = s_spsel3d.GetSpriteForRender();
-	//		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+	//		g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	//	}
 	//	//{
 	//	//	int spgcnt;
@@ -32008,7 +32010,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spguisw[spgcnt].GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 		}
@@ -32023,7 +32025,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = &(s_spguisw[spgcnt].spriteOFF);
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 
@@ -32032,7 +32034,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_spguisw[SPGUISW_CAMERA_AND_IK].GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 		}
@@ -32047,7 +32049,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_spdispsw[spgcnt].GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 		else if (s_platemenukind == SPPLATEMENUKIND_RIGID) {
@@ -32059,7 +32061,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_sprigidsw[spgcnt].GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 		else if (s_platemenukind == SPPLATEMENUKIND_RETARGET) {
@@ -32070,7 +32072,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_spretargetsw[sprcnt].GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 		else if (s_platemenukind == SPPLATEMENUKIND_EFFECT) {
@@ -32080,7 +32082,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_speffectsw[sprcnt].GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 		}
 	}
@@ -32098,7 +32100,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				rendersprite.Init();
 				//rendersprite.psprite = &(s_spaxis[spacnt].sprite);
 				rendersprite.psprite = s_spaxis[spacnt].GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//IK Mode
@@ -32107,7 +32109,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_spikmodesw[spgcnt].GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//lodsw
@@ -32115,7 +32117,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_sprefpos.GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//limiteulsw
@@ -32123,7 +32125,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_splimiteul.GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//scrapingsw
@@ -32131,7 +32133,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_spscraping.GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			{
@@ -32140,7 +32142,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_spcplw2w.GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 
@@ -32151,7 +32153,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_spundo[spucnt].GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			//Rig switch
@@ -32160,7 +32162,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_sprig[s_oprigflag].GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			{
@@ -32169,7 +32171,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_spsmooth.GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			{
@@ -32178,7 +32180,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_spconstexe.GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			{
@@ -32187,7 +32189,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_spconstrefresh.GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 			{
@@ -32195,7 +32197,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
 				rendersprite.psprite = s_spret2prev2.GetSpriteForRender();
-				s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
 
@@ -32206,35 +32208,35 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spcopy_camera.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				{
 					//CameraPaste
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_sppaste_camera.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				{
 					//CameraInit
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spinit_camera.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				{
 					//CameraInterpolate
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spinterpolate_camera.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				{
 					//CameraSmooth
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spsmooth_camera.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 
@@ -32246,7 +32248,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spcopy.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
 				{
@@ -32255,7 +32257,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spsymcopy.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
 				{
@@ -32264,7 +32266,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_sppaste.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
 				{
@@ -32273,7 +32275,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spcopyhistory.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 			else if (s_toolspritemode == 1) {
@@ -32283,7 +32285,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spjumpinterpolate.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
 				{
@@ -32292,7 +32294,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spinterpolate.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 
 				{
@@ -32301,7 +32303,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spinit.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				{
 					//ScaleInit
@@ -32309,7 +32311,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spscaleinit.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				{
 					//Property
@@ -32317,7 +32319,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spproperty.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 			else if (s_toolspritemode == 2) {
@@ -32327,7 +32329,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spzeroframe.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 				{
 					//CameraDolly
@@ -32335,7 +32337,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spcameradolly.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 
 				}
 				{
@@ -32344,7 +32346,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spmodelposdir.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 
 				}
 				{
@@ -32353,7 +32355,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 					myRenderer::RENDERSPRITE rendersprite;
 					rendersprite.Init();
 					rendersprite.psprite = s_spmaterialrate.GetSpriteForRender();
-					s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+					g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 				}
 			}
 			else {
@@ -32369,21 +32371,21 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 			myRenderer::RENDERSPRITE rendersprite;
 			rendersprite.Init();
 			rendersprite.psprite = s_spcam[spccnt].GetSpriteForRender();
-			s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+			g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 		}
 		//cameramode
 		{
 			myRenderer::RENDERSPRITE rendersprite;
 			rendersprite.Init();
 			rendersprite.psprite = s_spcameramode.GetSpriteForRender();
-			s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+			g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 		}
 		//camerainherit
 		if (g_cameraanimmode != 0) {
 			myRenderer::RENDERSPRITE rendersprite;
 			rendersprite.Init();
 			rendersprite.psprite = s_spcamerainherit.GetSpriteForRender();
-			s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+			g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 		}
 	}
 
@@ -32395,7 +32397,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		myRenderer::RENDERSPRITE rendersprite;
 		rendersprite.Init();
 		rendersprite.psprite = s_spmousehere.GetSpriteForRender();
-		s_chascene->AddSpriteToForwardRenderPass(rendersprite);
+		g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
 
 
@@ -32524,10 +32526,10 @@ void SkipJointMarkReq(int srcstate, CBone* srcbone, bool setbrotherflag)
 
 int FilterFromTool()
 {
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return 0;
 	}
-	int modelnum = s_chascene->GetModelNum();
+	int modelnum = g_chascene->GetModelNum();
 	if (modelnum <= 0) {
 		return 0;
 	}
@@ -32611,10 +32613,10 @@ int FilterFromTool()
 
 int JumpInterpolateFromTool()
 {
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return 0;
 	}
-	int modelnum = s_chascene->GetModelNum();
+	int modelnum = g_chascene->GetModelNum();
 	if (modelnum <= 0) {
 		return 0;
 	}
@@ -32715,10 +32717,10 @@ int JumpInterpolateFromTool()
 
 int InterpolateFromTool()
 {
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return 0;
 	}
-	int modelnum = s_chascene->GetModelNum();
+	int modelnum = g_chascene->GetModelNum();
 	if (modelnum <= 0) {
 		return 0;
 	}
@@ -32803,10 +32805,10 @@ int InterpolateFromTool()
 
 int InitMpFromTool()
 {
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return 0;
 	}
-	int modelnum = s_chascene->GetModelNum();
+	int modelnum = g_chascene->GetModelNum();
 	if (modelnum <= 0) {
 		return 0;
 	}
@@ -33977,8 +33979,8 @@ int BoneRClick(int srcboneno)
 						L"IK Stop OFF");
 				}
 
-				if (s_chascene) {
-					int modelnum = s_chascene->GetModelNum();
+				if (g_chascene) {
+					int modelnum = g_chascene->GetModelNum();
 					if (modelnum > 0) {
 						//AppendMenu(submenu, MF_STRING, ID_RMENU_0 + MENUOFFSET_BONERCLICK + MAXRIGNUM * 3, L"Set PostureChildModel");
 
@@ -34006,7 +34008,7 @@ int BoneRClick(int srcboneno)
 
 						int childindex;
 						for (childindex = 0; childindex < modelnum; childindex++) {
-							MODELELEM curme = s_chascene->GetModelElem(childindex);
+							MODELELEM curme = g_chascene->GetModelElem(childindex);
 							if (curme.modelptr) {
 								WCHAR curname[MAX_PATH] = { 0L };
 								if (curbone->GetPostureChildModel() == curme.modelptr) {
@@ -34283,10 +34285,10 @@ int GetSymRootMode()
 	};
 	*/
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return 0;
 	}
-	int modelnum = s_chascene->GetModelNum();
+	int modelnum = g_chascene->GetModelNum();
 	if (modelnum <= 0) {
 		return 0;
 	}
@@ -34931,8 +34933,8 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			SetCamera3DFromEyePos();
 		}
 		else if (menuid == (ID_RMENU_0 + MENUOFFSET_BULLETDLG)) {
-			if (s_chascene) {
-				s_chascene->ChangeAngleSpringScale();
+			if (g_chascene) {
+				g_chascene->ChangeAngleSpringScale();
 			}
 		}
 		else if (menuid == (ID_RMENU_0 + MENUOFFSET_DISPLIMITSDLG)) {
@@ -38988,18 +38990,18 @@ void SetMainWindowTitle()
 	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.49 : No.%d : ", s_appcnt);//本体のバージョン
 
 
-	if (GetCurrentModel() && s_chascene) {
+	if (GetCurrentModel() && g_chascene) {
 		//WCHAR strcharactor[MAX_PATH * 3] = { 0L };
 		WCHAR strindexedcharactor[MAX_PATH * 3] = { 0L };
 		char strmotionA[MAX_PATH * 3] = { 0 };
 		WCHAR strmotionW[MAX_PATH * 3] = { 0 };
 		WCHAR strrefW[MAX_PATH * 3] = { 0 };
 
-		int modelnum = s_chascene->GetModelNum();
+		int modelnum = g_chascene->GetModelNum();
 
 		if ((modelnum >= 1) && (s_curmodelmenuindex >= 0) && (s_curmodelmenuindex < modelnum)) {
 			CModel* curmodel;
-			curmodel = s_chascene->GetModel(s_curmodelmenuindex);
+			curmodel = g_chascene->GetModel(s_curmodelmenuindex);
 			if (curmodel) {
 				swprintf_s(strindexedcharactor, MAX_PATH * 3, L"%d : %s", s_curmodelmenuindex, curmodel->GetFileName());
 				wcscat_s(strmaintitle, (MAX_PATH * 3), strindexedcharactor);
@@ -41873,7 +41875,7 @@ int SetShowPosTime()
 
 int ChangeUpdateMatrixThreads()
 {
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return 0;
 	}
 
@@ -41883,10 +41885,10 @@ int ChangeUpdateMatrixThreads()
 
 	//SleepEx(30, false);
 
-	int modelnum = s_chascene->GetModelNum();
+	int modelnum = g_chascene->GetModelNum();
 	int modelcount;
 	for (modelcount = 0; modelcount < modelnum; modelcount++) {
-		CModel* curmodel = s_chascene->GetModel(modelcount);
+		CModel* curmodel = g_chascene->GetModel(modelcount);
 		if (curmodel) {
 			curmodel->CreateBoneUpdateMatrix();
 		}
@@ -42380,7 +42382,7 @@ bool PickAndSelectMeshOfDispGroupDlg()
 	if (g_previewFlag != 0) {
 		return false;
 	}
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return false;
 	}
 
@@ -42480,7 +42482,7 @@ bool PickAndPut()
 	if (g_previewFlag != 0) {
 		return false;
 	}
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return false;
 	}
 
@@ -43198,7 +43200,7 @@ bool DispTipMesh()
 		return false;
 	}
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return false;
 	}
 
@@ -43229,7 +43231,7 @@ bool DispTipMesh()
 		s_pickmodel = nullptr;
 		s_pickmqoobj = nullptr;
 		s_pickmaterial = nullptr;
-		pickflag = s_chascene->PickPolyMesh(NUMKEYPICK_MQOOBJECT, &tmppickinfo, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial, &s_pickhitpos);
+		pickflag = g_chascene->PickPolyMesh(NUMKEYPICK_MQOOBJECT, &tmppickinfo, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial, &s_pickhitpos);
 
 		if (pickflag && s_pickmodel && s_pickmqoobj) {
 			s_befpickmodel = s_pickmodel;
@@ -43257,7 +43259,7 @@ bool DispTipMaterial()
 		return false;
 	}
 
-	if (!s_chascene) {
+	if (!g_chascene) {
 		return false;
 	}
 
@@ -43288,7 +43290,7 @@ bool DispTipMaterial()
 		s_pickmodel = nullptr;
 		s_pickmqoobj = nullptr;
 		s_pickmaterial = nullptr;
-		pickflag = s_chascene->PickPolyMesh(NUMKEYPICK_MQOMATERIAL, &tmppickinfo, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial, &s_pickhitpos);
+		pickflag = g_chascene->PickPolyMesh(NUMKEYPICK_MQOMATERIAL, &tmppickinfo, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial, &s_pickhitpos);
 
 		if (pickflag && s_pickmodel && s_pickmaterial) {
 			s_befpickmodel = s_pickmodel;
@@ -46839,7 +46841,7 @@ bool GetResultOfPickRay()
 	int pickkind;
 	if (s_spdispsw[SPDISPSW_DISPGROUP].state) {
 		pickkind = NUMKEYPICK_MQOOBJECT;
-		dispPickfortip = s_chascene->GetResultOfPickRay(pickkind, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial, &s_pickhitpos);
+		dispPickfortip = g_chascene->GetResultOfPickRay(pickkind, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial, &s_pickhitpos);
 		if (dispPickfortip &&
 			s_pickmodel && s_pickmqoobj) {// &&
 			//((s_pickmodel != s_befpickmodel) || (s_pickmqoobj != s_befpickmqoobj))) {
@@ -46862,7 +46864,7 @@ bool GetResultOfPickRay()
 	}
 	else if (s_spdispsw[SPDISPSW_SHADERTYPE].state) {
 		pickkind = NUMKEYPICK_MQOMATERIAL;
-		dispPickfortip = s_chascene->GetResultOfPickRay(pickkind, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial, &s_pickhitpos);
+		dispPickfortip = g_chascene->GetResultOfPickRay(pickkind, &s_pickmodel, &s_pickmqoobj, &s_pickmaterial, &s_pickhitpos);
 
 		if (dispPickfortip &&
 			s_pickmodel && s_pickmaterial) {// &&
@@ -47235,7 +47237,7 @@ int SetModel2Dlgs(CModel* srcmodel)
 		s_limiteuldlg.SetModel(srcmodel, s_curboneno);
 
 		s_dispgroupdlg.SetModel(srcmodel);
-		s_footrigdlg.SetModel(s_chascene, srcmodel);
+		s_footrigdlg.SetModel(g_chascene, srcmodel);
 
 		if (s_motchangedlg.GetVisible()) {
 			ShowMOAWnd(true);
@@ -47268,8 +47270,8 @@ int SetModel2Dlgs(CModel* srcmodel)
 
 void SetCurrentModel(CModel* srcmodel)
 {
-	if (s_chascene) {
-		s_chascene->SetCurrentModel(srcmodel);
+	if (g_chascene) {
+		g_chascene->SetCurrentModel(srcmodel);
 	}
 	else {
 		_ASSERT(0);
@@ -47277,8 +47279,8 @@ void SetCurrentModel(CModel* srcmodel)
 }
 CModel* GetCurrentModel()
 {
-	if (s_chascene) {
-		return s_chascene->GetCurrentModel();
+	if (g_chascene) {
+		return g_chascene->GetCurrentModel();
 	}
 	else {
 		_ASSERT(0);
@@ -47934,12 +47936,12 @@ int SetNewPoseByMoa(double* pnextframe)
 
 int ChangeMotionWithGUI(int srcmotid)
 {
-	if (!s_chascene) {
+	if (!g_chascene) {
 		_ASSERT(0);
 		return 1;
 	}
 
-	int selindex = s_chascene->MotID2SelIndex(s_chascene->FindModelIndex(GetCurrentModel()), srcmotid);
+	int selindex = g_chascene->MotID2SelIndex(g_chascene->FindModelIndex(GetCurrentModel()), srcmotid);
 	if (selindex >= 0) {
 		bool dorefreshtl;
 		if ((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false))) {

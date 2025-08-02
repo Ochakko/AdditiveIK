@@ -2013,7 +2013,7 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 
 		//int modelcount2;
 		//for (modelcount2 = 0; modelcount2 < modelnum; modelcount2++) {
-		//	CModel* curmodel = s_chascene->GetModel(modelcount2);
+		//	CModel* curmodel = g_chascene->GetModel(modelcount2);
 		//	if (curmodel && (curmodel->GetBtCnt() != 0)) {
 		//		if (curmodel->GetCurMotInfo()) {
 		//			//curmodel->SetBtMotion(curmodel->GetBoneByID(s_curboneno), 0, *pnextframe, &curmodel->GetWorldMat(), &s_matVP);

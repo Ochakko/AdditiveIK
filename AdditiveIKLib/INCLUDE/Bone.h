@@ -1157,7 +1157,7 @@ public: //accesser
 	};
 
 
-	CModel* GetParModel(){ return m_parmodel; };
+	CModel* GetParModel() { return m_parmodel; };
 	//void SetParModel( CModel* srcpar ){ m_parmodel = srcpar; };//parmodelごとのm_bonenoに注意！！！
 
 
@@ -1766,9 +1766,8 @@ public: //accesser
 			SetPostureChildFlag(false);
 		}
 	}
-	CModel* GetPostureChildModel() {
-		return m_posture_child_model;
-	}
+	CModel* GetPostureChildModel();
+
 	void SetPostureChildFlag(bool srcflag) {
 		m_posture_child_flag = srcflag;
 	}
