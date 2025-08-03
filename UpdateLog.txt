@@ -1,11 +1,14 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2025/08/03
+　PostureChlidModel設定の保存と読み込み
+　　プロジェクトファイル(*.cha)ファイルの保存時にpocファイルを自動保存、chaファイル読み込み時にpocファイルも自動で読み込み
+　　
 2025/08/02
 　GetPostureChildModel()の修正
 　　設定したモデルが削除されてないことをチェックするように.
 　　
-
 2025/07/27
 　PostureChild機能の実装開始(実装中)
 　　乗り物に人を載せたい場合などに、乗り物のボーンを右クリックしてSetPostureChildをドロップダウンして乗せたいモデル名を選択すると機能します

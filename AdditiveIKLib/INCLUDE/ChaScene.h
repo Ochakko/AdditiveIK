@@ -219,6 +219,31 @@ public:
 			return nullptr;
 		}
 	};
+	CModel* GetModel(char* srcfolder, char* srcfilename)
+	{
+		if ((srcfilename == nullptr) || (srcfolder == nullptr)) {
+			_ASSERT(0);
+			return nullptr;
+		}
+
+		WCHAR wfolder[MAX_PATH] = { 0L };
+		WCHAR wfilename[MAX_PATH] = { 0L };
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, srcfolder, -1, wfolder, MAX_PATH);
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, srcfilename, -1, wfilename, MAX_PATH);
+
+
+		int modelnum = GetModelNum();
+		int modelindex;
+		for (modelindex = 0; modelindex < modelnum; modelindex++) {
+			CModel* chkmodel = GetModel(modelindex);
+			if (chkmodel && (wcscmp(wfilename, chkmodel->GetFileName()) == 0) && (wcscmp(wfolder, chkmodel->GetModelFolder()) == 0)) {
+				return chkmodel;
+			}
+		}
+
+		_ASSERT(0);
+		return nullptr;
+	};
 	MODELELEM GetModelElem(int srcmodelindex)
 	{
 		MODELELEM retelem;

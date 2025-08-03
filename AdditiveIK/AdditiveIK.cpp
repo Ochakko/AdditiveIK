@@ -52,6 +52,7 @@
 #include <SkyParamsFile.h>
 #include <FogParamsFile.h>
 #include <DofParamsFile.h>
+#include <PostureChildFile.h>
 #include "IniFile.h"
 
 
@@ -96,6 +97,7 @@
 #include <EventKey.h>
 #include <EventPad.h>
 #include <MCHandler.h>
+
 
 #include <math.h>
 #include <stdio.h>
@@ -19150,6 +19152,22 @@ int SaveProject()
 
 	//全てのモデルが書き込まれた後で*.friを書き込む
 	s_footrigdlg.SaveFootRigFile(s_projectdir, s_projectname, g_chascene);
+	
+	
+	//全てのモデルが書き込まれた後で*.pocを書き込む
+	int modelnum2 = g_chascene->GetModelNum();
+	int modelcount2;
+	for (modelcount2 = 0; modelcount2 < modelnum2; modelcount2++) {
+		CModel* curmodel = g_chascene->GetModel(modelcount2);
+		if (curmodel && (curmodel->GetNoBoneFlag() == false)) {//NoBoneのときはスキップ
+			CPostureChildFile posturechildfile;
+			WCHAR pocname[MAX_PATH] = { 0L };
+			swprintf_s(pocname, MAX_PATH, L"%s\\%s\\%s.poc",
+				s_projectdir, s_projectname, curmodel->GetFileName());
+			posturechildfile.WritePostureChildFile(pocname, curmodel, g_chascene);
+		}
+	}
+
 
 
 	//書き込み処理が成功してから履歴を保存する。chaファイルだけ。
@@ -19485,6 +19503,22 @@ int OpenChaFile()
 
 	//全てのモデルが読み込まれた後で*.friを読み込む
 	s_footrigdlg.LoadFootRigFile(s_chasavedir, s_chasavename);
+
+
+	//全てのモデルが読み込まれた後で*.pocを読み込む
+	int modelnum = g_chascene->GetModelNum();
+	int modelcount;
+	for (modelcount = 0; modelcount < modelnum; modelcount++) {
+		CModel* curmodel = g_chascene->GetModel(modelcount);
+		if (curmodel && (curmodel->GetNoBoneFlag() == false)) {//NoBoneのときはスキップ
+			CPostureChildFile posturechildfile;
+			WCHAR pocname[MAX_PATH] = { 0L };
+			swprintf_s(pocname, MAX_PATH, L"%s\\%s\\%s.poc",
+				s_chasavedir, s_chasavename, curmodel->GetFileName());
+			posturechildfile.LoadPostureChildFile(pocname, curmodel, g_chascene);
+		}
+	}
+
 
 
 	PostOpenChaFile();//2024/04/17 常駐スライダーなどにchaファイル読込値を反映する

@@ -336,6 +336,9 @@
     <ClCompile Include="..\CPP\EventPAD.cpp">
       <Filter>MotionAccelerator</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\PostureChildFile.cpp">
+      <Filter>FileIO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1590,6 +1593,9 @@
     </ClInclude>
     <ClInclude Include="..\INCLUDE\EventPAD.h">
       <Filter>MotionAccelerator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\PostureChildFile.h">
+      <Filter>FileIO</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
