@@ -1021,7 +1021,6 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 		return 0;
 	}
 
-
 	//2024/06/09
 	//カメラモーションの場合
 	//カメラモーションにはskeletonのモーションポイントが存在しない
@@ -10438,7 +10437,10 @@ CModel* CBone::GetPostureChildModel()
 		}
 	}
 	else {
-		_ASSERT(0);
+		//2025/08/04
+		//PostureChild未設定時にm_posture_child_modelがnullptrなのでここを通る
+		//エラーではない
+		//_ASSERT(0);
 		return nullptr;
 	}
 }
