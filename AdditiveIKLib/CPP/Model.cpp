@@ -22449,22 +22449,23 @@ void CModel::GetHipsBoneReq(CBone* srcbone, CBone** dstppbone)
 
 void CModel::CalcModelWorldMatOnLoad(CFootRigDlg* srcfootrigdlg)
 {
-	ChaMatrix scalemat;
-	scalemat.SetIdentity();
+	CQuaternion rotq;
+	rotq.SetRotationXYZ(nullptr, GetModelRotation());
 	ChaMatrix rotmat;
-	rotmat.SetIdentity();
-	rotmat.SetXYZRotation(0, GetModelRotation());
+	rotmat = rotq.MakeRotMatX();
 	ChaMatrix tramat;
 	tramat.SetIdentity();
 	tramat.SetTranslation(GetModelPosition());
-	ChaMatrix modelnodemat;
-	modelnodemat.SetIdentity();
 
 	ChaMatrix worldmatonload;
 	worldmatonload.SetIdentity();
-	//worldmatonload = ChaMatrixFromSRT(true, true, modelnodemat, &scalemat, &rotmat, &tramat);
 	worldmatonload = rotmat * tramat;
 
+	//2025/08/12
+	if (GetPostureParentFlag()) {
+		ChaMatrix postureParentMultMat = GetPostureParentMat();
+		worldmatonload = postureParentMultMat * worldmatonload;
+	}
 
 	//2024/09/09
 	//FootRigDlgのUpdate()により設定したmatWorldが補間されて途中までしか動かない不具合を解消

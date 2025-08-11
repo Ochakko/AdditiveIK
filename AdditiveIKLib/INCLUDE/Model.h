@@ -2684,12 +2684,35 @@ public: //accesser
 	{
 		m_matWorld = srcmat;
 	};
-	ChaMatrix GetWorldMat()
+	ChaMatrix GetWorldMat(int forceselect = 0)
 	{
-		if (GetPostureParentFlag()) {
-			return GetPostureParentMat();
+		if (forceselect == GETWM_MIXED) {
+			//select指定なしの場合(通常)
+			return m_matWorld;
+		}
+		else if (forceselect == GETWM_NO_POSTUREPARENT) {
+			//2025/08/12
+			//PostureChildModel機能使用時に　モデルのWorldMat機能で位置と向きを設定する場合
+			//PostureChildModelの影響を受けていないWorldMatが必要になる
+			//
+			//CBone::UpdateMatrix()においても
+			//PostureChildModelの影響を受けていないWorldMatが必要になる
+
+			//return m_matWorld;
+			CQuaternion rotq;
+			rotq.SetRotationXYZ(nullptr, GetModelRotation());
+			ChaMatrix rotmat;
+			rotmat = rotq.MakeRotMatX();
+			ChaMatrix tramat;
+			tramat.SetIdentity();
+			tramat.SetTranslation(GetModelPosition());
+			ChaMatrix worldmatonload;
+			worldmatonload.SetIdentity();
+			worldmatonload = rotmat * tramat;
+			return worldmatonload;
 		}
 		else {
+			_ASSERT(0);
 			return m_matWorld;
 		}
 	};
@@ -3554,8 +3577,8 @@ public: //accesser
 		}
 	};
 
-	void SetPostureParentMat(ChaMatrix srcmat) {
-		m_postureparentmat = srcmat;
+	void SetPostureParentMat(ChaMatrix srcmultmat) {
+		m_postureparentmat = srcmultmat;
 	}
 	ChaMatrix GetPostureParentMat() {
 		return m_postureparentmat;

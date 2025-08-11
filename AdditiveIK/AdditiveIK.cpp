@@ -24004,50 +24004,45 @@ int GetModelWorldMat(ChaVector3* dstpos, ChaVector3* dstrot)
 	WCHAR strval[256] = { 0L };
 	float value = 0.0f;
 
-	if (GetCurrentModel()) {
-		tmppos = GetCurrentModel()->GetModelPosition();
-		tmprot = GetCurrentModel()->GetModelRotation();
-		const float maxvalue = 100000.0f;
-		const float minvalue = -maxvalue;
-		const float maxvalue2 = 10000.0f;
-		const float minvalue2 = -maxvalue;
+	const float maxvalue_pos = 500000.0f;
+	const float minvalue_pos = -maxvalue_pos;
+	const float maxvalue_rot = 360.0;
+	const float minvalue_rot = -maxvalue_rot;
 
-		GetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONX, strval, 256);
-		value = (float)_wtof(strval);
-		if ((value >= minvalue) && (value <= maxvalue)) {
-			tmppos.x = value;
-		}
-		GetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONY, strval, 256);
-		value = (float)_wtof(strval);
-		if ((value >= minvalue) && (value <= maxvalue)) {
-			tmppos.y = value;
-		}
-		GetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONZ, strval, 256);
-		value = (float)_wtof(strval);
-		if ((value >= minvalue) && (value <= maxvalue)) {
-			tmppos.z = value;
-		}
-
-		GetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONX, strval, 256);
-		value = (float)_wtof(strval);
-		if ((value >= minvalue) && (value <= maxvalue)) {
-			tmprot.x = value;
-		}
-		GetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONY, strval, 256);
-		value = (float)_wtof(strval);
-		if ((value >= minvalue) && (value <= maxvalue)) {
-			tmprot.y = value;
-		}
-		GetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONZ, strval, 256);
-		value = (float)_wtof(strval);
-		if ((value >= minvalue) && (value <= maxvalue)) {
-			tmprot.z = value;
-		}
-
-
-		*dstpos = tmppos;
-		*dstrot = tmprot;
+	GetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONX, strval, 256);
+	value = (float)_wtof(strval);
+	if ((value >= minvalue_pos) && (value <= maxvalue_pos)) {
+		tmppos.x = value;
 	}
+	GetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONY, strval, 256);
+	value = (float)_wtof(strval);
+	if ((value >= minvalue_pos) && (value <= maxvalue_pos)) {
+		tmppos.y = value;
+	}
+	GetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONZ, strval, 256);
+	value = (float)_wtof(strval);
+	if ((value >= minvalue_pos) && (value <= maxvalue_pos)) {
+		tmppos.z = value;
+	}
+
+	GetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONX, strval, 256);
+	value = (float)_wtof(strval);
+	if ((value >= minvalue_rot) && (value <= maxvalue_rot)) {
+		tmprot.x = value;
+	}
+	GetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONY, strval, 256);
+	value = (float)_wtof(strval);
+	if ((value >= minvalue_rot) && (value <= maxvalue_rot)) {
+		tmprot.y = value;
+	}
+	GetDlgItemTextW(hDlgWnd, IDC_EDIT_ROTATIONZ, strval, 256);
+	value = (float)_wtof(strval);
+	if ((value >= minvalue_rot) && (value <= maxvalue_rot)) {
+		tmprot.z = value;
+	}
+
+	*dstpos = tmppos;
+	*dstrot = tmprot;
 
 	return 0;
 }

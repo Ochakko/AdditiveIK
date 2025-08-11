@@ -1797,6 +1797,8 @@ public: //accesser
 		return m_posture_child_rot_offset;
 	}
 
+	void CalcPostureChildWorldMat(int limitdegflag, int srcmotid, double roundingframe);
+
 public:
 	CRITICAL_SECTION m_CritSection_GetBefNext;
 	//CRITICAL_SECTION m_CritSection_GetBefNext2;

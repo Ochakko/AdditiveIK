@@ -2,11 +2,15 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/08/12
+　PostureChild機能の続き
+　　PostureChild機能使用時にモデルのWorldMat設定をすると結果が正しくない不具合を修正
+　　PostureChild機能使用時に親ボーンのworldmatと子供モデルのworldmatの取り違いで親ボーンの位置がおかしくなる不具合を修正
+
 2025/08/11
 　PostureChild機能の続き
 　　ボーンを右クリックしてPostureChildを設定する際に回転オフセットも指定可能に.
 　　回転オフセットの読み書きにも対応.
-
 
 2025/08/04早朝
 　GetPostureChildModel()修正

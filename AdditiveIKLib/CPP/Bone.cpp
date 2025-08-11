@@ -838,7 +838,7 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 	if (GetParModel() && GetParModel()->IsCameraMotion(srcmotid)) {
 		//ChaMatrix initwm;
 		//initwm.SetIdentity();
-		//ChaMatrix modelwm = *wmat;
+		//ChaMatrix modelwm = modelworldmat;
 		//ChaVector3 zeroeul;
 		//zeroeul.SetParams(0.0f, 0.0f, 0.0f);
 		//m_curmp[m_updateslot].InitParams();
@@ -872,7 +872,7 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 			}
 			else {
 				CallF(CalcFBXMotion(limitdegflag, srcmotid, srcframe, &(m_targetmp), &existflag), return 1);
-				//newworldmat = m_curmp.GetWorldMat();// **wmat;
+				//newworldmat = m_curmp.GetWorldMat();// * modelworldmat;
 				newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_targetmp));
 			}
 
@@ -913,7 +913,7 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 			//ChaVector3TransformCoord(&m_childworld, &jpos, &tmpmat);
 			//ChaMatrix vpmat = *vmat * *pmat;
 			//ChaMatrix wvpmat = tmpmat * vpmat;
-			//ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);//wmatで変換した位置に対して　vp変換
+			//ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);//modelworldmatで変換した位置に対して　vp変換
 		}
 		else {
 			_ASSERT(0);
@@ -982,6 +982,9 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 		//ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);
 	}
 
+	//2025/08/12
+	CalcPostureChildWorldMat(limitdegflag, srcmotid, roundingframe);
+
 	//m_befupdatetime = srcframe;
 
 	return 0;
@@ -1021,6 +1024,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 	if (IsNotSkeleton()) {
 		return 0;
 	}
+
 
 	//2024/06/09
 	//カメラモーションの場合
@@ -1065,7 +1069,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 			}
 			else {
 				CallF(CalcFBXMotion(limitdegflag, srcmotid, srcframe, &(m_curmp[m_updateslot]), &existflag), return 1);
-				//newworldmat = m_curmp.GetWorldMat();// **wmat;
+				//newworldmat = m_curmp.GetWorldMat();// * *wmat;
 				newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
 			}
 
@@ -1112,7 +1116,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 			ChaVector3TransformCoord(&m_childworld, &jpos, &tmpmat);
 			ChaMatrix vpmat = *vmat * *pmat;
 			ChaMatrix wvpmat = tmpmat * vpmat;
-			ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);//wmatで変換した位置に対して　vp変換
+			ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);//*wmatで変換した位置に対して　vp変換
 		}
 		else {
 			_ASSERT(0);
@@ -1164,10 +1168,10 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 		ChaMatrix wmat2, wvpmat;
 		if (GetParent(true)) {
-			wmat2 = GetParent(true)->GetBtMat(true);// **wmat;
+			wmat2 = GetParent(true)->GetBtMat(true);// * *wmat;
 		}
 		else {
-			wmat2 = GetBtMat(true);// **wmat;
+			wmat2 = GetBtMat(true);// * *wmat;
 		}
 		ChaMatrix vpmat = *vmat * *pmat;
 		wvpmat = wmat2 * vpmat;
@@ -1181,48 +1185,49 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 		ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);
 	}
 
-
-	if (GetPostureChildModel()) {
-		if (GetPostureChildFlag() && GetPostureChildModel()->GetPostureParentFlag()) {
-			ChaMatrix posturemat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
-			ChaMatrix posturerotmat = ChaMatrixRot(posturemat);
-
-			ChaVector3 postureoffset_position = GetPostureChildOffset_Position();
-			ChaVector3 postureoffset_rotation = GetPostureChildOffset_Rotation();
-			
-			ChaMatrix postureoffset_tramat;
-			postureoffset_tramat.SetIdentity();
-			postureoffset_tramat.SetTranslation(postureoffset_position);
-
-			CQuaternion postureoffset_q;
-			postureoffset_q.SetRotationXYZ(nullptr, postureoffset_rotation);
-			ChaMatrix postureoffset_rotmat;
-			postureoffset_rotmat = postureoffset_q.MakeRotMatX();
-
-			//posturerotmat = postureoffset_rotmat * posturerotmat;
-			//ChaVector3 rotatedposoffset;
-			//ChaVector3TransformCoord(&rotatedposoffset, &postureoffset_position, &posturerotmat);
-			//posturemat.data[MATI_41] += rotatedposoffset.x;
-			//posturemat.data[MATI_42] += rotatedposoffset.y;
-			//posturemat.data[MATI_43] += rotatedposoffset.z;
-
-			ChaMatrix newposturemat;
-			newposturemat = postureoffset_rotmat * postureoffset_tramat * posturemat;
-
-			GetPostureChildModel()->SetPostureParentMat(newposturemat);
-			GetPostureChildModel()->SetPostureParentFlag(true);
-		}
-		else {
-			ChaMatrix inimat;
-			inimat.SetIdentity();
-			GetPostureChildModel()->SetPostureParentMat(inimat);
-			GetPostureChildModel()->SetPostureParentFlag(false);
-		}
-	}
+	//2025/08/12
+	CalcPostureChildWorldMat(limitdegflag, srcmotid, roundingframe);
 
 	m_befupdatetime = srcframe;
 
 	return 0;
+}
+
+void CBone::CalcPostureChildWorldMat(int limitdegflag, int srcmotid, double roundingframe)
+{
+	if (GetParModel()) {
+		if (GetPostureChildModel()) {
+			if (GetPostureChildFlag() && GetPostureChildModel()->GetPostureParentFlag()) {
+				ChaMatrix posturemat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
+				//ChaMatrix modelworldmat = GetPostureChildModel()->GetWorldMat(GETWM_NO_POSTUREPARENT);
+				ChaMatrix posturerotmat = ChaMatrixRot(posturemat);
+
+				ChaVector3 postureoffset_position = GetPostureChildOffset_Position();
+				ChaVector3 postureoffset_rotation = GetPostureChildOffset_Rotation();
+
+				ChaMatrix postureoffset_tramat;
+				postureoffset_tramat.SetIdentity();
+				postureoffset_tramat.SetTranslation(postureoffset_position);
+
+				CQuaternion postureoffset_q;
+				postureoffset_q.SetRotationXYZ(nullptr, postureoffset_rotation);
+				ChaMatrix postureoffset_rotmat;
+				postureoffset_rotmat = postureoffset_q.MakeRotMatX();
+
+				ChaMatrix posturemultmat = postureoffset_rotmat * postureoffset_tramat;
+
+				ChaMatrix newposturemat;
+				newposturemat = posturemultmat * posturemat;
+
+				GetPostureChildModel()->SetPostureParentMat(posturemultmat);
+				GetPostureChildModel()->SetWorldMat(newposturemat);
+				GetPostureChildModel()->SetPostureParentFlag(true);
+			}
+			else {
+				GetPostureChildModel()->SetPostureParentFlag(false);
+			}
+		}
+	}
 }
 
 int CBone::UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, double srcframe,
@@ -1259,6 +1264,7 @@ int CBone::UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, 
 		return 0;
 	}
 
+
 	if (srcframe >= 0.0) {
 		ChaMatrix newworldmat;
 		ChaMatrixIdentity(&newworldmat);
@@ -1280,7 +1286,7 @@ int CBone::UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, 
 		ChaVector3TransformCoord(&m_childworld, &jpos, &tmpmat);
 		ChaMatrix vpmat = *vmat * *pmat;
 		ChaMatrix wvpmat = tmpmat * vpmat;
-		ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);//wmatで変換した位置に対して　vp変換
+		ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);//*wmatで変換した位置に対して　vp変換
 	}
 	else {
 		_ASSERT(0);
@@ -1323,7 +1329,7 @@ int CBone::UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, 
 	//if (GetParModel() && GetParModel()->IsCameraMotion(srcmotid)) {
 	//	ChaMatrix initwm;
 	//	initwm.SetIdentity();
-	//	ChaMatrix modelwm = *wmat;
+	//	ChaMatrix modelwm = modelworldmat;
 	//	ChaVector3 zeroeul;
 	//	zeroeul.SetParams(0.0f, 0.0f, 0.0f);
 	//	m_curmp[m_updateslot].InitParams();
@@ -1355,14 +1361,14 @@ int CBone::UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, 
 
 	//	//modelのworldmatを掛ける
 	//		//skinmeshの変換の際にはシェーダーでg_hmWorldは掛けない　すでにg_hmWorldが掛かっている必要有
-	//	ChaMatrix tmpmat = newworldmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//	ChaMatrix tmpmat = newworldmat * modelworldmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//	m_curmp[m_updateslot].SetWorldMat(tmpmat);
 
 	//	ChaVector3 jpos = GetJointFPos();
 	//	ChaVector3TransformCoord(&m_childworld, &jpos, &tmpmat);
 	//	ChaMatrix vpmat = *vmat * *pmat;
 	//	ChaMatrix wvpmat = tmpmat * vpmat;
-	//	ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);//wmatで変換した位置に対して　vp変換
+	//	ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);//modelworldmatで変換した位置に対して　vp変換
 
 	//	if (GetParModel() && (GetParModel()->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
 	//		bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
@@ -1375,10 +1381,10 @@ int CBone::UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, 
 
 	//	ChaMatrix wmat2, wvpmat;
 	//	if (GetParent(true)) {
-	//		wmat2 = GetParent(true)->GetBtMat(true);// **wmat;
+	//		wmat2 = GetParent(true)->GetBtMat(true);// * modelworldmat;
 	//	}
 	//	else {
-	//		wmat2 = GetBtMat(true);// **wmat;
+	//		wmat2 = GetBtMat(true);// * modelworldmat;
 	//	}
 	//	ChaMatrix vpmat = *vmat * *pmat;
 	//	wvpmat = wmat2 * vpmat;
@@ -1391,6 +1397,9 @@ int CBone::UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, 
 	//	//ChaVector3TransformCoord(&m_childworld, &jpos, &(GetBtMat()));
 	//	ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);
 	//}
+
+	//2025/08/12
+	CalcPostureChildWorldMat(limitdegflag, srcmotid, roundingframe);
 
 	m_befupdatetime = srcframe;
 

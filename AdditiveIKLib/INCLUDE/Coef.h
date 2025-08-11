@@ -24,6 +24,13 @@ class CMQOMaterial;
 #define	u_long	unsigned long
 
 
+//CModel::GetWorldMat()
+enum {
+	GETWM_MIXED = 0,
+	GETWM_NO_POSTUREPARENT
+};
+
+
 enum {
 	IKKIND_ROTATE,
 	IKKIND_MOVE,
