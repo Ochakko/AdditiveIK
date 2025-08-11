@@ -455,6 +455,7 @@ int CBone::InitParams()
 	m_posture_child_flag = false;
 	m_posture_child_model = nullptr;
 	m_posture_child_pos_offset.SetZeroVec3();
+	m_posture_child_rot_offset.SetZeroVec3();
 
 	ChaMatrixIdentity(&m_nodemat);
 	ChaMatrixIdentity(&m_nodeanimmat);
@@ -1184,17 +1185,31 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 	if (GetPostureChildModel()) {
 		if (GetPostureChildFlag() && GetPostureChildModel()->GetPostureParentFlag()) {
 			ChaMatrix posturemat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
-
 			ChaMatrix posturerotmat = ChaMatrixRot(posturemat);
 
-			ChaVector3 postureposoffset = GetPostureChildPosOffset();
-			ChaVector3 rotatedposoffset;
-			ChaVector3TransformCoord(&rotatedposoffset, &postureposoffset, &posturerotmat);
-			posturemat.data[MATI_41] += rotatedposoffset.x;
-			posturemat.data[MATI_42] += rotatedposoffset.y;
-			posturemat.data[MATI_43] += rotatedposoffset.z;
+			ChaVector3 postureoffset_position = GetPostureChildOffset_Position();
+			ChaVector3 postureoffset_rotation = GetPostureChildOffset_Rotation();
+			
+			ChaMatrix postureoffset_tramat;
+			postureoffset_tramat.SetIdentity();
+			postureoffset_tramat.SetTranslation(postureoffset_position);
 
-			GetPostureChildModel()->SetPostureParentMat(posturemat);
+			CQuaternion postureoffset_q;
+			postureoffset_q.SetRotationXYZ(nullptr, postureoffset_rotation);
+			ChaMatrix postureoffset_rotmat;
+			postureoffset_rotmat = postureoffset_q.MakeRotMatX();
+
+			//posturerotmat = postureoffset_rotmat * posturerotmat;
+			//ChaVector3 rotatedposoffset;
+			//ChaVector3TransformCoord(&rotatedposoffset, &postureoffset_position, &posturerotmat);
+			//posturemat.data[MATI_41] += rotatedposoffset.x;
+			//posturemat.data[MATI_42] += rotatedposoffset.y;
+			//posturemat.data[MATI_43] += rotatedposoffset.z;
+
+			ChaMatrix newposturemat;
+			newposturemat = postureoffset_rotmat * postureoffset_tramat * posturemat;
+
+			GetPostureChildModel()->SetPostureParentMat(newposturemat);
 			GetPostureChildModel()->SetPostureParentFlag(true);
 		}
 		else {

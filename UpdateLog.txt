@@ -1,6 +1,13 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+
+2025/08/11
+　PostureChild機能の続き
+　　ボーンを右クリックしてPostureChildを設定する際に回転オフセットも指定可能に.
+　　回転オフセットの読み書きにも対応.
+
+
 2025/08/04早朝
 　GetPostureChildModel()修正
 　　エラーではないときの_ASSERT文をコメントアウト

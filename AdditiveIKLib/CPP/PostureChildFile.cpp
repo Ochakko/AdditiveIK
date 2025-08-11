@@ -105,7 +105,8 @@ int CPostureChildFile::WritePostureChildElem(CBone* srcbone, ChaScene* srcchasce
 	if (!childmodel) {
 		return 0;
 	}
-	ChaVector3 offset = srcbone->GetPostureChildPosOffset();
+	ChaVector3 offset_position = srcbone->GetPostureChildOffset_Position();
+	ChaVector3 offset_rotation = srcbone->GetPostureChildOffset_Rotation();
 
 	char filename[MAX_PATH] = { 0 };
 	char modelfolder[MAX_PATH] = { 0 };
@@ -123,12 +124,18 @@ int CPostureChildFile::WritePostureChildElem(CBone* srcbone, ChaScene* srcchasce
 
 
 	CallF(Write2File("    <OffsetX>%.2f</OffsetX>\r\n",
-		offset.x), return 1);
+		offset_position.x), return 1);
 	CallF(Write2File("    <OffsetY>%.2f</OffsetY>\r\n",
-		offset.y), return 1);
+		offset_position.y), return 1);
 	CallF(Write2File("    <OffsetZ>%.2f</OffsetZ>\r\n",
-		offset.z), return 1);
+		offset_position.z), return 1);
 
+	CallF(Write2File("    <OffsetRotationX>%.2f</OffsetRotationX>\r\n",
+		offset_rotation.x), return 1);
+	CallF(Write2File("    <OffsetRotationY>%.2f</OffsetRotationY>\r\n",
+		offset_rotation.y), return 1);
+	CallF(Write2File("    <OffsetRotationZ>%.2f</OffsetRotationZ>\r\n",
+		offset_rotation.z), return 1);
 
 	CallF(Write2File("  </PostureChildElem>\r\n"), return 1);
 
@@ -253,29 +260,45 @@ int CPostureChildFile::ReadPostureChildElem(CModel* srcmodel, ChaScene* srcchasc
 	int getoffsetX = 0;
 	float offsetX = 0.0f;
 	getoffsetX = Read_Float(xmlbuf, "<OffsetX>", "</OffsetX>", &offsetX);
-
 	int getoffsetY = 0;
 	float offsetY = 0.0f;
 	getoffsetY = Read_Float(xmlbuf, "<OffsetY>", "</OffsetY>", &offsetY);
-
 	int getoffsetZ = 0;
 	float offsetZ = 0.0f;
 	getoffsetZ = Read_Float(xmlbuf, "<OffsetZ>", "</OffsetZ>", &offsetZ);
 
+	int getoffsetRotationX = 0;
+	float offsetRotationX = 0.0f;
+	getoffsetRotationX = Read_Float(xmlbuf, "<OffsetRotationX>", "</OffsetRotationX>", &offsetRotationX);
+	int getoffsetRotationY = 0;
+	float offsetRotationY = 0.0f;
+	getoffsetRotationY = Read_Float(xmlbuf, "<OffsetRotationY>", "</OffsetRotationY>", &offsetRotationY);
+	int getoffsetRotationZ = 0;
+	float offsetRotationZ = 0.0f;
+	getoffsetRotationZ = Read_Float(xmlbuf, "<OffsetRotationZ>", "</OffsetRotationZ>", &offsetRotationZ);
 
-	if ((getparentbonename == 0) && (getchildfoldername == 0) && (getchildmodelname == 0) &&
-		(getoffsetX == 0) && (getoffsetY == 0) && (getoffsetZ == 0)) {
-
+	if ((getparentbonename == 0) && (getchildfoldername == 0) && (getchildmodelname == 0)) {
 		CBone* parentbone = srcmodel->FindBoneByName(parentbonename);
 		if (parentbone != nullptr) {
-
 			CModel* childmodel = srcchascene->GetModel(childfoldername, childmodelname);
 			if (childmodel) {
-				ChaVector3 offset = ChaVector3(offsetX, offsetY, offsetZ);
 
-				parentbone->SetPostureChildModel(childmodel);
-				parentbone->SetPostureChildPosOffset(offset);
-				parentbone->SetPostureChildFlag(true);
+				bool setflag = false;
+				if ((getoffsetX == 0) && (getoffsetY == 0) && (getoffsetZ == 0)) {
+					ChaVector3 offset = ChaVector3(offsetX, offsetY, offsetZ);
+					parentbone->SetPostureChildOffset_Position(offset);
+					setflag = true;
+				}
+				if ((getoffsetRotationX == 0) && (getoffsetRotationY == 0) && (getoffsetRotationZ == 0)) {
+					ChaVector3 offset_rotation = ChaVector3(offsetRotationX, offsetRotationY, offsetRotationZ);
+					parentbone->SetPostureChildOffset_Rotation(offset_rotation);
+					setflag = true;
+				}
+
+				if (setflag) {
+					parentbone->SetPostureChildModel(childmodel);
+					parentbone->SetPostureChildFlag(true);
+				}
 			}
 			else {
 				_ASSERT(0);
@@ -286,7 +309,6 @@ int CPostureChildFile::ReadPostureChildElem(CModel* srcmodel, ChaScene* srcchasc
 			_ASSERT(0);
 			return 2;
 		}
-
 	}
 	else {
 		_ASSERT(0);

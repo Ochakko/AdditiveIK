@@ -1783,11 +1783,18 @@ public: //accesser
 		}
 	}
 
-	void SetPostureChildPosOffset(ChaVector3 srcoffset) {
+	void SetPostureChildOffset_Position(ChaVector3 srcoffset) {
 		m_posture_child_pos_offset = srcoffset;
 	}
-	ChaVector3 GetPostureChildPosOffset() {
+	ChaVector3 GetPostureChildOffset_Position() {
 		return m_posture_child_pos_offset;
+	}
+
+	void SetPostureChildOffset_Rotation(ChaVector3 srcoffset) {
+		m_posture_child_rot_offset = srcoffset;
+	}
+	ChaVector3 GetPostureChildOffset_Rotation() {
+		return m_posture_child_rot_offset;
 	}
 
 public:
@@ -1978,6 +1985,7 @@ private:
 	bool m_posture_child_flag;
 	CModel* m_posture_child_model;
 	ChaVector3 m_posture_child_pos_offset;
+	ChaVector3 m_posture_child_rot_offset;
 
 	CBone* m_parent;
 	CBone* m_child;

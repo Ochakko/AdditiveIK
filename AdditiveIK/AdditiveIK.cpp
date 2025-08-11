@@ -24268,9 +24268,9 @@ LRESULT CALLBACK PostureChildDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 				swprintf_s(strval, 256, L"Offset Position X : %.2f", (double)currentoffset);
 				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_X, strval);
 
-				ChaVector3 currentposoffset = s_postureparentbone->GetPostureChildPosOffset();
+				ChaVector3 currentposoffset = s_postureparentbone->GetPostureChildOffset_Position();
 				currentposoffset.x = currentoffset;
-				s_postureparentbone->SetPostureChildPosOffset(currentposoffset);
+				s_postureparentbone->SetPostureChildOffset_Position(currentposoffset);
 			}
 			else if (GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Y) == (HWND)lp) {
 				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Y), TBM_GETPOS, 0, 0);
@@ -24279,9 +24279,9 @@ LRESULT CALLBACK PostureChildDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 				swprintf_s(strval, 256, L"Offset Position Y : %.2f", (double)currentoffset);
 				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_Y, strval);
 
-				ChaVector3 currentposoffset = s_postureparentbone->GetPostureChildPosOffset();
+				ChaVector3 currentposoffset = s_postureparentbone->GetPostureChildOffset_Position();
 				currentposoffset.y = currentoffset;
-				s_postureparentbone->SetPostureChildPosOffset(currentposoffset);
+				s_postureparentbone->SetPostureChildOffset_Position(currentposoffset);
 			}
 			else if (GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Z) == (HWND)lp) {
 				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Z), TBM_GETPOS, 0, 0);
@@ -24290,9 +24290,44 @@ LRESULT CALLBACK PostureChildDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM l
 				swprintf_s(strval, 256, L"Offset Position Z : %.2f", (double)currentoffset);
 				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_Z, strval);
 
-				ChaVector3 currentposoffset = s_postureparentbone->GetPostureChildPosOffset();
+				ChaVector3 currentposoffset = s_postureparentbone->GetPostureChildOffset_Position();
 				currentposoffset.z = currentoffset;
-				s_postureparentbone->SetPostureChildPosOffset(currentposoffset);
+				s_postureparentbone->SetPostureChildOffset_Position(currentposoffset);
+			}
+
+
+			else if (GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_X2) == (HWND)lp) {
+				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_X2), TBM_GETPOS, 0, 0);
+				float currentoffset = (float)((double)cursliderpos * 0.1);
+
+				swprintf_s(strval, 256, L"Offset ROTATION X : %.2f", (double)currentoffset);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETROTATION_X2, strval);
+
+				ChaVector3 currentoffset_rotation = s_postureparentbone->GetPostureChildOffset_Rotation();
+				currentoffset_rotation.x = currentoffset;
+				s_postureparentbone->SetPostureChildOffset_Rotation(currentoffset_rotation);
+			}
+			else if (GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_Y2) == (HWND)lp) {
+				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_Y2), TBM_GETPOS, 0, 0);
+				float currentoffset = (float)((double)cursliderpos * 0.1);
+
+				swprintf_s(strval, 256, L"Offset Rotation Y : %.2f", (double)currentoffset);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETROTATION_Y2, strval);
+
+				ChaVector3 currentoffset_rotation = s_postureparentbone->GetPostureChildOffset_Rotation();
+				currentoffset_rotation.y = currentoffset;
+				s_postureparentbone->SetPostureChildOffset_Rotation(currentoffset_rotation);
+			}
+			else if (GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_Z2) == (HWND)lp) {
+				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_Z2), TBM_GETPOS, 0, 0);
+				float currentoffset = (float)((double)cursliderpos * 0.1);
+
+				swprintf_s(strval, 256, L"Offset Rotation Z : %.2f", (double)currentoffset);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETROTATION_Z2, strval);
+
+				ChaVector3 currentoffset_rotation = s_postureparentbone->GetPostureChildOffset_Rotation();
+				currentoffset_rotation.z = currentoffset;
+				s_postureparentbone->SetPostureChildOffset_Rotation(currentoffset_rotation);
 			}
 		}
 		break;
@@ -43745,28 +43780,52 @@ int ShowPostureChildDlg()
 			WCHAR strval[256] = { 0L };
 
 			if ((s_posturechildmodel != nullptr) && (s_postureparentbone != nullptr)) {
-				ChaVector3 currentposoffset = s_postureparentbone->GetPostureChildPosOffset();
+				ChaVector3 currentoffset_position = s_postureparentbone->GetPostureChildOffset_Position();
+				ChaVector3 currentoffset_rotation = s_postureparentbone->GetPostureChildOffset_Rotation();
 
-				swprintf_s(strval, 256, L"Offset Position X : %.2f", (double)currentposoffset.x);
+				swprintf_s(strval, 256, L"Offset Position X : %.2f", (double)currentoffset_position.x);
 				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_X, strval);
-				int sliderposx = int(max(-5000.0, min(5000.0, (double)currentposoffset.x * 10.0)));
+				int sliderposx = int(fmax(-5000.0, fmin(5000.0, (double)currentoffset_position.x * 10.0)));
 				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_X), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-5000);
 				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_X), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)5000);
 				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_X), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderposx);
 
-				swprintf_s(strval, 256, L"Offset Position Y : %.2f", (double)currentposoffset.y);
+				swprintf_s(strval, 256, L"Offset Position Y : %.2f", (double)currentoffset_position.y);
 				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_Y, strval);
-				int sliderposy = int(max(-5000.0, min(5000.0, (double)currentposoffset.y * 10.0)));
+				int sliderposy = int(fmax(-5000.0, fmin(5000.0, (double)currentoffset_position.y * 10.0)));
 				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Y), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-5000);
 				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Y), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)5000);
 				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Y), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderposy);
 
-				swprintf_s(strval, 256, L"Offset Position Z : %.2f", (double)currentposoffset.z);
+				swprintf_s(strval, 256, L"Offset Position Z : %.2f", (double)currentoffset_position.z);
 				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_Z, strval);
-				int sliderposz = int(max(-5000.0, min(5000.0, (double)currentposoffset.z * 10.0)));
+				int sliderposz = int(fmax(-5000.0, fmin(5000.0, (double)currentoffset_position.z * 10.0)));
 				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Z), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-5000);
 				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Z), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)5000);
 				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Z), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderposz);
+
+
+
+				swprintf_s(strval, 256, L"Offset Rotation X : %.2f", (double)currentoffset_rotation.x);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETROTATION_X2, strval);
+				int sliderrotx = int(fmax(-1800.0, fmin(1800.0, (double)currentoffset_rotation.x * 10.0)));
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_X2), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-1800);
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_X2), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)1800);
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_X2), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderrotx);
+
+				swprintf_s(strval, 256, L"Offset Rotation Y : %.2f", (double)currentoffset_rotation.y);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETROTATION_Y2, strval);
+				int sliderroty = int(fmax(-1800.0, fmin(1800.0, (double)currentoffset_rotation.y * 10.0)));
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_Y2), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-1800);
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_Y2), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)1800);
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_Y2), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderroty);
+
+				swprintf_s(strval, 256, L"Offset Rotation Z : %.2f", (double)currentoffset_rotation.z);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETROTATION_Z2, strval);
+				int sliderrotz = int(fmax(-1800.0, fmin(1800.0, (double)currentoffset_rotation.z * 10.0)));
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_Z2), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-1800);
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_Z2), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)1800);
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_Z2), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderrotz);
 			}
 
 			ShowWindow(s_posturechilddlgwnd, SW_SHOW);
