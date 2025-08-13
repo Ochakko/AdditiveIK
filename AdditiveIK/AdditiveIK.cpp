@@ -15527,7 +15527,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.48\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.49\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -34070,6 +34070,9 @@ int BoneRClick(int srcboneno)
 
 						int setmenuid = ID_RMENU_0 + MENUOFFSET_BONERCLICK + MAXRIGNUM * 3 + 1;
 
+
+						int currentmodelindex = g_chascene->FindModelIndex(GetCurrentModel());
+
 						int childindex;
 						for (childindex = 0; childindex < modelnum; childindex++) {
 							MODELELEM curme = g_chascene->GetModelElem(childindex);
@@ -34083,6 +34086,18 @@ int BoneRClick(int srcboneno)
 								}
 								int subsubid = setmenuid + childindex;
 								AppendMenu(subsubmenu, MF_STRING, subsubid, curname);
+
+								if ((currentmodelindex >= 0) && (currentmodelindex == childindex)) {
+									//2025/08/13
+									//右クリックしたボーンの主モデルのメニューはグレーアウト
+									//(自分自身をPostureChildに指定すると不安定にくるくる回ったりするので無効に)
+									MENUITEMINFO mii;
+									ZeroMemory(&mii, sizeof(MENUITEMINFO));
+									mii.cbSize = sizeof(MENUITEMINFO);
+									mii.fMask = MIIM_STATE;
+									mii.fState = MFS_GRAYED;
+									SetMenuItemInfo(subsubmenu, subsubid, FALSE, &mii);
+								}
 							}
 						}
 					}
