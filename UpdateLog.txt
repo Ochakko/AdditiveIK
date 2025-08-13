@@ -2,8 +2,8 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2025/08/13
-　AdditiveIK 1.0.0.49 RC2(リリース候補2)
+2025/08/14
+　AdditiveIK 1.0.0.49 release
 　　1.0.0.48からの変更点
 　　　ぽすちゃーチャイルド(PostureChild)機能の追加
 　　　　ボーンの『姿勢(ぽすちゃー)』を引き継ぐ他モデルを設定可能
