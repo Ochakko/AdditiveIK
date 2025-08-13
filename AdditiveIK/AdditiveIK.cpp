@@ -7371,6 +7371,12 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 							ShowPostureChildDlg();
 						}
+
+						//2025/08/13
+						//PostureChildのフラグの更新後にFillTimelineするために呼び出す(名前に水色で(P)が付く)
+						if (s_owpTimeline) {
+							refreshTimeline(*s_owpTimeline);
+						}
 					}
 				}
 			}
@@ -12140,10 +12146,10 @@ void refreshTimeline(OWP_Timeline& timeline)
 		s_owpLTimeline->deleteKey();
 		s_owpLTimeline->deleteLine();
 
-		s_owpLTimeline->newLine(0, 0, false, false, s_strcurrent);
+		s_owpLTimeline->newLine(0, 0, false, false, false, s_strcurrent);
 		//s_owpLTimeline->newKey( s_strcurrent, 0.0, 0 );
-		s_owpLTimeline->newLine(0, 0, false, false, s_streditrange);
-		s_owpLTimeline->newLine(0, 0, false, false, s_strmark);
+		s_owpLTimeline->newLine(0, 0, false, false, false, s_streditrange);
+		s_owpLTimeline->newLine(0, 0, false, false, false, s_strmark);
 		//s_owpLTimeline->newKey( s_strmark, 0.0, 0 );
 
 		//s_owpLTimeline->setMaxTime( GetCurrentModel()->m_curmotinfo->frameleng - 1.0 );
@@ -12172,7 +12178,7 @@ void refreshTimeline(OWP_Timeline& timeline)
 	else {
 		WCHAR label[256];
 		swprintf_s(label, 256, L"dummy%d", 0);
-		timeline.newLine(0, 0, false, false, label);
+		timeline.newLine(0, 0, false, false, false, label);
 	}
 
 	//選択時刻を設定
@@ -19391,6 +19397,12 @@ int PostOpenChaFile()
 		g_chascene->InitializeBoneAxisKind();
 	}
 
+
+	//2025/08/13
+	//PostureChildのフラグなど全モデル読み込み後の設定がboneに付いた後でFillTimelineするために呼び出す(名前に水色で(P)が付く)
+	if (s_owpTimeline) {
+		refreshTimeline(*s_owpTimeline);
+	}
 
 	return 0;
 }

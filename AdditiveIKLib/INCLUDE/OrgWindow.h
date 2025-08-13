@@ -6339,7 +6339,7 @@ void s_dummyfunc()
 			
 			TIME_ERROR_WIDTH = 0.0001;
 
-			lineData.push_back(new LineData(0,0,false,false,_name,this,0));
+			lineData.push_back(new LineData(0,0,false,false,false,_name,this,0));
 			maxTime= _maxTime;
 			timeSize= _timeSize;
 			//cursorListener = [](){s_dummyfunc();};
@@ -6605,7 +6605,7 @@ void s_dummyfunc()
 
 		//	Method : 行を追加	(既に同名のキーがある場合はFalseを返す)
 		bool newLine(int _depth, int nullflag, 
-			bool srcikstopflag, bool srcconstraintflag,
+			bool srcikstopflag, bool srcconstraintflag, bool srcpostureflag,
 			const std::basic_string<TCHAR>& _name, 
 			COLORREF srctextcol = RGB(255, 255, 255)){
 			
@@ -6615,7 +6615,7 @@ void s_dummyfunc()
 				}
 			}
 			lineData.push_back(new LineData(_depth, nullflag, 
-				srcikstopflag, srcconstraintflag,
+				srcikstopflag, srcconstraintflag, srcpostureflag,
 				_name, this, (int)lineData.size(), srctextcol));
 
 			//再描画要求
@@ -7709,12 +7709,13 @@ void s_dummyfunc()
 		public: class LineData{
 		public:
 			LineData(int _depth, int nullflag, 
-				bool srcikstopflag, bool srcconstraintflag, 
+				bool srcikstopflag, bool srcconstraintflag, bool srcpostureflag,
 				const std::basic_string<TCHAR>& _name, OWP_Timeline *_parent, unsigned int _lineIndex, COLORREF srctextcol = RGB(256,256, 256)){
 				depth = _depth;
 				m_nullflag = nullflag;
 				ikstopflag = srcikstopflag;
 				constraintflag = srcconstraintflag;
+				postureflag = srcpostureflag;
 				name= _name;
 				parent= _parent;
 				lineIndex= _lineIndex;
@@ -7780,6 +7781,14 @@ void s_dummyfunc()
 			void setConstraintFlag(bool srcflag)
 			{
 				constraintflag = srcflag;
+			}
+			bool getPostureFlag()
+			{
+				return postureflag;
+			}
+			void setPostureFlag(bool srcflag)
+			{
+				postureflag = srcflag;
 			}
 
 			//キーデータクラス---------------
@@ -7856,6 +7865,7 @@ void s_dummyfunc()
 			int m_nullflag;
 			bool ikstopflag;
 			bool constraintflag;
+			bool postureflag;
 			std::basic_string<TCHAR> name;
 			std::vector<Key*> key;
 			unsigned int lineIndex;
@@ -7899,13 +7909,19 @@ void s_dummyfunc()
 				if (getConstraintFlag()) {
 					prname += TEXT(" (⏸)");
 				}
+				if (getPostureFlag()) {
+					prname += TEXT(" (P)");
+				}
 
 				int fontsize = (int)((double)parent->LABEL_SIZE_Y * 0.8);
 				hdcM->setFont(fontsize, _T("ＭＳ ゴシック"));//DrawGdiText()よりも前でフォントを設定
 
 				COLORREF color1;
 				if (textcol == RGB(255, 255, 255)) {
-					if (hasrigflag) {
+					if (getPostureFlag()) {
+						color1 = RGB(197, 250, 250);
+					}
+					else if (hasrigflag) {
 						color1 = RGB(0, 255, 0);
 					}
 					else if (m_nullflag == 0) {

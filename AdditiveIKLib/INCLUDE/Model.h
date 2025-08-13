@@ -1281,8 +1281,8 @@ private:
 	//void UpdateMatrixReq( int srcmotid, double srcframe, ChaMatrix* wmat, ChaMatrix* vpmat, 
 	//	ChaMatrix* parmat, CQuaternion* parq, CBone* srcbone, int broflag );
 
-	void FillTimelineReq( OrgWinGUI::OWP_Timeline& timeline, CBone* curbone, int* linenoptr, 
-		std::map<int, int>& lineno2boneno, std::map<int, int>& boneno2lineno, int broflag );
+	//void FillTimelineReq( OrgWinGUI::OWP_Timeline& timeline, CBone* curbone, int* linenoptr, 
+	//	std::map<int, int>& lineno2boneno, std::map<int, int>& boneno2lineno, int broflag );
 
 	void SetSelectFlagReq( CBone* boneptr, int broflag );
 	int CalcMouseLocalRay( UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVector3* dirptr );

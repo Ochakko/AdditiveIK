@@ -3345,6 +3345,7 @@ int CModel::FillTimeLineOne(CBone* curbone, int lineno,
 		int depth = curbone->CalcBoneDepth();
 		bool ikstopflag = curbone->GetIKStopFlag();
 		bool iktargetflag = curbone->GetIKTargetFlag();
+		bool postureflag = curbone->GetPostureChildFlag();
 
 		WCHAR dispname[JOINTNAMELENG];
 		ZeroMemory(dispname, sizeof(WCHAR) * JOINTNAMELENG);
@@ -3371,13 +3372,13 @@ int CModel::FillTimeLineOne(CBone* curbone, int lineno,
 
 		//行を追加
 		if (curbone->IsBranchBone()) {
-			timeline.newLine(depth, 2, ikstopflag, iktargetflag, dispname);
+			timeline.newLine(depth, 2, ikstopflag, iktargetflag, postureflag, dispname);
 		}
 		else if (curbone->IsSkeleton()) {
-			timeline.newLine(depth, 0, ikstopflag, iktargetflag, dispname);
+			timeline.newLine(depth, 0, ikstopflag, iktargetflag, postureflag, dispname);
 		}
 		else {
-			timeline.newLine(depth, 1, ikstopflag, iktargetflag, dispname);
+			timeline.newLine(depth, 1, ikstopflag, iktargetflag, postureflag, dispname);
 		}
 
 		timeline.setHasRigFlag(curbone->GetWBoneName(), ChkBoneHasRig(curbone));
@@ -3429,22 +3430,7 @@ int CModel::FillTimeLine(OrgWinGUI::OWP_Timeline& timeline, map<int, int>& linen
 			
 			//_ASSERT(0);
 		}
-
-
-/***
-		_ASSERT( m_curmotinfo );
-		CMotionPoint* curmp = curbone->m_motionkey[ m_curmotinfo->motid ];
-		while( curmp ){
-			timeline.newKey( curbone->m_wbonename, curmp->m_frame, (void*)curmp );
-			curmp = curmp->m_next;
-		}
-***/
 	}
-
-/***
-	int lineno = 0;
-	FillTimelineReq( timeline, m_topbone, &lineno, lineno2boneno, boneno2lineno, 0 );
-***/
 
 	if (GetTopBone()){
 		//選択行を設定
@@ -3453,37 +3439,37 @@ int CModel::FillTimeLine(OrgWinGUI::OWP_Timeline& timeline, map<int, int>& linen
 	return 0;
 }
 
-void CModel::FillTimelineReq( OrgWinGUI::OWP_Timeline& timeline, CBone* curbone, int* linenoptr, 
-	map<int, int>& lineno2boneno, map<int, int>& boneno2lineno, int broflag )
-{
-	if (!curbone || !linenoptr){
-		return;
-	}
-
-	if (curbone->IsSkeleton()) {
-		FillTimeLineOne(curbone, *linenoptr,
-			timeline,
-			lineno2boneno, boneno2lineno);
-
-		(*linenoptr)++;
-	}
-
-/***
-	_ASSERT( m_curmotinfo );
-	CMotionPoint* curmp = curbone->m_motionkey[ m_curmotinfo->motid ];
-	while( curmp ){
-		timeline.newKey( curbone->m_wbonename, curmp->m_frame, (void*)curmp );
-		curmp = curmp->m_next;
-	}
-***/
-
-	if( curbone->GetChild(false) ){
-		FillTimelineReq( timeline, curbone->GetChild(false), linenoptr, lineno2boneno, boneno2lineno, 1 );
-	}
-	if( broflag && curbone->GetBrother(false) ){
-		FillTimelineReq( timeline, curbone->GetBrother(false), linenoptr, lineno2boneno, boneno2lineno, 1 );
-	}
-}
+//void CModel::FillTimelineReq( OrgWinGUI::OWP_Timeline& timeline, CBone* curbone, int* linenoptr, 
+//	map<int, int>& lineno2boneno, map<int, int>& boneno2lineno, int broflag )
+//{
+//	if (!curbone || !linenoptr){
+//		return;
+//	}
+//
+//	if (curbone->IsSkeleton()) {
+//		FillTimeLineOne(curbone, *linenoptr,
+//			timeline,
+//			lineno2boneno, boneno2lineno);
+//
+//		(*linenoptr)++;
+//	}
+//
+///***
+//	_ASSERT( m_curmotinfo );
+//	CMotionPoint* curmp = curbone->m_motionkey[ m_curmotinfo->motid ];
+//	while( curmp ){
+//		timeline.newKey( curbone->m_wbonename, curmp->m_frame, (void*)curmp );
+//		curmp = curmp->m_next;
+//	}
+//***/
+//
+//	if( curbone->GetChild(false) ){
+//		FillTimelineReq( timeline, curbone->GetChild(false), linenoptr, lineno2boneno, boneno2lineno, 1 );
+//	}
+//	if( broflag && curbone->GetBrother(false) ){
+//		FillTimelineReq( timeline, curbone->GetBrother(false), linenoptr, lineno2boneno, boneno2lineno, 1 );
+//	}
+//}
 
 int CModel::AddMotion(const char* srcname, const WCHAR* wfilename, double srcleng, int* dstid)
 {
