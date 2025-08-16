@@ -3834,6 +3834,17 @@ void AnimateBoneReq(bool limitdegflag, FbxNode* pNode, FbxAnimLayer* lAnimLayer,
 			//lSkel->SetRotationOrder(FbxNode::eSourcePivot, eEulerXYZ);
 			//lSkel->SetRotationOrder(FbxNode::eDestinationPivot, eEulerXYZ);
 	
+			//if (!curbone->GetENullConvertFlag()) {
+			//	lSkel->SetRotationOrder(FbxNode::eSourcePivot, eEulerXYZ);
+			//	lSkel->SetRotationOrder(FbxNode::eDestinationPivot, eEulerXYZ);
+			//}
+			//else {
+			//	EFbxRotationOrder rotationorder;
+			//	curbone->GetFbxNodeOnLoad()->GetRotationOrder(FbxNode::eSourcePivot, rotationorder);
+			//	lSkel->SetRotationOrder(FbxNode::eSourcePivot, rotationorder);
+			//	lSkel->SetRotationOrder(FbxNode::eDestinationPivot, rotationorder);
+			//}
+
 			s_convPivot = FbxNode::eDestinationPivot;
 
 			CFBXBone fbxbone;
@@ -3862,6 +3873,7 @@ void AnimateBoneReq(bool limitdegflag, FbxNode* pNode, FbxAnimLayer* lAnimLayer,
 				//カメラのデフォルト位置が意図せずに初期化されてしまう
 				//よって書き出すモーションがカメラモーションでない場合には、カメラノードの姿勢を書き出さない
 				if (curbone->IsSkeleton() && !curbone->GetENullConvertFlag()) {//2025/07/05 type not eNull
+				//if (curbone->IsSkeleton()) {
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_X);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Y);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Z);

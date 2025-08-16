@@ -561,7 +561,7 @@ public:
 ChaScene* g_chascene = nullptr;
 IShaderResource* g_shadowmapforshader = nullptr;
 CColDlg g_coldlg;
-
+int g_ikkind = IKKIND_ROTATE;
 
 
 //staic
@@ -1099,7 +1099,7 @@ using namespace OrgWinGUI;
 static ChaMatrix s_inimat;
 static double s_time = 0.0;
 //static double s_difftime = 0.0;
-static int s_ikkind = IKKIND_ROTATE;
+//static int s_ikkind = IKKIND_ROTATE;
 static int s_cameraeditkind = 0;//2024/08/05
 
 //PICKRANGEを大きくするとジョイントではなく疑似ボーンドラッグまで可能になるが、マニピュレータのリングのpickが難しくなる
@@ -4386,7 +4386,7 @@ void InitApp()
 
 	g_wallscrapingikflag = 0;
 
-	s_ikkind = IKKIND_ROTATE;
+	g_ikkind = IKKIND_ROTATE;
 	s_cameraeditkind = CAMERAANIMEDIT_NONE;
 
 	//g_wmatDirectSetFlag = false;
@@ -6712,7 +6712,7 @@ void PrepairUndo_BlendShape(CBlendShapeElem srcblendshapeelem)
 	brushstate.motionbrush_method = g_motionbrush_method;
 	brushstate.wallscrapingikflag = g_wallscrapingikflag;
 	brushstate.brushrepeats = g_brushrepeats;
-	brushstate.ikkind = s_ikkind;//2025/05/31
+	brushstate.ikkind = g_ikkind;//2025/05/31
 
 	UNDOCAMERA undocamera;
 	undocamera.Init();
@@ -6788,7 +6788,7 @@ void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel)
 	brushstate.motionbrush_method = g_motionbrush_method;
 	brushstate.wallscrapingikflag = g_wallscrapingikflag;
 	brushstate.brushrepeats = g_brushrepeats;
-	brushstate.ikkind = s_ikkind;//2025/05/31
+	brushstate.ikkind = g_ikkind;//2025/05/31
 
 	UNDOCAMERA undocamera;
 	undocamera.Init();
@@ -6864,7 +6864,7 @@ void PrepairUndo()
 			brushstate.motionbrush_method = g_motionbrush_method;
 			brushstate.wallscrapingikflag = g_wallscrapingikflag;
 			brushstate.brushrepeats = g_brushrepeats;
-			brushstate.ikkind = s_ikkind;//2025/05/31
+			brushstate.ikkind = g_ikkind;//2025/05/31
 
 			UNDOCAMERA undocamera;
 			undocamera.Init();
@@ -7001,7 +7001,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		//if (curbone && curbone->GetParent()) {
 		//2023/02/08 opeboneにparentをセットするのは　IKRotのときだけ
-		if (curbone && curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton() && (s_ikkind == IKKIND_ROTATE)) {
+		if (curbone && curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton() && (g_ikkind == IKKIND_ROTATE)) {
 			opebone = curbone->GetParent(false);
 		}
 		else {
@@ -8070,15 +8070,15 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				int pickikmodeflag = 0;
 				pickikmodeflag = PickSpIkModeSW(ptCursor);
 				if (pickikmodeflag == 1) {
-					s_ikkind = IKKIND_ROTATE;
+					g_ikkind = IKKIND_ROTATE;
 					OnChangeIKKind(false);
 				}
 				else if (pickikmodeflag == 2) {
-					s_ikkind = IKKIND_MOVE;
+					g_ikkind = IKKIND_MOVE;
 					OnChangeIKKind(false);
 				}
 				else if (pickikmodeflag == 3) {
-					s_ikkind = IKKIND_SCALE;
+					g_ikkind = IKKIND_SCALE;
 					OnChangeIKKind(false);
 				}
 			}
@@ -8713,7 +8713,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		if (g_edittarget != EDITTARGET_CAMERA) {
 			if (ChkEnableIK() && (s_undoFlag == false) && (s_redoFlag == false)) {
 				if (s_oprigflag == 0) {
-					if ((s_ikkind == IKKIND_ROTATE) && (editmotionflag >= 0)) {
+					if ((g_ikkind == IKKIND_ROTATE) && (editmotionflag >= 0)) {
 						if (s_pickinfo.buttonflag == PICK_CENTER) {
 							s_ikdoneflag = true;
 						}
@@ -8726,7 +8726,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 							s_ikdoneflag = true;
 						}
 					}
-					else if ((s_ikkind == IKKIND_MOVE) && (editmotionflag >= 0)) {
+					else if ((g_ikkind == IKKIND_MOVE) && (editmotionflag >= 0)) {
 						if (s_pickinfo.buttonflag == PICK_CENTER) {
 							s_ikdoneflag = true;
 						}
@@ -8750,7 +8750,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		}
 		else {
 			if ((s_undoFlag == false) && (s_redoFlag == false)) {
-				//if (((s_ikkind == 0) || (s_ikkind == 1) || (s_ikkind == 2)) && (s_editcameraflag >= 0)) {//2024/06/16 ドリー編集も対象に
+				//if (((g_ikkind == 0) || (g_ikkind == 1) || (g_ikkind == 2)) && (s_editcameraflag >= 0)) {//2024/06/16 ドリー編集も対象に
 				//if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editmotionflag >= 0)) {//2024/08/05 s_cameraeditkind : OnCameraAnimMouseMove()呼び出し時のopekind
 				if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editcameraflag >= 0)) {//2024/08/14 editCAMERAflag
 					s_ikdoneflag = true;
@@ -8955,13 +8955,13 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	/*
 	if( uMsg == WM_LBUTTONDOWN ){
 		//#replacing comment out#g_Camera->HandleMessages( hWnd, WM_RBUTTONDOWN, wParam, lParam );
-		if( s_ikkind == 2 ){
+		if( g_ikkind == 2 ){
 			g_LightControl[g_nActiveLight].HandleMessages( hWnd, WM_RBUTTONDOWN, wParam, lParam );
 		}
 	}else if( uMsg == WM_LBUTTONDBLCLK ){
 	}else if( uMsg == WM_LBUTTONUP ){
 		//#replacing comment out#g_Camera->HandleMessages( hWnd, WM_RBUTTONUP, wParam, lParam );
-		if( s_ikkind == 2 ){
+		if( g_ikkind == 2 ){
 			g_LightControl[g_nActiveLight].HandleMessages( hWnd, WM_RBUTTONUP, wParam, lParam );
 		}
 	}else if( uMsg == WM_RBUTTONDOWN ){
@@ -8987,7 +8987,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		//}
 	}else{
 		//#replacing comment out#g_Camera->HandleMessages( hWnd, uMsg, wParam, lParam );
-		if( s_ikkind == 2 ){
+		if( g_ikkind == 2 ){
 			g_LightControl[g_nActiveLight].HandleMessages( hWnd, uMsg, wParam, lParam );
 		}
 	}
@@ -11578,7 +11578,7 @@ int UpdateEditedEuler()
 				}
 			}
 
-			s_owpEulerGraph->setEulMinMax(s_ikkind, minval, maxval);
+			s_owpEulerGraph->setEulMinMax(g_ikkind, minval, maxval);
 
 			if (g_motionbrush_value) {
 
@@ -11663,13 +11663,13 @@ int UpdateEditedEuler()
 
 
 			int graphkind = 0;
-			if ((s_ikkind == IKKIND_ROTATE) || (s_cameraeditkind == CAMERAANIMEDIT_ROT) || (s_cameraeditkind == CAMERAANIMEDIT_TWIST) || (s_cameraeditkind == CAMERAANIMEDIT_TWISTRESET)) {//回転
+			if ((g_ikkind == IKKIND_ROTATE) || (s_cameraeditkind == CAMERAANIMEDIT_ROT) || (s_cameraeditkind == CAMERAANIMEDIT_TWIST) || (s_cameraeditkind == CAMERAANIMEDIT_TWISTRESET)) {//回転
 				graphkind = 0;
 			}
-			else if ((s_ikkind == IKKIND_MOVE) || (s_cameraeditkind == CAMERAANIMEDIT_MV) || (s_cameraeditkind == CAMERAANIMEDIT_DIST)) {//移動
+			else if ((g_ikkind == IKKIND_MOVE) || (s_cameraeditkind == CAMERAANIMEDIT_MV) || (s_cameraeditkind == CAMERAANIMEDIT_DIST)) {//移動
 				graphkind = 1;
 			}
-			else if (s_ikkind == IKKIND_SCALE) {//スケール
+			else if (g_ikkind == IKKIND_SCALE) {//スケール
 				graphkind = 2;
 			}
 
@@ -11886,7 +11886,7 @@ int refreshEulerGraph()
 				}
 			}
 
-			s_owpEulerGraph->setEulMinMax(s_ikkind, minval, maxval);
+			s_owpEulerGraph->setEulMinMax(g_ikkind, minval, maxval);
 
 			if (g_motionbrush_value) {
 
@@ -11958,13 +11958,13 @@ int refreshEulerGraph()
 
 
 				int graphkind = 0;
-				if ((s_ikkind == IKKIND_ROTATE) || (s_cameraeditkind == CAMERAANIMEDIT_ROT) || (s_cameraeditkind == CAMERAANIMEDIT_TWIST) || (s_cameraeditkind == CAMERAANIMEDIT_TWISTRESET)) {//回転
+				if ((g_ikkind == IKKIND_ROTATE) || (s_cameraeditkind == CAMERAANIMEDIT_ROT) || (s_cameraeditkind == CAMERAANIMEDIT_TWIST) || (s_cameraeditkind == CAMERAANIMEDIT_TWISTRESET)) {//回転
 					graphkind = 0;
 				}
-				else if ((s_ikkind == IKKIND_MOVE) || (s_cameraeditkind == CAMERAANIMEDIT_MV) || (s_cameraeditkind == CAMERAANIMEDIT_DIST)) {//移動
+				else if ((g_ikkind == IKKIND_MOVE) || (s_cameraeditkind == CAMERAANIMEDIT_MV) || (s_cameraeditkind == CAMERAANIMEDIT_DIST)) {//移動
 					graphkind = 1;
 				}
-				else if (s_ikkind == IKKIND_SCALE) {//スケール
+				else if (g_ikkind == IKKIND_SCALE) {//スケール
 					graphkind = 2;
 				}
 
@@ -13212,7 +13212,7 @@ int OnChangePreviewMOA()
 
 int OnChangeIKKind(bool callfromUndo)
 {
-	switch (s_ikkind) {
+	switch (g_ikkind) {
 	case IKKIND_ROTATE:
 		s_spikmodesw[0].state = true;
 		s_spikmodesw[1].state = false;
@@ -22652,7 +22652,7 @@ int SetSelectState()
 
 
 	if (s_camtargetdisp == false) {
-		if (s_ikkind == IKKIND_ROTATE) {
+		if (g_ikkind == IKKIND_ROTATE) {
 			s_select->SetDispFlag("ringX", 1);
 			s_select->SetDispFlag("ringY", 1);
 			s_select->SetDispFlag("ringZ", 1);
@@ -22660,7 +22660,7 @@ int SetSelectState()
 			s_select->SetDispFlag("planeY", 1);
 			s_select->SetDispFlag("planeZ", 1);
 		}
-		else if ((s_ikkind == IKKIND_MOVE) || (s_ikkind == IKKIND_SCALE)) {
+		else if ((g_ikkind == IKKIND_MOVE) || (g_ikkind == IKKIND_SCALE)) {
 			s_select->SetDispFlag("ringX", 0);
 			s_select->SetDispFlag("ringY", 0);
 			s_select->SetDispFlag("ringZ", 0);
@@ -22738,7 +22738,7 @@ int SetSelectState()
 				colliobjx = s_select->CollisionNoBoneObj_Mouse(&pickinfo, "objX", excludeinvface);
 				colliobjy = s_select->CollisionNoBoneObj_Mouse(&pickinfo, "objY", excludeinvface);
 				colliobjz = s_select->CollisionNoBoneObj_Mouse(&pickinfo, "objZ", excludeinvface);
-				if (s_ikkind == IKKIND_ROTATE) {
+				if (g_ikkind == IKKIND_ROTATE) {
 					colliringx = s_select->CollisionNoBoneObj_Mouse(&pickinfo, "ringX", excludeinvface);
 					colliringy = s_select->CollisionNoBoneObj_Mouse(&pickinfo, "ringY", excludeinvface);
 					colliringz = s_select->CollisionNoBoneObj_Mouse(&pickinfo, "ringZ", excludeinvface);
@@ -23341,7 +23341,7 @@ int SetLTimelineMark(int curboneno)
 			CBone* opebone = GetCurrentModel()->GetBoneByID(curboneno);
 			if (opebone) {
 				CBone* parentbone = opebone->GetParent(false);
-				if (s_ikkind == IKKIND_ROTATE) {
+				if (g_ikkind == IKKIND_ROTATE) {
 					//ikkind がROT(0)の場合はIK　それ以外のMV, SCALEの場合にはFK
 					if (parentbone && parentbone->IsSkeleton()) {
 						opebone = parentbone;
@@ -25181,9 +25181,9 @@ int OnFrameKeyboard()
 
 
 		if ((g_keybuf[VK_SHIFT] & 0x80) && ((g_savekeybuf[VK_SHIFT] & 0x80) == 0)) {//TourBox 上ボタン押す度に IKKINDを変更
-			s_ikkind++;
-			if (s_ikkind >= IKKIND_MAX) {
-				s_ikkind = IKKIND_ROTATE;
+			g_ikkind++;
+			if (g_ikkind >= IKKIND_MAX) {
+				g_ikkind = IKKIND_ROTATE;
 			}
 			OnChangeIKKind(false);
 		}
@@ -28054,14 +28054,14 @@ int InterpolateMotionFunc(CModel* srcmodel, MOTINFO* curmi)
 		}
 		//if (curbone && curbone->GetParent()) {
 		//2023/02/08 opeboneにparentをセットするのは　IKRotのときだけ
-		if (curbone && curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton() && (s_ikkind == IKKIND_ROTATE)) {
+		if (curbone && curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton() && (g_ikkind == IKKIND_ROTATE)) {
 			opebone = curbone->GetParent(false);
 		}
 		else {
 			opebone = curbone;
 		}
 
-		if (s_ikkind == IKKIND_ROTATE) {
+		if (g_ikkind == IKKIND_ROTATE) {
 			interpolatebone = opebone;
 		}
 		else {
@@ -29552,7 +29552,7 @@ bool UnderDragOperation_L()//左ドラッグ中かどうか
 
 
 	if (s_oprigflag == 0) {
-		if ((s_ikkind == IKKIND_ROTATE) && (s_editmotionflag >= 0)) {
+		if ((g_ikkind == IKKIND_ROTATE) && (s_editmotionflag >= 0)) {
 			if (s_pickinfo.buttonflag == PICK_CENTER) {
 				return true;
 			}
@@ -29565,7 +29565,7 @@ bool UnderDragOperation_L()//左ドラッグ中かどうか
 				return true;
 			}
 		}
-		else if ((s_ikkind == IKKIND_MOVE) && (s_editmotionflag >= 0)) {
+		else if ((g_ikkind == IKKIND_MOVE) && (s_editmotionflag >= 0)) {
 			if (s_pickinfo.buttonflag == PICK_CENTER) {
 				return true;
 			}
@@ -29578,7 +29578,7 @@ bool UnderDragOperation_L()//左ドラッグ中かどうか
 				return true;
 			}
 		}
-		else if ((s_ikkind == IKKIND_SCALE) && (s_editmotionflag >= 0)) {
+		else if ((g_ikkind == IKKIND_SCALE) && (s_editmotionflag >= 0)) {
 			if (s_pickinfo.buttonflag == PICK_CENTER) {
 				return true;
 			}
@@ -31725,7 +31725,7 @@ int OnRenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* rc)
 		//if (s_allmodelbone == false) {
 			//if ((g_previewFlag != 1) && (g_previewFlag != -1) && (g_previewFlag != 4)){
 			if (GetCurrentModel() && GetCurrentModel()->GetModelDisp()) {
-				//if (s_ikkind >= 3){
+				//if (g_ikkind >= 3){
 				GetCurrentModel()->RenderBoneMark(g_limitdegflag, &s_bcircle,
 					s_curboneno, g_chascene, s_matVP);
 
@@ -35569,7 +35569,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.49 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.50 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -36155,13 +36155,13 @@ int OnMouseMoveFunc()
 								//CallF(CalcTargetPos(&targetpos), return 1);
 								int result = CalcTargetPos(&targetpos);
 								if (result == 0) {//2025/03/23 マウスLボタンを押した瞬間にジョイントが動くのを防止
-									if (s_ikkind == IKKIND_ROTATE) {
+									if (g_ikkind == IKKIND_ROTATE) {
 
 										s_editmotionflag = GetCurrentModel()->IKRotateUnderIK(g_limitdegflag, g_wallscrapingikflag,
 											&s_editrange, s_pickinfo.pickobjno, targetpos, g_iklevel);
 
 									}
-									else if (s_ikkind == IKKIND_MOVE) {
+									else if (g_ikkind == IKKIND_MOVE) {
 										//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;
 
 										ChaVector3 modelobjworld;
@@ -36171,7 +36171,7 @@ int OnMouseMoveFunc()
 										AddBoneTra2(diffvec);
 										s_editmotionflag = s_curboneno;
 									}
-									else if (s_ikkind == IKKIND_SCALE) {
+									else if (g_ikkind == IKKIND_SCALE) {
 										//ChaVector3 diffvec = targetpos - s_pickinfo.objworld;
 
 										ChaVector3 modelobjworld;
@@ -36259,7 +36259,7 @@ int OnMouseMoveFunc()
 					}
 				}
 				else if (g_edittarget == EDITTARGET_CAMERA) {
-					switch (s_ikkind) {
+					switch (g_ikkind) {
 					case IKKIND_ROTATE:
 						s_cameraeditkind = CAMERAANIMEDIT_ROT;
 						break;
@@ -36327,7 +36327,7 @@ int OnMouseMoveFunc()
 					}
 				}
 				else if (g_edittarget == EDITTARGET_CAMERA) {
-					switch (s_ikkind) {
+					switch (g_ikkind) {
 					case IKKIND_ROTATE:
 						s_cameraeditkind = CAMERAANIMEDIT_ROT;
 						break;
@@ -36435,7 +36435,7 @@ int OnMouseMoveFunc()
 		if (g_edittarget != EDITTARGET_CAMERA) {
 			if (ChkEnableIK() && (s_undoFlag == false) && (s_redoFlag == false)) {
 				if (s_oprigflag == 0) {
-					if ((s_ikkind == IKKIND_ROTATE) && (editmotionflag >= 0)) {
+					if ((g_ikkind == IKKIND_ROTATE) && (editmotionflag >= 0)) {
 						if (s_pickinfo.buttonflag == PICK_CENTER) {
 							HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 							s_editmotionflag = GetCurrentModel()->IKRotatePostIK(g_limitdegflag, g_wallscrapingikflag,
@@ -36466,7 +36466,7 @@ int OnMouseMoveFunc()
 							//ikdoneflag = true;
 						}
 					}
-					else if ((s_ikkind == IKKIND_MOVE) && (editmotionflag >= 0)) {
+					else if ((g_ikkind == IKKIND_MOVE) && (editmotionflag >= 0)) {
 						if (s_pickinfo.buttonflag == PICK_CENTER) {
 							HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
 
@@ -36542,7 +36542,7 @@ int OnMouseMoveFunc()
 		}
 		else {
 			//if ((s_undoFlag == false) && (s_redoFlag == false)) {
-			//	//if (((s_ikkind == 0) || (s_ikkind == 1) || (s_ikkind == 2)) && (s_editcameraflag >= 0)) {//2024/06/16 ドリー編集も対象に
+			//	//if (((g_ikkind == 0) || (g_ikkind == 1) || (g_ikkind == 2)) && (s_editcameraflag >= 0)) {//2024/06/16 ドリー編集も対象に
 			//	//if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editmotionflag >= 0)) {//2024/08/05 s_cameraeditkind : OnCameraAnimMouseMove()呼び出し時のopekind
 			//	if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editcameraflag >= 0)) {//2024/08/14 editCAMERAflag
 			//		//ikdoneflag = true;
@@ -39078,7 +39078,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.49 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.50 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {
@@ -41658,7 +41658,7 @@ int PickManipulator(UIPICKINFO* ppickinfo, bool pickring)
 		colliobjx = s_select->CollisionNoBoneObj_Mouse(ppickinfo, "objX", excludeinvface);
 		colliobjy = s_select->CollisionNoBoneObj_Mouse(ppickinfo, "objY", excludeinvface);
 		colliobjz = s_select->CollisionNoBoneObj_Mouse(ppickinfo, "objZ", excludeinvface);
-		if ((s_ikkind == IKKIND_ROTATE) || (pickring == true)) {
+		if ((g_ikkind == IKKIND_ROTATE) || (pickring == true)) {
 			colliringx = s_select->CollisionNoBoneObj_Mouse(ppickinfo, "ringX", excludeinvface);
 			colliringy = s_select->CollisionNoBoneObj_Mouse(ppickinfo, "ringY", excludeinvface);
 			colliringz = s_select->CollisionNoBoneObj_Mouse(ppickinfo, "ringZ", excludeinvface);
@@ -42040,7 +42040,7 @@ void RollbackBrushState(BRUSHSTATE srcbrushstate)
 	g_wallscrapingikflag = srcbrushstate.wallscrapingikflag;
 	g_brushrepeats = srcbrushstate.brushrepeats;
 
-	s_ikkind = srcbrushstate.ikkind;//2025/05/31
+	g_ikkind = srcbrushstate.ikkind;//2025/05/31
 	OnChangeIKKind(true);//2025/05/31
 
 	//if (s_BrushMirrorUCheckBox) {
@@ -42205,7 +42205,7 @@ int FilterFuncDlg()
 					CBone* curbone = 0;
 					curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 					if (curbone) {
-						if ((s_ikkind == IKKIND_ROTATE) && curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton()) {
+						if ((g_ikkind == IKKIND_ROTATE) && curbone->GetParent(false) && curbone->GetParent(false)->IsSkeleton()) {
 							opebone = curbone->GetParent(false);
 						}
 						else {
@@ -47133,7 +47133,7 @@ CBone* GetEditTargetOpeBone(int* pmotid, int* pframeleng)
 			opebone = GetCurrentModel()->GetBoneByID(s_curboneno);
 			if (opebone) {
 				CBone* parentbone = opebone->GetParent(false);
-				if (s_ikkind == IKKIND_ROTATE) {
+				if (g_ikkind == IKKIND_ROTATE) {
 					//ikkind がROT(0)の場合はIK　それ以外のMV, SCALEの場合にはFK
 					if (parentbone && parentbone->IsSkeleton()) {
 						opebone = parentbone;
@@ -48196,7 +48196,7 @@ int IKOperateJointAxisDelta(int srcpickkind, float srcdeltax)//シングルス�
 		return -1;
 	}
 
-	if (s_ikkind == IKKIND_ROTATE) {
+	if (g_ikkind == IKKIND_ROTATE) {
 		if (GetCurrentModel()->GetUnderIKRot()) {
 			result = GetCurrentModel()->IKRotateAxisDeltaUnderIK(
 				g_limitdegflag, g_wallscrapingikflag,
@@ -48210,7 +48210,7 @@ int IKOperateJointAxisDelta(int srcpickkind, float srcdeltax)//シングルス�
 				srcdeltax, g_iklevel, s_ikcnt, s_ikselectmat);
 		}
 	}
-	else if (s_ikkind == IKKIND_MOVE) {
+	else if (g_ikkind == IKKIND_MOVE) {
 		bool useMT;
 		if (GetCurrentModel()->GetUnderIKRot()) {
 			useMT = true;
@@ -48221,7 +48221,7 @@ int IKOperateJointAxisDelta(int srcpickkind, float srcdeltax)//シングルス�
 		AddBoneTra(useMT, srcpickkind - PICK_X, srcdeltax);
 		result = s_curboneno;
 	}
-	else if (s_ikkind == IKKIND_SCALE) {
+	else if (g_ikkind == IKKIND_SCALE) {
 		//if (g_shiftkey) {
 		if (g_controlkey) {//2025/04/28 shiftキーは　IKKINDの変更に使用することになったので 軸ごとのスケールはControlキー(TourBoxのサイドボタン)を押しながら
 			AddBoneScale(srcpickkind - PICK_X, srcdeltax);
@@ -48246,7 +48246,7 @@ int IKOperateCameraAxisDelta(int srcpickkind, float srcdeltax)//シングルス�
 {
 	int result = -1;
 
-	switch (s_ikkind) {
+	switch (g_ikkind) {
 	case IKKIND_ROTATE:
 		s_cameraeditkind = CAMERAANIMEDIT_ROT;
 		break;

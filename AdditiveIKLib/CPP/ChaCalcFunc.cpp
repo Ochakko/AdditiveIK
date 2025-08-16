@@ -60,6 +60,7 @@ using namespace std;
 //extern bool g_underIKRot;
 extern bool g_x180flag;
 extern CRITICAL_SECTION g_CritSection_FbxSdk;
+extern int g_ikkind;
 
 
 #define EULLIMITPLAY	1
@@ -1709,61 +1710,74 @@ CMotionPoint* ChaCalcFunc::AddBoneTraReq(CBone* srcbone, bool limitdegflag, int 
 		return 0;
 	}
 
+	////for debug
+	//if (srcbone->GetENullConvertFlag()) {
+	//	int dbgflag1 = 1;
+	//}
+
+
 	int existflag = 0;
 	//CMotionPoint* curmp = AddMotionPoint( srcmotid, srcframe, &existflag );
 	//if( !curmp || !existflag ){
 	CMotionPoint* curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
-	if (!curmp) {
-		_ASSERT(0);
-		return 0;
+	if (curmp) {
+		ChaMatrix currentbefwm;
+		ChaMatrix currentnewwm;
+		currentbefwm.SetIdentity();
+		currentnewwm.SetIdentity();
+		//currentbefwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+		if (limitdegflag == 0) {
+			currentbefwm = curmp->GetWorldMat();
+		}
+		else {
+			currentbefwm = curmp->GetLimitedWM();
+		}
+
+		bool infooutflag = false;
+
+		//curmp->SetBefWorldMat( curmp->GetWorldMat() );
+		if (parmp) {
+			////ChaMatrix invbefpar;
+			////ChaMatrix tmpparbefwm = parmp->GetBefWorldMat();//!!!!!!! 2022/12/23 引数にするべき
+			////ChaMatrixInverse( &invbefpar, NULL, &tmpparbefwm );
+			////ChaMatrix tmpmat = curmp->GetWorldMat() * invbefpar * parmp->GetWorldMat();
+			
+			
+			ChaMatrix tmpmat = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp) * ChaMatrixInv(befparentwm) * newparentwm;
+
+			bool directsetflag = true;
+			int onlycheck = 0;
+			bool fromiktarget = false;
+			srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0, srcmotid, roundingframe, tmpmat, onlycheck, fromiktarget);
+
+			currentnewwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+		}
+		else {
+			ChaMatrix tramat;
+			tramat.SetIdentity();//2023/02/12
+			ChaMatrixTranslation(&tramat, srctra.x, srctra.y, srctra.z);
+			ChaMatrix tmpmat = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp) * tramat;
+			bool directsetflag = true;
+			int onlycheck = 0;
+			bool fromiktarget = false;
+			srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0, srcmotid, roundingframe, tmpmat, onlycheck, fromiktarget);
+
+			currentnewwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+		}
+
+		curmp->SetAbsMat(srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp));
+
+
+		if (srcbone->GetChild(false)) {
+			srcbone->GetChild(false)->AddBoneTraReq(limitdegflag, wallscrapingikflag,
+				curmp, srcmotid, roundingframe, srctra, currentbefwm, currentnewwm);
+		}
+		if (srcbone->GetBrother(false) && parmp) {
+			srcbone->GetBrother(false)->AddBoneTraReq(limitdegflag, wallscrapingikflag,
+				parmp, srcmotid, roundingframe, srctra, befparentwm, newparentwm);
+		}
 	}
 
-	ChaMatrix currentbefwm;
-	ChaMatrix currentnewwm;
-	currentbefwm.SetIdentity();
-	currentnewwm.SetIdentity();
-	currentbefwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-
-
-	bool infooutflag = false;
-
-	//curmp->SetBefWorldMat( curmp->GetWorldMat() );
-	if (parmp) {
-		//ChaMatrix invbefpar;
-		//ChaMatrix tmpparbefwm = parmp->GetBefWorldMat();//!!!!!!! 2022/12/23 引数にするべき
-		//ChaMatrixInverse( &invbefpar, NULL, &tmpparbefwm );
-		//ChaMatrix tmpmat = curmp->GetWorldMat() * invbefpar * parmp->GetWorldMat();
-		ChaMatrix tmpmat = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp) * ChaMatrixInv(befparentwm) * newparentwm;
-		bool directsetflag = true;
-		int onlycheck = 0;
-		bool fromiktarget = false;
-		srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0, srcmotid, roundingframe, tmpmat, onlycheck, fromiktarget);
-
-		currentnewwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-	}
-	else {
-		ChaMatrix tramat;
-		tramat.SetIdentity();//2023/02/12
-		ChaMatrixTranslation(&tramat, srctra.x, srctra.y, srctra.z);
-		ChaMatrix tmpmat = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp) * tramat;
-		bool directsetflag = true;
-		int onlycheck = 0;
-		bool fromiktarget = false;
-		srcbone->SetWorldMat(limitdegflag, wallscrapingikflag, directsetflag, infooutflag, 0, srcmotid, roundingframe, tmpmat, onlycheck, fromiktarget);
-
-		currentnewwm = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-	}
-
-	curmp->SetAbsMat(srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp));
-
-	if (srcbone->GetChild(false)) {
-		srcbone->GetChild(false)->AddBoneTraReq(limitdegflag, wallscrapingikflag, 
-			curmp, srcmotid, roundingframe, srctra, currentbefwm, currentnewwm);
-	}
-	if (srcbone->GetBrother(false) && parmp) {
-		srcbone->GetBrother(false)->AddBoneTraReq(limitdegflag, wallscrapingikflag, 
-			parmp, srcmotid, roundingframe, srctra, befparentwm, newparentwm);
-	}
 	return curmp;
 
 }
@@ -1948,6 +1962,7 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 	CQuaternion eulq;
 
 	if (srcbone->IsSkeleton() && !srcbone->GetENullConvertFlag()) {
+	//if (srcbone->IsSkeleton()) {
 
 		//###########################
 		//skeletonの場合
@@ -1965,6 +1980,7 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 
 				//parentがeNullの場合はある
 				if (parentbone->IsSkeleton() && !parentbone->GetENullConvertFlag()) {//2025/07/12 !ENullConvertFlag
+				//if (parentbone->IsSkeleton()) {
 					parentwm = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 					eulq = ChaMatrix2Q(ChaMatrixInv(parentwm)) * ChaMatrix2Q(curwm);
 				}
@@ -1994,7 +2010,26 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 				}
 				else if (parentbone->GetENullConvertFlag()) {//2025/07/12 ENullConvertFlag
 					//2025/07/12
-					eulq = ChaMatrix2Q(curwm);
+					//eulq = ChaMatrix2Q(curwm);
+
+					//parentwm = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+					//eulq = ChaMatrix2Q(ChaMatrixInv(parentwm)) * ChaMatrix2Q(curwm);
+
+
+					//2025/08/17
+					//親がENullConvertだった場合には親行列として　親の親の行列を使う FantasyAnimalに移動回転を付けて保存読み込みOK
+					if (parentbone->GetParent(false)) {
+						parentwm = parentbone->GetParent(false)->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+					}
+					else {
+						parentwm = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+					}
+					eulq = ChaMatrix2Q(ChaMatrixInv(parentwm)) * ChaMatrix2Q(curwm);
+
+					////axisq : nullptr
+					//eulq.Q2EulXYZusingQ(srcbone->GetParModel()->GetUnderIKRot(), srcbone->GetParModel()->GetUnderRetarget(),
+					//	nullptr, befeul, &cureul, isfirstbone, isendbone, notmodify180flag);
+					//return cureul;
 				}
 				else {
 					eulq = ChaMatrix2Q(curwm);
@@ -2086,9 +2121,13 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 				eulq = ChaMatrix2Q(localmat);
 
 				int cameranotmodify180flag = 1;
+				//eulq.Q2EulXYZusingMat(
+				//	IntRotationOrder(rotationorder),//!!!!!! eCamera* --> ROTORDER_*への変換
+				//	0,
+				//	ChaVector3(0.0f, 0.0f, 0.0f), &cureul, cameranotmodify180flag);
 				eulq.Q2EulXYZusingMat(
 					IntRotationOrder(rotationorder),//!!!!!! eCamera* --> ROTORDER_*への変換
-					0,
+					nullptr,//!!!!!!!!!!!
 					ChaVector3(0.0f, 0.0f, 0.0f), &cureul, cameranotmodify180flag);
 			}
 			else {
@@ -2158,6 +2197,20 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 		else {
 			eulq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 		}
+
+		eulq.Q2EulXYZusingQ(srcbone->GetParModel()->GetUnderIKRot(), srcbone->GetParModel()->GetUnderRetarget(),
+			&axisq, befeul, &cureul, isfirstbone, isendbone, notmodify180flag);
+		
+		//EFbxRotationOrder rotationorder;
+		//srcbone->GetFbxNodeOnLoad()->GetRotationOrder(FbxNode::eSourcePivot, rotationorder);
+		//int cameranotmodify180flag = 0;//!!!
+		//eulq.Q2EulXYZusingMat(
+		//	IntRotationOrder(rotationorder),
+		//	&axisq,//!!!
+		//	ChaVector3(0.0f, 0.0f, 0.0f), &cureul, cameranotmodify180flag);
+
+		return cureul;
+
 	}
 	else {
 		return cureul;
@@ -2969,10 +3022,10 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 		//curmat.SetIdentity();
 
 		
-		if (g_underWriteFbx == false) {//2025/07/12 IK計算時のparentとしてのeNullのworldmatはIdentity.
-			curmat.SetIdentity();
-		}
-		else {
+		//if (g_underWriteFbx == false) {//2025/07/12 IK計算時のparentとしてのeNullのworldmatはIdentity.
+		//	curmat.SetIdentity();
+		//}
+		//else {
 			if (srcmp) {
 				if (limitdegflag == false) {
 					curmat = srcmp->GetWorldMat();
@@ -3008,7 +3061,7 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 					curmat.SetIdentity();
 				}
 			}
-		}
+		//}
 		return curmat;
 	}
 	else if (srcbone->IsCamera()) {
@@ -3057,10 +3110,66 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 		}
 		return curmat;
 	}
-	else if (srcbone->IsSkeleton()) {
+	else if (srcbone->IsSkeleton() && !srcbone->GetENullConvertFlag()) {
 
-		if ((g_underWriteFbx == false) && srcbone->GetENullConvertFlag()) {//2025/07/12 "IK計算時" の parentとしてのeNull のworldmatはIdentity.
-			curmat.SetIdentity();
+		if (srcmp) {
+			if (limitdegflag == false) {
+				curmat = srcmp->GetWorldMat();
+				if (dsteul) {
+					*dsteul = srcmp->GetLocalEul();
+				}
+			}
+			else {
+				curmat = srcmp->GetLimitedWM();
+				if (dsteul) {
+					*dsteul = srcmp->GetLimitedLocalEul();
+				}
+			}
+		}
+		else {
+			CMotionPoint* curmp;
+			curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
+			if (curmp) {
+				if (limitdegflag == false) {
+					curmat = curmp->GetWorldMat();
+					if (dsteul) {
+						*dsteul = curmp->GetLocalEul();
+					}
+				}
+				else {
+					curmat = curmp->GetLimitedWM();
+					if (dsteul) {
+						*dsteul = curmp->GetLimitedLocalEul();
+					}
+				}
+			}
+			else {
+				curmat.SetIdentity();
+			}
+		}
+		return curmat;
+	}
+	else if (srcbone->GetENullConvertFlag()) {
+		if ((g_underWriteFbx == false) && (g_ikkind == IKKIND_ROTATE) && srcbone->GetParent(false)) {
+			CMotionPoint* curmp;
+			curmp = srcbone->GetParent(false)->GetMotionPoint(srcmotid, roundingframe);
+			if (curmp) {
+				if (limitdegflag == false) {
+					curmat = curmp->GetWorldMat();
+					if (dsteul) {
+						*dsteul = curmp->GetLocalEul();
+					}
+				}
+				else {
+					curmat = curmp->GetLimitedWM();
+					if (dsteul) {
+						*dsteul = curmp->GetLimitedLocalEul();
+					}
+				}
+			}
+			else {
+				curmat.SetIdentity();
+			}
 		}
 		else {
 			if (srcmp) {
@@ -3099,8 +3208,6 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 				}
 			}
 		}
-
-		return curmat;
 	}
 	else {
 		curmat.SetIdentity();

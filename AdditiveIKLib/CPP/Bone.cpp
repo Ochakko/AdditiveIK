@@ -3424,7 +3424,6 @@ CMotionPoint* CBone::AddBoneScaleReq(bool limitdegflag, int wallscrapingikflag, 
 
 	bool infooutflag = false;
 
-
 	//curmp->SetBefWorldMat( curmp->GetWorldMat() );
 	if (parmp) {
 		//ChaMatrix invbefpar;
@@ -3533,13 +3532,29 @@ CMotionPoint* CBone::AddBoneScaleReq(bool limitdegflag, int wallscrapingikflag, 
 
 	curmp->SetAbsMat(GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp));
 
-	if (GetChild(false)) {
-		GetChild(false)->AddBoneScaleReq(limitdegflag, wallscrapingikflag, 
-			curmp, srcmotid, roundingframe, srcscale, currentbefwm, currentnewwm);
+
+	if (!GetENullConvertFlag()) {
+		if (GetChild(false)) {
+			GetChild(false)->AddBoneScaleReq(limitdegflag, wallscrapingikflag,
+				curmp, srcmotid, roundingframe, srcscale, currentbefwm, currentnewwm);
+		}
+		if (GetBrother(false) && parmp) {
+			GetBrother(false)->AddBoneScaleReq(limitdegflag, wallscrapingikflag,
+				parmp, srcmotid, roundingframe, srcscale, befparentwm, newparentwm);
+		}
 	}
-	if (GetBrother(false) && parmp) {
-		GetBrother(false)->AddBoneScaleReq(limitdegflag, wallscrapingikflag, 
-			parmp, srcmotid, roundingframe, srcscale, befparentwm, newparentwm);
+	else {
+		//2025/08/16
+		//srcboneがeNullの場合にここを通る　子供のskeletonには引数のまま伝達する
+
+		if (GetChild(false)) {
+			GetChild(false)->AddBoneScaleReq(limitdegflag, wallscrapingikflag,
+				parmp, srcmotid, roundingframe, srcscale, befparentwm, newparentwm);//parmp, befparentwm, newparentwm : 引数で渡されたままのもの
+		}
+		if (GetBrother(false) && parmp) {
+			GetBrother(false)->AddBoneScaleReq(limitdegflag, wallscrapingikflag,
+				parmp, srcmotid, roundingframe, srcscale, befparentwm, newparentwm);//parmp, befparentwm, newparentwm : 引数で渡されたままのもの
+		}
 	}
 
 	return curmp;
@@ -6840,6 +6855,9 @@ ChaVector3 CBone::CalcFbxScaleAnim(bool limitdegflag, int srcmotid, double srcfr
 			svec.SetParams(1.0f, 1.0f, 1.0f);
 		}
 	}
+	//else if (GetENullConvertFlag()) {
+	//	svec.SetParams(1.0f, 1.0f, 1.0f);
+	//}
 	else {
 		svec.SetParams(1.0f, 1.0f, 1.0f);
 	}
@@ -7165,6 +7183,9 @@ ChaVector3 CBone::CalcFBXTra(bool limitdegflag, int srcmotid, double srcframe)
 			return ChaVector3(0.0f, 0.0f, 0.0f);
 		}
 	}
+	//else if (GetENullConvertFlag()){
+	//	return ChaVector3(0.0f, 0.0f, 0.0f);
+	//}
 	else {
 		return ChaVector3(0.0f, 0.0f, 0.0f);
 	}
@@ -9315,6 +9336,7 @@ int CBone::GetFBXAnim(FbxNode* pNode, int animno, int motid, double animleng, bo
 			//2023/05/07
 			//eNullにアニメーションは無いので　上方で(eSkeleton || eCamera)以外はリターンしている
 			//いろいろ直した結果　lCurveが0の場合にも　同じ数式でOKに
+			//globalmat = (ChaMatrixInv(GetNodeMat()) * chaGlobalSRT);
 			globalmat = (ChaMatrixInv(GetNodeMat()) * chaGlobalSRT);
 
 
@@ -10187,8 +10209,9 @@ ChaMatrix CBone::CalcFbxLocalMatrix(bool limitdegflag, int srcmotid, double srcf
 		return localfbxmat;
 	}
 
+	ChaMatrix wmanim;
+	wmanim = GetNodeMat() * GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 
-	ChaMatrix wmanim = GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 	//ChaMatrix fbxwm;
 	//fbxwm = GetNodeMat() * wmanim;//eNULL自体のアニメーション書き出しは　しないことに
 
@@ -10201,13 +10224,13 @@ ChaMatrix CBone::CalcFbxLocalMatrix(bool limitdegflag, int srcmotid, double srcf
 		if (parentbone->IsSkeleton() && !parentbone->GetENullConvertFlag()) {//2025/07/12 !ENullConvertFlag
 			ChaMatrix parentwmanim = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 			parentfbxwm = parentbone->GetNodeMat() * parentwmanim;
-			localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
+			localfbxmat = wmanim * ChaMatrixInv(parentfbxwm);
 		}
 		else if (parentbone->IsNullAndChildIsCamera() || parentbone->IsCamera()) {
 			//ChaMatrix parentwmanim = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 			//localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
 			parentfbxwm = parentbone->GetTransformMat(srcmotid, roundingframe, true);
-			localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
+			localfbxmat = wmanim * ChaMatrixInv(parentfbxwm);
 		}
 		else if (parentbone->IsNull()) {
 			//2023/06/29 eNullもアニメーション可能にしたので
@@ -10220,13 +10243,13 @@ ChaMatrix CBone::CalcFbxLocalMatrix(bool limitdegflag, int srcmotid, double srcf
 
 			//parentfbxwm = parentbone->GetTransformMat(srcmotid, 0.0, true);
 			parentfbxwm = parentbone->GetTransformMat(srcmotid, roundingframe, true);
-			localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
+			localfbxmat = wmanim * ChaMatrixInv(parentfbxwm);
 		}
 		else if (parentbone->GetENullConvertFlag()) {//2025/07/12 ENullConvertFlag
 			////2025/07/12
 			ChaMatrix parentwmanim = parentbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 			parentfbxwm = parentbone->GetNodeMat() * parentwmanim;
-			localfbxmat = GetNodeMat() * wmanim * ChaMatrixInv(parentfbxwm);
+			localfbxmat = wmanim * ChaMatrixInv(parentfbxwm);
 		}
 		//else if (parentbone->IsCamera()) {
 		//	//bool multInvNodeMat = false;
@@ -10240,12 +10263,12 @@ ChaMatrix CBone::CalcFbxLocalMatrix(bool limitdegflag, int srcmotid, double srcf
 		//}
 		else {
 			parentfbxwm.SetIdentity();
-			localfbxmat = GetNodeMat() * wmanim;
+			localfbxmat = wmanim;
 		}
 	}
 	else {
 		parentfbxwm.SetIdentity();
-		localfbxmat = GetNodeMat() * wmanim;
+		localfbxmat = wmanim;
 	}
 	
 	return localfbxmat;
