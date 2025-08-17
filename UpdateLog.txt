@@ -2,6 +2,9 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/08/17
+　UnityAsset FantasyAnimal(同梱していません)の一番親のジョイントをHipsジョイントとして認識するように.
+
 2025/08/16
 　Skeletonの間にeNullノードがある場合のモーション編集の修正
 　　モーション全体の移動編集と拡大編集がうまくいっていなかったのを修正(回転編集はうまくいっていた)

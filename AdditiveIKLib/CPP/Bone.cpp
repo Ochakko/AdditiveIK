@@ -9633,6 +9633,13 @@ bool CBone::IsHipsBone()
 			if (strcmp(GetBoneName(), strpat3) == 0) {//strcmp
 				return true;
 			}
+			else {
+				//FantasyAnimal
+				const char strpat4[25] = "CATRigAnimaHub001";
+				if (strstr(GetBoneName(), strpat4) != nullptr) {//strstr
+					return true;
+				}
+			}
 		}
 	}
 
