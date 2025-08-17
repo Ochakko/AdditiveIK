@@ -3,6 +3,10 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/08/17
+　ショートムービー　【AdditiveIK】乗り物に乗って
+　　https://youtu.be/ZiJG6xh96YE
+
+2025/08/17
 　UnityAsset FantasyAnimal(同梱していません)の一番親のジョイントをHipsジョイントとして認識するように.
 
 2025/08/16

@@ -290,6 +290,9 @@ Smooth平滑化<br>
 [SonyDualSenseでリアルタイム階段接地 2025/02/11](https://youtu.be/WTpdyVGKlcs "Usage example13")<br>
 
 [ちょっと前のAdditiveIKのオペ画面 2025/05/06](https://youtu.be/40jmur2J2CY "Usage example14")<br>
+
+[【AdditiveIK】乗り物に乗って 2025/08/17](https://youtu.be/ZiJG6xh96YE "Usage example15")<br>
+<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
