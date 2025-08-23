@@ -2,6 +2,12 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/08/23
+　8/16日の修正でFbx出力に問題が出ていたので修正
+　　Skeletonの間にあるeNullについてはモーションを書き出すようにしました。(Hipsモーションで移動した場合に対応する必要があったので)
+　　Skeletonの間にeNullが混ざっている場合のFbxの読-->書-->読-->書->読テストOK
+　　(ただし、Cameraの子供のSkeletonについては以前と同様に未対応)
+
 2025/08/17
 　ショートムービー　【AdditiveIK】乗り物に乗って
 　　https://youtu.be/ZiJG6xh96YE

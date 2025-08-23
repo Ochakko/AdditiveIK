@@ -3479,7 +3479,7 @@ INT WINAPI wWinMain(
 			//int dispfps = (int)(g_avrgfps + 0.5);
 			//swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.1 : No.%d : fps %d", s_appcnt, dispfps);
 			//SetWindowText(g_mainhwnd, strmaintitle);
-			if (g_underWriteFbx == false) {//2024/02/10
+			if (g_writeFbxState == WRITEFBX_NONE) {//2024/02/10
 
 				//2024/08/09
 				//リターゲットバッチ中にタイミングでエラー　OnUserFrameMove()の中に入れて バッチ中はスキップ
@@ -4336,7 +4336,7 @@ void InitApp()
 	s_smoothBefRetarget = false;
 	s_ikdoneflag = false;
 
-	g_underWriteFbx = false;
+	g_writeFbxState = WRITEFBX_NONE;
 	//g_underCalcEul = false;
 	//g_underPostFKTra = false;
 	//g_underInitMp = false;

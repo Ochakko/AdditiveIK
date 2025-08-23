@@ -410,7 +410,7 @@ int BVH2FBXFile(FbxManager* psdk, CBVHFile* pbvhfile, char* pfilename, char* fbx
 		return 1;
 	}
 
-	g_underWriteFbx = true;
+	g_writeFbxState = WRITEFBX_START;
 
 	s_bvhflag = 1;
 	s_bvhjointnum = 0;
@@ -437,7 +437,7 @@ int BVH2FBXFile(FbxManager* psdk, CBVHFile* pbvhfile, char* pfilename, char* fbx
     if(lResult == false)
     {
 		_ASSERT( 0 );
-		g_underWriteFbx = false;
+		g_writeFbxState = WRITEFBX_NONE;
 		return 1;
     }
 
@@ -448,7 +448,7 @@ int BVH2FBXFile(FbxManager* psdk, CBVHFile* pbvhfile, char* pfilename, char* fbx
     if(lResult == false)
     {
 		_ASSERT( 0 );
-		g_underWriteFbx = false;
+		g_writeFbxState = WRITEFBX_NONE;
 		return 1;
 	}
 
@@ -464,7 +464,7 @@ int BVH2FBXFile(FbxManager* psdk, CBVHFile* pbvhfile, char* pfilename, char* fbx
 	s_blsinfo.clear();
 
 	s_bvhflag = 0;
-	g_underWriteFbx = false;
+	g_writeFbxState = WRITEFBX_NONE;
 
 	return 0;
 }
@@ -473,7 +473,7 @@ int BVH2FBXFile(FbxManager* psdk, CBVHFile* pbvhfile, char* pfilename, char* fbx
 int WriteFBXFile(bool limitdegflag, FbxManager* psdk, CModel* pmodel, char* pfilename, char* fbxdate)
 {
 
-	g_underWriteFbx = true;
+	g_writeFbxState = WRITEFBX_START;
 
 
 	s_bvhflag = 0;//ここは初期化の意味。CreateScene()でセット。
@@ -489,7 +489,7 @@ int WriteFBXFile(bool limitdegflag, FbxManager* psdk, CModel* pmodel, char* pfil
 	s_firstoutmot = -1;
 
 	if (pmodel->MakeEnglishName() != 0) {
-		g_underWriteFbx = false;
+		g_writeFbxState = WRITEFBX_NONE;
 		return 1;
 	};
 
@@ -507,7 +507,7 @@ int WriteFBXFile(bool limitdegflag, FbxManager* psdk, CModel* pmodel, char* pfil
     if(lResult == false)
     {
 		_ASSERT( 0 );
-		g_underWriteFbx = false;
+		g_writeFbxState = WRITEFBX_NONE;
 		return 1;
     }
 
@@ -518,7 +518,7 @@ int WriteFBXFile(bool limitdegflag, FbxManager* psdk, CModel* pmodel, char* pfil
     if(lResult == false)
     {
 		_ASSERT( 0 );
-		g_underWriteFbx = false;
+		g_writeFbxState = WRITEFBX_NONE;
 		return 1;
 	}
 
@@ -541,7 +541,7 @@ int WriteFBXFile(bool limitdegflag, FbxManager* psdk, CModel* pmodel, char* pfil
 	}
 	s_blsinfo.clear();
 
-	g_underWriteFbx = false;
+	g_writeFbxState = WRITEFBX_NONE;
 
 	return 0;
 }
@@ -3642,20 +3642,24 @@ void AnimateBoneOfBVHReq( CFBXBone* fbxbone, FbxAnimLayer* lAnimLayer )
 			
 			if ((fbxbone->GetType() == FB_BUNKI_CHIL) || (fbxbone->GetType() == FB_ROOT)){
 				zeroflag = 1;
+				g_writeFbxState = WRITEFBX_TRA;
 				WriteFBXAnimTraOfBVH(fbxbone, lAnimLayer, AXIS_X, zeroflag);
 				WriteFBXAnimTraOfBVH(fbxbone, lAnimLayer, AXIS_Y, zeroflag);
 				WriteFBXAnimTraOfBVH(fbxbone, lAnimLayer, AXIS_Z, zeroflag);
 
+				g_writeFbxState = WRITEFBX_ROT;
 				WriteFBXAnimRotOfBVH(fbxbone, lAnimLayer, AXIS_X, zeroflag);
 				WriteFBXAnimRotOfBVH(fbxbone, lAnimLayer, AXIS_Y, zeroflag);
 				WriteFBXAnimRotOfBVH(fbxbone, lAnimLayer, AXIS_Z, zeroflag);
 			}
 			else{
 				zeroflag = 0;
+				g_writeFbxState = WRITEFBX_TRA;
 				WriteFBXAnimTraOfBVH(fbxbone, lAnimLayer, AXIS_X, zeroflag);
 				WriteFBXAnimTraOfBVH(fbxbone, lAnimLayer, AXIS_Y, zeroflag);
 				WriteFBXAnimTraOfBVH(fbxbone, lAnimLayer, AXIS_Z, zeroflag);
 
+				g_writeFbxState = WRITEFBX_ROT;
 				WriteFBXAnimRotOfBVH(fbxbone, lAnimLayer, AXIS_X, zeroflag);
 				WriteFBXAnimRotOfBVH(fbxbone, lAnimLayer, AXIS_Y, zeroflag);
 				WriteFBXAnimRotOfBVH(fbxbone, lAnimLayer, AXIS_Z, zeroflag);
@@ -3872,16 +3876,19 @@ void AnimateBoneReq(bool limitdegflag, FbxNode* pNode, FbxAnimLayer* lAnimLayer,
 				//カメラの０フレーム姿勢はアニメーションが無い場合のデフォルト位置としても使用しているので
 				//カメラのデフォルト位置が意図せずに初期化されてしまう
 				//よって書き出すモーションがカメラモーションでない場合には、カメラノードの姿勢を書き出さない
-				if (curbone->IsSkeleton() && !curbone->GetENullConvertFlag()) {//2025/07/05 type not eNull
-				//if (curbone->IsSkeleton()) {
+				//if (curbone->IsSkeleton() && !curbone->GetENullConvertFlag()) {//2025/07/05 type not eNull
+				if (curbone->IsSkeleton()) {//2025/08/23 eNullのモーションを書き出すことに　FantasyAnimalでテストしてOK. 関連：GetWorldMat(), CalcFbxLocalMatrix(), m_writeFbxState
+					g_writeFbxState = WRITEFBX_TRA;
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_X);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Y);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Z);
 
+					g_writeFbxState = WRITEFBX_ROT;
 					WriteFBXAnimRot(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_X);
 					WriteFBXAnimRot(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Y);
 					WriteFBXAnimRot(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Z);
 
+					g_writeFbxState = WRITEFBX_SCL;
 					WriteFBXAnimScale(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_X);
 					WriteFBXAnimScale(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Y);
 					WriteFBXAnimScale(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Z);
@@ -3901,14 +3908,17 @@ void AnimateBoneReq(bool limitdegflag, FbxNode* pNode, FbxAnimLayer* lAnimLayer,
 				//処理中のカメラモーションに関係のあるカメラとeNullだけを書き出す
 				//IsCamera()&&ボーンの名前がモーション名と一致した場合にtrue　|| IsNullAndChildIsCamera()&&子供ボーンの名前がモーション名と一致した場合
 				if (curbone->IsConcernedCamera(motionname) || curbone->IsConcernedNullAndChildIsCamera(motionname)) {
+					g_writeFbxState = WRITEFBX_TRA;
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_X);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Y);
 					WriteFBXAnimTra(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Z);
 
+					g_writeFbxState = WRITEFBX_ROT;
 					WriteFBXAnimRot(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_X);
 					WriteFBXAnimRot(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Y);
 					WriteFBXAnimRot(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Z);
 
+					g_writeFbxState = WRITEFBX_SCL;
 					WriteFBXAnimScale(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_X);
 					WriteFBXAnimScale(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Y);
 					WriteFBXAnimScale(limitdegflag, &fbxbone, lAnimLayer, curmotid, maxframe, AXIS_Z);

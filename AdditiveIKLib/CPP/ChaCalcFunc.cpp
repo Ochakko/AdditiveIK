@@ -1957,7 +1957,7 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 
 	int notmodify180flag = srcbone->GetNotModify180Flag(srcmotid, roundingframe);
 	CQuaternion axisq;
-	axisq.RotationMatrix(srcbone->GetNodeMat());
+	//axisq.RotationMatrix(srcbone->GetNodeMat());
 
 	CQuaternion eulq;
 
@@ -1967,6 +1967,8 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 		//###########################
 		//skeletonの場合
 		//###########################
+		axisq.RotationMatrix(srcbone->GetNodeMat());
+
 		CMotionPoint* curmp = 0;
 		curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
 		if (curmp) {
@@ -2054,6 +2056,9 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 		//########################
 		//カメラの場合
 		//########################
+
+		axisq.RotationMatrix(srcbone->GetNodeMat());
+
 		if (srcbone->GetFbxNodeOnLoad()) {
 			EnterCriticalSection(&g_CritSection_FbxSdk);
 			FbxTime fbxtime0;
@@ -2103,6 +2108,8 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 		//###########
 		//eNullの場合
 		//###########
+
+		axisq.RotationMatrix(srcbone->GetNodeMat());
 
 		if (srcbone->IsNullAndChildIsCamera()) {
 
@@ -2181,6 +2188,9 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 		}
 	}
 	else if (srcbone->GetENullConvertFlag()) {
+
+		axisq.RotationMatrix(srcbone->GetNodeMat());
+
 		CMotionPoint* curmp = 0;
 		curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
 		if (curmp) {
@@ -2198,16 +2208,17 @@ ChaVector3 ChaCalcFunc::CalcLocalEulXYZ(CBone* srcbone, bool limitdegflag, int a
 			eulq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 		}
 
-		eulq.Q2EulXYZusingQ(srcbone->GetParModel()->GetUnderIKRot(), srcbone->GetParModel()->GetUnderRetarget(),
-			&axisq, befeul, &cureul, isfirstbone, isendbone, notmodify180flag);
+		//eulq.Q2EulXYZusingQ(srcbone->GetParModel()->GetUnderIKRot(), srcbone->GetParModel()->GetUnderRetarget(),
+		//	&axisq,
+		//	befeul, &cureul, isfirstbone, isendbone, notmodify180flag);
 		
-		//EFbxRotationOrder rotationorder;
-		//srcbone->GetFbxNodeOnLoad()->GetRotationOrder(FbxNode::eSourcePivot, rotationorder);
-		//int cameranotmodify180flag = 0;//!!!
-		//eulq.Q2EulXYZusingMat(
-		//	IntRotationOrder(rotationorder),
-		//	&axisq,//!!!
-		//	ChaVector3(0.0f, 0.0f, 0.0f), &cureul, cameranotmodify180flag);
+		EFbxRotationOrder rotationorder;
+		srcbone->GetFbxNodeOnLoad()->GetRotationOrder(FbxNode::eSourcePivot, rotationorder);
+		int cameranotmodify180flag = 0;//!!!
+		eulq.Q2EulXYZusingMat(
+			IntRotationOrder(rotationorder),
+			&axisq,//!!!
+			ChaVector3(0.0f, 0.0f, 0.0f), &cureul, cameranotmodify180flag);
 
 		return cureul;
 
@@ -3062,7 +3073,6 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 				}
 			}
 		//}
-		return curmat;
 	}
 	else if (srcbone->IsCamera()) {
 		//bool multInvNodeMat = true;
@@ -3108,7 +3118,6 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 				curmat.SetIdentity();	
 			}
 		}
-		return curmat;
 	}
 	else if (srcbone->IsSkeleton() && !srcbone->GetENullConvertFlag()) {
 
@@ -3147,23 +3156,26 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 				curmat.SetIdentity();
 			}
 		}
-		return curmat;
 	}
 	else if (srcbone->GetENullConvertFlag()) {
-		if ((g_underWriteFbx == false) && (g_ikkind == IKKIND_ROTATE) && srcbone->GetParent(false)) {
-			CMotionPoint* curmp;
-			curmp = srcbone->GetParent(false)->GetMotionPoint(srcmotid, roundingframe);
-			if (curmp) {
+		if ((g_writeFbxState == WRITEFBX_NONE) && (g_ikkind == IKKIND_ROTATE) && 
+			srcbone->GetParent(false)) {
+			//2025/08/23
+			//IKRotation中　ENullConvert自体はIKSkipで回転しないが　parent->GetWorldMatのparenetがENullConvertだった場合に以下の部分が影響する
+			
+			CMotionPoint* parmp;
+			parmp = srcbone->GetParent(false)->GetMotionPoint(srcmotid, roundingframe);//Parentのwmを使用する
+			if (parmp) {
 				if (limitdegflag == false) {
-					curmat = curmp->GetWorldMat();
+					curmat = parmp->GetWorldMat();
 					if (dsteul) {
-						*dsteul = curmp->GetLocalEul();
+						*dsteul = parmp->GetLocalEul();
 					}
 				}
 				else {
-					curmat = curmp->GetLimitedWM();
+					curmat = parmp->GetLimitedWM();
 					if (dsteul) {
-						*dsteul = curmp->GetLimitedLocalEul();
+						*dsteul = parmp->GetLimitedLocalEul();
 					}
 				}
 			}
@@ -3172,6 +3184,8 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 			}
 		}
 		else {
+			//2025/08/23 IKTraで 例えばHipsを移動した場合にはENullConvert自体のTraを計算する必要有　ENullConvert自体のTraを計算しない場合剛体マークがHips移動に付いてこない
+			//FBX書き出しの際にも　ENullConvert自体の姿勢を取得する必要有
 			if (srcmp) {
 				if (limitdegflag == false) {
 					curmat = srcmp->GetWorldMat();
@@ -3208,12 +3222,15 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 				}
 			}
 		}
+		//else {
+		//	curmat.SetIdentity();
+		//}
 	}
 	else {
-		curmat.SetIdentity();
-		return curmat;//!!!!!!!!!!!!  SkeletonでもNullでもCameraでも無い場合　identityを返す
+		curmat.SetIdentity();//!!!!!!!!!!!!  SkeletonでもNullでもCameraでも無い場合　identityを返す
 	}
 
+	return curmat;
 }
 
 ChaVector3 ChaCalcFunc::LimitEul(CBone* srcbone, ChaVector3 srceul)

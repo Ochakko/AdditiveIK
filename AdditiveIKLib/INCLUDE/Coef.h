@@ -24,6 +24,14 @@ class CMQOMaterial;
 #define	u_long	unsigned long
 
 
+enum {//g_underWriteFbxState
+	WRITEFBX_NONE,
+	WRITEFBX_START,
+	WRITEFBX_ROT,
+	WRITEFBX_TRA,
+	WRITEFBX_SCL
+};
+
 //CModel::GetWorldMat()
 enum {
 	GETWM_MIXED = 0,
