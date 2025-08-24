@@ -2,6 +2,20 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/08/24
+　AdditiveIK 1.0.0.50 release
+　　1.0.0.49からの変更点
+　　　Skeletonの間にeNullノードがある場合のモーション編集の修正
+　　　　モーション全体の移動編集と拡大編集がうまくいっていなかったのを修正(回転編集はうまくいっていた)
+　　　　eNullに関するFbx書き出し修正(skeletonの間に挟まっていた場合だけモーションを書き出し)
+　　　　FantasyAnimalのfbxを本ソフトで編集して読-->書-->読-->書->読テストOK
+　　　　(ただし、Cameraの子供のSkeletonについては以前と同様に未対応)
+　　　
+　　　UnityAsset FantasyAnimal(同梱していません)の一番親のジョイントをHipsジョイントとして認識するように.
+　　　
+　　　Fbx内のボーン数がボーン数上限(1000個)を越えていた場合にダイアログを出しました。
+
+
 2025/08/23
 　8/16日の修正でFbx出力に問題が出ていたので修正
 　　Skeletonの間にあるeNullについてはモーションを書き出すようにしました。(Hipsモーションで移動した場合に対応する必要があったので)

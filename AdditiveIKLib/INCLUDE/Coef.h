@@ -198,6 +198,7 @@ enum {
 
 //2023/12/08 ShaderTypeWndで使用
 #define MAXMATERIALNUM	1000
+//#define MAXMATERIALNUM	7000
 
 
 #define PATH_LENG	2048

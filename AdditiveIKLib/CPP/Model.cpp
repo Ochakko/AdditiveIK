@@ -1281,6 +1281,13 @@ int CModel::LoadFBX(int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, cons
 	//}
 
 
+		if (m_bonelist.size() > MAXBONENUM) {
+			WCHAR msg[1024] = { 0 };
+			swprintf_s(msg, 1024, L"Fbx %s : Num of joints overflow %d!!!.\r\nThis app will transfer only %d JointInfo to hw.",
+				m_filename, (int)m_bonelist.size(), (int)MAXBONENUM);
+			::MessageBox(NULL, msg, L"remark!!!", MB_OK | MB_ICONINFORMATION);
+		}
+
 	//CreateExtendBoneReq(m_topbone);
 
 _ASSERT(m_bonelist[0]);
@@ -6689,6 +6696,12 @@ void CModel::CreateFBXBoneReq(FbxScene* pScene, FbxNode* pNode, FbxNode* parnode
 		return;
 	}
 
+	//スキンメッシュのために最大数以上の場合も作成は必要
+	//if (m_bonelist.size() >= MAXBONENUM) {
+	//	//下方で検知した時にreturnしているが　子供の数分のループで呼び出されるので　ここでのreturnも必要
+	//	return;
+	//}
+
 	bool createdflag = false;
 
 
@@ -6723,10 +6736,10 @@ void CModel::CreateFBXBoneReq(FbxScene* pScene, FbxNode* pNode, FbxNode* parnode
 		//DbgOut(L"CreateFbxBoneReq : %s : parnode NULL!!!!\r\n", wname);
 	}
 
-
+	int getflag = 0;
 	if (strcmp(nodename, "RootNode") == 0) {
 		//GetFBXBone(pScene, FbxNodeAttribute::eSkeleton, pAttrib, pNode, 0);
-		GetFBXBone(pScene, FbxNodeAttribute::eNull, pAttrib, pNode, 0);
+		getflag = GetFBXBone(pScene, FbxNodeAttribute::eNull, pAttrib, pNode, 0);
 		createdflag = true;
 	}
 	else if ( pAttrib ) {
@@ -6737,7 +6750,7 @@ void CModel::CreateFBXBoneReq(FbxScene* pScene, FbxNode* pNode, FbxNode* parnode
 			case FbxNodeAttribute::eSkeleton:
 			case FbxNodeAttribute::eNull:
 			case FbxNodeAttribute::eCamera://2023/05/23
-				GetFBXBone(pScene, type, pAttrib, pNode, parentbonenode);
+				getflag = GetFBXBone(pScene, type, pAttrib, pNode, parentbonenode);
 				createdflag = true;
 				break;
 			case FbxSkeleton::eRoot:
@@ -6750,9 +6763,24 @@ void CModel::CreateFBXBoneReq(FbxScene* pScene, FbxNode* pNode, FbxNode* parnode
 	}
 	else {
 		//attrib無しの　eNull
-		GetFBXBone(pScene, FbxNodeAttribute::eNull, pAttrib, pNode, parentbonenode);
+		getflag = GetFBXBone(pScene, FbxNodeAttribute::eNull, pAttrib, pNode, parentbonenode);
 		createdflag = true;
 	}
+
+	//スキンメッシュのために最大数以上の場合も作成は必要
+	//if (getflag != 0) {
+	//	if (getflag == 2) {
+	//		char msg[1024] = { 0 };
+	//		sprintf_s(msg, 1024, "Num of joints overflow %d!!!.\r\nThis app will display only %d joints and continue.",
+	//			(int)m_bonelist.size(), (int)MAXBONENUM);
+	//		::MessageBoxA(NULL, msg, "Caution", MB_OK | MB_ICONINFORMATION);
+	//	}
+	//	else {
+	//		_ASSERT(0);
+	//		abort();
+	//	}
+	//	return;
+	//}
 
 	int childNodeNum;
 	childNodeNum = pNode->GetChildCount();
@@ -6973,7 +7001,6 @@ int CModel::GetFBXBone(FbxScene* pScene, FbxNodeAttribute::EType type, FbxNodeAt
 	//}
 
 	newbone = CreateNewFbxBone(type, curnode, parnode);
-
 
 	if (!newbone) {
 		_ASSERT(0);
