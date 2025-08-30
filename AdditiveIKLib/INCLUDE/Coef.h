@@ -134,7 +134,9 @@ enum {
 	RETARGETDLG_OPE_MAX
 };
 
-
+//PolyMesh3のCPU衝突判定におけるバウンダリーごとのFace数(自動バウンダリー分割)
+//FootRigの地面に指定するモデルは　Mayaでポリゴン数を削減して AdditiveIKで非表示にしたものを指定すると高速化可能
+#define PM3BOUNDINGFACENUM 1000
 
 #define HISTORYCOMMENTLEN	32
 #define EDIT_BUFLEN_NUM		20
@@ -198,7 +200,6 @@ enum {
 
 //2023/12/08 ShaderTypeWndで使用
 #define MAXMATERIALNUM	1000
-//#define MAXMATERIALNUM	7000
 
 
 #define PATH_LENG	2048

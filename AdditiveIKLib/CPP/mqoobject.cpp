@@ -2195,6 +2195,107 @@ int CMQOObject::CollisionLocal_Ray(ChaVector3 startlocal, ChaVector3 dirlocal,
 }
 
 
+int CMQOObject::CollisionLocal_Ray_BB(MODELBOUND objbb, ChaVector3 startlocal, ChaVector3 dirlocal)
+{
+	//##################
+	//PolyMesh3限定
+	// 衝突判定　自動分割
+	//##################
+
+	if (!m_pm3) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	if (objbb.IsValid() == false) {
+		return 0;//バウンダリーが無い場合には当たらない
+	}
+
+	ChaVector3 points[8];
+	points[0].SetParams(objbb.min.x, objbb.min.y, objbb.min.z);
+	points[1].SetParams(objbb.max.x, objbb.min.y, objbb.min.z);
+	points[2].SetParams(objbb.min.x, objbb.max.y, objbb.min.z);
+	points[3].SetParams(objbb.max.x, objbb.max.y, objbb.min.z);
+	points[4].SetParams(objbb.min.x, objbb.min.y, objbb.max.z);
+	points[5].SetParams(objbb.max.x, objbb.min.y, objbb.max.z);
+	points[6].SetParams(objbb.min.x, objbb.max.y, objbb.max.z);
+	points[7].SetParams(objbb.max.x, objbb.max.y, objbb.max.z);
+
+	//面の向きは考慮せずにセット
+	int indices[12 * 3];
+	indices[0] = 0;//前面1
+	indices[1] = 1;
+	indices[2] = 2;
+	indices[3] = 2;//前面2
+	indices[4] = 1;
+	indices[5] = 3;
+
+	indices[6] = 4;//後ろ面1
+	indices[7] = 5;
+	indices[8] = 6;
+	indices[9] = 6;//後ろ面2
+	indices[10] = 5;
+	indices[11] = 7;
+
+	indices[12] = 2;//上面1
+	indices[13] = 3;
+	indices[14] = 6;
+	indices[15] = 6;//上面2
+	indices[16] = 3;
+	indices[17] = 7;
+
+	indices[18] = 0;//下面1
+	indices[19] = 1;
+	indices[20] = 4;
+	indices[21] = 4;//下面2
+	indices[22] = 1;
+	indices[23] = 5;
+
+	indices[24] = 0;//左面1
+	indices[25] = 2;
+	indices[26] = 4;
+	indices[27] = 4;//左面2
+	indices[28] = 2;
+	indices[29] = 6;
+
+	indices[30] = 1;//右面1
+	indices[31] = 3;
+	indices[32] = 5;
+	indices[33] = 5;//右面2
+	indices[34] = 3;
+	indices[35] = 7;
+
+	int allowrev = 1;
+	int hitflag;
+	int justflag;
+	//float justval = 0.01f;
+	float justval = 0.0001f;//2024/03/31 Test/1009_1モデルのpickでjustvalの誤動作(大きく外れているのに当たった)をしたので値を小さくした
+
+	int faceindex;
+	for (faceindex = 0; faceindex < 12; faceindex++) {
+
+		int index0 = indices[faceindex * 3];
+		int index1 = indices[faceindex * 3 + 1];
+		int index2 = indices[faceindex * 3 + 2];
+
+		justflag = 0;
+		hitflag = 0;
+		hitflag = ChkRay(allowrev,
+			index0, index1, index2,
+			points, startlocal, dirlocal, justval, &justflag);
+		if (hitflag || justflag) {
+			return 1;
+		}
+	}
+
+
+	int dbgflag1 = 1;
+
+	return 0;
+
+}
+
+
 int CMQOObject::CollisionLocal_Ray_BB(ChaVector3 startlocal, ChaVector3 dirlocal)
 {
 	MODELBOUND objbb = GetBound();
@@ -2343,7 +2444,10 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 		}
 	}
 
-
+	std::vector<MODELBOUND> arbound = pm3ptr->GetARBound();
+	if (arbound.empty()) {
+		return 0;
+	}
 
 	int allowrev;
 	if (excludeinvface) {
@@ -2364,6 +2468,25 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 	int nearestfaceindex = -1;
 	bool findflag = false;
 	for (fno = 0; fno < face_count; fno++) {
+
+		MODELBOUND curbound;
+		curbound.Init();
+		int boundindex = fno / PM3BOUNDINGFACENUM;
+		if ((boundindex >= 0) && (boundindex < arbound.size())) {
+			curbound = arbound[boundindex];
+		}
+		else {
+			_ASSERT(0);
+			return 0;
+		}
+		//まずはバウンダリーで粗く判定
+		int collibb = CollisionLocal_Ray_BB(curbound, startlocal, dirlocal);
+		if (collibb == 0) {
+			fno = PM3BOUNDINGFACENUM * (boundindex + 1) - 1;
+			continue;
+		}
+
+
 		hitflag = 0;
 		justflag = 0;
 

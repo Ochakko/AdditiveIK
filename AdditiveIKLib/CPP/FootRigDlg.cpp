@@ -23,7 +23,9 @@
 using namespace std;
 using namespace OrgWinGUI;
 
-#define FOOTRIGPICKHEIGHT	1000.0f
+//#define FOOTRIGPICKHEIGHT	1000.0f
+//2025/08/30 1000-->500
+#define FOOTRIGPICKHEIGHT	500.0f
 
 //位置補正のトリガーを少し緩めるために使用
 //#define ROUNDINGPOS	2.0f
@@ -2389,6 +2391,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				higherfootinfo->CalcPos(limitdegflag);
 				lowerfootinfo->CalcPos(limitdegflag);
 			}
+
 
 			if (//!secondcalling &&
 				(hipspos.y - higherfootinfo->GetLowerGPos().y) > (hdiffmax + ROUNDINGPOS)) {

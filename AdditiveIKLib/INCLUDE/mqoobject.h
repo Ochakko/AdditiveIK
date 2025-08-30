@@ -122,6 +122,7 @@ public:
 	int CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirlocal,
 		bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos);
 	int CollisionLocal_Ray_BB(ChaVector3 startlocal, ChaVector3 dirlocal);
+	int CollisionLocal_Ray_BB(MODELBOUND objbb, ChaVector3 startlocal, ChaVector3 dirlocal);
 
 
 	//int MakeXBoneno2wno( int arrayleng, int* boneno2wno, int* infnumptr );

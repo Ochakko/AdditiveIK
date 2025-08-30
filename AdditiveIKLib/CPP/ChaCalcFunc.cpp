@@ -3233,6 +3233,7 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 	return curmat;
 }
 
+
 ChaVector3 ChaCalcFunc::LimitEul(CBone* srcbone, ChaVector3 srceul)
 {
 	if (!srcbone) {

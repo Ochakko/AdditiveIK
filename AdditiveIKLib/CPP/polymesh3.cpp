@@ -86,6 +86,7 @@ void CPolyMesh3::InitParams()
 	ZeroMemory( &chkalpha, sizeof( CHKALPHA ) );
 	//ZeroMemory( &m_bound, sizeof( MODELBOUND ) );
 	m_bound.Init();
+	m_ar_bound.clear();
 }
 
 void CPolyMesh3::DestroyObjs()
@@ -956,14 +957,25 @@ typedef struct tag_modelbaund
 	//m_bound.r = 1.0f;
 
 	m_bound.Init();
+	m_ar_bound.clear();
 
 	if( (m_orgpointnum == 0) || (m_facenum == 0) ){
+
 		m_bound.min.SetParams(0.0f, 0.0f, 0.0f);
 		m_bound.max.SetParams(0.0f, 0.0f, 0.0f);
 		m_bound.center.SetParams(0.0f, 0.0f, 0.0f);
 		m_bound.r = 1.0f;
-
 		m_bound.SetIsValid(false);//!!!!!!!!
+
+
+		MODELBOUND bound;
+		bound.Init();
+		bound.min.SetParams(0.0f, 0.0f, 0.0f);
+		bound.max.SetParams(0.0f, 0.0f, 0.0f);
+		bound.center.SetParams(0.0f, 0.0f, 0.0f);
+		bound.r = 1.0f;
+		bound.SetIsValid(false);//!!!!!!!!
+		m_ar_bound.push_back(bound);
 
 		return 0;
 	}
@@ -972,40 +984,119 @@ typedef struct tag_modelbaund
 	//m_bound.min = *m_pointbuf;
 	//m_bound.max = *m_pointbuf;
 
+	//PM3BOUNDINGFACENUM
+
+
 	bool setflag = false;
 	int vno;
 	for( vno = 0; vno < m_orgpointnum; vno++ ){
 		ChaVector3 curv = *( m_pointbuf + vno );
 
-		if( m_bound.min.x > curv.x ){
+		if (m_bound.min.x > curv.x) {
 			m_bound.min.x = curv.x;
 		}
-		if( m_bound.min.y > curv.y ){
+		if (m_bound.min.y > curv.y) {
 			m_bound.min.y = curv.y;
 		}
-		if( m_bound.min.z > curv.z ){
+		if (m_bound.min.z > curv.z) {
 			m_bound.min.z = curv.z;
 		}
 
-		if( m_bound.max.x < curv.x ){
+		if (m_bound.max.x < curv.x) {
 			m_bound.max.x = curv.x;
 		}
-		if( m_bound.max.y < curv.y ){
+		if (m_bound.max.y < curv.y) {
 			m_bound.max.y = curv.y;
 		}
-		if( m_bound.max.z < curv.z ){
+		if (m_bound.max.z < curv.z) {
 			m_bound.max.z = curv.z;
 		}
+
 		setflag = true;
 	}
 
-	m_bound.center = ( m_bound.min + m_bound.max ) * 0.5f;
-
-	ChaVector3 diff;
-	diff = m_bound.center - m_bound.min;
-	m_bound.r = (float)ChaVector3LengthDbl(&diff);
-
+	m_bound.center = (m_bound.min + m_bound.max) * 0.5f;
+	ChaVector3 diff0;
+	diff0 = m_bound.center - m_bound.min;
+	m_bound.r = (float)ChaVector3LengthDbl(&diff0);
 	m_bound.SetIsValid(setflag);
+
+
+
+	BINORMALDISPV* dispv = GetDispV();
+	if (!dispv) {
+		_ASSERT(0);
+		return 0;
+	}
+	int* dispindex = GetDispIndex();
+	if (!dispindex) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	int face_count = GetFaceNum();
+	int fno;
+	MODELBOUND curbound;
+	curbound.Init();
+	bool firstflag = true;
+	for (fno = 0; fno < face_count; fno++) {
+
+		if ((fno % PM3BOUNDINGFACENUM) == 0) {
+			if (!firstflag) {
+				curbound.center = (curbound.min + curbound.max) * 0.5f;
+				ChaVector3 diff1;
+				diff1 = curbound.center - curbound.min;
+				curbound.r = (float)ChaVector3LengthDbl(&diff1);
+				curbound.SetIsValid(setflag);
+
+				m_ar_bound.push_back(curbound);
+			}
+			curbound.Init();
+			firstflag = false;
+		}
+
+		int index0, index1, index2;
+		index0 = *(dispindex + fno * 3);
+		index1 = *(dispindex + fno * 3 + 1);
+		index2 = *(dispindex + fno * 3 + 2);
+		BINORMALDISPV* pv[3];
+		pv[0] = dispv + index0;
+		pv[1] = dispv + index1;
+		pv[2] = dispv + index2;
+
+		int pno;
+		for (pno = 0; pno < 3; pno++) {
+			BINORMALDISPV* curv = pv[pno];
+
+			if (curbound.min.x > curv->pos.x) {
+				curbound.min.x = curv->pos.x;
+			}
+			if (curbound.min.y > curv->pos.y) {
+				curbound.min.y = curv->pos.y;
+			}
+			if (curbound.min.z > curv->pos.z) {
+				curbound.min.z = curv->pos.z;
+			}
+
+			if (curbound.max.x < curv->pos.x) {
+				curbound.max.x = curv->pos.x;
+			}
+			if (curbound.max.y < curv->pos.y) {
+				curbound.max.y = curv->pos.y;
+			}
+			if (curbound.max.z < curv->pos.z) {
+				curbound.max.z = curv->pos.z;
+			}
+		}
+
+	}
+	curbound.center = (curbound.min + curbound.max) * 0.5f;
+	ChaVector3 diff2;
+	diff2 = curbound.center - curbound.min;
+	curbound.r = (float)ChaVector3LengthDbl(&diff2);
+	curbound.SetIsValid(setflag);
+	m_ar_bound.push_back(curbound);
+
 
 	return 0;
 }

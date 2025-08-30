@@ -182,6 +182,10 @@ public:
 		return m_bound;
 	};
 
+	const std::vector<MODELBOUND> GetARBound(){
+		return m_ar_bound;
+	};
+
 	bool GetFbxFileFlag()
 	{
 		return m_fbxfileflag;
@@ -205,7 +209,7 @@ private:
 
 	MATERIALBLOCK* m_matblock;
 	MODELBOUND	m_bound;
-
+	std::vector<MODELBOUND> m_ar_bound;
 
 //以下、クラス外からアクセスしないのでアクセッサー無し。
 	CMQOFace* m_mqoface;//外部メモリ
