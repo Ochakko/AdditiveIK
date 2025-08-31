@@ -24785,10 +24785,12 @@ int CModel::CalcFillupTarget(int nextmotid, int filluppoint, double motionrate1,
 	return 0;
 }
 
-ChaMatrix CModel::Move2HipsPos(int nextmotid, double nextframe)
+ChaMatrix CModel::Move2HipsPos(CFootRigDlg* srcfootrigdlg, int nextmotid, double nextframe)
 {
 	ChaMatrix wm = m_matWorld;
-	ChaVector3 savepos = ChaMatrixTraVec(wm);
+	//ChaVector3 savepos = ChaMatrixTraVec(wm);
+	ChaVector3 savepos = GetModelPosition();//2025/08/31
+
 
 	CBone* hipsbone = nullptr;
 	GetHipsBoneReq(GetTopBone(false), &hipsbone);
@@ -24797,23 +24799,47 @@ ChaMatrix CModel::Move2HipsPos(int nextmotid, double nextframe)
 	}
 
 	ChaMatrix currenthipswm = hipsbone->GetCurMp().GetWorldMat();
+	//ChaMatrix currenthipswm = hipsbone->GetCurMp().GetAnimMat();//2025/08/31
 	ChaVector3 currenthipspos = ChaMatrixTraVec(currenthipswm);
-	ChaMatrix nexthipsanimmat = hipsbone->GetWorldMat(g_limitdegflag, nextmotid, nextframe, nullptr);
+	ChaMatrix nexthipsanimmat = hipsbone->GetWorldMat(g_limitdegflag, nextmotid, nextframe, nullptr) * m_matWorld;
 	ChaVector3 nexthipsanimpos = ChaMatrixTraVec(nexthipsanimmat);
 
-	//ChaMatrix nextwm;
-	//nexthipsanimmat* nextwm = currenthipswm;
-	//nextwm = ChaMatrixInv(nexthipsanimmat) * currenthipswm;
-	//ChaVector3 nextpos = ChaMatrixTraVec(nextwm);
+	ChaVector3 diffpos, newpos;
+	//diffpos = nexthipsanimpos - currenthipspos;
+	diffpos = currenthipspos - nexthipsanimpos;
+	newpos = savepos + diffpos;
+	newpos.y = savepos.y;
+	SetModelPosition(newpos);
 
-	ChaVector3 pos;
-	//nexthipsanimpos + pos = currenthipspos;
-	pos = currenthipspos - nexthipsanimpos;
-	pos.y = savepos.y;
-	wm.SetTranslation(pos);
 
-	SetWorldMat(wm);
+	CQuaternion orgrotq;
+	orgrotq.SetRotationXYZ(nullptr, GetModelRotation());
 
+	ChaMatrix diffmat = currenthipswm * ChaMatrixInv(nexthipsanimmat);
+	CQuaternion diffrotq;
+	diffrotq.RotationMatrix(diffmat);
+
+	//CQuaternion newrotq = diffrotq * orgrotq;
+	////CQuaternion newrotq = orgrotq * diffrotq;
+	//int notmodify180flag = 0;//!!!!!!!!!!!!!!!
+	//BEFEUL befeul;
+	//befeul.Init();
+	//befeul.befframeeul.SetZeroVec3();
+	//befeul.currentframeeul.SetZeroVec3();
+	//ChaVector3 newroteul;
+	//newrotq.Q2EulXYZusingQ(true, false, nullptr, befeul, &newroteul, 1, 0, notmodify180flag);
+	//SetModelRotation(newroteul);
+
+
+	//ChaVector3 beftra = ChaMatrixTraVec(wm);
+	//ChaVector3 newtra = beftra + diffpos;
+	//wm.SetTranslation(newtra);
+	//SetWorldMat(wm);
+
+	//////void SetModelRotation(ChaVector3 srcdir)
+	CalcModelWorldMatOnLoad(srcfootrigdlg);
+	wm = GetWorldMat(GETWM_MIXED);
+	
 	return wm;
 }
 ChaMatrix CModel::RotMocapWalk(double srcrot)
@@ -24847,7 +24873,27 @@ ChaMatrix CModel::RotMocapWalk(double srcrot)
 	rotmat.SetXYZRotation(nullptr, ChaVector3(0.0f, rotdeg, 0.0f));
 	wm = befrot * rotmat * aftrot * wm;
 
-	SetWorldMat(wm);
+	CQuaternion orgrotq;
+	orgrotq.SetRotationXYZ(nullptr, GetModelRotation());
+	CQuaternion addrotq;
+	addrotq.RotationMatrix(rotmat);
+	CQuaternion newrotq = addrotq * orgrotq;
+	int notmodify180flag = 0;//!!!!!!!!!!!!!!!
+	BEFEUL befeul;
+	befeul.Init();
+	befeul.befframeeul.SetZeroVec3();
+	befeul.currentframeeul.SetZeroVec3();
+	ChaVector3 newroteul;
+	newrotq.Q2EulXYZusingQ(true, false, nullptr, befeul, &newroteul, 1, 0, notmodify180flag);
+	SetModelRotation(newroteul);
+
+
+
+	CalcModelWorldMatOnLoad(nullptr);
+	wm = GetWorldMat(GETWM_MIXED);
+
+
+	//SetWorldMat(wm);
 
 	return wm;
 }

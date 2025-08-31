@@ -2665,7 +2665,7 @@ LRESULT CMotChangeDlg::OnPlay(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 		currentmodel->SetUnderBlending(false);
 
 		currentmodel->BackUpLoopFlag();//モーションのリピートを変える前にバックアップ
-		currentmodel->SetMotInfoLoopFlagAll(0);//モーションのリピートはSetNewPoseMoa()で制御するため　リピート無しに設定
+		currentmodel->SetMotInfoLoopFlagAll(0);//モーションのリピートはSetNewPoseByMoa()で制御するため　リピート無しに設定
 
 		g_previewMOA = 1;
 		g_previewFlag = 1;

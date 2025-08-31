@@ -57,6 +57,7 @@ class CGltfLoader;
 class CMCHandler;
 class CEventKey;
 class CEventPad;
+class CFootRigDlg;
 
 typedef struct funcmpparams
 {
@@ -1231,7 +1232,7 @@ public:
 
 	int GetChildCameraBoneAndNode(CBone* enullbone, CBone** ppbone, FbxNode** ppnode);
 
-	ChaMatrix Move2HipsPos(int nextmotid, double nextframe);
+	ChaMatrix Move2HipsPos(CFootRigDlg* srcfootrigdlg, int nextmotid, double nextframe);
 	ChaMatrix RotMocapWalk(double srcrot);
 
 private:
@@ -2683,6 +2684,24 @@ public: //accesser
 	void SetWorldMat(ChaMatrix srcmat)
 	{
 		m_matWorld = srcmat;
+
+		//ChaVector3 svec, tvec;
+		//ChaMatrix rmat;
+		//CQuaternion rotq;
+		//GetSRTMatrix(srcmat, &svec, &rmat, &tvec);
+		//rotq.RotationMatrix(rmat);
+		//int notmodify180flag3 = 0;//!!!!!!!!!!!!!!!
+		//BEFEUL befeul3;
+		//befeul3.Init();
+		//befeul3.befframeeul.SetZeroVec3();
+		//befeul3.currentframeeul.SetZeroVec3();
+		//ChaVector3 seteul;
+		//seteul.SetParams(0.0f, 0.0f, 0.0f);
+		//int isfirstbone = 1;//!!!!
+		//int isendbone = 0;
+		//rotq.Q2EulXYZusingQ(false, false, nullptr, befeul3, &seteul, isfirstbone, isendbone, notmodify180flag3);
+		//SetModelRotation(seteul);
+		//SetModelPosition(tvec);
 	};
 	ChaMatrix GetWorldMat(int forceselect = 0)
 	{

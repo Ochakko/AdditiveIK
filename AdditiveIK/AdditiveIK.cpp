@@ -47873,7 +47873,7 @@ int SetNewPoseByMoa(double* pnextframe)
 						//UnderBlendingの場合は　if分の最後で処理
 						//#####################################
 						if (currentmodel->GetMocapWalkFlag() || jumpflag) {
-							s_matWorld = currentmodel->Move2HipsPos(idlingmotid, 1.0);
+							s_matWorld = currentmodel->Move2HipsPos(&s_footrigdlg, idlingmotid, 1.0);
 							currentmodel->SetMocapWalkFlag(false);
 						}
 						ChangeMotionWithGUI(idlingmotid);
@@ -47963,7 +47963,7 @@ int SetNewPoseByMoa(double* pnextframe)
 						//補間計算終了　nextmotidへ遷移
 						//###########################
 						if (currentmodel->GetMocapWalkFlag()) {
-							s_matWorld = currentmodel->Move2HipsPos(model_nextmotid, (double)filluppoint);
+							s_matWorld = currentmodel->Move2HipsPos(&s_footrigdlg, model_nextmotid, (double)filluppoint);
 							currentmodel->SetMocapWalkFlag(false);
 						}
 						ChangeMotionWithGUI(model_nextmotid);
@@ -47983,7 +47983,7 @@ int SetNewPoseByMoa(double* pnextframe)
 						//UnderBlending処理の最後で処理
 						//############################
 						if (currentmodel->GetMocapWalkFlag()) {
-							s_matWorld = currentmodel->Move2HipsPos(idlingmotid, 1.0);
+							s_matWorld = currentmodel->Move2HipsPos(&s_footrigdlg, idlingmotid, 1.0);
 							currentmodel->SetMocapWalkFlag(false);
 						}
 						ChangeMotionWithGUI(idlingmotid);
@@ -48012,7 +48012,7 @@ int SetNewPoseByMoa(double* pnextframe)
 				//補間無しですぐにモーション遷移を実行
 				//###############################
 				if (currentmodel->GetMocapWalkFlag() || jumpflag) {
-					s_matWorld = currentmodel->Move2HipsPos(model_nextmotid, 1.0);
+					s_matWorld = currentmodel->Move2HipsPos(&s_footrigdlg, model_nextmotid, 1.0);
 					currentmodel->SetMocapWalkFlag(false);
 				}
 				ChangeMotionWithGUI(model_nextmotid);
