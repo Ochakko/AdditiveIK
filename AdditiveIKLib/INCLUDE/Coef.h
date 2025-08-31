@@ -136,7 +136,7 @@ enum {
 
 //PolyMesh3のCPU衝突判定におけるバウンダリーごとのFace数(自動バウンダリー分割)
 //FootRigの地面に指定するモデルは　Mayaでポリゴン数を削減して AdditiveIKで非表示にしたものを指定すると高速化可能
-#define PM3BOUNDINGFACENUM 1000
+#define PM3BOUNDINGFACENUM 200
 
 #define HISTORYCOMMENTLEN	32
 #define EDIT_BUFLEN_NUM		20

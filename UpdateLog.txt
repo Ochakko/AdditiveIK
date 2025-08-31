@@ -2,6 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/08/31
+　FootRigの高速化
+　　BoundaryArrayの修正.
+　　地面との衝突判定を必要最小限に.
+　　細かく震える現象が出た場合にはFootRigダイアログのBlendスライダーで調整,
+　　
+
 2025/08/30
 　ボーンの入っていないメッシュの当たり判定を修正
 　　メッシュに対して自動で１０００ポリゴン単位のバウンダリーを作成

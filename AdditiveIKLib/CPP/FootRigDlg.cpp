@@ -1280,6 +1280,7 @@ int CFootRigDlg::CreateFootRigWnd()
 
 			//g_lightSlot = comboid;
 			//ParamsToDlg();
+
 			if (m_dlgWnd) {
 				m_dlgWnd->callRewrite();
 			}
@@ -2388,53 +2389,33 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
 				modelwm = modelwm3;
 				hipspos.y += diffy2;
-				higherfootinfo->CalcPos(limitdegflag);
-				lowerfootinfo->CalcPos(limitdegflag);
+
+				//2025/08/31 ここのCalcPosは省略可能
+				//higherfootinfo->CalcPos(limitdegflag);
+				//lowerfootinfo->CalcPos(limitdegflag);
 			}
 
+			//足と腰の高さが　設定より長い場合
+			if (((hipspos.y - higherfootinfo->GetLowerGPos().y) > (hdiffmax + ROUNDINGPOS)) ||
+				((hipspos.y - lowerfootinfo->GetLowerGPos().y) > (hdiffmax + ROUNDINGPOS))) {
 
-			if (//!secondcalling &&
-				(hipspos.y - higherfootinfo->GetLowerGPos().y) > (hdiffmax + ROUNDINGPOS)) {
-
-				//float diffy = highergpos.y - (higherjointpos.y + higheroffset);
-				//float diffy = -(hipspos.y - higherfootinfo->GetLowerGPos().y - hdiffmax);//2024/09/16 hdiffmax設定で足の曲がり方が調整できるように修正　地面とhipsの高さがhdiffmax以下になるようにShiftする
-				float diffy = -(hipspos.y - higherfootinfo->GetLowerGPos().y - hdiffmax) - higherfootinfo->GetLowerFootOffset().y;//2024/10/17
+				float diffy_high = -(hipspos.y - higherfootinfo->GetLowerGPos().y - hdiffmax) - higherfootinfo->GetLowerFootOffset().y;//2024/10/17
+				float diffy_low = -(hipspos.y - lowerfootinfo->GetLowerGPos().y - hdiffmax) - lowerfootinfo->GetLowerFootOffset().y;//2024/10/17
+				float diffy = fmin(diffy_high, diffy_low);
 				ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, curelem.wmblend, true);//wmをブレンドする　この処理後に地面に潜っていても　後処理で地面位置まで上げる
 
 				float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
 				modelwm = modelwm3;
 				hipspos.y += diffy2;
+
+				//ここのCalcPosは省略不可　Test_FootRig_7のテストデータにて確認.
 				higherfootinfo->CalcPos(limitdegflag);
 				lowerfootinfo->CalcPos(limitdegflag);
 
 				//higherdoneflag = true;
 			}
 
-			if (//!secondcalling &&
-				(hipspos.y - lowerfootinfo->GetLowerGPos().y) > (hdiffmax + ROUNDINGPOS)) {
-
-				//float diffy = lowergpos.y - (lowerjointpos.y + loweroffset);
-				//float diffy = -(hipspos.y - lowerfootinfo->GetLowerGPos().y - hdiffmax);//2024/09/16 hdiffmax設定で足の曲がり方が調整できるように修正　地面とhipsの高さがhdiffmax以下になるようにShiftする
-				float diffy = -(hipspos.y - lowerfootinfo->GetLowerGPos().y - hdiffmax) - lowerfootinfo->GetLowerFootOffset().y;//2024/10/17
-				ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, curelem.wmblend, true);//wmをブレンドする　この処理後に地面に潜っていても　後処理で地面位置まで上げる
-
-				float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
-				modelwm = modelwm3;
-				hipspos.y += diffy2;
-				higherfootinfo->CalcPos(limitdegflag);
-				lowerfootinfo->CalcPos(limitdegflag);
-
-				//lowerdoneflag = true;
-				//if (higherdoneflag) {
-				//	//低い方の地面に接地した場合には　強制的に高い方の足を曲げる処理をする
-				//	forcehigherfootrig = true;
-				//}
-			}
-
-			if (!lowerdoneflag &&
-				//((hipspos.y - lowerfootinfo->GetHigherGPos().y) <= hdiffmax) &&
-				!lowerfootinfo->IsHigherFootThanGround(ROUNDINGPOS)
-				) {
+			if (!lowerfootinfo->IsHigherFootThanGround(ROUNDINGPOS)) {
 
 				//低い方の足をFootRigで曲げて接地
 				lowerfootinfo->RigControlFootRig(limitdegflag, srcmodel, curframe,
@@ -2445,11 +2426,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 			}
 
 			if (forcehigherfootrig ||
-				(
-					!higherdoneflag &&
-					//((hipspos.y - higherfootinfo->GetHigherGPos().y) <= (hdiffmax + higherhdiffoffset)) &&
-					!higherfootinfo->IsHigherFootThanGround(0.0f)
-					)
+				(!higherdoneflag && !higherfootinfo->IsHigherFootThanGround(0.0f))
 				) {
 
 				//高い方の足をFootRigで曲げて接地
@@ -2500,8 +2477,11 @@ void CFootRigDlg::FootRig(bool secondcalling,
 					modelwm = modelwm3;
 				}
 
-				higherfootinfo->CalcPos(limitdegflag);
-				lowerfootinfo->CalcPos(limitdegflag);
+
+				//2025/08/30 Update()の最初でCalcPos()するのでここでは不要
+				//higherfootinfo->CalcPos(limitdegflag);
+				//lowerfootinfo->CalcPos(limitdegflag);
+
 
 			//}
 		}
@@ -2905,7 +2885,7 @@ int CFootInfo::RigControlFootRig(bool limitdegflag, CModel* srcmodel, double cur
 		return 1;
 	}
 
-	CalcPos(limitdegflag);
+	//CalcPos(limitdegflag);
 
 	RigControlFootRigFunc(false, 
 		limitdegflag, srcmodel, curframe,
@@ -2956,7 +2936,7 @@ int CFootInfo::RigControlFootRigFunc(bool istoebase,
 		//	srcmodel->BlendSaveBoneMotionReq(updatebone, BONEMOTIONBLEND);//プルプル震え防止のための１回前とのブレンド
 		//}
 
-		srcmodel->UpdateMatrixFootRigReq(istoebase, limitdegflag, m_updatebone, &modelwm, &matView, &matProj);//角度制限あり無し両方に　現状の姿勢を格納
+		//srcmodel->UpdateMatrixFootRigReq(istoebase, limitdegflag, m_updatebone, &modelwm, &matView, &matProj);//角度制限あり無し両方に　現状の姿勢を格納
 
 		CalcPos(limitdegflag);
 		//newbonepos = m_footrigdlg->GetJointPos(limitdegflag, srcmodel, footbone, posoffset, istoebase);
@@ -2971,6 +2951,9 @@ int CFootInfo::RigControlFootRigFunc(bool istoebase,
 		//	break;
 		//}
 	}
+
+
+	srcmodel->UpdateMatrixFootRigReq(istoebase, limitdegflag, m_updatebone, &modelwm, &matView, &matProj);//角度制限あり無し両方に　現状の姿勢を格納
 
 	return 0;
 }

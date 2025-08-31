@@ -2437,7 +2437,7 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 
 	if (face_count > (int)(12 * 1.5)) {//バウンダリーの面数 x 1.5より面数が多い場合だけ　バウンダリーで予備判定
 		//2024/05/11
-		//まずはバウンダリーで粗く判定
+		//まずはメッシュ全体のバウンダリーで粗く判定
 		int collibb = CollisionLocal_Ray_BB(startlocal, dirlocal);
 		if (collibb == 0) {
 			return 0;
@@ -2448,6 +2448,8 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 	if (arbound.empty()) {
 		return 0;
 	}
+	int arboundnum = (int)arbound.size();
+
 
 	int allowrev;
 	if (excludeinvface) {
@@ -2469,21 +2471,27 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 	bool findflag = false;
 	for (fno = 0; fno < face_count; fno++) {
 
-		MODELBOUND curbound;
-		curbound.Init();
-		int boundindex = fno / PM3BOUNDINGFACENUM;
-		if ((boundindex >= 0) && (boundindex < arbound.size())) {
-			curbound = arbound[boundindex];
-		}
-		else {
-			_ASSERT(0);
-			return 0;
-		}
-		//まずはバウンダリーで粗く判定
-		int collibb = CollisionLocal_Ray_BB(curbound, startlocal, dirlocal);
-		if (collibb == 0) {
-			fno = PM3BOUNDINGFACENUM * (boundindex + 1) - 1;
-			continue;
+
+		if ((arboundnum > 1) && ((fno % PM3BOUNDINGFACENUM) == 0)) {
+			//まずはバウンダリーで粗く判定
+			MODELBOUND curbound;
+			curbound.Init();
+			int boundindex = fno / PM3BOUNDINGFACENUM;
+			if ((boundindex >= 0) && (boundindex < arbound.size())) {
+				curbound = arbound[boundindex];
+				if (arboundnum > 1) {
+					int collibb = CollisionLocal_Ray_BB(curbound, startlocal, dirlocal);
+					if (collibb == 0) {
+						//バウンダリーで衝突しない場合には　次のバウンダリーの判定にジャンプ
+						fno = PM3BOUNDINGFACENUM * (boundindex + 1) - 1;
+						continue;
+					}
+				}
+			}
+			else {
+				_ASSERT(0);
+				return 0;
+			}
 		}
 
 
