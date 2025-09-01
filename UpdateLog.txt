@@ -2,6 +2,12 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/09/02
+　不具合修正
+　　FootRigとぽすちゃーチャイルド併用時に
+　　高いところに登ってから高さに対して横移動すると
+　　ぽすちゃーチャイルド設定ジョイントだけ位置が低くなる不具合を修正
+
 2025/08/31
 　FootRigの高速化
 　　BoundaryArrayの修正.

@@ -2733,6 +2733,15 @@ void CModel::BlendSaveBoneMotionReq(CBone* srcbone, float srcblend)
 void CModel::UpdateModelWMFootRig(ChaMatrix newwm)
 {
 	ChaMatrix befwm = m_matWorld;
+
+	ChaVector3 beftra = ChaMatrixTraVec(befwm);
+	ChaVector3 newtra = ChaMatrixTraVec(newwm);
+	ChaVector3 difftra = newtra - beftra;
+
+	ChaVector3 currentmodelpos = GetModelPosition();
+	ChaVector3 newmodelpos = currentmodelpos + difftra;
+	SetModelPosition(newmodelpos);
+
 	m_matWorld = newwm;
 
 	UpdateModelWMFootRigReq(GetTopBone(false), newwm, befwm);
