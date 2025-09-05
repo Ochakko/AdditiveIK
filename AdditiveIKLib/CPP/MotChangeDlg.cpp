@@ -26,6 +26,9 @@
 #include <GetDlgParams.h>
 #include <GlobalVar.h>
 
+
+
+
 //#########
 //Keyboard
 //#########
@@ -2607,6 +2610,78 @@ LRESULT CMotChangeDlg::OnApplyFULeng(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 
 	return 0;
 }
+
+LRESULT CMotChangeDlg::OnPlayWithBt(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	if (g_previewFlag != 0) {
+		return 0;
+	}
+	if (!m_chascene) {
+		_ASSERT(0);
+		return 1;
+	}
+	CModel* currentmodel = GetCurrentModel();
+	if (!currentmodel) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	//g_dspeedsave = g_dspeed;
+
+	int ret;
+	ret = currentmodel->CreateMotChangeHandlerIfNot();
+	if (ret) {
+		DbgOut(L"motchangedlg : OnChangeIdle : CreateMotChangeHandlerIfNot error !!!\n");
+		_ASSERT(0);
+		return 1;
+	}
+
+	CMCHandler* mch = currentmodel->GetMotChangeHandler();
+	if (!mch) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int motnum = currentmodel->GetMotInfoSize();
+	if (motnum <= 0) {
+		return 0;
+	}
+
+
+	CMAFile* mafile;
+	mafile = new CMAFile();
+	if (!mafile) {
+		DbgOut(L"mcdlg : OnPlay : mafile alloc error !!!\n");
+		_ASSERT(0);
+		return 1;
+	}
+
+	ret = mafile->CheckIdlingMotion(mch);
+	if (ret) {
+		::MessageBox(m_hWnd, L"アイドリング設定のモーションが、１つだけ存在する必要があります。\n設定を直して、再試行してください。", L"アイドリングエラー", MB_OK);
+		delete mafile;
+		return 0;
+	}
+
+	int idlingmotid = mch->GetIdlingMotID(nullptr, 0);
+	if (idlingmotid > 0) {
+		currentmodel->SetCurrentMotion(idlingmotid);
+		currentmodel->SetUnderBlending(false);
+
+		currentmodel->BackUpLoopFlag();//モーションのリピートを変える前にバックアップ
+		currentmodel->SetMotInfoLoopFlagAll(0);//モーションのリピートはSetNewPoseByMoa()で制御するため　リピート無しに設定
+
+		g_previewMOA = 1;
+		g_previewFlag = 4;//preview with Bt 
+	}
+
+	if (mafile) {
+		delete mafile;
+	}
+
+	return 0;
+}
+
 LRESULT CMotChangeDlg::OnPlay(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	if(g_previewFlag != 0){

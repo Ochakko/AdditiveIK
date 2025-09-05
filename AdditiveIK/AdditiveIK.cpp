@@ -707,7 +707,7 @@ void OnDSUpdate();
 //static void OnDSMouseHereApeal();
 static void OnArrowKey();//DS関数でキーボードの矢印キーに対応
 
-static int SetNewPoseByMoa(double* pnextframe);
+static int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe);
 static int ChangeMotionWithGUI(int srcmotid);
 static int s_moa_nextmotid;
 static int s_moa_nextframe;
@@ -6067,7 +6067,6 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		if (ploopstartflag) {
 			*ploopstartflag = loopstartflag;
 		}
-
 
 
 		//#############
@@ -25880,7 +25879,7 @@ int OnFramePreviewNormal(double nextframe, double difftime, int endflag, int loo
 
 
 	if (g_previewMOA != 0) {
-		SetNewPoseByMoa(&nextframe);
+		SetNewPoseByMoa(GetCurrentModel(), &nextframe);//呼び出し場所変更　OnFrameProcessTime()かどちらかを呼ぶように.
 	}
 	g_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, nextframe, loopstartflag);
 
@@ -25934,6 +25933,10 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 	}
 
 
+	if (GetCurrentModel() && (g_previewMOA != 0)) {
+		SetNewPoseByMoa(GetCurrentModel(), &nextframe);
+	}
+
 
 	//安定のために　シミュ開始時の姿勢で　キネマティックしている回数
 	int INITTERM;
@@ -25983,9 +25986,9 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 			//if (endflag == 1) {
 				//g_previewFlag = 0;
 			//}
-
-			curmodel->SetMotionFrame(nextframe);
-
+			if ((curmodel != GetCurrentModel()) || (g_previewMOA == 0)) {
+				curmodel->SetMotionFrame(nextframe);
+			}
 		}
 	}
 
@@ -47406,35 +47409,48 @@ CModel* GetCurrentModel()
 }
 
 
-int SetNewPoseByMoa(double* pnextframe)
+int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 {
 	static int s_dbgflag1 = 0;
 
 
-	if (!pnextframe) {
+	if (!srcmodel || !pnextframe) {
 		_ASSERT(0);
 		return 0;
 	}
 
-	CModel* currentmodel = GetCurrentModel();
-	if (!currentmodel) {
+	if (srcmodel->GetNoBoneFlag()) {
 		return 0;
 	}
-	CEventKey* eventkey = currentmodel->GetEventKey();
+	else {
+		int dbgflag1 = 1;
+	}
+
+
+	//CModel* currentmodel = GetCurrentModel();
+	//if (!currentmodel) {
+	//	return 0;
+	//}
+	CEventKey* eventkey = srcmodel->GetEventKey();
 	if (!eventkey) {
 		return 0;
 	}
-	CEventPad* eventpad = currentmodel->GetEventPad();
+	CEventPad* eventpad = srcmodel->GetEventPad();
 	if (!eventpad) {
 		return 0;
 	}
-	CMCHandler* mch = currentmodel->GetMotChangeHandler();
+	CMCHandler* mch = srcmodel->GetMotChangeHandler();
 	if (!mch) {
+		return 0;
+	}
+	int idlingmotid = mch->GetIdlingMotID(nullptr, 0);
+	if (idlingmotid < 0) {
+		_ASSERT(0);
 		return 0;
 	}
 
 	bool jumpflag0;
-	MOTINFO mi0 = currentmodel->GetCurMotInfo();
+	MOTINFO mi0 = srcmodel->GetCurMotInfo();
 	if ((mi0.motid > 0) && mi0.GetJumpFlag()) {
 		jumpflag0 = true;
 	}
@@ -47538,7 +47554,7 @@ int SetNewPoseByMoa(double* pnextframe)
 			}
 
 			if ((jumpflag0 == false) && (eventno != 0)) {
-				currentmodel->SetMocapWalkFlag(true);
+				srcmodel->SetMocapWalkFlag(true);
 			}
 		}
 		else {
@@ -47605,12 +47621,12 @@ int SetNewPoseByMoa(double* pnextframe)
 		if (s_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) {
 			double orgval = s_dsaxisvalue[MB3D_DSAXIS_LEFT_LR];
 			double rotval = (orgval - MB3D_DSAXISSRH) / (1.0 - MB3D_DSAXISSRH);
-			s_matWorld = currentmodel->RotMocapWalk(rotval);
+			s_matWorld = srcmodel->RotMocapWalk(rotval);
 		}
 		else if (s_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0) {
 			double orgval = s_dsaxisvalue[MB3D_DSAXIS_LEFT_LR];
 			double rotval = (orgval + MB3D_DSAXISSRH) / (1.0 - MB3D_DSAXISSRH);
-			s_matWorld = currentmodel->RotMocapWalk(rotval);
+			s_matWorld = srcmodel->RotMocapWalk(rotval);
 		}
 
 	}
@@ -47625,34 +47641,34 @@ int SetNewPoseByMoa(double* pnextframe)
 	int curmotid = -1;
 	double curframe = 0;
 	double curframeleng = 0;
-	ret = currentmodel->GetMotionFrame(&curmotid, &curframe);
+	ret = srcmodel->GetMotionFrame(&curmotid, &curframe);
 	if (ret || (curmotid < 0)) {
 		DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mh GetMotionFrameNo error !!!\n");
 		_ASSERT(0);
 		return 1;
 	}
-	curframeleng = currentmodel->GetCurrentMotLeng();
+	curframeleng = srcmodel->GetCurrentMotLeng();
 
 	int chkmotid = -1;//GetNextMotion()用
 	double chkframe = 0;//GetNextMotion()用
 	double chkframeleng = 0;//GetNextMotion()用
 
-	if (currentmodel->GetMoaNextMotId() == -1) {
+	if (srcmodel->GetMoaNextMotId() == -1) {
 		chkmotid = curmotid;
 		chkframe = curframe;
-		MOTINFO chkmi = currentmodel->GetMotInfo(curmotid);
+		MOTINFO chkmi = srcmodel->GetMotInfo(curmotid);
 		chkframeleng = chkmi.frameleng;
 	}
 	else {
 		//2025/01/12
 		//補間ブレンド中にキーを連打した場合に対応するために　GetMoaNextMotion()用の変数は次の状態を指している必要がある
-		chkmotid = currentmodel->GetMoaNextMotId();
-		chkframe = 1.0;// currentmodel->GetMoaNextFrame();
-		MOTINFO chkmi = currentmodel->GetMotInfo(chkmotid);
+		chkmotid = srcmodel->GetMoaNextMotId();
+		chkframe = 1.0;// srcmodel->GetMoaNextFrame();
+		MOTINFO chkmi = srcmodel->GetMotInfo(chkmotid);
 		chkframeleng = chkmi.frameleng;
 	}
 
-	int idlingmotid = mch->GetIdlingMotID(nullptr, 0);
+	//int idlingmotid = mch->GetIdlingMotID(nullptr, 0);//上に移動
 	double fillupleng = 0.0;// = mch->GetFillUpLeng();
 
 
@@ -47667,7 +47683,7 @@ int SetNewPoseByMoa(double* pnextframe)
 
 
 	//for debug
-	//if (currentmodel->GetMoaNextMotId() == 2) {
+	//if (srcmodel->GetMoaNextMotId() == 2) {
 	//	int dbgflag1 = 1;
 	//}
 	if ((s_dbgflag1 == 1) && (eventno != 0)) {
@@ -47712,7 +47728,7 @@ int SetNewPoseByMoa(double* pnextframe)
 			//#####################################################
 			//ev0idleは キー入力が途切れた場合にすぐにidlingに戻すフラグ.
 			//#####################################################
-			currentmodel->SetMoaStartFillUpFrame(curframe);
+			srcmodel->SetMoaStartFillUpFrame(curframe);
 			notfu = 0;
 			if (idlingmotid < 0) {
 				DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetIdlingMotID 0 : idling motion not exist error !!!\n");
@@ -47721,14 +47737,14 @@ int SetNewPoseByMoa(double* pnextframe)
 			}
 			fillupflag = 1;
 			s_moaeventtime = s_fTime;
-			if (currentmodel->GetMoaNextMotId() != -1) {
-				currentmodel->SetChangeUnderBlending(true);
+			if (srcmodel->GetMoaNextMotId() != -1) {
+				srcmodel->SetChangeUnderBlending(true);
 			}
 
-			currentmodel->SetMoaNextMotId(idlingmotid);
-			currentmodel->SetMoaNextFrame(1);
-			currentmodel->SetMoaRand1();//2025/01/12 連打対応
-			currentmodel->SetUnderBlending(true);//2025/01/12 連打対応
+			srcmodel->SetMoaNextMotId(idlingmotid);
+			srcmodel->SetMoaNextFrame(1);
+			srcmodel->SetMoaRand1();//2025/01/12 連打対応
+			srcmodel->SetUnderBlending(true);//2025/01/12 連打対応
 		}
 
 		if (fillupflag == 0) {
@@ -47739,7 +47755,7 @@ int SetNewPoseByMoa(double* pnextframe)
 				//#######################################################################
 				//イベント番号の指示通りのs_moa_nextmotidへ変化させる
 				//s_moa_nextmotid, s_moa_nextframeはそのまま
-				currentmodel->SetMoaStartFillUpFrame(curframe);
+				srcmodel->SetMoaStartFillUpFrame(curframe);
 				notfu = 0;
 				if (s_moa_nextmotid < 0) {
 					DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetIdlingMotID 0 : idling motion not exist error !!!\n");
@@ -47748,41 +47764,41 @@ int SetNewPoseByMoa(double* pnextframe)
 				}
 				fillupflag = 1;
 				s_moaeventtime = s_fTime;
-				if (currentmodel->GetMoaNextMotId() != -1) {
-					currentmodel->SetChangeUnderBlending(true);
+				if (srcmodel->GetMoaNextMotId() != -1) {
+					srcmodel->SetChangeUnderBlending(true);
 				}
-				currentmodel->SetMoaNextMotId(s_moa_nextmotid);
-				currentmodel->SetMoaNextFrame(s_moa_nextframe);
-				currentmodel->SetMoaRand1();//2025/01/12 連打対応
-				currentmodel->SetUnderBlending(true);//2025/01/12 連打対応
+				srcmodel->SetMoaNextMotId(s_moa_nextmotid);
+				srcmodel->SetMoaNextFrame(s_moa_nextframe);
+				srcmodel->SetMoaRand1();//2025/01/12 連打対応
+				srcmodel->SetUnderBlending(true);//2025/01/12 連打対応
 
 				if (s_moa_nextmotid == 2) {
 					s_dbgflag1 = 1;
 				}
 			}
-			else if (//(!currentmodel->GetUnderBlending()) && 
-				//(currentmodel->GetMoaNextMotId() == -1) && //モーション遷移決定後に　現在のモーションが最終フレームに来た場合には　idlingではなくnextmotidへ遷移させるので　blending中はここを通らない 
+			else if (//(!srcmodel->GetUnderBlending()) && 
+				//(srcmodel->GetMoaNextMotId() == -1) && //モーション遷移決定後に　現在のモーションが最終フレームに来た場合には　idlingではなくnextmotidへ遷移させるので　blending中はここを通らない 
 				(curframe >= (curframeleng - 1.0 - g_endmotionMargin - 0.0001)) && (nottoidle == 0)) {
 				//###########################################################
 				//モーションを最後まで再生したので　アイドリングに戻す　またはループする
 				//###########################################################
-				if (currentmodel->GetMocapWalkFlag()) {
+				if (srcmodel->GetMocapWalkFlag()) {
 					//MocapWalk Loop
-					currentmodel->SetMoaNextMotId(currentmodel->GetCurrentMotID());
-					currentmodel->SetMoaNextFrame(1);
-					currentmodel->SetMoaStartFillUpFrame(curframe);
+					srcmodel->SetMoaNextMotId(srcmodel->GetCurrentMotID());
+					srcmodel->SetMoaNextFrame(1);
+					srcmodel->SetMoaStartFillUpFrame(curframe);
 				}
-				else if ((currentmodel->GetMoaNextMotId() == -1)) {
-					currentmodel->SetMoaNextMotId(idlingmotid);
-					currentmodel->SetMoaNextFrame(1);
-					currentmodel->SetMoaStartFillUpFrame(curframe);
+				else if ((srcmodel->GetMoaNextMotId() == -1)) {
+					srcmodel->SetMoaNextMotId(idlingmotid);
+					srcmodel->SetMoaNextFrame(1);
+					srcmodel->SetMoaStartFillUpFrame(curframe);
 				}
 				else {
-					currentmodel->SetMoaNextMotId(currentmodel->GetMoaNextMotId());
-					currentmodel->SetMoaNextFrame(currentmodel->GetMoaNextFrame());
-					currentmodel->SetMoaStartFillUpFrame(curframe);
+					srcmodel->SetMoaNextMotId(srcmodel->GetMoaNextMotId());
+					srcmodel->SetMoaNextFrame(srcmodel->GetMoaNextFrame());
+					srcmodel->SetMoaStartFillUpFrame(curframe);
 
-					currentmodel->SetChangeUnderBlending(true);
+					srcmodel->SetChangeUnderBlending(true);
 				}
 
 				notfu = 1;//最終フレームからidlingへの遷移は補間ブレンドしない
@@ -47799,7 +47815,7 @@ int SetNewPoseByMoa(double* pnextframe)
 		}
 	}
 
-	if (currentmodel->GetUnderBlending()) {
+	if (srcmodel->GetUnderBlending()) {
 		//リアルタイムでブレンドするために　ブレンド中もモーション遷移処理を実行するようにフラグを立てる
 		fillupflag = 1;
 	}
@@ -47816,11 +47832,11 @@ int SetNewPoseByMoa(double* pnextframe)
 		//モーション変化決定時のパラメータを使う
 		//s_moa_nextmotidはモーション変化しない場合にすぐにidlingmotidになることがあるのでSetMoa*()で設定した値を使う
 		//################################################################################################
-		int model_nextmotid = currentmodel->GetMoaNextMotId();
-		int model_nextframe = currentmodel->GetMoaNextFrame();
+		int model_nextmotid = srcmodel->GetMoaNextMotId();
+		int model_nextframe = srcmodel->GetMoaNextFrame();
 		
 		bool jumpflag;
-		MOTINFO currentmi = currentmodel->GetCurMotInfo();
+		MOTINFO currentmi = srcmodel->GetCurMotInfo();
 		if ((currentmi.motid > 0) && currentmi.GetJumpFlag()) {
 			jumpflag = true;
 		}
@@ -47829,8 +47845,8 @@ int SetNewPoseByMoa(double* pnextframe)
 		}
 
 		if (model_nextmotid >= 0) {
-			if ((notfu == 0) && (currentmodel->GetMocapWalkFlag() == false) && (jumpflag == false)) {
-				MOTINFO nextmi = currentmodel->GetMotInfo(model_nextmotid);
+			if ((notfu == 0) && (srcmodel->GetMocapWalkFlag() == false) && (jumpflag == false)) {
+				MOTINFO nextmi = srcmodel->GetMotInfo(model_nextmotid);
 				if (nextmi.motid > 0) {
 					//########################################################################################
 					//モーションの変わり目は　補間＋ブレンド
@@ -47842,7 +47858,7 @@ int SetNewPoseByMoa(double* pnextframe)
 					g_plusrandMOA = s_motchangedlg.GetPlusRandMoa();//補間ブレンド期間の長さに乱数を加えるモード
 
 					if (g_plusrandMOA) {
-						fillupleng = mch->GetFillUpLeng() + currentmodel->GetMoaRand1();//2025/01/12 変化が出るように
+						fillupleng = mch->GetFillUpLeng() + srcmodel->GetMoaRand1();//2025/01/12 変化が出るように
 					}
 					else {
 						fillupleng = mch->GetFillUpLeng();
@@ -47856,15 +47872,15 @@ int SetNewPoseByMoa(double* pnextframe)
 					int filluppoint;
 					filluppoint = max(1, min((nextframeleng - 3), (model_nextframe + (int)fillupleng - 1)));
 					int actualfillupleng = max(1, min((int)(nextframeleng - 3 + 1), (int)(filluppoint + 1)));
-					//actualfillupleng = max(1, min((int)(curframeleng - (int)currentmodel->GetMoaStartFillUpFrame() + 1), actualfillupleng));//最終フレーム付近ではfillupleng長の残りフレームは無い
-					actualfillupleng = max(1, min((int)(curframeleng - (int)currentmodel->GetMoaStartFillUpFrame() + 1), actualfillupleng));//最終フレーム付近ではfillupleng長の残りフレームは無い
+					//actualfillupleng = max(1, min((int)(curframeleng - (int)srcmodel->GetMoaStartFillUpFrame() + 1), actualfillupleng));//最終フレーム付近ではfillupleng長の残りフレームは無い
+					actualfillupleng = max(1, min((int)(curframeleng - (int)srcmodel->GetMoaStartFillUpFrame() + 1), actualfillupleng));//最終フレーム付近ではfillupleng長の残りフレームは無い
 
 					double motionrate1, motionrate2;
-					motionrate2 = fmin(1.0, fmax(0.0, (curframe - currentmodel->GetMoaStartFillUpFrame()) / (double)actualfillupleng));
+					motionrate2 = fmin(1.0, fmax(0.0, (curframe - srcmodel->GetMoaStartFillUpFrame()) / (double)actualfillupleng));
 					motionrate1 = 1.0 - motionrate2;
 
 
-					if (!currentmodel->GetUnderBlending() &&
+					if (!srcmodel->GetUnderBlending() &&
 						((int)(curframeleng - curframe - 0.0001) <= g_endmotionMargin)
 						) {
 						//#####################################
@@ -47872,27 +47888,27 @@ int SetNewPoseByMoa(double* pnextframe)
 						//UnderBlendingではない場合の処理
 						//UnderBlendingの場合は　if分の最後で処理
 						//#####################################
-						if (currentmodel->GetMocapWalkFlag() || jumpflag) {
-							s_matWorld = currentmodel->Move2HipsPos(&s_footrigdlg, idlingmotid, 1.0);
-							currentmodel->SetMocapWalkFlag(false);
+						if (srcmodel->GetMocapWalkFlag() || jumpflag) {
+							s_matWorld = srcmodel->Move2HipsPos(&s_footrigdlg, idlingmotid, 1.0);
+							srcmodel->SetMocapWalkFlag(false);
 						}
 						ChangeMotionWithGUI(idlingmotid);
-						currentmodel->SetMotionFrame(1.0);
-						currentmodel->SetMoaStartFillUpFrame(1.0);
-						currentmodel->SetChangeUnderBlending(false);
-						currentmodel->SetUnderBlending(false);
-						currentmodel->SetMoaNextMotId(-1);
-						currentmodel->SetMoaFillupCount(0);
+						srcmodel->SetMotionFrame(1.0);
+						srcmodel->SetMoaStartFillUpFrame(1.0);
+						srcmodel->SetChangeUnderBlending(false);
+						srcmodel->SetUnderBlending(false);
+						srcmodel->SetMoaNextMotId(-1);
+						srcmodel->SetMoaFillupCount(0);
 
 					}
-					else if (currentmodel->GetUnderBlending() &&
+					else if (srcmodel->GetUnderBlending() &&
 						(
-						((currentmodel->GetChangeUnderBlending() == false) && 
-							(curframe >= currentmodel->GetMoaStartFillUpFrame()) &&
-							((int)(curframe - (int)currentmodel->GetMoaStartFillUpFrame() + 1) < actualfillupleng))
+						((srcmodel->GetChangeUnderBlending() == false) && 
+							(curframe >= srcmodel->GetMoaStartFillUpFrame()) &&
+							((int)(curframe - (int)srcmodel->GetMoaStartFillUpFrame() + 1) < actualfillupleng))
 						||
-						((currentmodel->GetChangeUnderBlending() == true) &&
-							(currentmodel->GetMoaFillupCount() < actualfillupleng))
+						((srcmodel->GetChangeUnderBlending() == true) &&
+							(srcmodel->GetMoaFillupCount() < actualfillupleng))
 						)
 							
 						) {
@@ -47905,9 +47921,9 @@ int SetNewPoseByMoa(double* pnextframe)
 							//通常補間ブレンドモード
 							//####################
 
-							currentmodel->CalcFillupTarget(model_nextmotid, filluppoint, motionrate1,
-								IsJustEqualTime(curframe, currentmodel->GetMoaStartFillUpFrame()));
-							//currentmodel->CalcFillupTarget(model_nextmotid, model_nextframe, motionrate1, 
+							srcmodel->CalcFillupTarget(model_nextmotid, filluppoint, motionrate1,
+								IsJustEqualTime(curframe, srcmodel->GetMoaStartFillUpFrame()));
+							//srcmodel->CalcFillupTarget(model_nextmotid, model_nextframe, motionrate1, 
 							// IsJustEqualTime(curframe, curstartfillupframe));
 						}
 						else {
@@ -47917,12 +47933,12 @@ int SetNewPoseByMoa(double* pnextframe)
 							//####################
 							
 							int freezecount;
-							if (IsJustEqualTime(curframe, currentmodel->GetMoaStartFillUpFrame())) {
-								currentmodel->SetMoaFreezeCount(0);
+							if (IsJustEqualTime(curframe, srcmodel->GetMoaStartFillUpFrame())) {
+								srcmodel->SetMoaFreezeCount(0);
 								freezecount = 0;
 							}
 							else {
-								freezecount = currentmodel->IncrementMoaFreezeCount();
+								freezecount = srcmodel->IncrementMoaFreezeCount();
 							}
 							//if (freezecount < 2) {
 							//	freezemotionrate1 = motionrate1;
@@ -47935,93 +47951,93 @@ int SetNewPoseByMoa(double* pnextframe)
 							double freezebigrate1 = fmin(3.9, (double)freezecount);
 
 							//2025/01/12 Be Big!!!
-							currentmodel->CalcFillupTarget(model_nextmotid, filluppoint, freezebigrate1, //motionrate1,
-								IsJustEqualTime(curframe, currentmodel->GetMoaStartFillUpFrame()));
+							srcmodel->CalcFillupTarget(model_nextmotid, filluppoint, freezebigrate1, //motionrate1,
+								IsJustEqualTime(curframe, srcmodel->GetMoaStartFillUpFrame()));
 						}
-						currentmodel->SetMotionFrame(curframe);
-						//currentmodel->SetUnderBlending(true);
+						srcmodel->SetMotionFrame(curframe);
+						//srcmodel->SetUnderBlending(true);
 
-						if (IsJustEqualTime(curframe, currentmodel->GetMoaStartFillUpFrame())) {
-							currentmodel->SetMoaFillupCount(0);
+						if (IsJustEqualTime(curframe, srcmodel->GetMoaStartFillUpFrame())) {
+							srcmodel->SetMoaFillupCount(0);
 						}
 						else {
-							currentmodel->IncrementMoaFillupCount();
+							srcmodel->IncrementMoaFillupCount();
 						}
 					}
-					else if (currentmodel->GetUnderBlending() &&
+					else if (srcmodel->GetUnderBlending() &&
 						(
-							((currentmodel->GetChangeUnderBlending() == false) &&
-								(curframe >= currentmodel->GetMoaStartFillUpFrame()) &&
-								((int)(curframe - (int)currentmodel->GetMoaStartFillUpFrame() + 1) >= actualfillupleng))
+							((srcmodel->GetChangeUnderBlending() == false) &&
+								(curframe >= srcmodel->GetMoaStartFillUpFrame()) &&
+								((int)(curframe - (int)srcmodel->GetMoaStartFillUpFrame() + 1) >= actualfillupleng))
 							||
-							((currentmodel->GetChangeUnderBlending() == true) &&
-								(currentmodel->GetMoaFillupCount() >= actualfillupleng))
+							((srcmodel->GetChangeUnderBlending() == true) &&
+								(srcmodel->GetMoaFillupCount() >= actualfillupleng))
 						)
 
 						) {
 						//###########################
 						//補間計算終了　nextmotidへ遷移
 						//###########################
-						if (currentmodel->GetMocapWalkFlag()) {
-							s_matWorld = currentmodel->Move2HipsPos(&s_footrigdlg, model_nextmotid, (double)filluppoint);
-							currentmodel->SetMocapWalkFlag(false);
+						if (srcmodel->GetMocapWalkFlag()) {
+							s_matWorld = srcmodel->Move2HipsPos(&s_footrigdlg, model_nextmotid, (double)filluppoint);
+							srcmodel->SetMocapWalkFlag(false);
 						}
 						ChangeMotionWithGUI(model_nextmotid);
-						currentmodel->SetMotionFrame((double)filluppoint);
-						//currentmodel->SetMotionFrame(model_nextframe);
-						currentmodel->SetMoaStartFillUpFrame(1.0);
-						currentmodel->SetChangeUnderBlending(false);
-						currentmodel->SetMoaNextMotId(-1);
-						currentmodel->SetUnderBlending(false);
-						currentmodel->SetMoaFillupCount(0);
+						srcmodel->SetMotionFrame((double)filluppoint);
+						//srcmodel->SetMotionFrame(model_nextframe);
+						srcmodel->SetMoaStartFillUpFrame(1.0);
+						srcmodel->SetChangeUnderBlending(false);
+						srcmodel->SetMoaNextMotId(-1);
+						srcmodel->SetUnderBlending(false);
+						srcmodel->SetMoaFillupCount(0);
 					}
-					else if (currentmodel->GetUnderBlending() &&
+					else if (srcmodel->GetUnderBlending() &&
 						((int)(curframeleng - curframe - 0.0001) <= g_endmotionMargin)
 						) {
 						//############################
 						//アイドリングへ戻る
 						//UnderBlending処理の最後で処理
 						//############################
-						if (currentmodel->GetMocapWalkFlag()) {
-							s_matWorld = currentmodel->Move2HipsPos(&s_footrigdlg, idlingmotid, 1.0);
-							currentmodel->SetMocapWalkFlag(false);
+						if (srcmodel->GetMocapWalkFlag()) {
+							s_matWorld = srcmodel->Move2HipsPos(&s_footrigdlg, idlingmotid, 1.0);
+							srcmodel->SetMocapWalkFlag(false);
 						}
 						ChangeMotionWithGUI(idlingmotid);
-						currentmodel->SetMotionFrame(1.0);
-						currentmodel->SetMoaStartFillUpFrame(1.0);
-						currentmodel->SetChangeUnderBlending(false);
-						currentmodel->SetUnderBlending(false);
-						currentmodel->SetMoaNextMotId(-1);
-						currentmodel->SetMoaFillupCount(0);
+						srcmodel->SetMotionFrame(1.0);
+						srcmodel->SetMoaStartFillUpFrame(1.0);
+						srcmodel->SetChangeUnderBlending(false);
+						srcmodel->SetUnderBlending(false);
+						srcmodel->SetMoaNextMotId(-1);
+						srcmodel->SetMoaFillupCount(0);
 					}
 					else {
 						_ASSERT(0);
 					}
 
-					////currentmodel->SetCurrentMotion(s_moa_nextmotid);
+					////srcmodel->SetCurrentMotion(s_moa_nextmotid);
 					//ChangeMotionWithGUI(s_moa_nextmotid);
-					//currentmodel->SetMotionFrame(model_nextframe);
-					//currentmodel->SetUnderBlending(false);
+					//srcmodel->SetMotionFrame(model_nextframe);
+					//srcmodel->SetUnderBlending(false);
 				}
 			}
 			else {
 				// notfu != 0  direct change
-				//currentmodel->SetCurrentMotion(s_moa_nextmotid);
+				//srcmodel->SetCurrentMotion(s_moa_nextmotid);
 
 				//###############################
 				//補間無しですぐにモーション遷移を実行
 				//###############################
-				if (currentmodel->GetMocapWalkFlag() || jumpflag) {
-					s_matWorld = currentmodel->Move2HipsPos(&s_footrigdlg, model_nextmotid, 1.0);
-					currentmodel->SetMocapWalkFlag(false);
+				if (srcmodel->GetMocapWalkFlag() || jumpflag) {
+					s_matWorld = srcmodel->Move2HipsPos(&s_footrigdlg, model_nextmotid, 1.0);
+					srcmodel->SetMocapWalkFlag(false);
 				}
 				ChangeMotionWithGUI(model_nextmotid);
-				currentmodel->SetMotionFrame(1.0);
-				currentmodel->SetMoaStartFillUpFrame(1.0);
-				currentmodel->SetChangeUnderBlending(false);
-				currentmodel->SetUnderBlending(false);
-				currentmodel->SetMoaNextMotId(-1);
-				currentmodel->SetMoaFillupCount(0);
+				srcmodel->SetMotionFrame(1.0);
+				srcmodel->SetMoaStartFillUpFrame(1.0);
+				srcmodel->SetChangeUnderBlending(false);
+				srcmodel->SetUnderBlending(false);
+				srcmodel->SetMoaNextMotId(-1);
+				srcmodel->SetMoaFillupCount(0);
 			}
 		}
 	}
@@ -48030,13 +48046,13 @@ int SetNewPoseByMoa(double* pnextframe)
 		//#############################################
 		//2025/01/11 呼び出し元のnextframeを更新する必要有
 		//#############################################
-		*pnextframe = currentmodel->GetCurrentFrame();
+		*pnextframe = srcmodel->GetCurrentFrame();
 	}
 
-	if (GetCurrentModel()) {
-		MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
+	{
+		MOTINFO curmi = srcmodel->GetCurMotInfo();
 		if (curmi.motid > 0) {
-			GetCurrentModel()->SetMotionSpeed(curmi.motid, motionspeed);
+			srcmodel->SetMotionSpeed(curmi.motid, motionspeed);
 
 			//if (backplay == false) {
 			//	g_previewFlag = 1;

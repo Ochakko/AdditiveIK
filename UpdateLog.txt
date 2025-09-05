@@ -2,6 +2,11 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/09/06
+　MOA2.0とFootRigとbulletシミュの組み合わせ再生が可能に.
+　　MotChangeDlg(MOAのダイアログ)にbulletとの組み合わせ再生用のPlayBtボタンを追加
+
+
 2025/09/02
 　不具合修正
 　　FootRigとぽすちゃーチャイルド併用時に

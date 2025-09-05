@@ -24886,7 +24886,8 @@ ChaMatrix CModel::RotMocapWalk(double srcrot)
 	orgrotq.SetRotationXYZ(nullptr, GetModelRotation());
 	CQuaternion addrotq;
 	addrotq.RotationMatrix(rotmat);
-	CQuaternion newrotq = addrotq * orgrotq;
+	//CQuaternion newrotq = addrotq * orgrotq;
+	CQuaternion newrotq = orgrotq * addrotq;
 	int notmodify180flag = 0;//!!!!!!!!!!!!!!!
 	BEFEUL befeul;
 	befeul.Init();

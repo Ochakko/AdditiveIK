@@ -57,6 +57,7 @@ BEGIN_MSG_MAP(CMotChangeDlg)
 
 	COMMAND_ID_HANDLER(IDC_APPLY, OnApplyFULeng)
 	COMMAND_ID_HANDLER(IDC_PLAY, OnPlay)
+	COMMAND_ID_HANDLER(IDC_PLAYWITHBT, OnPlayWithBt)
 	COMMAND_ID_HANDLER(IDC_STOP, OnStop)
 	COMMAND_ID_HANDLER(IDC_COMBOIDLE, OnChangeIdle)
 	
@@ -93,6 +94,7 @@ END_MSG_MAP()
 
 	LRESULT OnApplyFULeng(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnPlay(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnPlayWithBt(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnStop(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnChangeIdle(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
