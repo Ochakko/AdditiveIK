@@ -15533,7 +15533,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.50\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.51\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -47621,12 +47621,12 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 		if (s_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) {
 			double orgval = s_dsaxisvalue[MB3D_DSAXIS_LEFT_LR];
 			double rotval = (orgval - MB3D_DSAXISSRH) / (1.0 - MB3D_DSAXISSRH);
-			s_matWorld = srcmodel->RotMocapWalk(rotval);
+			s_matWorld = srcmodel->RotMocapWalk(&s_footrigdlg, rotval);
 		}
 		else if (s_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0) {
 			double orgval = s_dsaxisvalue[MB3D_DSAXIS_LEFT_LR];
 			double rotval = (orgval + MB3D_DSAXISSRH) / (1.0 - MB3D_DSAXISSRH);
-			s_matWorld = srcmodel->RotMocapWalk(rotval);
+			s_matWorld = srcmodel->RotMocapWalk(&s_footrigdlg, rotval);
 		}
 
 	}

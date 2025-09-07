@@ -478,7 +478,7 @@ public:
 	void UpdateMatrixFootRigReq(bool istoebase, bool limitdegflag, CBone* srcbone,
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
 
-	void UpdateModelWMFootRig(ChaMatrix newwm);
+	void UpdateModelWMFootRig(CFootRigDlg* srcfootrigdlg, ChaMatrix newwm);
 	void UpdateModelWMFootRigReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm);
 
 	int ChkInView(int refposindex);
@@ -1233,7 +1233,7 @@ public:
 	int GetChildCameraBoneAndNode(CBone* enullbone, CBone** ppbone, FbxNode** ppnode);
 
 	ChaMatrix Move2HipsPos(CFootRigDlg* srcfootrigdlg, int nextmotid, double nextframe);
-	ChaMatrix RotMocapWalk(double srcrot);
+	ChaMatrix RotMocapWalk(CFootRigDlg* srcfootrigdlg, double srcrot);
 
 private:
 	int InitParams();

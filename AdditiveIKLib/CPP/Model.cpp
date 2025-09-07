@@ -2730,7 +2730,7 @@ void CModel::BlendSaveBoneMotionReq(CBone* srcbone, float srcblend)
 }
 
 
-void CModel::UpdateModelWMFootRig(ChaMatrix newwm)
+void CModel::UpdateModelWMFootRig(CFootRigDlg* srcfootrigdlg, ChaMatrix newwm)
 {
 	ChaMatrix befwm = m_matWorld;
 
@@ -2742,7 +2742,8 @@ void CModel::UpdateModelWMFootRig(ChaMatrix newwm)
 	ChaVector3 newmodelpos = currentmodelpos + difftra;
 	SetModelPosition(newmodelpos);
 
-	m_matWorld = newwm;
+	//m_matWorld = newwm;
+	CalcModelWorldMatOnLoad(srcfootrigdlg);
 
 	UpdateModelWMFootRigReq(GetTopBone(false), newwm, befwm);
 }
@@ -22486,7 +22487,8 @@ void CModel::CalcModelWorldMatOnLoad(CFootRigDlg* srcfootrigdlg)
 	//2025/08/12
 	if (GetPostureParentFlag()) {
 		ChaMatrix postureParentMultMat = GetPostureParentMat();
-		worldmatonload = postureParentMultMat * worldmatonload;
+		//worldmatonload = postureParentMultMat * worldmatonload;
+		worldmatonload = worldmatonload * postureParentMultMat;//2025/09/07
 	}
 
 	//2024/09/09
@@ -24851,7 +24853,7 @@ ChaMatrix CModel::Move2HipsPos(CFootRigDlg* srcfootrigdlg, int nextmotid, double
 	
 	return wm;
 }
-ChaMatrix CModel::RotMocapWalk(double srcrot)
+ChaMatrix CModel::RotMocapWalk(CFootRigDlg* srcfootrigdlg, double srcrot)
 {
 	ChaMatrix wm = m_matWorld;
 	ChaVector3 savepos = ChaMatrixTraVec(wm);
@@ -24899,7 +24901,7 @@ ChaMatrix CModel::RotMocapWalk(double srcrot)
 
 
 
-	CalcModelWorldMatOnLoad(nullptr);
+	CalcModelWorldMatOnLoad(srcfootrigdlg);
 	wm = GetWorldMat(GETWM_MIXED);
 
 

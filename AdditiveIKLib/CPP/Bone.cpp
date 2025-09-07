@@ -1198,8 +1198,9 @@ void CBone::CalcPostureChildWorldMat(int limitdegflag, int srcmotid, double roun
 	if (GetParModel()) {
 		if (GetPostureChildModel()) {
 			if (GetPostureChildFlag() && GetPostureChildModel()->GetPostureParentFlag()) {
-				ChaMatrix posturemat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
-				//ChaMatrix modelworldmat = GetPostureChildModel()->GetWorldMat(GETWM_NO_POSTUREPARENT);
+				//ChaMatrix posturemat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
+				ChaMatrix posturemat = GetWorldMat(limitdegflag, srcmotid, roundingframe, nullptr);
+				////ChaMatrix modelworldmat = GetPostureChildModel()->GetWorldMat(GETWM_NO_POSTUREPARENT);
 				ChaMatrix posturerotmat = ChaMatrixRot(posturemat);
 
 				ChaVector3 postureoffset_position = GetPostureChildOffset_Position();
@@ -1217,10 +1218,12 @@ void CBone::CalcPostureChildWorldMat(int limitdegflag, int srcmotid, double roun
 				ChaMatrix posturemultmat = postureoffset_rotmat * postureoffset_tramat;
 
 				ChaMatrix newposturemat;
-				newposturemat = posturemultmat * posturemat;
+				newposturemat = posturemultmat * posturemat * GetParModel()->GetWorldMat(GETWM_MIXED);
 
-				GetPostureChildModel()->SetPostureParentMat(posturemultmat);
-				GetPostureChildModel()->SetWorldMat(newposturemat);
+				//GetPostureChildModel()->SetPostureParentMat(posturemultmat);
+				//GetPostureChildModel()->SetWorldMat(newposturemat);
+				GetPostureChildModel()->SetPostureParentMat(newposturemat);
+				GetPostureChildModel()->CalcModelWorldMatOnLoad(nullptr);//上に乗る方のmodel処理なのでfootrigdlgはnullptrで良い
 				GetPostureChildModel()->SetPostureParentFlag(true);
 			}
 			else {

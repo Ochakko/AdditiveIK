@@ -22,6 +22,7 @@ class OrgWinGUI::OWP_Separator;
 class OrgWinGUI::OWP_ScrollWnd;
 
 class CFootInfo;
+class CBone;
 
 enum {
 	FOOTRIG_LR_LEFT,
@@ -425,6 +426,8 @@ public:
 
 		return retdiff;
 	};
+
+	CBone* GetUpdateBoneForUpdateMatrix();
 	//float GetDiffBetweenLowerGPosAndFoot()
 	//{
 	//	float retdiff = 0.0f;

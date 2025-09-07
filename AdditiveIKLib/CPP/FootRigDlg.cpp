@@ -2278,6 +2278,18 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 			//		m_rightinfolabel->setName(strlabel);
 			//	}
 			//}
+
+			//2025/09/07
+			//RigConrtolFootRig()を呼び出したときも呼び出さなかった時にも　modelの高さが変わった場合にTopBoneからのUpdateMatrixが必要
+			//### どのボーンの上にchildmodelが乗っているかここではわからないので　TopBoneからのUpdateMatrixが必要 ###
+			ChaMatrix matWorld = srcmodel->GetWorldMat(GETWM_MIXED);
+			ChaMatrix matView = srcmodel->GetViewMat();
+			ChaMatrix matProj = srcmodel->GetProjMat();
+			//int refposindex = 0;
+			//srcmodel->UpdateMatrix(limitdegflag, &matWorld, &matView, &matProj, true, refposindex);
+			srcmodel->UpdateMatrixFootRigReq(false, limitdegflag,
+				srcmodel->GetTopBone(false), &matWorld, &matView, &matProj);
+
 		}
 		else {
 
@@ -2669,7 +2681,7 @@ ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diff
 	else {
 		modelwm3 = modelwm2;
 	}
-	srcmodel->UpdateModelWMFootRig(modelwm3);
+	srcmodel->UpdateModelWMFootRig(this, modelwm3);
 	retmat = modelwm3;
 
 	if (savewmflag) {
@@ -2832,6 +2844,12 @@ bool CFootInfo::IsHigherGPos(CFootInfo* cmpinfo)
 	}
 }
 
+CBone* CFootInfo::GetUpdateBoneForUpdateMatrix() {
+	m_updatebone = GetUpdateBone(m_toebasejoint->GetParModel(),
+		m_toebasejoint, m_rig, m_rigdir, &m_rignum);
+	return m_updatebone;
+};
+
 CBone* CFootInfo::GetUpdateBone(CModel* srcmodel, CBone* footbone, CUSTOMRIG footrig, int rigdir, int* prignum)
 {
 	//########################################
@@ -2953,7 +2971,7 @@ int CFootInfo::RigControlFootRigFunc(bool istoebase,
 	}
 
 
-	srcmodel->UpdateMatrixFootRigReq(istoebase, limitdegflag, m_updatebone, &modelwm, &matView, &matProj);//角度制限あり無し両方に　現状の姿勢を格納
+	//srcmodel->UpdateMatrixFootRigReq(istoebase, limitdegflag, m_updatebone, &modelwm, &matView, &matProj);//角度制限あり無し両方に　現状の姿勢を格納
 
 	return 0;
 }

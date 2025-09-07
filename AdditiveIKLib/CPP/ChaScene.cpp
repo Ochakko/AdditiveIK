@@ -218,6 +218,8 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* 
 
 		//m_totalupdatethreadsnum = 0;
 
+		vector<CModel*> posturechildmodel;
+
 		bool needwaitflag = false;
 		int modelnum = (int)m_modelindex.size();
 		int modelindex;
@@ -225,32 +227,56 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* 
 			CModel* curmodel = m_modelindex[modelindex].modelptr;
 			if (curmodel && (curmodel->GetGrassFlag() == false)) {
 
+				if (curmodel->GetPostureParentFlag()) {
+					posturechildmodel.push_back(curmodel);
+				}
+				else {
+					int curmotid = curmodel->GetCurrentMotID();
+					if (curmotid <= 0) {
+						int dbgflag1 = 1;
+					}
+
+					if (curmodel->ExistCurrentMotion() &&
+						((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false)))) {
+						curmodel->SetMotionFrame(srcframe);//refposの場合にも必要
+					}
+
+					if (curmodel->GetRefPosFlag() == false) {//2024/02/06
+						ChaMatrix wmat = curmodel->GetWorldMat();
+						curmodel->UpdateMatrix(limitdegflag, &wmat, vmat, pmat, needwaitflag, 0);// , updateslot);
+					}
+
+					//2023/11/03
+					//ここ(UpdateMatrixModels)でtotalupdatethreadsnumをセットすると
+					//UpdateMatrixModelsとRenderModelsの間で　OnDelModelを呼んだ場合にスレッド数が合わずに無限ループする
+					//よって　スレッド総数はWaitUpdateThreadsで調べてセットすることにした
+					//m_totalupdatethreadsnum += curmodel->GetThreadingUpdateMatrixNum();
+				}
+			}
+		}
+
+		//#########################################
+		//PostureParentFlagがTrueのモデルは後でUpdate
+		//#########################################
+		int posturechildnum = (int)posturechildmodel.size();
+		for (modelindex = 0; modelindex < posturechildnum; modelindex++) {
+			CModel* curmodel = posturechildmodel[modelindex];
+			if (curmodel) {
+
 				int curmotid = curmodel->GetCurrentMotID();
 				if (curmotid <= 0) {
 					int dbgflag1 = 1;
 				}
 
-				if (curmodel->ExistCurrentMotion() && 
+				if (curmodel->ExistCurrentMotion() &&
 					((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false)))) {
 					curmodel->SetMotionFrame(srcframe);//refposの場合にも必要
 				}
-
-				//if (m_footrigdlg && m_footrigdlg->IsEnableFootRig(curmodel)) {
-				//	//１回前のFootRig計算によるmodelworldmatの変更を元に戻す
-				//	curmodel->SetWorldMat(m_footrigdlg->GetSaveModelWM(curmodel));
-				//}
-
 
 				if (curmodel->GetRefPosFlag() == false) {//2024/02/06
 					ChaMatrix wmat = curmodel->GetWorldMat();
 					curmodel->UpdateMatrix(limitdegflag, &wmat, vmat, pmat, needwaitflag, 0);// , updateslot);
 				}
-
-				//2023/11/03
-				//ここ(UpdateMatrixModels)でtotalupdatethreadsnumをセットすると
-				//UpdateMatrixModelsとRenderModelsの間で　OnDelModelを呼んだ場合にスレッド数が合わずに無限ループする
-				//よって　スレッド総数はWaitUpdateThreadsで調べてセットすることにした
-				//m_totalupdatethreadsnum += curmodel->GetThreadingUpdateMatrixNum();
 			}
 		}
 
