@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/09/7
-　AdditiveIK 1.0.0.51 RC1(リリース候補1)
+　AdditiveIK 1.0.0.51 RC2(リリース候補2)
 　　1.0.0.50からの変更点
 　　　MOA2.0(モーションアクセラレータ)のBtSimu(bullet physics)対応
 　　　　MOAのダイアログにPlayBtボタンを追加.
@@ -31,7 +31,9 @@ https://github.com/Ochakko/AdditiveIK
 　　　　　eNull補足行列が施されたfbxをAdditiveIKで読み書きするとモーションが変質することがあった.
 　　　　　そのようなモデルに対しては改変無しでそのままAdditiveIKで読み込むこと推奨.
 　　　　　
-　　　　　
+　RC2:
+　　MocapWalkLoop修正：MOAのアナログスティックで回転時の回転の中心を修正
+　　FootRigとBtSimuの組み合わせが効いていなかったので修正
 
 2025/09/06
 　MOA2.0とFootRigとbulletシミュの組み合わせ再生が可能に.

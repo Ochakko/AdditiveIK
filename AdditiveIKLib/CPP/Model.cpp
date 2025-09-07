@@ -22487,8 +22487,8 @@ void CModel::CalcModelWorldMatOnLoad(CFootRigDlg* srcfootrigdlg)
 	//2025/08/12
 	if (GetPostureParentFlag()) {
 		ChaMatrix postureParentMultMat = GetPostureParentMat();
-		//worldmatonload = postureParentMultMat * worldmatonload;
-		worldmatonload = worldmatonload * postureParentMultMat;//2025/09/07
+		worldmatonload = postureParentMultMat * worldmatonload;
+		//worldmatonload = worldmatonload * postureParentMultMat;
 	}
 
 	//2024/09/09
@@ -24899,6 +24899,11 @@ ChaMatrix CModel::RotMocapWalk(CFootRigDlg* srcfootrigdlg, double srcrot)
 	newrotq.Q2EulXYZusingQ(true, false, nullptr, befeul, &newroteul, 1, 0, notmodify180flag);
 	SetModelRotation(newroteul);
 
+	//2025/09/07
+	ChaVector3 curmodelpos = GetModelPosition();
+	ChaVector3 diffmodelpos = ChaMatrixTraVec(wm) - savepos;
+	ChaVector3 newmodelpos = curmodelpos + diffmodelpos;
+	SetModelPosition(newmodelpos);
 
 
 	CalcModelWorldMatOnLoad(srcfootrigdlg);

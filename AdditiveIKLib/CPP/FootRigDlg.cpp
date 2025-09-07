@@ -2280,16 +2280,16 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 			//}
 
 			//2025/09/07
-			//RigConrtolFootRig()を呼び出したときも呼び出さなかった時にも　modelの高さが変わった場合にTopBoneからのUpdateMatrixが必要
-			//### どのボーンの上にchildmodelが乗っているかここではわからないので　TopBoneからのUpdateMatrixが必要 ###
 			ChaMatrix matWorld = srcmodel->GetWorldMat(GETWM_MIXED);
 			ChaMatrix matView = srcmodel->GetViewMat();
 			ChaMatrix matProj = srcmodel->GetProjMat();
-			//int refposindex = 0;
-			//srcmodel->UpdateMatrix(limitdegflag, &matWorld, &matView, &matProj, true, refposindex);
 			srcmodel->UpdateMatrixFootRigReq(false, limitdegflag,
-				srcmodel->GetTopBone(false), &matWorld, &matView, &matProj);
-
+				s_leftfootinfo->GetUpdateBoneForUpdateMatrix(), &matWorld, &matView, &matProj);
+			srcmodel->UpdateMatrixFootRigReq(false, limitdegflag,
+				s_rightfootinfo->GetUpdateBoneForUpdateMatrix(), &matWorld, &matView, &matProj);
+			//### どのボーンの上にchildmodelが乗っているかここではわからないので　TopBoneからのUpdateMatrixが必要 ###
+			int refposindex = 0;
+			srcmodel->UpdateMatrix(limitdegflag, &matWorld, &matView, &matProj, true, refposindex);
 		}
 		else {
 
