@@ -2379,8 +2379,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 	int curmotid = srcmodel->GetCurrentMotID();
 	double curframe = RoundingTime(srcmodel->GetCurrentFrame());//!!! RoundingTime
 
-	CBone* hipsjoint = nullptr;
-	srcmodel->GetHipsBoneReq(srcmodel->GetTopBone(), &hipsjoint);
+	CBone* hipsjoint = srcmodel->GetHipsBone();
 	if (hipsjoint) {
 		ChaVector3 hipsoffset;
 		hipsoffset.SetZeroVec3();

@@ -128,7 +128,7 @@ public:
 		bool onretarget, int reqflag,
 		CBone* bvhbone, int traflag, ChaVector3 traanim, double srcframe, int srcboneno,
 		CQuaternion rotq);
-	void GetHipsBoneReq(CModel* srcmodel, CBone* srcbone, CBone** dstppbone);
+	void GetHipsBoneReq(CModel* srcmodel, CBone* srcbone, CBone** dstppbone, CBone** ppfirstskeleton);
 	CBone* GetTopBone(CModel* srcmodel, bool excludenullflag);//default : excludenullflag = true
 	void GetTopBoneReq(CModel* srcmodel, CBone* srcbone, CBone** pptopbone, bool excludenullflag);
 

@@ -1234,7 +1234,7 @@ int CModel::LoadFBX(int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, cons
 	}
 	m_vroidjointname = false;
 	CheckVRoidJointNameReq(GetTopBone(false), &m_vroidjointname);
-
+	SetHipsBone();//2025/09/13
 
 	InitCameraFbx();
 	CreateFBXCameraReq(pRootNode);//CreateFBXBoneReqよりも後　cameranodeとcameraboneが対応付いてから呼ぶ
@@ -22464,10 +22464,19 @@ void CModel::CheckVRoidJointNameReq(CBone* srcbone, bool* dstflag)
 }
 
 
-void CModel::GetHipsBoneReq(CBone* srcbone, CBone** dstppbone)
+void CModel::SetHipsBone()
 {
+	if (GetNoBoneFlag() == true) {
+		m_hipsbone = nullptr;
+		return;
+	}
 	ChaCalcFunc chacalcfunc;
-	chacalcfunc.GetHipsBoneReq(this, srcbone, dstppbone);
+	CBone* firstskeleton = nullptr;
+	chacalcfunc.GetHipsBoneReq(this, GetTopBone(false), &m_hipsbone, &firstskeleton);
+	if (m_hipsbone == nullptr) {
+		//2025/09/13 hipsの名前のボーンが無い場合には　一番親のskeletonをhipsboneとする
+		m_hipsbone = firstskeleton;
+	}
 }
 
 void CModel::CalcModelWorldMatOnLoad(CFootRigDlg* srcfootrigdlg)
@@ -23941,7 +23950,7 @@ int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj
 				return 1;
 			}
 			else {
-				GetHipsBoneReq(modeltopbone, &modelhipsbone);
+				modelhipsbone = GetHipsBone();
 				if (modelhipsbone) {
 					modelbone = modelhipsbone;
 				}
@@ -23963,7 +23972,7 @@ int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj
 		CBone* befbvhbone = 0;
 		bvhtopbone = srcbvhmodel->GetTopBone();
 		if (bvhtopbone) {
-			srcbvhmodel->GetHipsBoneReq(bvhtopbone, &bvhhipsbone);
+			bvhhipsbone = srcbvhmodel->GetHipsBone();
 			if (bvhhipsbone) {
 				befbvhbone = bvhhipsbone;
 			}
@@ -24346,8 +24355,7 @@ ChaMatrix CModel::GetMatrixForChkInView(ChaMatrix matWorld)
 		chkmatworld = matWorld;
 	}
 	else {
-		CBone* hipsbone = nullptr;
-		GetHipsBoneReq(GetTopBone(), &hipsbone);
+		CBone* hipsbone = GetHipsBone();
 		if (hipsbone) {
 			int currentmotid = GetCurrentMotID();
 			if (currentmotid > 0) {
@@ -24803,8 +24811,7 @@ ChaMatrix CModel::Move2HipsPos(CFootRigDlg* srcfootrigdlg, int nextmotid, double
 	ChaVector3 savepos = GetModelPosition();//2025/08/31
 
 
-	CBone* hipsbone = nullptr;
-	GetHipsBoneReq(GetTopBone(false), &hipsbone);
+	CBone* hipsbone = GetHipsBone();
 	if (!hipsbone) {
 		return wm;
 	}
@@ -24858,8 +24865,7 @@ ChaMatrix CModel::RotMocapWalk(CFootRigDlg* srcfootrigdlg, double srcrot)
 	ChaMatrix wm = m_matWorld;
 	ChaVector3 savepos = ChaMatrixTraVec(wm);
 
-	CBone* hipsbone = nullptr;
-	GetHipsBoneReq(GetTopBone(false), &hipsbone);
+	CBone* hipsbone = GetHipsBone();
 	if (!hipsbone) {
 		return wm;
 	}

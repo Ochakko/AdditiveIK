@@ -1836,7 +1836,13 @@ public: //accesser
 	//	return m_topbone;
 	//};
 	CBone* GetRootBone();
-	void GetHipsBoneReq(CBone* srcbone, CBone** dstppbone);
+	
+	//void GetHipsBoneReq(CBone* srcbone, CBone** dstppbone);//SetHipsBone()で階層を探してhipsboneをセット、GetHipsBone()でhipsboneを取得という方法に変更
+	void SetHipsBone();//HipsBoneを探してm_hipsboneにセット
+	CBone* GetHipsBone() {
+		//SetHipsBone()でセットしたm_hipsboneを返す
+		return m_hipsbone;
+	};
 	bool IncludeRootOrReference(FbxNode* ptopnode);
 	void GetRootOrReferenceReq(FbxNode* srcnode, FbxNode** dstppnode);
 	void CheckVRoidJointNameReq(CBone* srcbone, bool* dstflag);
@@ -3662,7 +3668,7 @@ private:
 	CBtObject* m_topbt;//一番親のbullet剛体オブジェクト。
 	std::vector<CBtObject*> m_btovec;//2024/06/16 処理高速化のために　skipflagが0のbtoのvectorを用意　1000個を越えるノードがある場合などに有効
 	//float m_btgscale;//bulletの重力に掛け算するスケール。--> m_rigideleminfoのbtgscaleに移動。
-
+	CBone* m_hipsbone;//SetHipsBone()でセット, GetHipsBone()で取得.
 
 	CThreadingUpdateMatrix* m_boneupdatematrix;
 	CThreadingLoadFbx* m_LoadFbxAnim;

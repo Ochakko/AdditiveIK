@@ -3352,7 +3352,7 @@ int CMQOObject::ChkInView(ChaMatrix matWorld, ChaMatrix matVP, int refposindex)
 			//hipsが大きく移動すると　視野外になる不具合への対応
 			//hipsのworldmatを考慮する
 			// 
-			//GetHipsBone()はclisterの最初のボーンを親方向へさかのぼって探す
+			//GetHipsBone()はclusterの最初のボーンを親方向へさかのぼって探す
 			//##################################################################
 
 			CBone* hipsbone = GetHipsBone();
@@ -3475,15 +3475,22 @@ CBone* CMQOObject::GetHipsBone()
 		firstbone = 0;
 	}
 
+	CBone* firstskeleton = nullptr;
 	CBone* chkbone = firstbone;
 	while (chkbone) {
 		if (chkbone->IsHipsBone()) {
 			hipsbone = chkbone;
 			break;
 		}
+		if (chkbone->IsSkeleton() && !chkbone->GetENullConvertFlag()) {
+			firstskeleton = chkbone;//2025/09/13
+		}
 		chkbone = chkbone->GetParent(false);
 	}
 
+	if (hipsbone == nullptr) {
+		hipsbone = firstskeleton;//2025/09/13
+	}
 	return hipsbone;
 }
 

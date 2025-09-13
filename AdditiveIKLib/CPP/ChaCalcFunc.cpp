@@ -4015,7 +4015,7 @@ int ChaCalcFunc::ConvBoneRotation(CModel* srcmodel, CModel* srcbvhmodel, int sel
 			CBone* modeltopbone = srcmodel->GetTopBone();
 			CBone* modelhipsbone = 0;
 			if (modeltopbone) {
-				srcmodel->GetHipsBoneReq(modeltopbone, &modelhipsbone);
+				modelhipsbone = srcmodel->GetHipsBone();
 				if (modelhipsbone) {
 					modelfirstbone = modelhipsbone;
 				}
@@ -4028,7 +4028,7 @@ int ChaCalcFunc::ConvBoneRotation(CModel* srcmodel, CModel* srcbvhmodel, int sel
 			CBone* bvhtopbone = srcbvhmodel->GetTopBone();
 			CBone* bvhhipsbone = 0;
 			if (bvhtopbone) {
-				srcbvhmodel->GetHipsBoneReq(bvhtopbone, &bvhhipsbone);
+				bvhhipsbone = srcbvhmodel->GetHipsBone();
 				if (bvhhipsbone) {
 					bvhfirstbone = bvhhipsbone;
 				}
@@ -4353,7 +4353,7 @@ void ChaCalcFunc::GetTopBoneReq(CModel* srcmodel, CBone* srcbone, CBone** pptopb
 
 
 
-void ChaCalcFunc::GetHipsBoneReq(CModel* srcmodel, CBone* srcbone, CBone** dstppbone)
+void ChaCalcFunc::GetHipsBoneReq(CModel* srcmodel, CBone* srcbone, CBone** dstppbone, CBone** ppfirstskeleton)
 {
 	if (!srcmodel) {
 		return;
@@ -4364,6 +4364,12 @@ void ChaCalcFunc::GetHipsBoneReq(CModel* srcmodel, CBone* srcbone, CBone** dstpp
 		return;
 	}
 
+	if (srcbone && ppfirstskeleton && !(*ppfirstskeleton)) {
+		if (srcbone->IsSkeleton() && !srcbone->GetENullConvertFlag()) {
+			//2025/09/13 hipsの名前のボーンが無い場合のために　一番親のSkeletonを保存
+			*ppfirstskeleton = srcbone;
+		}
+	}
 
 	if (srcbone && dstppbone && !(*dstppbone)) {
 
@@ -4374,10 +4380,10 @@ void ChaCalcFunc::GetHipsBoneReq(CModel* srcmodel, CBone* srcbone, CBone** dstpp
 
 		if (!(*dstppbone)) {
 			if (srcbone->GetBrother(false)) {
-				GetHipsBoneReq(srcmodel, srcbone->GetBrother(false), dstppbone);
+				GetHipsBoneReq(srcmodel, srcbone->GetBrother(false), dstppbone, ppfirstskeleton);
 			}
 			if (srcbone->GetChild(false)) {
-				GetHipsBoneReq(srcmodel, srcbone->GetChild(false), dstppbone);
+				GetHipsBoneReq(srcmodel, srcbone->GetChild(false), dstppbone, ppfirstskeleton);
 			}
 		}
 	}
