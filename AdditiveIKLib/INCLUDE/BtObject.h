@@ -5,7 +5,7 @@
 #include <wchar.h>
 #include <Coef.h>
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 #include <ConstraintElem.h>

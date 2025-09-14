@@ -166,8 +166,8 @@ int CMQOFile::LoadMQOFile_aft( float multiple, ChaVector3 offsetpos, ChaVector3 
 	m_state = BEGIN_FINDCHUNK;
 
 	while( m_state != BEGIN_FINISH ){
-		//map<int, CMQOMaterial*> curmaterial;
-		//map<int, CMQOObject*> curobject;
+		//unordered_map<int, CMQOMaterial*> curmaterial;
+		//unordered_map<int, CMQOObject*> curobject;
 
 		switch( m_state ){
 		case BEGIN_FINDCHUNK:
@@ -265,7 +265,7 @@ int CMQOFile::LoadMQOFile_aft( float multiple, ChaVector3 offsetpos, ChaVector3 
 	CallF(m_modelptr->AddDefMaterialIfEmpty(), return 1);
 
 
-	//map<int, CMQOObject*> curobject;
+	//unordered_map<int, CMQOObject*> curobject;
 	//m_modelptr->GetMqoObject2( curobject );
 	CallF( Multiple(), return 1 );
 
@@ -1124,7 +1124,7 @@ int CMQOFile::ReadFace( MQOSTATE* nextstate )
 
 int CMQOFile::Multiple()
 {
-	map<int,CMQOObject*>::iterator itr;
+	unordered_map<int,CMQOObject*>::iterator itr;
 	for( itr = m_modelptr->GetMqoObjectBegin(); itr != m_modelptr->GetMqoObjectEnd(); itr++ ){
 		CMQOObject* curobj = itr->second;
 		if( curobj ){

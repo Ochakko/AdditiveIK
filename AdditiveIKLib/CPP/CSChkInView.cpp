@@ -44,7 +44,7 @@
 
 
 
-#include <map>
+#include <unordered_map>
 #include <algorithm>
 #include <iostream>
 #include <iterator>
@@ -366,7 +366,7 @@ CSInView CSChkInView::GetResultOfChkInView(CMQOObject* srcobj)
 		if (srcobj) {
 			CSInView* outputData = (CSInView*)m_outputChkInViewSB.GetResourceOnCPU();
 			if (outputData) {
-				map<CMQOObject*, int>::iterator itrindex;
+				unordered_map<CMQOObject*, int>::iterator itrindex;
 				itrindex = m_indexmap.find(srcobj);
 				if (itrindex != m_indexmap.end()) {
 					int dataIndex = itrindex->second;

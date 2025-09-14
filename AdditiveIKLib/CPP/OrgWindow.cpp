@@ -5,7 +5,7 @@
 
 #include <windows.h>
 #include <list>
-#include <map>
+#include <unordered_map>
 
 #include "GlobalVar.h"
 #include "ColDlg.h"
@@ -2497,7 +2497,7 @@ namespace OrgWinGUI{
 	////////////////////////// MemberVar /////////////////////////////
 
 	//	MemberVar : ウィンドウハンドルとOrgWindowインスタンスポインタの対応マップ
-	map<HWND,OrgWindow*> OrgWindow::hWndAndClassMap;
+	unordered_map<HWND,OrgWindow*> OrgWindow::hWndAndClassMap;
 
 	//////////////////////////// Method //////////////////////////////
 
@@ -2505,7 +2505,7 @@ namespace OrgWinGUI{
 	//	Method : ウィンドウプロシージャ
 	//
 	LRESULT CALLBACK OrgWindow::wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam){
-		map<HWND,OrgWindow*>::iterator owItr;
+		unordered_map<HWND,OrgWindow*>::iterator owItr;
 		owItr= hWndAndClassMap.find(hwnd);
 		if( owItr==hWndAndClassMap.end() ){
 			//if (message != WM_SETCURSOR) {

@@ -158,7 +158,7 @@ int CImpulseDlg::SetPosAndSize(int srcposx, int srcposy, int srcsizex, int srcsi
 //}
 
 
-void CImpulseDlg::SetModel(CModel* srcmodel, int srccurboneno, std::map<CModel*, int> srcrgdindexmap)
+void CImpulseDlg::SetModel(CModel* srcmodel, int srccurboneno, std::unordered_map<CModel*, int> srcrgdindexmap)
 {
 	m_model = srcmodel;
 	m_curboneno = srccurboneno;

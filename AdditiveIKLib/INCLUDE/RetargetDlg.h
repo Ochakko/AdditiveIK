@@ -10,7 +10,7 @@
 
 #include <vector>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 class OrgWinGUI::OrgWindow;
 class OrgWinGUI::OWP_ComboBoxA;
@@ -111,11 +111,11 @@ public:
 	{
 		m_bvhbone_bonenomap[bvhcbno] = boneno;//2024/07/07 メニューのインデックス-->ボーン番号　変換表
 	};
-	void GetRetargetConvBoneMap(std::map<CBone*, CBone*>& dstmap)
+	void GetRetargetConvBoneMap(std::unordered_map<CBone*, CBone*>& dstmap)
 	{
 		dstmap = m_convbonemap;
 	};
-	void SetRetargetConvBoneMap(std::map<CBone*, CBone*> srcmap)
+	void SetRetargetConvBoneMap(std::unordered_map<CBone*, CBone*> srcmap)
 	{
 		m_convbonemap = srcmap;
 	};
@@ -135,8 +135,8 @@ private:
 	//int m_maxboneno;
 	CBone* m_modelbone_bone[MAXBONENUM];
 	CBone* m_bvhbone_bone[MAXBONENUM];
-	std::map<CBone*, CBone*> m_convbonemap;
-	std::map<int, int> m_bvhbone_bonenomap;//<メニューインデックス, ボーン番号>  eNullなどは除外してm_bvhbone_boneにセットする
+	std::unordered_map<CBone*, CBone*> m_convbonemap;
+	std::unordered_map<int, int> m_bvhbone_bonenomap;//<メニューインデックス, ボーン番号>  eNullなどは除外してm_bvhbone_boneにセットする
 	int m_bvhbone_cbno;
 	bool m_closeconvboneFlag;
 	bool m_retargetguiFlag;

@@ -873,7 +873,7 @@ static int s_opedispmodelcnt = -1;
 static bool s_nowloading = true;
 static void OnRenderNowLoading();
 
-extern map<CModel*, int> g_bonecntmap;
+extern unordered_map<CModel*, int> g_bonecntmap;
 extern int gNumIslands;
 extern void InitCustomRig(CUSTOMRIG* dstcr, CBone* parentbone, int rigno);
 extern int IsValidCustomRig(CModel* srcmodel, CUSTOMRIG srccr, CBone* parentbone);
@@ -949,7 +949,7 @@ static CBone* s_customrigbone = 0;
 static int s_customrigno = 0;
 static int s_tooltipdispcount = 0;
 static size_t s_tooltiplen = 0;
-static map<int, int> s_customrigmenuindex;
+static unordered_map<int, int> s_customrigmenuindex;
 
 static int s_forcenewaxis = 0;
 static int s_doneinit = 0;
@@ -973,7 +973,7 @@ static int s_savemotionbrush_frameleng;
 static float s_selectscale = 1.0f;
 //static int s_sethipstra = 0;
 //static CFrameCopyDlg s_selbonedlg;
-static map<CModel*, CFrameCopyDlg*> s_selbonedlgmap;
+static unordered_map<CModel*, CFrameCopyDlg*> s_selbonedlgmap;
 static bool s_allmodelbone = false;
 
 static std::vector<HISTORYELEM> s_cptfilename;
@@ -1112,10 +1112,10 @@ static vector<TLELEM> s_tlarray;
 //static int s_curreindex = -1;
 //static int s_rgdindex = -1;
 	//each character each param //2021/03/18 
-static map<CModel*, int> s_motmenuindexmap;
-static map<CModel*, int> s_cameramenuindexmap;
-static map<CModel*, int> s_reindexmap;
-static map<CModel*, int> s_rgdindexmap;
+static unordered_map<CModel*, int> s_motmenuindexmap;
+static unordered_map<CModel*, int> s_cameramenuindexmap;
+static unordered_map<CModel*, int> s_reindexmap;
+static unordered_map<CModel*, int> s_rgdindexmap;
 
 
 static HWND		s_3dwnd = 0;
@@ -1479,7 +1479,7 @@ static float s_removegrassdistance = 50.0f;
 static double s_keyShiftTime = 0.0;			// キー移動量
 static list<KeyInfo> s_copyKeyInfoList;	// コピーされたキー情報リスト
 
-//static multimap<CBone*, CMotionPoint> s_copymotmap;
+//static multiunordered_map<CBone*, CMotionPoint> s_copymotmap;
 typedef struct tag_cpelem
 {
 	CBone* bone;
@@ -1803,8 +1803,8 @@ static WindowPos s_camerapanelpos;
 
 
 
-static map<int, int> s_lineno2boneno;
-static map<int, int> s_boneno2lineno;
+static unordered_map<int, int> s_lineno2boneno;
+static unordered_map<int, int> s_boneno2lineno;
 
 //static ChaScene* g_chascene = 0;
 //static vector<MODELELEM> s_modelindex;
@@ -5497,7 +5497,7 @@ void OnDestroyDevice()
 	s_oprigflag = 0;
 	s_customrigbone = 0;
 
-	map<CModel*, CFrameCopyDlg*>::iterator itrcpdlg;
+	unordered_map<CModel*, CFrameCopyDlg*>::iterator itrcpdlg;
 	for (itrcpdlg = s_selbonedlgmap.begin(); itrcpdlg != s_selbonedlgmap.end(); itrcpdlg++) {
 		CFrameCopyDlg* curcpdlg = itrcpdlg->second;
 		if (curcpdlg) {
@@ -7012,7 +7012,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		////if (g_retargetbatchflag == 0) {
 		//if (GetCurrentModel() && s_convbone_bvh) {
-		//	map<int, CBone*>::iterator itrbone;
+		//	unordered_map<int, CBone*>::iterator itrbone;
 		//	for (itrbone = s_convbone_bvh->GetBoneListBegin(); itrbone != s_convbone_bvh->GetBoneListEnd(); itrbone++) {
 		//		CBone* curbone = itrbone->second;
 		//		if (curbone) {
@@ -10498,7 +10498,7 @@ CModel* OpenMQOFile()
 	//   CDXUTComboBox* pComboBox = g_SampleUI.GetComboBox( IDC_COMBO_BONE );
 	   //pComboBox->RemoveAllItems();
 
-	   //map<int, CBone*>::iterator itrbone;
+	   //unordered_map<int, CBone*>::iterator itrbone;
 	   //for( itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++ ){
 	   //	ULONG boneno = (ULONG)itrbone->first;
 	   //	CBone* curbone = itrbone->second;
@@ -10820,7 +10820,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	//   CDXUTComboBox* pComboBox = g_SampleUI.GetComboBox( IDC_COMBO_BONE );
 	   //pComboBox->RemoveAllItems();
 
-	   //map<int, CBone*>::iterator itrbone;
+	   //unordered_map<int, CBone*>::iterator itrbone;
 	   //for( itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++ ){
 	   //	ULONG boneno = (ULONG)itrbone->first;
 	   //	CBone* curbone = itrbone->second;
@@ -12189,7 +12189,7 @@ void refreshTimeline(OWP_Timeline& timeline)
  //   CDXUTComboBox* pComboBox = g_SampleUI.GetComboBox( IDC_COMBO_BONE );
 	//pComboBox->RemoveAllItems();
 	//if( GetCurrentModel() ){
-	//	map<int, CBone*>::iterator itrbone;
+	//	unordered_map<int, CBone*>::iterator itrbone;
 	//	for( itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++ ){
 	//		ULONG boneno = (ULONG)itrbone->first;
 	//		CBone* opebone = itrbone->second;
@@ -13870,7 +13870,7 @@ int refreshModelPanel()
 	}
 
 	if (objnum > 0) {
-		map<int, CMQOObject*>::iterator itrobj;
+		unordered_map<int, CMQOObject*>::iterator itrobj;
 		for (itrobj = GetCurrentModel()->GetMqoObjectBegin(); itrobj != GetCurrentModel()->GetMqoObjectEnd(); itrobj++) {
 			CMQOObject* curobj = itrobj->second;
 			WCHAR wname[256];
@@ -14153,7 +14153,7 @@ CFrameCopyDlg* GetCurrentFrameCopyDlg(bool cameraflag)
 	}
 
 	CFrameCopyDlg* curcpdlg = 0;
-	map<CModel*, CFrameCopyDlg*>::iterator itrfinddlg;
+	unordered_map<CModel*, CFrameCopyDlg*>::iterator itrfinddlg;
 	itrfinddlg = s_selbonedlgmap.find(srcmodel);
 	if (itrfinddlg == s_selbonedlgmap.end()) {
 		return 0;
@@ -14356,7 +14356,7 @@ int RenderRigMarkFunc(myRenderer::RenderingEngine* re, RenderContext* pRenderCon
 		//double curframe = GetCurrentModel()->GetCurrentFrame();
 		double renderframe = GetCurrentModel()->GetRenderSlotFrame();//2024/03/29 表示用スロットのフレーム
 
-		std::map<int, CBone*>::iterator itrbone;
+		std::unordered_map<int, CBone*>::iterator itrbone;
 		for (itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++) {
 			CBone* curbone = (CBone*)itrbone->second;
 			if (curbone && (curbone->IsSkeleton())) {
@@ -18099,7 +18099,7 @@ int SetConvBone(int cbno)
 
 	int bvhcbno = 0;
 	int maxboneno = 0;
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = s_retargetdlg.GetRetargetBvh()->GetBoneListBegin(); 
 		itrbone != s_retargetdlg.GetRetargetBvh()->GetBoneListEnd(); itrbone++) {
 		CBone* curbone = itrbone->second;
@@ -18314,7 +18314,7 @@ int SaveRetargetFile()
 
 		MoveMemory(savepath, g_tmpmqopath, sizeof(WCHAR) * MAX_PATH);//MULTIPATHではない
 
-		std::map<CBone*, CBone*> convbonemap;
+		std::unordered_map<CBone*, CBone*> convbonemap;
 		s_retargetdlg.GetRetargetConvBoneMap(convbonemap);
 
 		CRetargetFile rtgfile;
@@ -18418,7 +18418,7 @@ int LoadRetargetFile(WCHAR* srcfilename)
 
 		//rtgファイルを読み込む
 		CRetargetFile rtgfile;
-		std::map<CBone*, CBone*> convbonemap;
+		std::unordered_map<CBone*, CBone*> convbonemap;
 		result = rtgfile.LoadRetargetFile(g_tmpmqopath, 
 			s_retargetdlg.GetRetargetModel(), s_retargetdlg.GetRetargetBvh(), convbonemap);
 		if (result == 0) {
@@ -18464,7 +18464,7 @@ int LoadRetargetFile(WCHAR* srcfilename)
 		//バッチからも呼ばれる
 
 		CRetargetFile rtgfile;
-		std::map<CBone*, CBone*> convbonemap;
+		std::unordered_map<CBone*, CBone*> convbonemap;
 		result = rtgfile.LoadRetargetFile(srcfilename,
 			s_retargetdlg.GetRetargetModel(), s_retargetdlg.GetRetargetBvh(), convbonemap);
 		if (result == 0) {
@@ -18524,7 +18524,7 @@ int RetargetMotion()
 	//OnChangeModel(s_convbone_model, forceflag, callundo);
 
 
-	std::map<CBone*, CBone*> convbonemap;
+	std::unordered_map<CBone*, CBone*> convbonemap;
 	s_retargetdlg.GetRetargetConvBoneMap(convbonemap);
 	if (convbonemap.empty()) {
 		_ASSERT(0);
@@ -23231,7 +23231,7 @@ int SetTimelineMark()
 
 //	s_owpTimeline->deleteKey();
 
-	//map<int,CBone*>::iterator itrbone;
+	//unordered_map<int,CBone*>::iterator itrbone;
 	//for( itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++ ){
 	//	CBone* curbone = itrbone->second;
 	//	if( curbone ){
@@ -23248,16 +23248,16 @@ int SetTimelineMark()
 	//	}
 	//}
 
-	//map<int, CBone*>::iterator itrbone;
+	//unordered_map<int, CBone*>::iterator itrbone;
 	//for( itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++ ){
 	//	CBone* curbone = itrbone->second;
 	//	if( curbone ){
 	//		int curlineno = s_boneno2lineno[ curbone->GetBoneNo() ];
 	//		if( curlineno >= 0 ){
-	//			map<int, map<double, int>>::iterator itrcur;
+	//			unordered_map<int, unordered_map<double, int>>::iterator itrcur;
 	//			itrcur = curbone->FindMotMarkOfMap( GetCurrentModel()->GetCurMotInfo()->motid );
 	//			if( itrcur != curbone->GetMotMarkOfMapBegin() ){
-	//				map<double, int>::iterator itrmark;
+	//				unordered_map<double, int>::iterator itrmark;
 	//				for( itrmark = itrcur->second.begin(); itrmark != itrcur->second.end(); itrmark++ ){
 	//					double curframe = itrmark->first;
 	//					s_owpTimeline->newKey( curbone->GetWBoneName(), curframe, 0 );
@@ -34239,7 +34239,7 @@ int SetRigRigCombo(HWND hDlgWnd, int elemno)
 
 		CBone* rigrigbone = GetCurrentModel()->GetBoneByID(currigelem.rigrigboneno);
 		CBone* currigrigbone;
-		map<int, CBone*>::iterator itrcurrigrigbone;
+		unordered_map<int, CBone*>::iterator itrcurrigrigbone;
 		for (itrcurrigrigbone = GetCurrentModel()->GetBoneListBegin(); itrcurrigrigbone != GetCurrentModel()->GetBoneListEnd(); itrcurrigrigbone++) {
 			currigrigbone = itrcurrigrigbone->second;
 			if (currigrigbone && (currigrigbone->IsSkeleton())) {
@@ -41412,7 +41412,7 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 		int curmotid = GetCurrentModel()->GetCurrentMotID();
 		double curframe = GetCurrentModel()->GetCurrentFrame();
 
-		std::map<int, CBone*>::iterator itrbone;
+		std::unordered_map<int, CBone*>::iterator itrbone;
 		for (itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++) {
 			CBone* curbone = (CBone*)itrbone->second;
 			if (curbone && (curbone->IsSkeleton())) {
@@ -41898,7 +41898,7 @@ int SetTimelineHasRigFlag()
 	}
 
 
-	std::map<int, CBone*>::iterator itrbone;
+	std::unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = GetCurrentModel()->GetBoneListBegin(); itrbone != GetCurrentModel()->GetBoneListEnd(); itrbone++) {
 		CBone* curbone = (CBone*)itrbone->second;
 		if (curbone && (curbone->IsSkeleton())) {

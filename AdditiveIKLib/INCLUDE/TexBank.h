@@ -4,7 +4,7 @@
 //#include <d3dx9.h>
 #include <ChaVecCalc.h>
 #include <wchar.h>
-#include <map>
+#include <unordered_map>
 //using namespace std;
 
 
@@ -49,9 +49,9 @@ private:
 private:
 	ID3D12Device* m_pdev;
 
-	std::map<int, CTexElem*> m_texmap;
+	std::unordered_map<int, CTexElem*> m_texmap;
 	//using TexElemPtr = std::unique_ptr<CTexElem>;
-	//std::map<int, TexElemPtr> m_texmap;
+	//std::unordered_map<int, TexElemPtr> m_texmap;
 
 };
 #endif

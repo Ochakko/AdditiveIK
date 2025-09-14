@@ -20,7 +20,7 @@
 
 #define DBGH
 #include <dbg.h>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 using namespace std;

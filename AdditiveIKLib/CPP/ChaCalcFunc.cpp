@@ -209,7 +209,7 @@ int ChaCalcFunc::GetBefNextMP(CBone* srcbone, int srcmotid, double srcframe, CMo
 	CMotionPoint* pbef = 0;
 	//CMotionPoint* pcur = m_motionkey[srcmotid -1];
 	CMotionPoint* pcur = 0;
-	//std::map<int, std::vector<CMotionPoint*>>::iterator itrvecmpmap;
+	//std::unordered_map<int, std::vector<CMotionPoint*>>::iterator itrvecmpmap;
 
 
 	int curframeindex = IntTime(srcframe);
@@ -1796,7 +1796,7 @@ int ChaCalcFunc::CalcBoneEul(CModel* srcmodel, bool limitdegflag, int srcmotid)
 	}
 
 	if (srcmotid >= 0) {
-		map<int, CBone*>::iterator itrbone;
+		unordered_map<int, CBone*>::iterator itrbone;
 		for (itrbone = srcmodel->GetBoneListBegin(); itrbone != srcmodel->GetBoneListEnd(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			if (curbone) {
@@ -3869,7 +3869,7 @@ int ChaCalcFunc::Motion2Bt(CModel* srcmodel, bool limitdegflag, double nextframe
 
 
 void ChaCalcFunc::RetargetReq(CModel* srcmodel, CModel* srcbvhmodel, CBone* modelbone,
-	double srcframe, CBone* befbvhbone, float hrate, std::map<CBone*, CBone*>& sconvbonemap)
+	double srcframe, CBone* befbvhbone, float hrate, std::unordered_map<CBone*, CBone*>& sconvbonemap)
 {
 	if (!srcmodel || !srcbvhmodel) {
 		return;

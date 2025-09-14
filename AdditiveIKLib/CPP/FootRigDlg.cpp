@@ -25,7 +25,9 @@ using namespace OrgWinGUI;
 
 //#define FOOTRIGPICKHEIGHT	1000.0f
 //2025/08/30 1000-->500
-#define FOOTRIGPICKHEIGHT	500.0f
+//#define FOOTRIGPICKHEIGHT	500.0f
+//2025/09/14 500->250
+#define FOOTRIGPICKHEIGHT	250.0f
 
 //位置補正のトリガーを少し緩めるために使用
 //#define ROUNDINGPOS	2.0f
@@ -510,7 +512,7 @@ int CFootRigDlg::SetModel(ChaScene* srcchascene, CModel* srcmodel)
 	if (m_model && m_chascene) {
 		int mindex = m_chascene->FindModelIndex(m_model);//削除されていないことを確認
 		if (mindex >= 0) {
-			std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+			std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 			itrelem = m_footrigelem.find(m_model);
 			if (itrelem == m_footrigelem.end()) {
 				FOOTRIGELEM newfootelem;
@@ -557,7 +559,7 @@ int CFootRigDlg::SetEditedRig(CModel* srcmodel, CBone* srcrigbone, CUSTOMRIG upd
 
 	CBone* rigbone[2] = { nullptr, nullptr };
 	CUSTOMRIG customrig[2];
-	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+	std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 	itrelem = m_footrigelem.find(m_model);
 	if (itrelem != m_footrigelem.end()) {
 
@@ -1181,7 +1183,7 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_gpuChk->setButtonListener([=, this]() {
 			bool value = m_gpuChk->getValue();
 			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
 					itrelem->second.gpucollision = value;
@@ -1207,7 +1209,7 @@ int CFootRigDlg::CreateFootRigWnd()
 			if ((comboid >= 1) && m_chascene && m_model) {
 				MODELELEM gmodelelem = m_chascene->GetModelElem(comboid - 1);
 				if (gmodelelem.modelptr) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.groundmodel = gmodelelem.modelptr;
@@ -1226,14 +1228,14 @@ int CFootRigDlg::CreateFootRigWnd()
 				string curcombo = m_leftfootBoneCombo->getSelectedComboStr();
 				CBone* curbone = m_model->GetBoneByName(curcombo);
 				if (curbone) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.leftfootbone = curbone;
 					}
 				}
 				else {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.leftfootbone = nullptr;
@@ -1249,7 +1251,7 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_leftrigCombo->setButtonListener([=, this]() {
 			int comboid = m_leftrigCombo->trackPopUpMenu();
 			if ((comboid >= 1) && m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
 					CBone* curbone = itrelem->second.leftfootbone;
@@ -1271,7 +1273,7 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_leftdirCombo->setButtonListener([=, this]() {
 			int comboid = m_leftdirCombo->trackPopUpMenu();
 			if ((comboid >= 0) && m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
 					itrelem->second.leftdir = comboid;
@@ -1293,14 +1295,14 @@ int CFootRigDlg::CreateFootRigWnd()
 				string curcombo = m_rightfootBoneCombo->getSelectedComboStr();
 				CBone* curbone = m_model->GetBoneByName(curcombo);
 				if (curbone) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.rightfootbone = curbone;
 					}
 				}
 				else {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.rightfootbone = nullptr;
@@ -1316,7 +1318,7 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_rightrigCombo->setButtonListener([=, this]() {
 			int comboid = m_rightrigCombo->trackPopUpMenu();
 			if ((comboid >= 1) && m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
 					CBone* curbone = itrelem->second.rightfootbone;
@@ -1338,7 +1340,7 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_rightdirCombo->setButtonListener([=, this]() {
 			int comboid = m_rightdirCombo->trackPopUpMenu();
 			if ((comboid >= 0) && m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
 					itrelem->second.rightdir = comboid;
@@ -1358,7 +1360,7 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_enableChk->setButtonListener([=, this]() {
 			bool value = m_enableChk->getValue();
 			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
 					itrelem->second.enablefootrig = value;
@@ -1381,7 +1383,7 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_wmblendSlider->setCursorListener([=, this]() {
 			float value = (float)m_wmblendSlider->getValue();
 			if (m_model) {
-				std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
 					itrelem->second.wmblend = value;
@@ -1431,7 +1433,7 @@ int CFootRigDlg::ParamsToDlg()
 
 		FOOTRIGELEM curfootrigelem;
 		curfootrigelem.Init();
-		std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+		std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 		itrelem = m_footrigelem.find(m_model);
 		if (itrelem != m_footrigelem.end()) {
 			curfootrigelem = itrelem->second;
@@ -1485,11 +1487,10 @@ int CFootRigDlg::ParamsToDlg()
 			m_leftfootBoneCombo->addString("   ");//先頭項目は未設定
 			if (m_model) {
 				int findselectedbone = -1;
-				int bonenum = m_model->GetBoneListSize();
-				int boneindex;
 				int addindex = 0;
-				for (boneindex = 0; boneindex < bonenum; boneindex++) {
-					CBone* curbone = m_model->GetBoneByZeroBaseIndex(boneindex);
+				std::unordered_map<int, CBone*>::iterator itrbone;
+				for (itrbone = m_model->GetBoneListBegin(); itrbone != m_model->GetBoneListEnd(); itrbone++) {
+					CBone* curbone = itrbone->second;
 					if (curbone && curbone->IsSkeleton()) {
 						m_leftfootBoneCombo->addString(curbone->GetBoneName());
 						if (curfootrigelem.leftfootbone == curbone) {
@@ -1501,6 +1502,24 @@ int CFootRigDlg::ParamsToDlg()
 				if (findselectedbone >= 0) {
 					m_leftfootBoneCombo->setSelectedCombo(findselectedbone + 1);
 				}
+
+				//int findselectedbone = -1;
+				//int bonenum = m_model->GetBoneListSize();
+				//int boneindex;
+				//int addindex = 0;
+				//for (boneindex = 0; boneindex < bonenum; boneindex++) {
+				//	CBone* curbone = m_model->GetBoneByZeroBaseIndex(boneindex);
+				//	if (curbone && curbone->IsSkeleton()) {
+				//		m_leftfootBoneCombo->addString(curbone->GetBoneName());
+				//		if (curfootrigelem.leftfootbone == curbone) {
+				//			findselectedbone = addindex;
+				//		}
+				//		addindex++;
+				//	}
+				//}
+				//if (findselectedbone >= 0) {
+				//	m_leftfootBoneCombo->setSelectedCombo(findselectedbone + 1);
+				//}
 			}
 		}
 
@@ -1541,11 +1560,10 @@ int CFootRigDlg::ParamsToDlg()
 			m_rightfootBoneCombo->addString("   ");//先頭項目は未設定
 			if (m_model) {
 				int findselectedbone = -1;
-				int bonenum = m_model->GetBoneListSize();
-				int boneindex;
 				int addindex = 0;
-				for (boneindex = 0; boneindex < bonenum; boneindex++) {
-					CBone* curbone = m_model->GetBoneByZeroBaseIndex(boneindex);
+				std::unordered_map<int, CBone*>::iterator itrbone;
+				for (itrbone = m_model->GetBoneListBegin(); itrbone != m_model->GetBoneListEnd(); itrbone++) {
+					CBone* curbone = itrbone->second;
 					if (curbone && curbone->IsSkeleton()) {
 						m_rightfootBoneCombo->addString(curbone->GetBoneName());
 						if (curfootrigelem.rightfootbone == curbone) {
@@ -1557,6 +1575,24 @@ int CFootRigDlg::ParamsToDlg()
 				if (findselectedbone >= 0) {
 					m_rightfootBoneCombo->setSelectedCombo(findselectedbone + 1);
 				}
+
+				//int findselectedbone = -1;
+				//int bonenum = m_model->GetBoneListSize();
+				//int boneindex;
+				//int addindex = 0;
+				//for (boneindex = 0; boneindex < bonenum; boneindex++) {
+				//	CBone* curbone = m_model->GetBoneByZeroBaseIndex(boneindex);
+				//	if (curbone && curbone->IsSkeleton()) {
+				//		m_rightfootBoneCombo->addString(curbone->GetBoneName());
+				//		if (curfootrigelem.rightfootbone == curbone) {
+				//			findselectedbone = addindex;
+				//		}
+				//		addindex++;
+				//	}
+				//}
+				//if (findselectedbone >= 0) {
+				//	m_rightfootBoneCombo->setSelectedCombo(findselectedbone + 1);
+				//}
 			}
 		}
 
@@ -1627,7 +1663,7 @@ int CFootRigDlg::ParamsToDlg_LeftRig()
 {
 	FOOTRIGELEM curfootrigelem;
 	curfootrigelem.Init();
-	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+	std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 	itrelem = m_footrigelem.find(m_model);
 	if (itrelem != m_footrigelem.end()) {
 		curfootrigelem = itrelem->second;
@@ -1671,7 +1707,7 @@ int CFootRigDlg::ParamsToDlg_RightRig()
 {
 	FOOTRIGELEM curfootrigelem;
 	curfootrigelem.Init();
-	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+	std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 	itrelem = m_footrigelem.find(m_model);
 	if (itrelem != m_footrigelem.end()) {
 		curfootrigelem = itrelem->second;
@@ -1722,7 +1758,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			float offsetval = (float)_wtof(stroffset);
 			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.leftoffsetY1 = offsetval;
@@ -1731,7 +1767,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			}
 			else {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						WCHAR strnotchange[256] = { 0L };
@@ -1749,7 +1785,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			float offsetval = (float)_wtof(stroffset);
 			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.leftoffsetZ1 = offsetval;
@@ -1758,7 +1794,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			}
 			else {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						WCHAR strnotchange[256] = { 0L };
@@ -1776,7 +1812,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			float offsetval = (float)_wtof(stroffset);
 			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.rightoffsetY1 = offsetval;
@@ -1785,7 +1821,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			}
 			else {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						WCHAR strnotchange[256] = { 0L };
@@ -1803,7 +1839,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			float offsetval = (float)_wtof(stroffset);
 			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.rightoffsetZ1 = offsetval;
@@ -1812,7 +1848,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			}
 			else {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						WCHAR strnotchange[256] = { 0L };
@@ -1832,7 +1868,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			float offsetval = (float)_wtof(stroffset);
 			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.leftoffsetY2 = offsetval;
@@ -1841,7 +1877,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			}
 			else {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						WCHAR strnotchange[256] = { 0L };
@@ -1859,7 +1895,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			float offsetval = (float)_wtof(stroffset);
 			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.leftoffsetZ2 = offsetval;
@@ -1868,7 +1904,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			}
 			else {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						WCHAR strnotchange[256] = { 0L };
@@ -1886,7 +1922,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			float offsetval = (float)_wtof(stroffset);
 			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.rightoffsetY2 = offsetval;
@@ -1895,7 +1931,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			}
 			else {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						WCHAR strnotchange[256] = { 0L };
@@ -1913,7 +1949,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			float offsetval = (float)_wtof(stroffset);
 			if ((offsetval >= -5000.0f) && (offsetval <= 5000.0f)) {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.rightoffsetZ2 = offsetval;
@@ -1922,7 +1958,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			}
 			else {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						WCHAR strnotchange[256] = { 0L };
@@ -1942,7 +1978,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			float diffval = (float)_wtof(strdiff);
 			if ((diffval >= -50000.0f) && (diffval <= 50000.0f)) {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.hdiffmax = diffval;
@@ -1951,7 +1987,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			}
 			else {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						WCHAR strnotchange[256] = { 0L };
@@ -1970,7 +2006,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			float stepval = (float)_wtof(strstep);
 			if ((stepval >= 0.0f) && (stepval <= 400.0f)) {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.rigstep = stepval;
@@ -1979,7 +2015,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			}
 			else {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						WCHAR strnotchange[256] = { 0L };
@@ -1998,7 +2034,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			int countval = _wtoi(strmaxcount);
 			if ((countval >= 0) && (countval <= 10000)) {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.maxcalccount = countval;
@@ -2007,7 +2043,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			}
 			else {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						WCHAR strnotchange[256] = { 0L };
@@ -2026,7 +2062,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			float stepval = (float)_wtof(strstep);
 			if ((stepval >= -50000.0f) && (stepval <= 50000.0f)) {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						itrelem->second.hopyperstep = stepval;
@@ -2035,7 +2071,7 @@ int CFootRigDlg::Dlg2ParamsListener()
 			}
 			else {
 				if (m_model) {
-					std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+					std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 					itrelem = m_footrigelem.find(m_model);
 					if (itrelem != m_footrigelem.end()) {
 						WCHAR strnotchange[256] = { 0L };
@@ -2089,7 +2125,7 @@ int CFootRigDlg::SaveFootRigFile(WCHAR* srcprojectdir, WCHAR* srcprojectname, Ch
 		return 1;
 	}
 
-	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+	std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 	for (itrelem = m_footrigelem.begin(); itrelem != m_footrigelem.end(); itrelem++) {
 		CModel* curmodel = itrelem->first;
 		FOOTRIGELEM curelem = itrelem->second;
@@ -2118,7 +2154,7 @@ int CFootRigDlg::LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname)
 		return 1;
 	}
 
-	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+	std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 	for (itrelem = m_footrigelem.begin(); itrelem != m_footrigelem.end(); itrelem++) {
 		CModel* curmodel = itrelem->first;
 		if (curmodel) {
@@ -2161,7 +2197,7 @@ int CFootRigDlg::Update(bool limitdegflag)
 	limitdegflag = false;
 
 	int result = 0;
-	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+	std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 	for (itrelem = m_footrigelem.begin(); itrelem != m_footrigelem.end(); itrelem++) {
 		CModel* curmodel = itrelem->first;
 		if (curmodel) {
@@ -2213,7 +2249,7 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 	}
 
 
-	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+	std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 	itrelem = m_footrigelem.find(srcmodel);
 	if (itrelem != m_footrigelem.end()) {
 
@@ -2505,7 +2541,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 void CFootRigDlg::SetSaveModelWM(CModel* srcmodel, ChaMatrix srcmat)
 {
 	if (srcmodel) {
-		std::map<CModel*, ChaMatrix>::iterator itrsavewm;
+		std::unordered_map<CModel*, ChaMatrix>::iterator itrsavewm;
 		itrsavewm = m_savemodelwm.find(srcmodel);
 		if (itrsavewm != m_savemodelwm.end()) {
 			itrsavewm->second = srcmat;
@@ -2523,7 +2559,7 @@ void CFootRigDlg::SetSaveModelWM(CModel* srcmodel, ChaMatrix srcmat)
 ChaMatrix CFootRigDlg::GetSaveModelWM(CModel* srcmodel)
 {
 	if (srcmodel) {
-		std::map<CModel*, ChaMatrix>::iterator itrsavewm;
+		std::unordered_map<CModel*, ChaMatrix>::iterator itrsavewm;
 		itrsavewm = m_savemodelwm.find(srcmodel);
 		if (itrsavewm != m_savemodelwm.end()) {
 			//１回前のFootRig計算によるmodelworldmatの変更を元に戻す
@@ -2550,7 +2586,7 @@ bool CFootRigDlg::IsEnableFootRig(CModel* srcmodel)
 		return false;
 	}
 
-	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+	std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 	itrelem = m_footrigelem.find(m_model);
 	if (itrelem != m_footrigelem.end()) {
 
@@ -2715,13 +2751,13 @@ int CFootRigDlg::OnDelModel(CModel* srcmodel)
 		return 1;
 	}
 
-	std::map<CModel*, FOOTRIGELEM>::iterator itrelem;
+	std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 	itrelem = m_footrigelem.find(srcmodel);
 	if (itrelem != m_footrigelem.end()) {
 		m_footrigelem.erase(itrelem);
 	}
 
-	std::map<CModel*, ChaMatrix>::iterator itrwm;
+	std::unordered_map<CModel*, ChaMatrix>::iterator itrwm;
 	itrwm = m_savemodelwm.find(srcmodel);
 	if (itrwm != m_savemodelwm.end()) {
 		m_savemodelwm.erase(itrwm);

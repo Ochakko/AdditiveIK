@@ -11,7 +11,7 @@
 
 #include <vector>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 class OrgWinGUI::OrgWindow;
 class OrgWinGUI::OWP_ComboBoxA;

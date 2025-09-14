@@ -819,7 +819,7 @@ int CModel::DestroyFBXSDK()
 
 int CModel::DestroyAllMotionInfo()
 {
-	map<int, MOTINFO*>::iterator itrmi;
+	unordered_map<int, MOTINFO*>::iterator itrmi;
 	for( itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++ ){
 		MOTINFO* miptr = itrmi->second;
 		if( miptr ){
@@ -845,7 +845,7 @@ int CModel::DestroyMaterial()
 int CModel::DestroyObject()
 {
 
-	map<int, CMQOObject*>::iterator itr;
+	unordered_map<int, CMQOObject*>::iterator itr;
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* delobj = itr->second;
 		if( delobj ){
@@ -859,7 +859,7 @@ int CModel::DestroyObject()
 
 int CModel::DestroyAncObj()
 {
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
 		CBone* delbone = itrbone->second;
 		if( delbone ){
@@ -875,7 +875,7 @@ int CModel::DestroyAncObj()
 	m_withStrJoint = 0;
 	m_withoutStrJoint = 0;
 
-	map<CMQOObject*, FBXOBJ*>::iterator itrobjindex;
+	unordered_map<CMQOObject*, FBXOBJ*>::iterator itrobjindex;
 	for (itrobjindex = m_fbxobj.begin(); itrobjindex != m_fbxobj.end(); itrobjindex++) {
 		FBXOBJ* curfbxobj = itrobjindex->second;
 		if (curfbxobj) {
@@ -1333,7 +1333,7 @@ _ASSERT(m_bonelist[0]);
 	ChaMatrix offsetmat;
 	ChaMatrixIdentity( &offsetmat );
 	offsetmat.SetScale(ChaVector3(srcmult, srcmult, srcmult));
-	map<int,CMQOObject*>::iterator itr;
+	unordered_map<int,CMQOObject*>::iterator itr;
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* curobj = itr->second;
 		if( curobj ){
@@ -1433,7 +1433,7 @@ _ASSERT(m_bonelist[0]);
 
 		_ASSERT(m_bonelist[0]);
 
-		map<int, CBone*>::iterator itrbone;
+		unordered_map<int, CBone*>::iterator itrbone;
 		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			if (curbone && (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNull())) {
@@ -1442,7 +1442,7 @@ _ASSERT(m_bonelist[0]);
 		}
 
 
-		map<int, CMQOObject*>::iterator itr2;
+		unordered_map<int, CMQOObject*>::iterator itr2;
 		for (itr2 = m_object.begin(); itr2 != m_object.end(); itr2++) {
 			CMQOObject* curobj = itr2->second;
 			if (curobj) {
@@ -1522,7 +1522,7 @@ int CModel::LoadFBXAnim( FbxManager* psdk, FbxScene* pscene, int (*tlfunc)( int 
 
 
 	/*
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
 		CBone* curbone = itrbone->second;
 		if (curbone){
@@ -1552,11 +1552,11 @@ int CModel::CreateMaterialTexture()
 	}
 
 
-	//map<int,CMQOObject*>::iterator itrobj;
+	//unordered_map<int,CMQOObject*>::iterator itrobj;
 	//for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
 	//	CMQOObject* curobj = itrobj->second;
 	//	if( curobj ){
-	//		map<int,CMQOMaterial*>::iterator itrmat;
+	//		unordered_map<int,CMQOMaterial*>::iterator itrmat;
 	//		for( itrmat = curobj->GetMaterialBegin(); itrmat != curobj->GetMaterialEnd(); itrmat++ ){
 	//			CMQOMaterial* curmat = itrmat->second;
 	//			if (curmat) {
@@ -1584,11 +1584,11 @@ int CModel::CreateMaterialTexture()
 //{
 //	CMQOMaterial* retmat = 0;
 //
-//	map<int, CMQOObject*>::iterator itrobj;
+//	unordered_map<int, CMQOObject*>::iterator itrobj;
 //	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
 //		CMQOObject* curobj = itrobj->second;
 //		if (curobj) {
-//			map<int, CMQOMaterial*>::iterator itrmat;
+//			unordered_map<int, CMQOMaterial*>::iterator itrmat;
 //			for (itrmat = curobj->GetMaterialBegin(); itrmat != curobj->GetMaterialEnd(); itrmat++) {
 //				CMQOMaterial* curmat = itrmat->second;
 //				if (strcmp(curmat->GetName(), srcname.c_str()) == 0) {
@@ -1617,7 +1617,7 @@ int CModel::CreateMaterialTexture()
 //
 //	ChaVector4 materialdisprate = GetMaterialDispRate();
 //
-//	//map<int,CMQOObject*>::iterator itr;
+//	//unordered_map<int,CMQOObject*>::iterator itr;
 //	//for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 //	//	CMQOObject* curobj = itr->second;
 //	int groupindex;
@@ -1687,7 +1687,7 @@ int CModel::SelectRenderObject(int srcobjno, std::vector<CMQOObject*>& selectedo
 {
 	selectedobjvec.clear();
 
-	map<int, DISPGROUPELEM>::iterator itrdigelem;
+	unordered_map<int, DISPGROUPELEM>::iterator itrdigelem;
 	itrdigelem = m_objno2digelem.find(srcobjno);
 	if (itrdigelem == m_objno2digelem.end()) {
 		return 0;
@@ -1703,7 +1703,7 @@ void CModel::SelectRenderObjectReq(FbxNode* pNode, std::vector<CMQOObject*>& sel
 {
 	if (pNode) {
 
-		map<FbxNode*, CMQOObject*>::iterator itrobj;
+		unordered_map<FbxNode*, CMQOObject*>::iterator itrobj;
 		itrobj = m_node2mqoobj.find(pNode);
 		if (itrobj != m_node2mqoobj.end()) {
 			CMQOObject* mqoobject = itrobj->second;
@@ -1728,7 +1728,7 @@ int CModel::GetSelectedObjTree(int srcobjno, std::vector<int>& selectedobjtree)
 {
 	selectedobjtree.clear();
 
-	map<int, DISPGROUPELEM>::iterator itrdigelem;
+	unordered_map<int, DISPGROUPELEM>::iterator itrdigelem;
 	itrdigelem = m_objno2digelem.find(srcobjno);
 	if (itrdigelem == m_objno2digelem.end()) {
 		return 0;
@@ -1745,7 +1745,7 @@ void CModel::GetSelectedObjTreeReq(FbxNode* pNode, std::vector<int>& selectedobj
 	if (pNode) {
 
 		int selectedobjno = -1;
-		map<int, DISPGROUPELEM>::iterator itrdigelem;
+		unordered_map<int, DISPGROUPELEM>::iterator itrdigelem;
 		for (itrdigelem = m_objno2digelem.begin(); itrdigelem != m_objno2digelem.end(); itrdigelem++) {
 			DISPGROUPELEM digelem = itrdigelem->second;
 			if (digelem.pNode == pNode) {
@@ -1792,12 +1792,12 @@ int CModel::RenderTest(bool withalpha, ChaScene* srcchascene, int lightflag, Cha
 	vector<CMQOObject*> selectedobjvec;
 	SelectRenderObject(srcobjno, selectedobjvec);
 
-	//map<int, FbxNode*>::iterator itrnode;
+	//unordered_map<int, FbxNode*>::iterator itrnode;
 	//itrnode = m_objno2node.find(srcobjno);
 	//if (itrnode == m_objno2node.end()) {
 	//	return 0;
 	//}
-	//map<FbxNode*, CMQOObject*>::iterator itrobj;
+	//unordered_map<FbxNode*, CMQOObject*>::iterator itrobj;
 	//itrobj = m_node2mqoobj.find(itrnode->second);
 	//if (itrobj == m_node2mqoobj.end()) {
 	//	return 0;
@@ -1880,7 +1880,7 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 	addmb.Init();
 
 	int calcflag = 0;
-	map<int,CMQOObject*>::iterator itr;
+	unordered_map<int,CMQOObject*>::iterator itr;
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* curobj = itr->second;
 		if (curobj && !curobj->IsND()) {
@@ -1956,7 +1956,7 @@ MODELBOUND CModel::CalcBoneBound()
 
 	bool firstflag = true;
 
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* curbone = itrbone->second;
 		if (curbone && (curbone->IsSkeleton())) {
@@ -2142,7 +2142,7 @@ int CModel::SetFaceOfShape( CMQOFace** ppface, int facenum, int shapeno, CMQOFac
 
 int CModel::MakeObjectName()
 {
-	map<int, CMQOObject*>::iterator itrobj;
+	unordered_map<int, CMQOObject*>::iterator itrobj;
 	for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
 		CMQOObject* curobj = itrobj->second;
 		if( curobj ){
@@ -2284,7 +2284,7 @@ int CModel::DbgDumpBoneReq(int level, CBone* boneptr, int broflag)
 
 int CModel::MakePolyMesh3(bool fbxfileflag)
 {
-	map<int,CMQOObject*>::iterator itr;
+	unordered_map<int,CMQOObject*>::iterator itr;
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* curobj = itr->second;
 		if( curobj ){
@@ -2296,7 +2296,7 @@ int CModel::MakePolyMesh3(bool fbxfileflag)
 }
 int CModel::MakePolyMesh4()
 {
-	map<int,CMQOObject*>::iterator itr;
+	unordered_map<int,CMQOObject*>::iterator itr;
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* curobj = itr->second;
 		if( curobj ){
@@ -2309,7 +2309,7 @@ int CModel::MakePolyMesh4()
 
 int CModel::MakeExtLine()
 {
-	map<int,CMQOObject*>::iterator itr;
+	unordered_map<int,CMQOObject*>::iterator itr;
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* curobj = itr->second;
 		if( curobj ){
@@ -2336,7 +2336,7 @@ int CModel::MakeDispObj()
 	//	hasbone = 0;
 	//}
 
-	map<int,CMQOObject*>::iterator itr;
+	unordered_map<int,CMQOObject*>::iterator itr;
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* curobj = itr->second;
 		if( curobj ){
@@ -2424,7 +2424,7 @@ void CModel::Motion2BtReq(CBtObject* srcbto)
 
 //int CModel::SwapCurrentMotionPoint()
 //{
-//	map<int, CBone*>::iterator itrbone;
+//	unordered_map<int, CBone*>::iterator itrbone;
 //	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 //		CBone* curbone = itrbone->second;
 //		if (curbone && (curbone->IsSkeleton())) {
@@ -2523,7 +2523,7 @@ int CModel::UpdateMatrix(bool limitdegflag,
 			//}
 		}
 		else {
-			//map<int, CBone*>::iterator itrbone;
+			//unordered_map<int, CBone*>::iterator itrbone;
 			//for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
 			//	CBone* curbone = itrbone->second;
 			//	if( curbone ){
@@ -2538,7 +2538,7 @@ int CModel::UpdateMatrix(bool limitdegflag,
 	if (GetInMorph() && (IsCameraMotion(curmotid) == false)) {//2024/06/07 カメラモーションにはモーフ情報は無い前提
 
 		//2024/05/22 BlendShapeプレートメニューのblendshapeDistスライダーによる指定距離内の場合にモーフ再生
-		map<int, CMQOObject*>::iterator itrobj;
+		unordered_map<int, CMQOObject*>::iterator itrobj;
 		for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
 			CMQOObject* curobj = itrobj->second;
 			_ASSERT(curobj);
@@ -2564,7 +2564,7 @@ int CModel::UpdateMatrix(bool limitdegflag,
 
 	int chkcnt = 0;
 	int motionorder = -1;
-	map<int, MOTINFO*>::iterator itrmi;
+	unordered_map<int, MOTINFO*>::iterator itrmi;
 	for( itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++ ){
 		MOTINFO* chkmi = itrmi->second;
 		if( chkmi ){
@@ -2601,7 +2601,7 @@ int CModel::UpdateMatrix(bool limitdegflag,
 	lTime.SetSecondDouble( m_curmotinfo->curframe / GetFbxTimeScale() );
 	//lTime.SetSecondDouble( m_curmotinfo->curframe / 300.0 );
 
-	map<int, CMQOObject*>::iterator itrobj;
+	unordered_map<int, CMQOObject*>::iterator itrobj;
 	for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
 		CMQOObject* curobj = itrobj->second;
 		_ASSERT( curobj );
@@ -2675,7 +2675,7 @@ void CModel::UpdateMatrixTargetRateReq(CBone* srcbone, double srcrate1)
 
 void CModel::ResetFootRigUpdated()
 {
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* curbone = itrbone->second;
 		if (curbone) {
@@ -2868,7 +2868,7 @@ int CModel::ClearLimitedWM(int srcmotid, double srcframe)
 		return 0;//!!!!!!!!!!!!
 	}
 
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* curbone = itrbone->second;
 		if (curbone && (curbone->IsSkeleton())) {
@@ -3296,7 +3296,7 @@ int CModel::SetShaderConst(int btflag, bool calcslotflag)
 
 	int setclcnt = 0;
 
-	std::map<int, CBone*>::iterator itrbone;
+	std::unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* curbone = itrbone->second;
 		if (curbone && curbone->IsSkeleton()) {
@@ -3355,7 +3355,7 @@ int CModel::SetShaderConst(int btflag, bool calcslotflag)
 
 int CModel::FillTimeLineOne(CBone* curbone, int lineno,
 	OrgWinGUI::OWP_Timeline& timeline, 
-	std::map<int, int>& lineno2boneno, std::map<int, int>& boneno2lineno)
+	std::unordered_map<int, int>& lineno2boneno, std::unordered_map<int, int>& boneno2lineno)
 {
 
 	if (curbone) {
@@ -3412,7 +3412,7 @@ int CModel::FillTimeLineOne(CBone* curbone, int lineno,
 	return 0;
 }
 
-int CModel::FillTimeLine(OrgWinGUI::OWP_Timeline& timeline, map<int, int>& lineno2boneno, map<int, int>& boneno2lineno)
+int CModel::FillTimeLine(OrgWinGUI::OWP_Timeline& timeline, unordered_map<int, int>& lineno2boneno, unordered_map<int, int>& boneno2lineno)
 {
 	lineno2boneno.clear();
 	boneno2lineno.clear();
@@ -3422,7 +3422,7 @@ int CModel::FillTimeLine(OrgWinGUI::OWP_Timeline& timeline, map<int, int>& linen
 	}
 
 	int lineno = 0;
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
 		CBone* curbone = itrbone->second;
 		_ASSERT( curbone );
@@ -3457,7 +3457,7 @@ int CModel::FillTimeLine(OrgWinGUI::OWP_Timeline& timeline, map<int, int>& linen
 }
 
 //void CModel::FillTimelineReq( OrgWinGUI::OWP_Timeline& timeline, CBone* curbone, int* linenoptr, 
-//	map<int, int>& lineno2boneno, map<int, int>& boneno2lineno, int broflag )
+//	unordered_map<int, int>& lineno2boneno, unordered_map<int, int>& boneno2lineno, int broflag )
 //{
 //	if (!curbone || !linenoptr){
 //		return;
@@ -3508,7 +3508,7 @@ int CModel::AddMotion(const char* srcname, const WCHAR* wfilename, double srclen
 	//int samenamecount = 0;
 
 	int maxid = 0;
-	map<int, MOTINFO*>::iterator itrmi;
+	unordered_map<int, MOTINFO*>::iterator itrmi;
 	for (itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++){
 		MOTINFO* chkmi = itrmi->second;
 		if (chkmi){
@@ -3619,7 +3619,7 @@ int CModel::AddMotion(const char* srcname, const WCHAR* wfilename, double srclen
 	//BlendShape
 	// anim格納用のデータ作成だけ
 	//#########################
-	map<int, CMQOObject*>::iterator itrobj;
+	unordered_map<int, CMQOObject*>::iterator itrobj;
 	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
 		CMQOObject* curobj = itrobj->second;
 		_ASSERT(curobj);
@@ -3695,7 +3695,7 @@ int CModel::SetCurrentMotion( int srcmotid )
 		_ASSERT( 0 );
 		return 1;
 	}else{
-		map<int, CBone*>::iterator itrbone;
+		unordered_map<int, CBone*>::iterator itrbone;
 		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			if (curbone){
@@ -3913,7 +3913,7 @@ int CModel::DeleteMotion( int motid )
 	}
 
 
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
 		CBone* curbone = itrbone->second;
 		if( curbone && (curbone->IsSkeleton())){
@@ -3930,7 +3930,7 @@ int CModel::DeleteMotion( int motid )
 			free(delmi);
 		}
 
-		std::map<int, MOTINFO*> tmpmimap;
+		std::unordered_map<int, MOTINFO*> tmpmimap;
 		tmpmimap.clear();
 
 		int destindex = 0;
@@ -3972,7 +3972,7 @@ int CModel::DeleteMotion( int motid )
 
 void CModel::ResetMotionCache()
 {
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* curbone = itrbone->second;
 		if (curbone && (curbone->IsSkeleton())) {
@@ -4023,7 +4023,7 @@ int CModel::GetSymBoneNo( int srcboneno, int* dstboneno, int* existptr )
 	////}else{
 	//if (findflag != 0){
 	//	CBone* dstbone = 0;
-	//	map<int, CBone*>::iterator itrbone;
+	//	unordered_map<int, CBone*>::iterator itrbone;
 	//	for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
 	//		CBone* chkbone = itrbone->second;
 	//		if( chkbone && (wcscmp( findname, chkbone->GetWBoneName() ) == 0) ){
@@ -4163,7 +4163,7 @@ CBone* CModel::GetSymPosBone(CBone* srcbone)
 	//matchdist = mb.r * 0.001f;
 	matchdist = 0.30f;
 
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
 		CBone* curbone = itrbone->second;
 		if (curbone && (curbone->IsSkeleton())){
@@ -4215,7 +4215,7 @@ int CModel::PickBone(UIPICKINFO* pickinfo, bool calcfirstdiff)
 	ChaVector2 firstdiff;
 	firstdiff.SetParams(0.0f, 0.0f);
 
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
 		CBone* curbone = itrbone->second;
 
@@ -4295,7 +4295,8 @@ int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj,
 	CalcMouseGlobalRay(pickinfo, &startglobal, &dirglobal);
 
 	ChaVector3 startlocal, dirlocal;
-	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal);
+	double rayleng;
+	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal, &rayleng);
 
 	bool excludeinvface = true;
 	int colli = 0;
@@ -4320,7 +4321,8 @@ int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
 	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 
 	ChaVector3 startlocal, dirlocal;
-	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal);
+	double rayleng;
+	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal, &rayleng);
 	bool excludeinvface = true;
 	int colli = 0;
 	ChaVector3 tmphitpos;
@@ -4333,7 +4335,7 @@ int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
 	}
 	else {
 		//### CPU ###
-		colli = pickobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, hitfaceindex, &tmphitpos);
+		colli = pickobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, rayleng, excludeinvface, hitfaceindex, &tmphitpos);
 	}
 
 
@@ -4365,6 +4367,7 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 	ChaVector3TransformCoord(&startlocal, &startglobal, &invwm);
 	ChaVector3TransformCoord(&endlocal, &endglobal, &invwm);
 	dirlocal = endlocal - startlocal;
+	double rayleng = ChaVector3LengthDbl(&dirlocal);
 	ChaVector3Normalize(&dirlocal, &dirlocal);
 
 
@@ -4375,7 +4378,7 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 	float nearestdist = FLT_MAX;
 	bool findflag = false;
 
-	map<int, CMQOObject*>::iterator itr;
+	unordered_map<int, CMQOObject*>::iterator itr;
 	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 		CMQOObject* curobj = itr->second;
 		if (curobj) {
@@ -4385,7 +4388,7 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 			ChaVector3 tmphitpos;
 			tmphitpos.SetParams(0.0f, 0.0f, 0.0f);
 			if (!gpuflag) {//### CPU ###
-				colli = curobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, excludeinvface, &hitfaceindex, &tmphitpos);
+				colli = curobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, rayleng, excludeinvface, &hitfaceindex, &tmphitpos);
 
 				if (colli != 0) {
 					ChaVector3 curdistvec = tmphitpos - startlocal;
@@ -4461,15 +4464,21 @@ int CModel::CollisionNoBoneObj_Mouse( UIPICKINFO* pickinfo, const char* objnamep
 	}
 
 	ChaVector3 startlocal, dirlocal;
-	CalcMouseLocalRay( pickinfo, &startlocal, &dirlocal );
+	double rayleng;
+	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal, &rayleng);
 
 	int colli = curobj->CollisionLocal_Ray(startlocal, dirlocal, excludeinvface);
 
 	return colli;
 }
 
-int CModel::CalcMouseLocalRay( UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVector3* dirptr )
+int CModel::CalcMouseLocalRay( UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVector3* dirptr, double* rayleng)
 {
+	if (!pickinfo || !startptr || !dirptr || !rayleng) {
+		_ASSERT(0);
+		return 0;
+	}
+
 	ChaVector3 startsc, endsc;
 	float rayx, rayy;
 	rayx = (float)pickinfo->clickpos.x / ((float)pickinfo->winx / 2.0f) - 1.0f;
@@ -4489,10 +4498,12 @@ int CModel::CalcMouseLocalRay( UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVe
 	ChaVector3TransformCoord( &endlocal, &endsc, &invmWVP );
 
 	ChaVector3 dirlocal = endlocal - startlocal;
+	double leng = ChaVector3LengthDbl(&dirlocal);
 	ChaVector3Normalize( &dirlocal, &dirlocal );
 
 	*startptr = startlocal;
 	*dirptr = dirlocal;
+	*rayleng = leng;
 
 	return 0;
 }
@@ -4610,7 +4621,7 @@ int CModel::ChangeMotFrameLeng( int motid, double srcleng )
 		dstmi->frameleng = srcleng;
 
 		if( befleng > srcleng ){
-			map<int, CBone*>::iterator itrbone;
+			unordered_map<int, CBone*>::iterator itrbone;
 			for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
 				CBone* curbone = itrbone->second;
 				if( curbone && (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNullAndChildIsCamera())){
@@ -4620,7 +4631,7 @@ int CModel::ChangeMotFrameLeng( int motid, double srcleng )
 		}
 
 		//2024/06/07 blendshapeアニメ　モーフアニメのアニメ長変更
-		map<int, CMQOObject*>::iterator itrobj;
+		unordered_map<int, CMQOObject*>::iterator itrobj;
 		for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
 			CMQOObject* curobj = itrobj->second;
 			_ASSERT(curobj);
@@ -4724,7 +4735,7 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 
 int CModel::MakeEnglishName()
 {
-	map<int, CMQOObject*>::iterator itrobj;
+	unordered_map<int, CMQOObject*>::iterator itrobj;
 	for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
 		CMQOObject* curobj = itrobj->second;
 		if( curobj ){
@@ -4733,7 +4744,7 @@ int CModel::MakeEnglishName()
 	}
 
 
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
 		CBone* curbone = itrbone->second;
 		if( curbone ){
@@ -4741,7 +4752,7 @@ int CModel::MakeEnglishName()
 		}
 	}
 
-	map<int, MOTINFO*>::iterator itrmi;
+	unordered_map<int, MOTINFO*>::iterator itrmi;
 	for( itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++ ){
 		MOTINFO* curmi = itrmi->second;
 		if( curmi ){
@@ -4798,7 +4809,7 @@ void CModel::CreateNodeOnLoadReq(CNodeOnLoad* newnodeonload)
 		case FbxNodeAttribute::eMesh:
 		{
 			newnodeonload->SetType(NOL_MESH);
-			map<FbxNode*, CMQOObject*>::iterator itrmqoobj;
+			unordered_map<FbxNode*, CMQOObject*>::iterator itrmqoobj;
 			itrmqoobj = m_node2mqoobj.find(pNode);
 			if (itrmqoobj != m_node2mqoobj.end()) {
 				newnodeonload->SetMqoObject(itrmqoobj->second);
@@ -7026,7 +7037,7 @@ int CModel::MotionID2Index( int motid )
 	int retindex = -1;
 
 	int chkcnt = 0;
-	map<int,MOTINFO*>::iterator itrmotinfo;
+	unordered_map<int,MOTINFO*>::iterator itrmotinfo;
 	for( itrmotinfo = m_motinfo.begin(); itrmotinfo != m_motinfo.end(); itrmotinfo++ ){
 		MOTINFO* curmi = itrmotinfo->second;
 		if( curmi ){
@@ -7045,7 +7056,7 @@ int CModel::MotionID2CameraIndex(int motid)
 	int retindex = -1;
 
 	int chkcnt = 0;
-	map<int, MOTINFO*>::iterator itrmotinfo;
+	unordered_map<int, MOTINFO*>::iterator itrmotinfo;
 	for (itrmotinfo = m_motinfo.begin(); itrmotinfo != m_motinfo.end(); itrmotinfo++) {
 		MOTINFO* curmi = itrmotinfo->second;
 		if (curmi && curmi->cameramotion) {
@@ -7259,7 +7270,7 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 
 
 
-			map<int, CBone*>::iterator itrbone;
+			unordered_map<int, CBone*>::iterator itrbone;
 			for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 				CBone* curbone = itrbone->second;
 				if (curbone && (curbone->IsSkeleton() || curbone->IsCamera() || curbone->IsNull())) {
@@ -7291,7 +7302,7 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 			//}
 
 			//スレッド読み込みしない場合
-			//map<int, CBone*>::iterator itranimbone;
+			//unordered_map<int, CBone*>::iterator itranimbone;
 			//for (itranimbone = m_bonelist.begin(); itranimbone != m_bonelist.end(); itranimbone++) {
 			//	CBone* curbone = itranimbone->second;
 			//	if (curbone) {
@@ -7437,7 +7448,7 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 	//ボーンモーション読込ループでカメラアニメを読み込むと
 	//ボーンモーションでカメラノードの姿勢が上書きされることがあるので
 	//ループを抜けてからまとめて読み込む
-	map<int, MOTINFO*>::iterator itrmi;
+	unordered_map<int, MOTINFO*>::iterator itrmi;
 	for (itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++) {
 		MOTINFO* miptr = itrmi->second;
 		if (miptr && miptr->cameramotion) {
@@ -7460,7 +7471,7 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 
 //int CModel::AddMotionPointAll(int srcmotid, double animleng)
 //{
-//	map<int, CBone*>::iterator itrbone;
+//	unordered_map<int, CBone*>::iterator itrbone;
 //	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 //		CBone* curbone = itrbone->second;
 //		if (curbone) {
@@ -7501,7 +7512,7 @@ void CModel::CreateIndexedMotionPoint(int srcmotid, double srcanimleng, int* per
 	GetMotionName(srcmotid, 256, motionname);
 
 
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* srcbone = itrbone->second;
 
@@ -8003,7 +8014,7 @@ int CModel::PreLoadCameraFbxAnim(int srcmotid)
 		double animlen = curmi.frameleng;
 
 
-		map<int, CBone*>::iterator itrbone;
+		unordered_map<int, CBone*>::iterator itrbone;
 		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 			CBone* srcbone = itrbone->second;
 
@@ -8570,7 +8581,7 @@ int CModel::RenderBoneMark(bool limitdegflag, InstancedSprite* bcircleptr,
 
 
 
-	map<int, CBone*>::iterator itrb;
+	unordered_map<int, CBone*>::iterator itrb;
 	for( itrb = m_bonelist.begin(); itrb != m_bonelist.end(); itrb++ ){
 		CBone* curbone = itrb->second;
 		if( curbone && (curbone->IsSkeleton())){
@@ -8621,7 +8632,7 @@ int CModel::RenderBoneMark(bool limitdegflag, InstancedSprite* bcircleptr,
 
 			int instanceno = 0;//!!!!!!!
 
-			map<int, CBone*>::iterator itrbone;
+			unordered_map<int, CBone*>::iterator itrbone;
 			for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++){
 				CBone* boneptr = itrbone->second;
 				if (boneptr && (boneptr->IsSkeleton()) && !boneptr->GetSkipRenderBoneMark()){
@@ -8720,7 +8731,7 @@ int CModel::RenderBoneMark(bool limitdegflag, InstancedSprite* bcircleptr,
 
 void CModel::ResetDispObjScale()
 {
-	map<int, CMQOObject*>::iterator itr;
+	unordered_map<int, CMQOObject*>::iterator itr;
 	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 		CMQOObject* curobj = itr->second;
 		if (curobj && curobj->GetDispObj()) {
@@ -9250,7 +9261,7 @@ int CModel::SetDefaultBonePos(FbxScene* pScene)
 //{
 //	m_materialname.clear();
 //
-//	map<int, CMQOMaterial*>::iterator itrmat;
+//	unordered_map<int, CMQOMaterial*>::iterator itrmat;
 //	for( itrmat = m_material.begin(); itrmat != m_material.end(); itrmat++ ){
 //		CMQOMaterial* curmat = itrmat->second;
 //		m_materialname[ curmat->GetName() ] = curmat;
@@ -9266,7 +9277,7 @@ int CModel::GetTextureNameVec(std::vector<std::string>& dstvec)
 	vector<string> tmpvec;
 
 	////MQOファイル用のマテリアルを格納
-	//map<int, CMQOMaterial*>::iterator itrmat;
+	//unordered_map<int, CMQOMaterial*>::iterator itrmat;
 	//for (itrmat = m_material.begin(); itrmat != m_material.end(); itrmat++) {
 	//	CMQOMaterial* curmat = itrmat->second;
 	//	if (curmat) {
@@ -9320,11 +9331,11 @@ int CModel::GetTextureNameVec(std::vector<std::string>& dstvec)
 
 
 	////fbxファイル用のマテリアルを格納
-	//map<int, CMQOObject*>::iterator itrobj;
+	//unordered_map<int, CMQOObject*>::iterator itrobj;
 	//for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
 	//	CMQOObject* curobj = itrobj->second;
 	//	if (curobj) {
-	//		map<int, CMQOMaterial*>::iterator itrmat2;
+	//		unordered_map<int, CMQOMaterial*>::iterator itrmat2;
 	//		for (itrmat2 = curobj->GetMaterialBegin(); itrmat2 != curobj->GetMaterialEnd(); itrmat2++) {
 	//			CMQOMaterial* curmat2 = itrmat2->second;
 	//			if (curmat2) {
@@ -9365,7 +9376,7 @@ int CModel::DestroyBtObject()
 	m_btovec.clear();
 	m_rigidbone.clear();
 
-	map<int,CBone*>::iterator itrbone;
+	unordered_map<int,CBone*>::iterator itrbone;
 	for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
 		CBone* curbone = itrbone->second;
 		if(curbone){
@@ -9586,7 +9597,7 @@ void CModel::CreateBtConstraintReq(CBone* curbone)
 		return;
 	}
 
-	map<CBone*, CBtObject*>::iterator itrbto;
+	unordered_map<CBone*, CBtObject*>::iterator itrbto;
 	for (itrbto = curbone->GetBtObjectMapBegin(); itrbto != curbone->GetBtObjectMapEnd(); itrbto++){
 		CBtObject* curbto = itrbto->second;
 		if (curbto){
@@ -9630,11 +9641,11 @@ void CModel::CreateBtConnectReq(CBone* curbone)
 		if (brobone1){
 			CBone* brobone2 = brobone1->GetBrother();
 			while (brobone2){
-				map<CBone*, CBtObject*>::iterator itrbto1;
+				unordered_map<CBone*, CBtObject*>::iterator itrbto1;
 				for (itrbto1 = brobone1->GetBtObjectMapBegin(); itrbto1 != brobone1->GetBtObjectMapEnd(); itrbto1++){
 					CBtObject* bto1 = itrbto1->second;
 					if (bto1 && bto1->GetRigidBody()){
-						map<CBone*, CBtObject*>::iterator itrbto2;
+						unordered_map<CBone*, CBtObject*>::iterator itrbto2;
 						for (itrbto2 = brobone2->GetBtObjectMapBegin(); itrbto2 != brobone2->GetBtObjectMapEnd(); itrbto2++){
 							CBtObject* bto2 = itrbto2->second;
 							if (bto2 && bto2->GetRigidBody()){
@@ -10048,7 +10059,7 @@ int CModel::CalcRigidElemParamsOnBt()
 	int firstflag = 0;//OnBtのときには　firstflag = 0 !!!! CalcRigidElem()との違い
 	bool setinstancescale = false;
 
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* boneptr = itrbone->second;
 		if (boneptr && boneptr->GetParent(false) && (boneptr->IsSkeleton())) {
@@ -10133,7 +10144,7 @@ int CModel::SetBtMotionOnBt(bool limitdegflag,
 	CQuaternion iniq;
 	iniq.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* curbone = itrbone->second;
 		//if (curbone) {
@@ -10155,7 +10166,7 @@ int CModel::SetBtMotionOnBt(bool limitdegflag,
 
 	double roundingframe = RoundingTime(curframe);
 
-	map<int, CBone*>::iterator itrbone2;
+	unordered_map<int, CBone*>::iterator itrbone2;
 	for (itrbone2 = m_bonelist.begin(); itrbone2 != m_bonelist.end(); itrbone2++) {
 		CBone* curbone2 = itrbone2->second;
 		if (curbone2 && (curbone2->IsSkeleton())) {
@@ -10250,7 +10261,7 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 
 
 
-		map<int, CBone*>::iterator itrbone;
+		unordered_map<int, CBone*>::iterator itrbone;
 		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			//if (curbone) {
@@ -10302,7 +10313,7 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 
 		double roundingframe = RoundingTime(curframe);
 
-		map<int, CBone*>::iterator itrbone2;
+		unordered_map<int, CBone*>::iterator itrbone2;
 		for (itrbone2 = m_bonelist.begin(); itrbone2 != m_bonelist.end(); itrbone2++) {
 			CBone* curbone2 = itrbone2->second;
 			if (curbone2 && (curbone2->IsSkeleton())) {
@@ -10352,7 +10363,7 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 
 	if (GetInMorph()) {
 		//2024/05/22 BlendShapeプレートメニューのblendshapeDistスライダーによる指定距離内の場合にモーフ再生
-		map<int, CMQOObject*>::iterator itrobj;
+		unordered_map<int, CMQOObject*>::iterator itrobj;
 		for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
 			CMQOObject* curobj = itrobj->second;
 			_ASSERT(curobj);
@@ -10403,7 +10414,7 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 //			lTime.SetSecondDouble( rgdmorphinfo->curframe / 300.0 );
 			//lTime.SetTime(0, 0, 0, (int)rgdmorphinfo->curframe, 0, m_pscene->GetGlobalSettings().GetTimeMode());
 
-			map<int, CMQOObject*>::iterator itrobj;
+			unordered_map<int, CMQOObject*>::iterator itrobj;
 			for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
 				CMQOObject* curobj = itrobj->second;
 				_ASSERT( curobj );
@@ -10461,7 +10472,7 @@ int CModel::DampAnim( MOTINFO* rgdmorphinfo )
 	//float minval = 0.000050f;
 	float minval = 0.000005f;
 
-	map<int,CBone*>::iterator itrbone;
+	unordered_map<int,CBone*>::iterator itrbone;
 	for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
 		CBone* curbone = itrbone->second;
 		if(curbone && curbone->IsSkeleton()){
@@ -10517,7 +10528,7 @@ MOTINFO* CModel::GetRgdMorphInfo()
 
 	int motionnum = (int)m_motinfo.size();
 	if( m_rgdmorphid < motionnum ){
-		map<int,MOTINFO*>::iterator itrmi;
+		unordered_map<int,MOTINFO*>::iterator itrmi;
 		itrmi = m_motinfo.begin();
 		int infcnt;
 		for( infcnt = 0; infcnt < m_rgdmorphid; infcnt++ ){
@@ -11295,10 +11306,10 @@ void CModel::SetBtImpulseReq( CBone* srcbone )
 	//	if( (m_curimpindex >= 0) && (m_curimpindex < impnum) ){
 
 	//		string curimpname = m_impinfo[ m_curimpindex ];
-	//		map<string, map<CBone*, ChaVector3>>::iterator findimpmap;
+	//		unordered_map<string, unordered_map<CBone*, ChaVector3>>::iterator findimpmap;
 	//		findimpmap = parentbone->FindImpMap( curimpname );
 	//		if( findimpmap != parentbone->GetImpMapEnd() ){
-	//			map<CBone*,ChaVector3>::iterator itrimp;
+	//			unordered_map<CBone*,ChaVector3>::iterator itrimp;
 	//			itrimp = findimpmap->second.find( srcbone );
 	//			if( itrimp != findimpmap->second.end() ){
 	//				setimp = itrimp->second;
@@ -11894,10 +11905,10 @@ void CModel::SetImpulseDataReq( int gid, CBone* srcbone, ChaVector3 srcimp )
 	//		if( curre ){
 	//			if( (gid == -1) || (gid == curre->GetGroupid()) ){
 	//				string curimpname = m_impinfo[ m_curimpindex ];
-	//				map<string, map<CBone*, ChaVector3>>::iterator findimpmap;
+	//				unordered_map<string, unordered_map<CBone*, ChaVector3>>::iterator findimpmap;
 	//				findimpmap = parentbone->FindImpMap( curimpname );
 	//				if( findimpmap != parentbone->GetImpMapEnd() ){
-	//					map<CBone*,ChaVector3>::iterator itrimp;
+	//					unordered_map<CBone*,ChaVector3>::iterator itrimp;
 	//					itrimp = findimpmap->second.find( srcbone );
 	//					if( itrimp != findimpmap->second.end() ){
 	//						itrimp->second = srcimp;
@@ -11951,9 +11962,9 @@ int CModel::SetImp( int srcboneno, int kind, float srcval )
 
 	//string curimpname = m_impinfo[ m_curimpindex ];
 	//if( parentbone->GetImpMapSize2( curimpname ) > 0 ){
-	//	map<string, map<CBone*, ChaVector3>>::iterator itrfindmap;
+	//	unordered_map<string, unordered_map<CBone*, ChaVector3>>::iterator itrfindmap;
 	//	itrfindmap = parentbone->FindImpMap( curimpname );
-	//	map<CBone*,ChaVector3>::iterator itrimp;
+	//	unordered_map<CBone*,ChaVector3>::iterator itrimp;
 	//	itrimp = itrfindmap->second.find( curbone );
 	//	if( itrimp == itrfindmap->second.end() ){
 	//		if (kind == 0){
@@ -12436,7 +12447,7 @@ int CModel::SetCurrentRigidElem( int curindex )
 
 
 	/*
-	map<int,CBone*>::iterator itrbone;
+	unordered_map<int,CBone*>::iterator itrbone;
 	for( itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++ ){
 		CBone* curbone = itrbone->second;
 		if (curbone){
@@ -12490,7 +12501,7 @@ void CModel::SetCurrentRigidElemReq(CBone* srcbone, string curname)
 int CModel::MultDispObj( ChaVector3 srcmult, ChaVector3 srctra )
 {
 
-	map<int,CMQOObject*>::iterator itrobj;
+	unordered_map<int,CMQOObject*>::iterator itrobj;
 	for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
 		CMQOObject* curobj = itrobj->second;
 		if( curobj ){
@@ -20003,7 +20014,7 @@ int CModel::RecalcBoneAxisX(CBone* srcbone)
 	}
 
 	if (!srcbone) {
-		map<int, CBone*>::iterator itrbone;
+		unordered_map<int, CBone*>::iterator itrbone;
 		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			if (curbone && (curbone->IsSkeleton())) {
@@ -20988,7 +20999,7 @@ void CModel::ApplyPhysIkRecReq(bool limitdegflag, int wallscrapingikflag,
 int CModel::ResetAngleLimit(bool excludebt, int srcval, CBone* srcbone)
 {
 	if (!srcbone) {
-		map<int, CBone*>::iterator itrbone;
+		unordered_map<int, CBone*>::iterator itrbone;
 		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			if (curbone && 
@@ -21011,7 +21022,7 @@ int CModel::ResetAngleLimit(bool excludebt, int srcval, CBone* srcbone)
 int CModel::AngleLimitReplace180to170(CBone* srcbone)
 {
 	if (!srcbone) {
-		map<int, CBone*>::iterator itrbone;
+		unordered_map<int, CBone*>::iterator itrbone;
 		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			if (curbone && (curbone->IsSkeleton())) {
@@ -21074,7 +21085,7 @@ int CModel::AdditiveCurrentToAngleLimit(CBone* srcbone)
 		CalcBoneEul(calclimitdegflag, GetCurrentMotID());
 
 		if (!srcbone) {
-			map<int, CBone*>::iterator itrbone;
+			unordered_map<int, CBone*>::iterator itrbone;
 			for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 				CBone* curbone = itrbone->second;
 				//if (curbone) {
@@ -21102,7 +21113,7 @@ int CModel::AdditiveAllMotionsToAngleLimit()
 		bool calclimitdegflag = false;
 		CalcBoneEul(calclimitdegflag, GetCurrentMotID());
 
-		map<int, CBone*>::iterator itrbone;
+		unordered_map<int, CBone*>::iterator itrbone;
 		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			//if (curbone) {
@@ -22523,7 +22534,7 @@ void CModel::GetTopBoneReq(CBone* srcbone, CBone** pptopbone, bool excludenullfl
 
 int CModel::GetBoneForMotionSize() {//eNull含まない
 	int retsize = 0;
-	std::map<int, CBone*>::iterator itrbone;
+	std::unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* curbone = itrbone->second;
 		if (curbone && (curbone->IsSkeleton())) {
@@ -22536,7 +22547,7 @@ int CModel::GetBoneForMotionSize() {//eNull含まない
 int CModel::GetMaxBoneNo()
 {
 	int retno = 0;
-	std::map<int, CBone*>::iterator itrbone;
+	std::unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* curbone = itrbone->second;
 		if (curbone && (curbone->IsSkeleton())) {
@@ -22600,7 +22611,7 @@ FbxNode* CModel::FindNodeByBone(CBone* srcbone)
 {
 	if (srcbone) {
 		FbxNode* retnode = 0;
-		map<CBone*, FbxNode*>::iterator itrnode;
+		unordered_map<CBone*, FbxNode*>::iterator itrnode;
 		itrnode = m_bone2node.find(srcbone);
 		if (itrnode != m_bone2node.end()) {
 			retnode = itrnode->second;
@@ -22619,7 +22630,7 @@ CBone* CModel::FindBoneByNode(FbxNode* srcnode)
 {
 	if (srcnode) {
 		CBone* retbone = 0;
-		map<FbxNode*, CBone*>::iterator itrbone;
+		unordered_map<FbxNode*, CBone*>::iterator itrbone;
 		itrbone = m_node2bone.find(srcnode);
 		if (itrbone != m_node2bone.end()) {
 			retbone = itrbone->second;
@@ -22955,7 +22966,7 @@ void CModel::SetCameraMotionId(int srcid)
 
 	MOTINFO camerami = GetMotInfo(srcid);
 	if (camerami.motid > 0) {
-		map<int, CBone*>::iterator itrbone;
+		unordered_map<int, CBone*>::iterator itrbone;
 		for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			if (curbone) {
@@ -23015,7 +23026,7 @@ int CModel::GetCurrentMotion()
 //2023/07/21
 int CModel::SetIKStopFlag()
 {
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* srcbone = itrbone->second;
 		if (srcbone) {
@@ -23063,7 +23074,7 @@ int CModel::ChkInView(int refposindex)
 		SetInView(true, refposindex);
 		SetInShadow(false, refposindex);
 
-		map<int, CMQOObject*>::iterator itr;
+		unordered_map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 			CMQOObject* curobj = itr->second;
 			if (curobj) {
@@ -23086,7 +23097,7 @@ int CModel::ChkInView(int refposindex)
 		SetInView(true, refposindex);
 		SetInShadow(false, refposindex);
 
-		map<int, CMQOObject*>::iterator itr;
+		unordered_map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 			CMQOObject* curobj = itr->second;
 			if (curobj) {
@@ -23109,7 +23120,7 @@ int CModel::ChkInView(int refposindex)
 		SetInView(true, refposindex);
 		SetInShadow(false, refposindex);
 
-		map<int, CMQOObject*>::iterator itr;
+		unordered_map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 			CMQOObject* curobj = itr->second;
 			if (curobj) {
@@ -23134,7 +23145,7 @@ int CModel::ChkInView(int refposindex)
 		SetInView(true, refposindexZero);
 		SetInShadow(false, refposindexZero);
 
-		map<int, CMQOObject*>::iterator itr;
+		unordered_map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 			CMQOObject* curobj = itr->second;
 			if (curobj) {
@@ -23261,7 +23272,7 @@ int CModel::ChkInView(int refposindex)
 		int objnum = 0;
 		int inviewnum = 0;
 		int inshadownum = 0;
-		map<int, CMQOObject*>::iterator itr;
+		unordered_map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 			CMQOObject* curobj = itr->second;
 			if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
@@ -23337,7 +23348,7 @@ int CModel::ChkInView(int refposindex)
 //		SetInView(true, refposindex);
 //		SetInShadow(false, refposindex);
 //
-//		map<int, CMQOObject*>::iterator itr;
+//		unordered_map<int, CMQOObject*>::iterator itr;
 //		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 //			CMQOObject* curobj = itr->second;
 //			if (curobj) {
@@ -23358,7 +23369,7 @@ int CModel::ChkInView(int refposindex)
 //		SetInView(true, refposindex);
 //		SetInShadow(false, refposindex);
 //
-//		map<int, CMQOObject*>::iterator itr;
+//		unordered_map<int, CMQOObject*>::iterator itr;
 //		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 //			CMQOObject* curobj = itr->second;
 //			if (curobj) {
@@ -23399,7 +23410,7 @@ int CModel::ChkInView(int refposindex)
 //			int objnum = 0;
 //			int inviewnum = 0;
 //			int inshadownum = 0;
-//			map<int, CMQOObject*>::iterator itr;
+//			unordered_map<int, CMQOObject*>::iterator itr;
 //			for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 //				CMQOObject* curobj = itr->second;
 //				if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
@@ -23434,7 +23445,7 @@ int CModel::ChkInView(int refposindex)
 //			SetInView(true, refposindex);
 //			SetInShadow(false, refposindex);
 //
-//			map<int, CMQOObject*>::iterator itr;
+//			unordered_map<int, CMQOObject*>::iterator itr;
 //			for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 //				CMQOObject* curobj = itr->second;
 //				if (curobj) {
@@ -23569,7 +23580,7 @@ int CModel::SetLODNum()
 	//LODが2Levelsなのか3Levelsなのか4Levelsを調べて　LODGroupにLODNumをセットする
 	//#######################################################################
 
-	map<int, CMQOObject*>::iterator itr;
+	unordered_map<int, CMQOObject*>::iterator itr;
 	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 		CMQOObject* curobj = itr->second;
 		if (curobj) {
@@ -23608,7 +23619,7 @@ int CModel::SetLODNum()
 
 int CModel::SetLODNum(const char* srcheadname, int srcnum)
 {
-	map<int, CMQOObject*>::iterator itr;
+	unordered_map<int, CMQOObject*>::iterator itr;
 	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 		CMQOObject* curobj = itr->second;
 		if (curobj) {
@@ -23639,7 +23650,7 @@ int CModel::CreateObjno2DigElem()
 		//#########
 		int objno = 0;
 		int depth = 0;
-		map<int,CMQOObject*>::iterator itr;
+		unordered_map<int,CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 			CMQOObject* curobj = itr->second;
 
@@ -23692,7 +23703,7 @@ void CModel::CreateObjno2DigElemReq(FbxNode* pNode, int* pobjno, int depth)
 			digelem.groupno = 1;// default value : groupno = groupindex + 1
 			digelem.pNode = pNode;
 			
-			map<FbxNode*, CMQOObject*>::iterator itrmqoobj;
+			unordered_map<FbxNode*, CMQOObject*>::iterator itrmqoobj;
 			itrmqoobj = m_node2mqoobj.find(pNode);
 			if (itrmqoobj != m_node2mqoobj.end()) {
 				digelem.mqoobject = itrmqoobj->second;
@@ -23723,7 +23734,7 @@ int CModel::SetBlendShapeGUI(std::vector<CBlendShapeElem>& blendshapeelem)
 {
 	blendshapeelem.clear();
 
-	map<int, CMQOObject*>::iterator itrobj;
+	unordered_map<int, CMQOObject*>::iterator itrobj;
 	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
 		CMQOObject* curobj = itrobj->second;
 		_ASSERT(curobj);
@@ -23812,7 +23823,7 @@ int CModel::MakeDispGroupForRender()
 
 int CModel::MakeLaterMaterial()
 {
-	map<int, CMQOObject*>::iterator itrobj;
+	unordered_map<int, CMQOObject*>::iterator itrobj;
 	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
 		CMQOObject* curobj = itrobj->second;
 		if (curobj) {
@@ -23888,7 +23899,7 @@ int CModel::SetLaterTransparentVec(std::vector<std::wstring> srclatervec)
 //}
 
 int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj,
-	std::map<CBone*, CBone*>& sconvbonemap,
+	std::unordered_map<CBone*, CBone*>& sconvbonemap,
 	int (*srcAddMotionFunc)(const WCHAR* wfilename, double srcmotleng))
 {
 
@@ -24077,7 +24088,7 @@ int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj
 }
 
 CMQOObject* CModel::GetMQOObjectByName(const char* findpattern) {
-	std::map<int, CMQOObject*>::iterator itrobj;
+	std::unordered_map<int, CMQOObject*>::iterator itrobj;
 	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
 		CMQOObject* curobj = itrobj->second;
 		if (curobj) {
@@ -24237,7 +24248,7 @@ void CModel::SetDistChkInView(float srcval, int refposindex)
 		return;
 	}
 	else {
-		map<int, CMQOObject*>::iterator itr;
+		unordered_map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 			CMQOObject* curobj = itr->second;
 			if (curobj) {
@@ -24261,7 +24272,7 @@ int CModel::CreateChkInView()
 
 		//このアプリにおいては　mqoファイル(マニピュレータや地面格子)はクリッピングしない用途に使用しているので　常に描画するように
 
-		//map<int, CMQOObject*>::iterator itr;
+		//unordered_map<int, CMQOObject*>::iterator itr;
 		//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 		//	CMQOObject* curobj = itr->second;
 		//	if (curobj) {
@@ -24282,7 +24293,7 @@ int CModel::CreateChkInView()
 		//2024/04/07 メッシュが無い場合はBoundaryも無いので実行用バッファは作成しない
 
 
-		//map<int, CMQOObject*>::iterator itr;
+		//unordered_map<int, CMQOObject*>::iterator itr;
 		//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 		//	CMQOObject* curobj = itr->second;
 		//	if (curobj) {
@@ -24322,7 +24333,7 @@ int CModel::CreateChkInView()
 		// モーションでの全体移動に対応
 		//###############################################################
 
-		map<int, CMQOObject*>::iterator itr;
+		unordered_map<int, CMQOObject*>::iterator itr;
 		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 			CMQOObject* curobj = itr->second;
 			//if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
@@ -24548,7 +24559,7 @@ void CModel::SaveBoneMotionWM()
 	int curmotid = GetCurrentMotID();
 	double curframe = RoundingTime(GetCurrentFrame());
 
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* curbone = itrbone->second;
 		//if (curbone && curbone->IsSkeleton()) {
@@ -24562,7 +24573,7 @@ void CModel::RestoreBoneMotionWM()
 	int curmotid = GetCurrentMotID();
 	double curframe = RoundingTime(GetCurrentFrame());
 
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* curbone = itrbone->second;
 		//if (curbone && curbone->IsSkeleton()) {
@@ -24574,7 +24585,7 @@ void CModel::RestoreBoneMotionWM()
 
 int CModel::SetGPUInteraction(bool srcflag)
 {
-	map<int, CMQOObject*>::iterator itr;
+	unordered_map<int, CMQOObject*>::iterator itr;
 	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 		CMQOObject* curobj = itr->second;
 		if (curobj && curobj->GetPm3()) {

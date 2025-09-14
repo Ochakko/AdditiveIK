@@ -9,7 +9,7 @@
 
 #include "dlgid.h"
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 #define FRAMECOPYLISTLENG	1024
@@ -153,7 +153,7 @@ private:
 	int m_iSelect;
 
 	//HTREEITEM* m_TI;
-	std::map<int, HTREEITEM> m_timap;
+	std::unordered_map<int, HTREEITEM> m_timap;
 	HTREEITEM m_selecteditem;
 	int m_selectedno;
 	
@@ -176,8 +176,8 @@ public:
 	int m_ignorelist[FCSLOTNUM2][FRAMECOPYLISTLENG];
 
 // ユーザーが指定したtree全体を格納（子供を含む。）
-	std::map<int, CBone*> m_validelemmap;
-	std::map<int, CBone*> m_invalidelemmap;
+	std::unordered_map<int, CBone*> m_validelemmap;
+	std::unordered_map<int, CBone*> m_invalidelemmap;
 	std::vector<CBone*> m_cpvec;
 
 };

@@ -19,7 +19,7 @@
 
 #define DBGH
 #include <dbg.h>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 using namespace std;
@@ -106,7 +106,7 @@ int CRigFile::WriteRigFile( WCHAR* strpath, CModel* srcmodel )
 
 	//WriteRigReq( m_model->GetTopBone(false) );
 
-	std::map<int, CBone*>::iterator itrbone;
+	std::unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_model->GetBoneListBegin(); itrbone != m_model->GetBoneListEnd(); itrbone++) {
 		CBone* srcbone = itrbone->second;
 		if (srcbone && srcbone->IsSkeleton()) {

@@ -98,7 +98,7 @@ int CChaFile::DestroyObjs()
 
 int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, WCHAR* projname, 
 	std::vector<MODELELEM>& srcmodelindex, float srcmotspeed, 
-	map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
+	unordered_map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
 	std::vector<CGrassElem*> srcgrasselemvec,
 	DOLLYELEM2* srccameraonload)
 {
@@ -264,7 +264,7 @@ int CChaFile::WriteFileInfo()
 }
 
 int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, 
-	map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
+	unordered_map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
 	CGrassElem* srcgrasselem)
 {
 	if (!srcme || !projname) {
@@ -416,7 +416,7 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 		return 1;
 	}
 	
-	map<CModel*, CFrameCopyDlg*>::iterator itrselbonedlg;
+	unordered_map<CModel*, CFrameCopyDlg*>::iterator itrselbonedlg;
 	itrselbonedlg = srcselbonedlgmap.find(curmodel);
 	if (itrselbonedlg != srcselbonedlgmap.end()) {
 		CFrameCopyDlg* framecopydlg = itrselbonedlg->second;
@@ -458,7 +458,7 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 
 	/***
 	//mqoファイルの場合のテクスチャ
-	map<int, CMQOMaterial*>::iterator itrmat;
+	unordered_map<int, CMQOMaterial*>::iterator itrmat;
 	for( itrmat = curmodel->m_material.begin(); itrmat != curmodel->m_material.end(); itrmat++ ){
 		CMQOMaterial* curmqomat = itrmat->second;
 		if( curmqomat && curmqomat->tex[0] && (curmqomat->m_texid >= 0) ){

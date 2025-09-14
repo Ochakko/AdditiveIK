@@ -4,7 +4,7 @@
 
 #include <wchar.h>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 #include <Coef.h>
 #include <OrgWindow.h>

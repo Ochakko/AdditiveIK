@@ -236,7 +236,7 @@ int CFrameCopyDlg::ExecuteOnOK()
 		SetTree2ListReq(1, invalidno, 0);
 	}
 
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_model->GetBoneListBegin(); itrbone != m_model->GetBoneListEnd(); itrbone++) {
 		int chkboneno = itrbone->first;
 		CBone* chkbone = itrbone->second;
@@ -335,7 +335,7 @@ int CFrameCopyDlg::FillTree()
 	AddBoneToTree( m_model->GetTopBone(false), 1, 1 );
 
 
-	map<int, HTREEITEM>::iterator itrtree;
+	unordered_map<int, HTREEITEM>::iterator itrtree;
 	for( itrtree = m_timap.begin(); itrtree != m_timap.end(); itrtree++ ){
 		HTREEITEM* curti = &(itrtree->second);
 		TreeView_Expand( m_tree_wnd, *curti, TVE_EXPAND );

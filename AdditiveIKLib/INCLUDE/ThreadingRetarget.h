@@ -7,7 +7,7 @@
 #include <ChaCalcFunc.h>
 
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 class CModel;
 class CBone;
@@ -27,7 +27,7 @@ public:
 
 	int AddFramenoList(double srcframeno);
 	void RetargetReqOne(int srclimitdegflag, CModel* srcmodel, CModel* srcbvhmodel, CBone* srcmodelbone,
-		CBone* srcbvhtopbone, float srchrate, std::map<CBone*, CBone*>& srcsconvbonemap);
+		CBone* srcbvhtopbone, float srchrate, std::unordered_map<CBone*, CBone*>& srcsconvbonemap);
 
 
 private:
@@ -46,14 +46,14 @@ private:
 	CModel* m_model;
 
 	//void RetargetReqOne(int limitdegflag, CModel* srcmodel, CModel* srcbvhmodel, CBone* modelbone,
-	//	double srcframe, CBone* bvhtopbone, float hrate, std::map<CBone*, CBone*>& sconvbonemap);
+	//	double srcframe, CBone* bvhtopbone, float hrate, std::unordered_map<CBone*, CBone*>& sconvbonemap);
 
 	int limitdegflag;
 	CModel* bvhmodel;
 	CBone* modelbone;
 	CBone* bvhtopbone;
 	float hrate;
-	std::map<CBone*, CBone*> sconvbonemap;
+	std::unordered_map<CBone*, CBone*> sconvbonemap;
 
 
 	std::vector<double> m_framenovec;

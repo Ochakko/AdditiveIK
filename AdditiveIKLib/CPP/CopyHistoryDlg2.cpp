@@ -1841,7 +1841,7 @@ int CCopyHistoryDlg2::GetSelectedFileName(CModel* srcmodel, WCHAR* dstfilename)
 			//	return 1;//有効な履歴無しの場合
 			//}
 
-			map<CModel*, wstring>::iterator itrfindname;
+			unordered_map<CModel*, wstring>::iterator itrfindname;
 			itrfindname = m_selectnamemap.find(srcmodel);
 			if (itrfindname != m_selectnamemap.end()) {
 				wcscpy_s(dstfilename, MAX_PATH, itrfindname->second.c_str());

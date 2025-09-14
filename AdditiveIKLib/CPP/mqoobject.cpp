@@ -107,7 +107,7 @@ CMQOObject::~CMQOObject()
 	//########
 	//bank管理
 	//########
-	//map<int, CMQOMaterial*>::iterator itr;
+	//unordered_map<int, CMQOMaterial*>::iterator itr;
 	//for( itr = m_material.begin(); itr != m_material.end(); itr++ ){
 	//	CMQOMaterial* delmat = itr->second;
 	//	if( delmat ){
@@ -175,7 +175,7 @@ void CMQOObject::DestroySystemDispObj()
 
 int CMQOObject::DestroyShapeObj()
 {
-	map<string,ChaVector3*>::iterator itrshape;
+	unordered_map<string,ChaVector3*>::iterator itrshape;
 	for( itrshape = m_shapevert.begin(); itrshape != m_shapevert.end(); itrshape++ ){
 		ChaVector3* curshape = itrshape->second;
 		if( curshape ){
@@ -197,9 +197,9 @@ int CMQOObject::DestroyShapeObj()
 }
 int CMQOObject::DestroyShapeAnim()
 {
-	map<string, map<int, float*>>::iterator itrshapeanim;
+	unordered_map<string, unordered_map<int, float*>>::iterator itrshapeanim;
 	for (itrshapeanim = m_shapeanim2.begin(); itrshapeanim != m_shapeanim2.end(); itrshapeanim++) {
-		map<int, float*>::iterator itrshapeanim2;
+		unordered_map<int, float*>::iterator itrshapeanim2;
 		for (itrshapeanim2 = itrshapeanim->second.begin(); itrshapeanim2 != itrshapeanim->second.end(); itrshapeanim2++) {
 			if (itrshapeanim2->second) {
 				free(itrshapeanim2->second);
@@ -221,7 +221,7 @@ int CMQOObject::DestroyShapeAnim(char* srcname, int srcmotid)
 		return 1;
 	}
 
-	map<string, map<int, float*>>::iterator itrshapeanim;
+	unordered_map<string, unordered_map<int, float*>>::iterator itrshapeanim;
 	itrshapeanim = m_shapeanim2.find(srcname);
 	if (itrshapeanim != m_shapeanim2.end()) {
 		if (itrshapeanim->second.find(srcmotid) != itrshapeanim->second.end()) {
@@ -232,7 +232,7 @@ int CMQOObject::DestroyShapeAnim(char* srcname, int srcmotid)
 		}
 	}
 
-	map<int, int>::iterator itranimleng;
+	unordered_map<int, int>::iterator itranimleng;
 	itranimleng = m_shapeanimleng2.find(srcmotid);
 	if (itranimleng != m_shapeanimleng2.end()) {
 		itranimleng->second = 0;
@@ -1905,7 +1905,7 @@ int CMQOObject::CheckFaceSameChildIndex( CMQOFace* srcface, int chkno, CMQOFace*
 	return 0;
 }
 
-int CMQOObject::CheckMaterialSameName( int srcmatno, map<int, CMQOMaterial*> &srcmaterial, int* nameflag )
+int CMQOObject::CheckMaterialSameName( int srcmatno, unordered_map<int, CMQOMaterial*> &srcmaterial, int* nameflag )
 {
 	int fno;
 	CMQOFace* curface;
@@ -2194,8 +2194,26 @@ int CMQOObject::CollisionLocal_Ray(ChaVector3 startlocal, ChaVector3 dirlocal,
 	return 0;
 }
 
+int CMQOObject::CollisionLocal_Ray_BB_Sph(MODELBOUND objbb, ChaVector3 startlocal, ChaVector3 dirlocal, double rayleng)
+{
+	if (objbb.IsValid() == false) {
+		return 0;//バウンダリーが無い場合には当たらない
+	}
 
-int CMQOObject::CollisionLocal_Ray_BB(MODELBOUND objbb, ChaVector3 startlocal, ChaVector3 dirlocal)
+	ChaVector3 raycenter = (startlocal + (startlocal + (dirlocal * rayleng))) * 0.50f;
+	ChaVector3 diffcenter = raycenter - objbb.center;
+	double diffleng = ChaVector3LengthDbl(&diffcenter);
+	if (diffleng > (rayleng + objbb.r)) {
+		return 0;
+	}
+	else {
+		return 1;
+	}
+}
+
+
+
+int CMQOObject::CollisionLocal_Ray_BB(MODELBOUND objbb, ChaVector3 startlocal, ChaVector3 dirlocal, double rayleng)
 {
 	//##################
 	//PolyMesh3限定
@@ -2211,6 +2229,12 @@ int CMQOObject::CollisionLocal_Ray_BB(MODELBOUND objbb, ChaVector3 startlocal, C
 		return 0;//バウンダリーが無い場合には当たらない
 	}
 
+	//2025/09/14 球で粗く判定
+	int sphcollision = CollisionLocal_Ray_BB_Sph(objbb, startlocal, dirlocal, rayleng);
+	if (sphcollision == 0) {
+		return 0;
+	}
+
 	ChaVector3 points[8];
 	points[0].SetParams(objbb.min.x, objbb.min.y, objbb.min.z);
 	points[1].SetParams(objbb.max.x, objbb.min.y, objbb.min.z);
@@ -2296,13 +2320,20 @@ int CMQOObject::CollisionLocal_Ray_BB(MODELBOUND objbb, ChaVector3 startlocal, C
 }
 
 
-int CMQOObject::CollisionLocal_Ray_BB(ChaVector3 startlocal, ChaVector3 dirlocal)
+int CMQOObject::CollisionLocal_Ray_BB(ChaVector3 startlocal, ChaVector3 dirlocal, double rayleng)
 {
 	MODELBOUND objbb = GetBound();
 	if (objbb.IsValid() == false) {
 		return 0;//バウンダリーが無い場合には当たらない
 	}
 
+	//2025/09/14 球で粗く判定
+	int sphcollision = CollisionLocal_Ray_BB_Sph(objbb, startlocal, dirlocal, rayleng);
+	if (sphcollision == 0) {
+		return 0;
+	}
+
+
 	ChaVector3 points[8];
 	points[0].SetParams(objbb.min.x, objbb.min.y, objbb.min.z);
 	points[1].SetParams(objbb.max.x, objbb.min.y, objbb.min.z);
@@ -2388,7 +2419,7 @@ int CMQOObject::CollisionLocal_Ray_BB(ChaVector3 startlocal, ChaVector3 dirlocal
 }
 
 
-int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirlocal,
+int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirlocal, double rayleng,
 	bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos)
 {
  
@@ -2438,7 +2469,7 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 	if (face_count > (int)(12 * 1.5)) {//バウンダリーの面数 x 1.5より面数が多い場合だけ　バウンダリーで予備判定
 		//2024/05/11
 		//まずはメッシュ全体のバウンダリーで粗く判定
-		int collibb = CollisionLocal_Ray_BB(startlocal, dirlocal);
+		int collibb = CollisionLocal_Ray_BB(startlocal, dirlocal, rayleng);
 		if (collibb == 0) {
 			return 0;
 		}
@@ -2480,10 +2511,10 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 			if ((boundindex >= 0) && (boundindex < arbound.size())) {
 				curbound = arbound[boundindex];
 				if (arboundnum > 1) {
-					int collibb = CollisionLocal_Ray_BB(curbound, startlocal, dirlocal);
+					int collibb = CollisionLocal_Ray_BB(curbound, startlocal, dirlocal, rayleng);
 					if (collibb == 0) {
 						//バウンダリーで衝突しない場合には　次のバウンダリーの判定にジャンプ
-						fno = PM3BOUNDINGFACENUM * (boundindex + 1) - 1;
+						fno = PM3BOUNDINGFACENUM * (boundindex + 1);
 						continue;
 					}
 				}
@@ -2688,7 +2719,7 @@ int CMQOObject::ChangeMorphAnimFrameLeng(int srcmotid, double newmotleng)
 		//##########################
 		m_shapeanimleng2[srcmotid] = newbufleng;
 
-		map<string, map<int, float*>>::iterator itrshapeanim;
+		unordered_map<string, unordered_map<int, float*>>::iterator itrshapeanim;
 		for (itrshapeanim = m_shapeanim2.begin(); itrshapeanim != m_shapeanim2.end(); itrshapeanim++) {
 
 			float* newshapeanim = (float*)malloc(sizeof(float) * newbufleng);//!!!!
@@ -3113,7 +3144,7 @@ int CMQOObject::AddShapeAnim(char* nameptr, int srcmotid, int animleng)
 		return 1;
 	}
 	ZeroMemory(newshapeanim, sizeof(float) * animleng);
-	map<string, map<int, float*>>::iterator itrshapeanim;
+	unordered_map<string, unordered_map<int, float*>>::iterator itrshapeanim;
 	itrshapeanim = m_shapeanim2.find(nameptr);
 	if (itrshapeanim != m_shapeanim2.end()) {
 		if (itrshapeanim->second[srcmotid] != nullptr) {
@@ -3123,7 +3154,7 @@ int CMQOObject::AddShapeAnim(char* nameptr, int srcmotid, int animleng)
 		itrshapeanim->second[srcmotid] = newshapeanim;
 	}
 	else {
-		map<int, float*> newanim;
+		unordered_map<int, float*> newanim;
 		newanim[srcmotid] = newshapeanim;
 		m_shapeanim2[nameptr] = newanim;
 	}
@@ -3168,7 +3199,7 @@ int CMQOObject::SetShapeAnim(char* nameptr, int srcmotid, int framecnt, float lW
 	}
 
 
-	map<int, int>::iterator itranimleng;
+	unordered_map<int, int>::iterator itranimleng;
 	itranimleng = m_shapeanimleng2.find(srcmotid);
 	if (itranimleng == m_shapeanimleng2.end()) {
 		_ASSERT(0);
@@ -3180,10 +3211,10 @@ int CMQOObject::SetShapeAnim(char* nameptr, int srcmotid, int framecnt, float lW
 		return 1;
 	}
 
-	map<string, map<int, float*>>::iterator itrshapeanim;
+	unordered_map<string, unordered_map<int, float*>>::iterator itrshapeanim;
 	itrshapeanim = m_shapeanim2.find(nameptr);
 	if (itrshapeanim != m_shapeanim2.end()) {
-		map<int, float*>::iterator itrshapeanim2;
+		unordered_map<int, float*>::iterator itrshapeanim2;
 		itrshapeanim2 = itrshapeanim->second.find(srcmotid);
 		if (itrshapeanim2 != itrshapeanim->second.end()) {
 			if (itrshapeanim2->second) {
@@ -3218,7 +3249,7 @@ int CMQOObject::SetShapeAnimWeight(int channelindex, int srcmotid, int framecnt,
 		return 1;
 	}
 
-	map<int, int>::iterator itranimleng;
+	unordered_map<int, int>::iterator itranimleng;
 	itranimleng = m_shapeanimleng2.find(srcmotid);
 	if (itranimleng == m_shapeanimleng2.end()) {
 		_ASSERT(0);
@@ -3230,10 +3261,10 @@ int CMQOObject::SetShapeAnimWeight(int channelindex, int srcmotid, int framecnt,
 		return 1;
 	}
 
-	map<string, map<int, float*>>::iterator itrshapeanim;
+	unordered_map<string, unordered_map<int, float*>>::iterator itrshapeanim;
 	itrshapeanim = m_shapeanim2.find(shapename);
 	if (itrshapeanim != m_shapeanim2.end()) {
-		map<int, float*>::iterator itrshapeanim2;
+		unordered_map<int, float*>::iterator itrshapeanim2;
 		itrshapeanim2 = itrshapeanim->second.find(srcmotid);
 		if (itrshapeanim2 != itrshapeanim->second.end()) {
 			if (itrshapeanim2->second) {
@@ -3275,7 +3306,7 @@ float CMQOObject::GetShapeAnimWeight(int srcmotid, int framecnt, int channelinde
 		return 0.0f;
 	}
 
-	map<int, int>::iterator itranimleng;
+	unordered_map<int, int>::iterator itranimleng;
 	itranimleng = m_shapeanimleng2.find(srcmotid);
 	if (itranimleng == m_shapeanimleng2.end()) {
 		_ASSERT(0);
@@ -3287,10 +3318,10 @@ float CMQOObject::GetShapeAnimWeight(int srcmotid, int framecnt, int channelinde
 		return 0.0f;
 	}
 
-	map<string, map<int, float*>>::iterator itrshapeanim;
+	unordered_map<string, unordered_map<int, float*>>::iterator itrshapeanim;
 	itrshapeanim = m_shapeanim2.find(shapename);
 	if (itrshapeanim != m_shapeanim2.end()) {
-		map<int, float*>::iterator itrshapeanim2;
+		unordered_map<int, float*>::iterator itrshapeanim2;
 		itrshapeanim2 = itrshapeanim->second.find(srcmotid);
 		if (itrshapeanim2 != itrshapeanim->second.end()) {
 			if (itrshapeanim2->second) {
@@ -3561,7 +3592,7 @@ int CMQOObject::IncludeTransparent(float multalpha, bool* pfound_noalpha, bool* 
 					}
 				}
 			}
-			//std::map<int, CMQOMaterial*>::iterator itrmaterial;
+			//std::unordered_map<int, CMQOMaterial*>::iterator itrmaterial;
 			//for (itrmaterial = GetMaterialBegin(); itrmaterial != GetMaterialEnd(); itrmaterial++) {
 			//	CMQOMaterial* curmaterial = itrmaterial->second;
 			//	if (curmaterial) {

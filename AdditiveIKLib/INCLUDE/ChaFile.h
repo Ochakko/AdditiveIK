@@ -8,7 +8,7 @@
 
 #include <vector>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 class CModel;
 class BPWorld;
@@ -26,7 +26,7 @@ public:
 
 	int WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, WCHAR* projname, 
 		std::vector<MODELELEM>& srcmodelindex, float srcmotspeed, 
-		std::map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
+		std::unordered_map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
 		std::vector<CGrassElem*> srcgrasselemvec,
 		DOLLYELEM2* srccameraonload);
 	int LoadChaFile(bool limitdegflag, WCHAR* strpath,
@@ -45,7 +45,7 @@ private:
 
 	int WriteFileInfo();
 	int WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, 
-		std::map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
+		std::unordered_map<CModel*, CFrameCopyDlg*> srcselbonedlgmap,
 		CGrassElem* srcgrasselem);
 
 	//int CheckFileVersion( XMLIOBUF* xmliobuf );
@@ -59,7 +59,7 @@ private:
 	std::vector<MODELELEM> m_modelindex;
 	WCHAR m_newdirname[MAX_PATH];
 
-	std::map<int, MOTINFO*> m_motinfo;
+	std::unordered_map<int, MOTINFO*> m_motinfo;
 	WCHAR m_wloaddir[MAX_PATH];
 	char m_mloaddir[MAX_PATH];
 

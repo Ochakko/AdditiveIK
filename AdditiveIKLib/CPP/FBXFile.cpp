@@ -55,7 +55,7 @@ static int s_firstanimout = 0;
 static int s_zeroframemotid = 0;
 static FbxNode* s_firstbindnode = nullptr;
 
-#include <map>
+#include <unordered_map>
 using namespace std;
 
 typedef struct tag_blsindex
@@ -100,7 +100,7 @@ typedef struct tag_blsinfo
 		}
 	};
 }BLSINFO;
-static map<int, BLSINFO> s_blsinfo;
+static unordered_map<int, BLSINFO> s_blsinfo;
 
 typedef struct tag_animinfo
 {
@@ -119,7 +119,7 @@ typedef struct tag_animinfo
 }ANIMINFO;
 
 
-static map<CBone*, map<int, int>> s_linkdirty;
+static unordered_map<CBone*, unordered_map<int, int>> s_linkdirty;
 static CModel* s_model = 0;
 
 static ANIMINFO* s_ai = 0;
@@ -129,8 +129,8 @@ static CFBXBone* s_fbxbone = 0;
 static CFBXBone* s_firsttopbone = 0;
 static int s_fbxbonenum = 0;
 
-static std::map<FbxNode*, CBone*> s_savenode2bone;
-static std::map<FbxNode*, FbxNode*> s_loadnode2savenode;
+static std::unordered_map<FbxNode*, CBone*> s_savenode2bone;
+static std::unordered_map<FbxNode*, FbxNode*> s_loadnode2savenode;
 
 static int sortfunc_leng( void *context, const void *elem1, const void *elem2);
 
@@ -147,7 +147,7 @@ static FbxManager* s_pSdkManager = 0;
 static int s_bvhflag = 0;
 static int s_bvhjointnum = 0;
 
-//static map<CBone*, FbxNode*> s_bone2skel;
+//static unordered_map<CBone*, FbxNode*> s_bone2skel;
 static int s_firstoutmot;
 
 //static void CreateSaveNode2BoneReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* ploadnode, FbxNode* parentskelnode);
@@ -594,7 +594,7 @@ bool CreateBVHScene( FbxManager *pSdkManager, FbxScene* pScene, char* fbxdate )
 	BLSINDEX blsindex;
 	ZeroMemory( &blsindex, sizeof( BLSINDEX ) );
 	s_blsinfo.clear();
-	map<int,CMQOObject*>::iterator itrobj;
+	unordered_map<int,CMQOObject*>::iterator itrobj;
 	for( itrobj = pmodel->m_object.begin(); itrobj != pmodel->m_object.end(); itrobj++ ){
 		CMQOObject* curobj = itrobj->second;
 		FbxNode* lMesh = CreateFbxMesh( pSdkManager, pScene, pmodel, curobj );
@@ -1497,7 +1497,7 @@ void CreateSkinMeshReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* pmodel
 		strcpy_s(dbgname, 256, srcnode->GetName());
 
 
-		map<FbxNode*, FbxNode*>::iterator itrsavenode;
+		unordered_map<FbxNode*, FbxNode*>::iterator itrsavenode;
 		itrsavenode = s_loadnode2savenode.find(srcnode);
 		if (itrsavenode != s_loadnode2savenode.end()) {
 			psavenode = itrsavenode->second;
@@ -1556,7 +1556,7 @@ void CreateSkinMeshReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* pmodel
 																				int dbgflag = 1;
 																			}
 
-																			map<FbxNode*, FbxNode*>::iterator itrsaveskel;
+																			unordered_map<FbxNode*, FbxNode*>::iterator itrsaveskel;
 																			itrsaveskel = s_loadnode2savenode.find(lLoadSkel);
 																			if (itrsaveskel != s_loadnode2savenode.end()) {
 																				FbxNode* lSaveSkel = itrsaveskel->second;
@@ -1959,7 +1959,7 @@ bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, C
 //	BLSINDEX blsindex;
 //	ZeroMemory(&blsindex, sizeof(BLSINDEX));
 //	s_blsinfo.clear();
-//	map<int, CMQOObject*>::iterator itrobj;
+//	unordered_map<int, CMQOObject*>::iterator itrobj;
 //	for (itrobj = pmodel->GetMqoObjectBegin(); itrobj != pmodel->GetMqoObjectEnd(); itrobj++) {
 //		CMQOObject* curobj = itrobj->second;
 //
@@ -2247,9 +2247,9 @@ int MapShapesOnMesh(FbxScene* pScene, FbxNode* lNode, FbxNode* srcnode, CModel* 
 //	(blsindex->channelno) = 0;
 //
 //	int targetcnt = 0;
-//	map<string,ChaVector3*> tmpmap;
+//	unordered_map<string,ChaVector3*> tmpmap;
 //	curobj->GetShapeVert2( tmpmap );
-//	map<string,ChaVector3*>::iterator itrshapev;
+//	unordered_map<string,ChaVector3*>::iterator itrshapev;
 //	for( itrshapev = tmpmap.begin(); itrshapev != tmpmap.end(); itrshapev++ ){
 //		string targetname = itrshapev->first;
 //		ChaVector3* curv = itrshapev->second;
@@ -3168,8 +3168,8 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 //		if (curbone) {
 //			int foundinf = 0;
 //
-//			map<CBone*, map<int, int>>::iterator itrlinkdirty;
-//			map<int, int> mapdirty;
+//			unordered_map<CBone*, unordered_map<int, int>>::iterator itrlinkdirty;
+//			unordered_map<int, int> mapdirty;
 //			s_linkdirty[curbone] = mapdirty;
 //			itrlinkdirty = s_linkdirty.find(curbone);
 //
@@ -3336,9 +3336,9 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 //			//CBone* curbone = fbxbone->GetBone();
 //			//_ASSERT(curbone);
 //			//if (curbone) {
-//				map<int, int> mapdirty;
+//				unordered_map<int, int> mapdirty;
 //				s_linkdirty[curbone] = mapdirty;
-//				map<CBone*, map<int, int>>::iterator itrlinkdirty;
+//				unordered_map<CBone*, unordered_map<int, int>>::iterator itrlinkdirty;
 //				itrlinkdirty = s_linkdirty.find(curbone);
 //
 //				int curclusterno = -1;
@@ -3496,7 +3496,7 @@ FbxTexture*  CreateTexture(FbxManager* pSdkManager, CModel* srcmodel, CMQOMateri
 //	if (srcattr) {
 //		FbxNodeAttribute::EType type = srcattr->GetAttributeType();
 //		if (type == FbxNodeAttribute::eSkeleton) {
-//			map<FbxNode*, FbxNode*>::iterator itrsavenode;
+//			unordered_map<FbxNode*, FbxNode*>::iterator itrsavenode;
 //			itrsavenode = s_loadnode2savenode.find(lSkelOnLoad);
 //			if (itrsavenode != s_loadnode2savenode.end()) {
 //				lSkel = itrsavenode->second;
@@ -3824,7 +3824,7 @@ void AnimateBoneReq(bool limitdegflag, FbxNode* pNode, FbxAnimLayer* lAnimLayer,
     int lKeyIndex = 0;
     FbxNode* lSkel = 0;
 
-	map<FbxNode*, CBone*>::iterator itrbone;
+	unordered_map<FbxNode*, CBone*>::iterator itrbone;
 	itrbone = s_savenode2bone.find(pNode);
 	if ((itrbone != s_savenode2bone.end()) && (strcmp(pNode->GetName(), "Root") != 0)) {
 		lSkel = pNode;
@@ -3977,7 +3977,7 @@ int WriteBindPose(FbxScene* pScene, CModel* pmodel)
 		_ASSERT( 0 );
 	}
 
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for( itrbone = pmodel->m_bonelist.begin(); itrbone != pmodel->m_bonelist.end(); itrbone++ ){
 		CBone* curbone = itrbone->second;
 		FbxNode* curskel = s_bone2skel[ curbone ];
@@ -4152,7 +4152,7 @@ void WriteBindPoseReq(CModel* pmodel, FbxNode* pNode, FbxPose* srcbindpose, FbxP
 	CFBXBone fbxbone;
 	fbxbone.SetSkelNode(pNode);
 
-	map<FbxNode*, CBone*>::iterator itrbone;
+	unordered_map<FbxNode*, CBone*>::iterator itrbone;
 	itrbone = s_savenode2bone.find(pNode);
 	if (itrbone != s_savenode2bone.end()) {
 		CBone* curbone = itrbone->second;
@@ -4653,7 +4653,7 @@ int AnimateMorph(FbxScene* pScene, CModel* pmodel)
 
 
 		FbxAnimLayer* ldstAnimLayer = curai->animlayer;
-		map<int, BLSINFO>::iterator itrblsinfo;
+		unordered_map<int, BLSINFO>::iterator itrblsinfo;
 		for( itrblsinfo = s_blsinfo.begin(); itrblsinfo != s_blsinfo.end(); itrblsinfo++ ){
 			BLSINFO curinfo = itrblsinfo->second;
 			string strchannelname = curinfo.channelname;

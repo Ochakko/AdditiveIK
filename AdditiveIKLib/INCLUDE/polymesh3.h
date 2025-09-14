@@ -8,7 +8,7 @@
 #include <crtdbg.h>
 //#include <infelem.h>
 
-#include <map>
+#include <unordered_map>
 #include <string>
 //using namespace std;
 
@@ -32,7 +32,7 @@ public:
 	//int SetIndexBuf();	
 	//int InvIndexBuf();
 
-	int ChkAlphaNum(std::map<int,CMQOMaterial*>& srcmat );
+	int ChkAlphaNum(std::unordered_map<int,CMQOMaterial*>& srcmat );
 	int CalcBound();
 
 	//int CalcInfNoSkin( CBone* applybone );

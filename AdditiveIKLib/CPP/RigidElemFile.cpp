@@ -22,7 +22,7 @@
 
 #define DBGH
 #include <dbg.h>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 #include <shlwapi.h>
@@ -95,7 +95,7 @@ int CRigidElemFile::WriteRigidElemFile( WCHAR* strpath, CModel* srcmodel, int re
 	CallF( Write2File( "    <SCBTG>%f</SCBTG>\r\n", m_btgscale ), return 1 );
 
 	//WriteREReq( m_model->GetTopBone(false) );
-	std::map<int, CBone*>::iterator itrbone;
+	std::unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_model->GetBoneListBegin(); itrbone != m_model->GetBoneListEnd(); itrbone++) {
 		CBone* srcbone = itrbone->second;
 		if (srcbone && srcbone->IsSkeleton()) {
@@ -158,7 +158,7 @@ int CRigidElemFile::WriteRE( CBone* srcbone )
 	CallF( Write2File( "    <Name>%s</Name>\r\n", srcbone->GetBoneName() ), return 1);
 	CallF( Write2File( "    <BTKIN>%d</BTKIN>\r\n", srcbone->GetBtForce() ), return 1);
 
-	//map<CBone*,CRigidElem*>::iterator itrre;
+	//unordered_map<CBone*,CRigidElem*>::iterator itrre;
 	//for( itrre = srcbone->GetRigidElemMapBegin(); itrre != srcbone->GetRigidElemMapEnd(); itrre++ ){
 	//	CRigidElem* curre = itrre->second;
 	CBone* childbone = srcbone->GetChild(false);

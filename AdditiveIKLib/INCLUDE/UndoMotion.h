@@ -9,7 +9,7 @@
 #include <wchar.h>
 #include <Coef.h>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 
 class CModel;
@@ -215,10 +215,10 @@ private:
 
 	MOTINFO m_savemotinfo;
 	MOTINFO m_savecameramotinfo;
-	std::map<CBone*, CMotionPoint*> m_bone2mp;
-	std::map<CMQOObject*, CMorphKey*> m_base2mk;
-	std::map<CBone*, std::map<double, int>> m_bonemotmark;
-	std::map<CBone*, ANGLELIMIT> m_bone2limit;
+	std::unordered_map<CBone*, CMotionPoint*> m_bone2mp;
+	std::unordered_map<CMQOObject*, CMorphKey*> m_base2mk;
+	std::unordered_map<CBone*, std::unordered_map<double, int>> m_bonemotmark;
+	std::unordered_map<CBone*, ANGLELIMIT> m_bone2limit;
 
 	std::vector<float> m_blendshapeweight;//2024/07/01
 

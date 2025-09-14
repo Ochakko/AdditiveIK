@@ -4,7 +4,7 @@
 
 #include <wchar.h>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 #include <Coef.h>
 #include <OrgWindow.h>
@@ -302,7 +302,7 @@ public:
 		}
 
 	};
-	int SetLineno2Boneno(int srcmodelindex, std::map<int, int> srclineno2boneno, std::map<int, int> srcboneno2lineno)
+	int SetLineno2Boneno(int srcmodelindex, std::unordered_map<int, int> srclineno2boneno, std::unordered_map<int, int> srcboneno2lineno)
 	{
 		if (m_modelindex.empty()) {
 			_ASSERT(0);
@@ -318,7 +318,7 @@ public:
 			return 1;
 		}
 	};
-	int GetLineno2Boneno(int srcmodelindex, std::map<int, int>& dstlineno2boneno, std::map<int, int>& dstboneno2lineno)
+	int GetLineno2Boneno(int srcmodelindex, std::unordered_map<int, int>& dstlineno2boneno, std::unordered_map<int, int>& dstboneno2lineno)
 	{
 		if (m_modelindex.empty()) {
 			_ASSERT(0);

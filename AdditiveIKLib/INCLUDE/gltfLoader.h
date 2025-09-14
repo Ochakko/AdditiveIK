@@ -3,7 +3,7 @@
 
 #include <wchar.h>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 #ifdef GLTFLOADERIMPL
 #define TINYGLTF_IMPLEMENTATION

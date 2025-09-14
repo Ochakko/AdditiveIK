@@ -54,7 +54,7 @@ int CRetargetFile::DestroyObjs()
 	return 0;
 }
 
-int CRetargetFile::WriteRetargetFile(WCHAR* srcpath, CModel* srcmodel, CModel* srcbvh, std::map<CBone*, CBone*>& convbonemap)
+int CRetargetFile::WriteRetargetFile(WCHAR* srcpath, CModel* srcmodel, CModel* srcbvh, std::unordered_map<CBone*, CBone*>& convbonemap)
 {
 	if (!srcpath || !srcmodel || !srcbvh || convbonemap.empty()) {
 		_ASSERT(0);
@@ -120,7 +120,7 @@ int CRetargetFile::WriteRetargetInfo(const char* modeljointname, const char* bvh
 	return 0;
 }
 
-int CRetargetFile::LoadRetargetFile(WCHAR* srcpath, CModel* srcmodel, CModel* srcbvh, std::map<CBone*, CBone*>& convbonemap)
+int CRetargetFile::LoadRetargetFile(WCHAR* srcpath, CModel* srcmodel, CModel* srcbvh, std::unordered_map<CBone*, CBone*>& convbonemap)
 {
 	if (!srcpath || !srcmodel || !srcbvh) {
 		_ASSERT(0);

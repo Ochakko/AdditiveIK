@@ -6,7 +6,7 @@
 #include <Coef.h>
 #include <XMLIO.h>
 
-#include <map>
+#include <unordered_map>
 #include <string>
 
 class CModel;

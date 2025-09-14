@@ -22,7 +22,7 @@
 #define DBGH
 #include <dbg.h>
 
-#include <map>
+#include <unordered_map>
 
 #include <shlwapi.h>
 
@@ -96,7 +96,7 @@ int CImpFile::WriteImpFile( WCHAR* strpath, CModel* srcmodel )
 	CallF( Write2File( "    <FileInfo>1001-01</FileInfo>\r\n" ), return 1 );
 
 	//WriteImpReq( m_model->GetTopBone(false) );
-	std::map<int, CBone*>::iterator itrbone;
+	std::unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_model->GetBoneListBegin(); itrbone != m_model->GetBoneListEnd(); itrbone++) {
 		CBone* srcbone = itrbone->second;
 		if (srcbone && srcbone->IsSkeleton()) {
@@ -148,7 +148,7 @@ int CImpFile::WriteImp( CBone* srcbone )
 		return 0;
 	}
 
-	map<string, map<CBone*,ChaVector3>>::iterator itrcurmap;
+	unordered_map<string, unordered_map<CBone*,ChaVector3>>::iterator itrcurmap;
 	itrcurmap = srcbone->FindImpMap(m_strimp);
 	if( itrcurmap == srcbone->GetImpMapEnd() ){
 		_ASSERT( 0 );
@@ -157,7 +157,7 @@ int CImpFile::WriteImp( CBone* srcbone )
 	CallF( Write2File( "  <Bone>\r\n" ), return 1);
 	CallF( Write2File( "    <Name>%s</Name>\r\n", srcbone->GetBoneName() ), return 1);
 
-	map<CBone*,ChaVector3>::iterator itrimp;
+	unordered_map<CBone*,ChaVector3>::iterator itrimp;
 	for( itrimp = itrcurmap->second.begin(); itrimp != itrcurmap->second.end(); itrimp++ ){
 		ChaVector3 curimp = itrimp->second;
 		CallF( Write2File( "    <RigidElem>\r\n" ), return 1);

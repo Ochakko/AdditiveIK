@@ -7,7 +7,7 @@
 //#include <d3dx9.h>
 #include <wchar.h>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 #include <Coef.h>
 #include <OrgWindow.h>
@@ -510,14 +510,14 @@ public:
  * FillTimeLine
  * @breaf タイムラインにボーンの分、行を追加する。
  * @param (OrgWinGUI::OWP_Timeline& timeline) OUT タイムライン。
- * @param (map<int, int>& lineno2boneno) OUT タイムラインの行番号からボーンIDを検索するためのmap。
- * @param (map<int, int>& boneno2lineno) OUT ボーンIDからタイムラインの行番号を検索するためのmap。
+ * @param (unordered_map<int, int>& lineno2boneno) OUT タイムラインの行番号からボーンIDを検索するためのmap。
+ * @param (unordered_map<int, int>& boneno2lineno) OUT ボーンIDからタイムラインの行番号を検索するためのmap。
  * @return 成功したら０。
  */
-	int FillTimeLine( OrgWinGUI::OWP_Timeline& timeline, std::map<int, int>& lineno2boneno, std::map<int, int>& boneno2lineno );
+	int FillTimeLine( OrgWinGUI::OWP_Timeline& timeline, std::unordered_map<int, int>& lineno2boneno, std::unordered_map<int, int>& boneno2lineno );
 	int FillTimeLineOne(CBone* curbone, int lineno,
 		OrgWinGUI::OWP_Timeline& timeline,
-		std::map<int, int>& lineno2boneno, std::map<int, int>& boneno2lineno);
+		std::unordered_map<int, int>& lineno2boneno, std::unordered_map<int, int>& boneno2lineno);
 
 
 /**
@@ -1194,7 +1194,7 @@ public:
 	int SetBefEditMatFK(bool limitdegflag, CEditRange* erptr, CBone* curbone);
 
 	int Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj,
-		std::map<CBone*, CBone*>& sconvbonemap,
+		std::unordered_map<CBone*, CBone*>& sconvbonemap,
 		int (*srcAddMotionFunc)(const WCHAR* wfilename, double srcmotleng));
 
 	int CreateMaterialTexture();
@@ -1283,10 +1283,10 @@ private:
 	//	ChaMatrix* parmat, CQuaternion* parq, CBone* srcbone, int broflag );
 
 	//void FillTimelineReq( OrgWinGUI::OWP_Timeline& timeline, CBone* curbone, int* linenoptr, 
-	//	std::map<int, int>& lineno2boneno, std::map<int, int>& boneno2lineno, int broflag );
+	//	std::unordered_map<int, int>& lineno2boneno, std::unordered_map<int, int>& boneno2lineno, int broflag );
 
 	void SetSelectFlagReq( CBone* boneptr, int broflag );
-	int CalcMouseLocalRay( UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVector3* dirptr );
+	int CalcMouseLocalRay( UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVector3* dirptr, double* rayleng);
 	int CalcMouseGlobalRay(UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVector3* dirptr);
 	//CBone* GetCalcRootBone( CBone* firstbone, int maxlevel );
 	//void CalcXTransformMatrixReq( CBone* srcbone, ChaMatrix parenttra, float mult );
@@ -1629,20 +1629,20 @@ public: //accesser
 		return (int)m_object.size();
 	};
 	CMQOObject* GetMqoObject( int srcobjno ){
-		std::map<int, CMQOObject*>::iterator itrobj;
-		itrobj = m_object.find(srcobjno);
-		if (itrobj != m_object.end()){
-			return itrobj->second;
-		}
-		else{
-			return 0;
-		}
-		//return m_object[ srcobjno ];
+		//std::unordered_map<int, CMQOObject*>::iterator itrobj;
+		//itrobj = m_object.find(srcobjno);
+		//if (itrobj != m_object.end()){
+		//	return itrobj->second;
+		//}
+		//else{
+		//	return 0;
+		//}
+		return m_object[ srcobjno ];
 	};
-	std::map<int,CMQOObject*>::iterator GetMqoObjectBegin(){
+	std::unordered_map<int,CMQOObject*>::iterator GetMqoObjectBegin(){
 		return m_object.begin();
 	};
-	std::map<int,CMQOObject*>::iterator GetMqoObjectEnd(){
+	std::unordered_map<int,CMQOObject*>::iterator GetMqoObjectEnd(){
 		return m_object.end();
 	};
 	void SetMqoObject( int srcindex, CMQOObject* srcobj ){
@@ -1675,15 +1675,15 @@ public: //accesser
 		}
 
 
-		std::map<std::string, CBone*>::iterator itrbone;
-		itrbone = m_bonename.find(srcname);
-		if (itrbone != m_bonename.end()) {
-			return itrbone->second;
-		}
-		else{
-			return 0;
-		}
-		//return m_bonename[ srcname ];
+		//std::unordered_map<std::string, CBone*>::iterator itrbone;
+		//itrbone = m_bonename.find(srcname);
+		//if (itrbone != m_bonename.end()) {
+		//	return itrbone->second;
+		//}
+		//else{
+		//	return 0;
+		//}
+		return m_bonename[ srcname ];
 	};
 
 
@@ -1692,7 +1692,7 @@ public: //accesser
 	//###############################
 	CBone* FindBoneByPattern(std::string srcpattern)
 	{
-		std::map<std::string, CBone*>::iterator itrbone;
+		std::unordered_map<std::string, CBone*>::iterator itrbone;
 		for (itrbone = m_bonename.begin(); itrbone != m_bonename.end(); itrbone++) {
 			if (strstr(itrbone->first.c_str(), srcpattern.c_str()) != 0) {
 				return itrbone->second;
@@ -1781,10 +1781,10 @@ public: //accesser
 	int GetBoneForMotionSize();//eNull含まない
 	int GetMaxBoneNo();
 
-	std::map<int,CBone*>::iterator GetBoneListBegin(){
+	std::unordered_map<int,CBone*>::iterator GetBoneListBegin(){
 		return m_bonelist.begin();
 	};
-	std::map<int,CBone*>::iterator GetBoneListEnd(){
+	std::unordered_map<int,CBone*>::iterator GetBoneListEnd(){
 		return m_bonelist.end();
 	};
 	CBone* GetBoneByID( int srcid ){
@@ -1792,22 +1792,22 @@ public: //accesser
 			_ASSERT(0);
 			return nullptr;
 		}
-		std::map<int, CBone*>::iterator itrbone;
-		itrbone = m_bonelist.find(srcid);
-		if (itrbone != m_bonelist.end()){
-			return itrbone->second;
-		}
-		else{
-			return nullptr;
-		}
-		//return m_bonelist[ srcid ];
+		//std::unordered_map<int, CBone*>::iterator itrbone;
+		//itrbone = m_bonelist.find(srcid);
+		//if (itrbone != m_bonelist.end()){
+		//	return itrbone->second;
+		//}
+		//else{
+		//	return nullptr;
+		//}
+		return m_bonelist[ srcid ];
 	};
 	CBone* GetBoneByZeroBaseIndex(int srcindex) {
 		int bonenum = (int)m_bonelist.size();
 		if ((srcindex < 0) || (srcindex >= bonenum)) {
 			return nullptr;
 		}
-		std::map<int, CBone*>::iterator itrbone;
+		std::unordered_map<int, CBone*>::iterator itrbone;
 		int curindex = 0;
 		itrbone = m_bonelist.begin();
 		while (curindex < srcindex) {
@@ -2142,7 +2142,7 @@ public: //accesser
 		//		currentmi->loopflag = srcloopflag;
 		//	}
 		//}
-		std::map<int, MOTINFO*>::iterator itrmi;
+		std::unordered_map<int, MOTINFO*>::iterator itrmi;
 		for (itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++) {
 			MOTINFO* miptr = itrmi->second;
 			if (miptr) {
@@ -2153,10 +2153,10 @@ public: //accesser
 		return 0;
 	}
 
-	//std::map<int,MOTINFO*>::iterator GetMotInfoBegin(){
+	//std::unordered_map<int,MOTINFO*>::iterator GetMotInfoBegin(){
 	//	return m_motinfo.begin();
 	//};
-	//std::map<int,MOTINFO*>::iterator GetMotInfoEnd(){
+	//std::unordered_map<int,MOTINFO*>::iterator GetMotInfoEnd(){
 	//	return m_motinfo.end();
 	//};
 
@@ -2190,7 +2190,7 @@ public: //accesser
 		//if (GetNoBoneFlag() == false) {
 			MOTINFO retmi;
 			retmi.Init();
-			std::map<int, MOTINFO*>::iterator itrmi;
+			std::unordered_map<int, MOTINFO*>::iterator itrmi;
 			for (itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++) {
 				MOTINFO* curmi = itrmi->second;
 				if (!cameraanimflag && !curmi->cameramotion) {
@@ -2236,7 +2236,7 @@ public: //accesser
 	};
 	int GetCameraMotInfoSize() {
 		int retsize = 0;
-		std::map<int, MOTINFO*>::iterator itrmi;
+		std::unordered_map<int, MOTINFO*>::iterator itrmi;
 		for (itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++) {
 			MOTINFO* chkmi = itrmi->second;
 			if (chkmi && chkmi->cameramotion) {
@@ -2249,7 +2249,7 @@ public: //accesser
 		MOTINFO retmi;
 		retmi.Init();
 		int count = 0;
-		std::map<int, MOTINFO*>::iterator itrmi;
+		std::unordered_map<int, MOTINFO*>::iterator itrmi;
 		for (itrmi = m_motinfo.begin(); itrmi != m_motinfo.end(); itrmi++) {
 			MOTINFO* chkmi = itrmi->second;
 			if (chkmi && chkmi->cameramotion) {
@@ -2619,7 +2619,7 @@ public: //accesser
 
 	CMQOObject* GetObjectByName(std::string strname)
 	{
-		std::map<std::string, CMQOObject*>::iterator itrobjname;
+		std::unordered_map<std::string, CMQOObject*>::iterator itrobjname;
 		itrobjname = m_objectname.find(strname);
 		if (itrobjname == m_objectname.end()){
 			return 0;
@@ -2990,7 +2990,7 @@ public: //accesser
 		}
 
 		if ((srcgroupindex >= 0) && (srcgroupindex < MAXDISPGROUPNUM)) {
-			std::map<int, DISPGROUPELEM>::iterator itrdigelem;
+			std::unordered_map<int, DISPGROUPELEM>::iterator itrdigelem;
 			for (itrdigelem = m_objno2digelem.begin(); itrdigelem != m_objno2digelem.end(); itrdigelem++) {
 				DISPGROUPELEM digelem = itrdigelem->second;
 				if (digelem.pNode) {
@@ -3009,7 +3009,7 @@ public: //accesser
 	void SetDispGroup(int srcgroupindex, int srcobjno)
 	{
 		if ((srcgroupindex >= 0) && (srcgroupindex < MAXDISPGROUPNUM)) {
-			std::map<int, DISPGROUPELEM>::iterator itrdigelem;
+			std::unordered_map<int, DISPGROUPELEM>::iterator itrdigelem;
 			itrdigelem = m_objno2digelem.find(srcobjno);
 			if (itrdigelem != m_objno2digelem.end()) {
 				itrdigelem->second.groupno = srcgroupindex + 1;//groupno = groupindex + 1
@@ -3659,9 +3659,9 @@ private:
 	char m_defaultrename[MAX_PATH];//RigidEelemファイル*.refのデフォルトのファイル名。
 	char m_defaultimpname[MAX_PATH];//インパルスファイル*.impのデフォルトのファイル名。
 
-	std::map<int, CMQOObject*> m_object;//オブジェクト。別の言葉でいうと３Dモデルにおける名前が付けられているパーツや部品。
-	std::map<int, CBone*> m_bonelist;//ボーンをボーンIDから検索できるようにしたmap。
-	std::map<std::string, CBone*> m_bonename;//ボーンを名前から検索できるようにしたmap。
+	std::unordered_map<int, CMQOObject*> m_object;//オブジェクト。別の言葉でいうと３Dモデルにおける名前が付けられているパーツや部品。
+	std::unordered_map<int, CBone*> m_bonelist;//ボーンをボーンIDから検索できるようにしたmap。
+	std::unordered_map<std::string, CBone*> m_bonename;//ボーンを名前から検索できるようにしたmap。
 	std::vector<std::string> m_ikstopname;//2023/07/21 IKStopフラグを設定するジョイントの名前の一部
 
 	CBone* m_topbone;//一番親のボーン。
@@ -3690,7 +3690,7 @@ private:
 	//int m_calceulthreadsnum;//4
 
 
-	std::map<int, MOTINFO*> m_motinfo;//モーションのプロパティをモーションIDから検索できるようにしたmap。
+	std::unordered_map<int, MOTINFO*> m_motinfo;//モーションのプロパティをモーションIDから検索できるようにしたmap。
 	MOTINFO* m_curmotinfo;//m_motinfoの中の現在再生中のMOTINFOへのポインタ。
 
 	std::vector<REINFO> m_rigideleminfo;//剛体設定ファイル*.refのファイル情報のvector。
@@ -3704,8 +3704,8 @@ private:
 	float m_tmpmotspeed;//モーション再生倍率の一時保存用。
 
 	////polymesh3用のマテリアル。polymesh4はmqoobjectのmqomaterialを使用する。
-	//std::map<int, CMQOMaterial*> m_material;
-	//std::map<std::string, CMQOMaterial*> m_materialname;
+	//std::unordered_map<int, CMQOMaterial*> m_material;
+	//std::unordered_map<std::string, CMQOMaterial*> m_materialname;
 	TResourceBank<CMQOMaterial> m_materialbank;
 
 
@@ -3730,16 +3730,16 @@ private:
 	ChaMatrix m_matProj;
 	ChaMatrix m_matVP;//View * Projection 変換行列。
 
-	std::map<CMQOObject*, FBXOBJ*> m_fbxobj;//FbxNodeのラッパークラスとCMQOObjectとのmap。
-	std::map<std::string, CMQOObject*> m_objectname;//CMQOObjectを名前で検索するためのmap。
+	std::unordered_map<CMQOObject*, FBXOBJ*> m_fbxobj;//FbxNodeのラッパークラスとCMQOObjectとのmap。
+	std::unordered_map<std::string, CMQOObject*> m_objectname;//CMQOObjectを名前で検索するためのmap。
 
 
 	int (*m_tlFunc)( int srcmotid );//Main.cppに実態があるタイムライン初期化用の関数へのポインタ。データ読み込み時にCModelから初期化関数を呼ぶ。
 
 	mutable FbxTime mStart, mStop, mFrameTime, mFrameTime2;//Fbxでの時間表現。アニメーションの時間(フレーム)指定などに使用。
 
-	std::map<CBone*, FbxNode*> m_bone2node;//ボーンとFbxNodeの対応表。FbxNodeはFBXファイル内のオブジェクトの階層をたどる際などに利用する。
-	std::map<CBone*,CBone*> m_rigidbone;//剛体１つはボーン１つに対応している。ボーンは親のジョイントと子供のジョイントからなる。ジョイントとボーンは同じように呼ぶことがある。剛体の親ボーンを子供ボーンからけんさくすることに使用する。
+	std::unordered_map<CBone*, FbxNode*> m_bone2node;//ボーンとFbxNodeの対応表。FbxNodeはFBXファイル内のオブジェクトの階層をたどる際などに利用する。
+	std::unordered_map<CBone*,CBone*> m_rigidbone;//剛体１つはボーン１つに対応している。ボーンは親のジョイントと子供のジョイントからなる。ジョイントとボーンは同じように呼ぶことがある。剛体の親ボーンを子供ボーンからけんさくすることに使用する。
 
 	int m_texpool;//Direct3Dのテクスチャ作成プール（場所）。システムメモリかビデオメモリかマネージドか選ぶ。通常は0でビデオメモリを指定する。
 	ChaVector3 m_ikrotaxis;//IK, FKでボーン回転するための回転軸を一時的に保存する。
@@ -3772,11 +3772,11 @@ private:
 	ChaVector4 m_materialdisprate;//diffuse, specular, emissive, ambient
 
 	CNodeOnLoad* m_nodeonload;//CNodeOnLoad of Root Node.
-	std::map<FbxNode*, CMQOObject*> m_node2mqoobj;
-	std::map<FbxNode*, CBone*> m_node2bone;
+	std::unordered_map<FbxNode*, CMQOObject*> m_node2mqoobj;
+	std::unordered_map<FbxNode*, CBone*> m_node2bone;
 
 
-	std::map<int, DISPGROUPELEM> m_objno2digelem;
+	std::unordered_map<int, DISPGROUPELEM> m_objno2digelem;
 	std::vector<DISPGROUPELEM> m_dispgroup[MAXDISPGROUPNUM];//m_dispgroup[groupno] = vector<objno>
 	bool m_dispgroupON[MAXDISPGROUPNUM];
 	std::vector<std::string> m_latertransparent;

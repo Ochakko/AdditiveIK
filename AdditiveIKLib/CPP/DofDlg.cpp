@@ -172,7 +172,7 @@ int CDofDlg::SetPosAndSize(int srcposx, int srcposy, int srcsizex, int srcsizey)
 //}
 
 
-//void CDofDlg::SetModel(CModel* srcmodel, int srccurboneno, std::map<CModel*, int> srcrgdindexmap)
+//void CDofDlg::SetModel(CModel* srcmodel, int srccurboneno, std::unordered_map<CModel*, int> srcrgdindexmap)
 //{
 //	m_model = srcmodel;
 //	m_curboneno = srccurboneno;

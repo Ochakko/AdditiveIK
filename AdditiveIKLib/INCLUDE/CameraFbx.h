@@ -1,7 +1,7 @@
 ﻿#ifndef CAMERAFBXH
 #define CAMERAFBXH
 
-#include <map>
+#include <unordered_map>
 #include <string>
 
 #include <Coef.h>
@@ -269,7 +269,7 @@ private:
 	bool m_loadedflag;
 
 	std::vector<CAMERANODE*> m_cameranode;
-	std::map<int, CAMERANODE*> m_cameramotion;//<motid, cameranode>
+	std::unordered_map<int, CAMERANODE*> m_cameramotion;//<motid, cameranode>
 
 
 	double m_time;

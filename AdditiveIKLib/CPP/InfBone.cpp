@@ -58,7 +58,7 @@ int CInfBone::InitParams()
 
 int CInfBone::DestroyObjs()
 {
-	map<CMQOObject*, INFDATA*>::iterator itrinf;
+	unordered_map<CMQOObject*, INFDATA*>::iterator itrinf;
 	for( itrinf = m_infdata.begin(); itrinf != m_infdata.end(); itrinf++ ){
 		INFDATA* curinf;
 		curinf = itrinf->second;
@@ -219,7 +219,7 @@ INFDATA* CInfBone::GetInfData(CMQOObject* srcobj)
 		return 0;
 	}
 
-	map<CMQOObject*, INFDATA*>::iterator itrinf;
+	unordered_map<CMQOObject*, INFDATA*>::iterator itrinf;
 	itrinf = m_infdata.find(srcobj);
 	if (itrinf == m_infdata.end()){
 		return 0;

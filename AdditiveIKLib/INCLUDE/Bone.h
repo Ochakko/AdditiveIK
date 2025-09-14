@@ -9,7 +9,7 @@
 
 #include <fbxsdk.h>
 
-#include <map>
+#include <unordered_map>
 #include <string>
 
 #include <Coef.h>
@@ -731,7 +731,7 @@ public: //accesser
 		if (srcmotid <= 0) {
 			return nullptr;
 		}
-		std::map<int, CMotionPoint*>::iterator itrmotkey;
+		std::unordered_map<int, CMotionPoint*>::iterator itrmotkey;
 		itrmotkey = m_motionkey.find(srcmotid);
 		if (itrmotkey != m_motionkey.end()) {
 			return itrmotkey->second;
@@ -763,7 +763,7 @@ public: //accesser
 	bool ExistInitIndexedMotionPoint(int srcmotid)
 	{
 		bool existflag = false;
-		std::map<int, bool>::iterator itrinitflag;
+		std::unordered_map<int, bool>::iterator itrinitflag;
 		itrinitflag = m_initindexedmotionpoint.find(srcmotid);//initflag
 		if (itrinitflag == m_initindexedmotionpoint.end()) {//エントリーがまだ無いとき
 			existflag = false;
@@ -781,7 +781,7 @@ public: //accesser
 	int GetIndexedMotionPointFrameLeng(int srcmotid)
 	{
 		int mpmapleng = 0;
-		std::map<int, std::vector<CMotionPoint*>>::iterator itrvecmpmap;
+		std::unordered_map<int, std::vector<CMotionPoint*>>::iterator itrvecmpmap;
 
 		itrvecmpmap = m_indexedmotionpoint.find(srcmotid);
 		if (itrvecmpmap == m_indexedmotionpoint.end()) {
@@ -795,7 +795,7 @@ public: //accesser
 
 	void GetIndexedMotionPointVec(int srcmotid, std::vector<CMotionPoint*>& dstvec)
 	{
-		std::map<int, std::vector<CMotionPoint*>>::iterator itrvecmpmap;
+		std::unordered_map<int, std::vector<CMotionPoint*>>::iterator itrvecmpmap;
 		itrvecmpmap = m_indexedmotionpoint.find(srcmotid);
 		if (itrvecmpmap == m_indexedmotionpoint.end()) {
 			dstvec.clear();
@@ -808,7 +808,7 @@ public: //accesser
 	CMotionPoint* GetIndexedMotionPoint(int srcmotid, int srcframeindex)
 	{
 		CMotionPoint* retmp = 0;
-		std::map<int, std::vector<CMotionPoint*>>::iterator itrvecmpmap;
+		std::unordered_map<int, std::vector<CMotionPoint*>>::iterator itrvecmpmap;
 
 		itrvecmpmap = m_indexedmotionpoint.find(srcmotid);
 		if (itrvecmpmap == m_indexedmotionpoint.end()) {
@@ -834,7 +834,7 @@ public: //accesser
 		*ppendframemp = 0;
 		*pmpvecsize = 0;
 
-		std::map<int, std::vector<CMotionPoint*>>::iterator itrvecmpmap;
+		std::unordered_map<int, std::vector<CMotionPoint*>>::iterator itrvecmpmap;
 
 		itrvecmpmap = m_indexedmotionpoint.find(srcmotid);
 		if (itrvecmpmap == m_indexedmotionpoint.end()) {
@@ -976,7 +976,7 @@ public: //accesser
 	void SetGlobalPosMat( FbxAMatrix srcmat ){ m_globalpos = srcmat; };
 
 	int GetRigidElemSize(){
-		std::map<std::string, std::map<CBone*, CRigidElem*>>::iterator itrremap;
+		std::unordered_map<std::string, std::unordered_map<CBone*, CRigidElem*>>::iterator itrremap;
 		itrremap = m_remap.find(m_rigidelemname);
 		if (itrremap != m_remap.end()){
 			return (int)itrremap->second.size();
@@ -989,8 +989,8 @@ public: //accesser
 	CRigidElem* GetRigidElem( CBone* srcbone ){ 
 		return GetRigidElemOfMap(m_rigidelemname, srcbone);
 	};
-	//std::map<CBone*, CRigidElem*>::iterator GetRigidElemMapBegin(){
-	//	std::map<std::string, std::map<CBone*, CRigidElem*>>::iterator itrremap;
+	//std::unordered_map<CBone*, CRigidElem*>::iterator GetRigidElemMapBegin(){
+	//	std::unordered_map<std::string, std::unordered_map<CBone*, CRigidElem*>>::iterator itrremap;
 	//	itrremap = m_remap.find(m_rigidelemname);
 	//	if (itrremap != m_remap.end()){
 	//		return itrremap->second.begin();
@@ -999,8 +999,8 @@ public: //accesser
 	//		return itrremap->second.end();
 	//	}
 	//};
-	//std::map<CBone*, CRigidElem*>::iterator GetRigidElemMapEnd(){
-	//	std::map<std::string, std::map<CBone*, CRigidElem*>>::iterator itrremap;
+	//std::unordered_map<CBone*, CRigidElem*>::iterator GetRigidElemMapEnd(){
+	//	std::unordered_map<std::string, std::unordered_map<CBone*, CRigidElem*>>::iterator itrremap;
 	//	itrremap = m_remap.find(m_rigidelemname);
 	//	return itrremap->second.end();
 	//};
@@ -1008,20 +1008,20 @@ public: //accesser
 		SetRigidElemOfMap(m_rigidelemname, srcbone, srcre);
 	};
 
-	//std::map<std::string, std::map<CBone*, CRigidElem*>>::iterator FindRigidElemOfMap(std::string srcname){
+	//std::unordered_map<std::string, std::unordered_map<CBone*, CRigidElem*>>::iterator FindRigidElemOfMap(std::string srcname){
 	//	return m_remap.find(srcname);
 	//};
 	int GetReMapSize(){ return (int)m_remap.size(); };
 	int GetReMapSize2(std::string srcstring){
-		std::map<CBone*, CRigidElem*> curmap = m_remap[ srcstring ];
+		std::unordered_map<CBone*, CRigidElem*> curmap = m_remap[ srcstring ];
 		return (int)curmap.size();
 	};
 	CRigidElem* GetRigidElemOfMap( std::string srcstr, CBone* srcbone ){
-		std::map<std::string, std::map<CBone*, CRigidElem*>>::iterator itrremap;
+		std::unordered_map<std::string, std::unordered_map<CBone*, CRigidElem*>>::iterator itrremap;
 		itrremap = m_remap.find(srcstr);
 		if (itrremap != m_remap.end()){
 			//itrremap->second[srcbone];
-			std::map<CBone*, CRigidElem*>::iterator itrmap2;
+			std::unordered_map<CBone*, CRigidElem*>::iterator itrmap2;
 			itrmap2 = itrremap->second.find(srcbone);
 			if (itrmap2 != itrremap->second.end()){
 				return itrmap2->second;
@@ -1034,35 +1034,35 @@ public: //accesser
 			return 0;
 		}
 	};
-	//std::map<std::string, std::map<CBone*, CRigidElem*>>::iterator GetRigidElemOfMapBegin(){
+	//std::unordered_map<std::string, std::unordered_map<CBone*, CRigidElem*>>::iterator GetRigidElemOfMapBegin(){
 	//	return m_remap.begin();
 	//};
-	//std::map<std::string, std::map<CBone*, CRigidElem*>>::iterator GetRigidElemOfMapEnd(){
+	//std::unordered_map<std::string, std::unordered_map<CBone*, CRigidElem*>>::iterator GetRigidElemOfMapEnd(){
 	//	return m_remap.end();
 	//};
 
 	void SetRigidElemOfMap(std::string srcstr, CBone* srcbone, CRigidElem* srcre);
 
-	std::map<std::string, std::map<CBone*, ChaVector3>>::iterator FindImpMap(std::string srcname){
+	std::unordered_map<std::string, std::unordered_map<CBone*, ChaVector3>>::iterator FindImpMap(std::string srcname){
 		return m_impmap.find(srcname);
 	};
 	int GetImpMapSize(){ return (int)m_impmap.size(); };
 	int GetImpMapSize2(std::string srcstring){
-		std::map<CBone*, ChaVector3> curmap = m_impmap[ srcstring ];
+		std::unordered_map<CBone*, ChaVector3> curmap = m_impmap[ srcstring ];
 		return (int)curmap.size();
 	};
-	std::map<std::string, std::map<CBone*, ChaVector3>>::iterator GetImpMapBegin(){
+	std::unordered_map<std::string, std::unordered_map<CBone*, ChaVector3>>::iterator GetImpMapBegin(){
 		return m_impmap.begin();
 	};
-	std::map<std::string, std::map<CBone*, ChaVector3>>::iterator GetImpMapEnd(){
+	std::unordered_map<std::string, std::unordered_map<CBone*, ChaVector3>>::iterator GetImpMapEnd(){
 		return m_impmap.end();
 	};
 	ChaVector3 GetImpMap( std::string srcstr, CBone* srcbone ){
-		std::map<std::string, std::map<CBone*, ChaVector3>>::iterator itrimpmap;
+		std::unordered_map<std::string, std::unordered_map<CBone*, ChaVector3>>::iterator itrimpmap;
 		itrimpmap = m_impmap.find(srcstr);
 		if (itrimpmap != m_impmap.end()){
-			std::map<CBone*, ChaVector3> curmap = itrimpmap->second;
-			std::map<CBone*, ChaVector3>::iterator itrimp;
+			std::unordered_map<CBone*, ChaVector3> curmap = itrimpmap->second;
+			std::unordered_map<CBone*, ChaVector3>::iterator itrimp;
 			itrimp = curmap.find(srcbone);
 			if (itrimp != curmap.end()){
 				return itrimp->second;
@@ -1077,14 +1077,14 @@ public: //accesser
 			return ChaVector3(0.0f, 0.0f, 0.0f);
 		}
 	};
-	void SetImpMap2( std::string srcstring, std::map<CBone*,ChaVector3>& srcmap ){
+	void SetImpMap2( std::string srcstring, std::unordered_map<CBone*,ChaVector3>& srcmap ){
 		m_impmap[ srcstring ] = srcmap;
 	};
 	void SetImpOfMap( std::string srcstr, CBone* srcbone, ChaVector3 srcimp ){
-		std::map<std::string, std::map<CBone*, ChaVector3>>::iterator itrimpmap;
+		std::unordered_map<std::string, std::unordered_map<CBone*, ChaVector3>>::iterator itrimpmap;
 		itrimpmap = m_impmap.find(srcstr);
 		if (itrimpmap != m_impmap.end()){
-			std::map<CBone*, ChaVector3>::iterator itrsetmap;
+			std::unordered_map<CBone*, ChaVector3>::iterator itrsetmap;
 			itrsetmap = itrimpmap->second.find(srcbone);
 			if (itrsetmap != itrimpmap->second.end()){
 				itrsetmap->second = srcimp;
@@ -1094,7 +1094,7 @@ public: //accesser
 			}
 		}
 		else{
-			std::map<CBone*, ChaVector3> newmap;
+			std::unordered_map<CBone*, ChaVector3> newmap;
 			newmap[srcbone] = srcimp;
 			m_impmap[srcstr] = newmap;
 		}
@@ -1109,10 +1109,10 @@ public: //accesser
 
 	int GetBtObjectSize(){ return (int)m_btobject.size(); };
 	CBtObject* GetBtObject( CBone* srcbone ){ return m_btobject[ srcbone ]; };
-	std::map<CBone*, CBtObject*>::iterator GetBtObjectMapBegin(){
+	std::unordered_map<CBone*, CBtObject*>::iterator GetBtObjectMapBegin(){
 		return m_btobject.begin();
 	};
-	std::map<CBone*, CBtObject*>::iterator GetBtObjectMapEnd(){
+	std::unordered_map<CBone*, CBtObject*>::iterator GetBtObjectMapEnd(){
 		return m_btobject.end();
 	};
 
@@ -1122,29 +1122,29 @@ public: //accesser
 
 	//int GetMotMarkSize(){ return (int)m_motmark.size(); };
 	//int GetMotMarkSize2(int srcindex){
-	//	std::map<double, int> curmap = m_motmark[ srcindex ];
+	//	std::unordered_map<double, int> curmap = m_motmark[ srcindex ];
 	//	return (int)curmap.size();
 	//};
 	//int GetMotMarkOfMap( int srcindex, double srcframe ){
-	//	std::map<double,int> curmap = m_motmark[ srcindex ];
+	//	std::unordered_map<double,int> curmap = m_motmark[ srcindex ];
 	//	return curmap[ srcframe ];
 	//};
-	void GetMotMarkOfMap2( int srcindex, std::map<double, int>& dstmap ){
+	void GetMotMarkOfMap2( int srcindex, std::unordered_map<double, int>& dstmap ){
 		dstmap = m_motmark[ srcindex ];
 	};
-	//std::map<int, std::map<double, int>>::iterator GetMotMarkOfMapBegin(){
+	//std::unordered_map<int, std::unordered_map<double, int>>::iterator GetMotMarkOfMapBegin(){
 	//	return m_motmark.begin();
 	//};
-	//std::map<int, std::map<double, int>>::iterator GetMotMarkOfMapEnd(){
+	//std::unordered_map<int, std::unordered_map<double, int>>::iterator GetMotMarkOfMapEnd(){
 	//	return m_motmark.end();
 	//};
-	//std::map<int, std::map<double, int>>::iterator FindMotMarkOfMap( int srcindex ){
+	//std::unordered_map<int, std::unordered_map<double, int>>::iterator FindMotMarkOfMap( int srcindex ){
 	//	return m_motmark.find( srcindex );
 	//};
 	//void SetMotMarkOfMap( int srcindex, double srcframe, int srcmark ){
 	//	((m_motmark[ srcindex ])[ srcframe ]) = srcmark;
 	//};
-	void SetMotMarkOfMap2( int srcindex, std::map<double, int>& srcmap ){
+	void SetMotMarkOfMap2( int srcindex, std::unordered_map<double, int>& srcmap ){
 		m_motmark[ srcindex ] = srcmap;
 	};
 	void ClearMotMarkOfMap2( int srcindex ){
@@ -1649,7 +1649,7 @@ public: //accesser
 
 	bool HasMotionCurve(int srcmotid) 
 	{
-		std::map<int, bool>::iterator itrhascurve;
+		std::unordered_map<int, bool>::iterator itrhascurve;
 		itrhascurve = m_hasmotioncurve.find(srcmotid);
 		if (itrhascurve != m_hasmotioncurve.end()) {
 			return itrhascurve->second;
@@ -1660,7 +1660,7 @@ public: //accesser
 	}
 	void SetHasMotionCurve(int srcmotid, bool srcval)
 	{
-		std::map<int, bool>::iterator itrhascurve;
+		std::unordered_map<int, bool>::iterator itrhascurve;
 		itrhascurve = m_hasmotioncurve.find(srcmotid);
 		if (itrhascurve != m_hasmotioncurve.end()) {
 			itrhascurve->second = srcval;
@@ -1847,7 +1847,7 @@ private:
 
 
 
-	std::map<int, CMotionPoint*> m_motionkey;//m_motionkey[ モーションID ]でモーションの最初のフレームの姿勢にアクセスできる。
+	std::unordered_map<int, CMotionPoint*> m_motionkey;//m_motionkey[ モーションID ]でモーションの最初のフレームの姿勢にアクセスできる。
 	CMotionPoint m_curmp[2];//現在のWVP適用後の姿勢データ。 ### 計算済 ###
 	CMotionPoint m_targetmp;//2025/01/05 for fillup motion of MOA
 	double m_targetrate1;//2025/01/05 for fillup motion of MOA
@@ -1857,8 +1857,8 @@ private:
 	CMotionPoint* m_cachebefmp[MAXMOTIONNUM + 1];//motidごとのキャッシュ
 
 	//std::vector<CMotionPoint*> m_indexedmp;
-	std::map<int, std::vector<CMotionPoint*>> m_indexedmotionpoint;
-	std::map<int, bool> m_initindexedmotionpoint;
+	std::unordered_map<int, std::vector<CMotionPoint*>> m_indexedmotionpoint;
+	std::unordered_map<int, bool> m_initindexedmotionpoint;
 	CMotionPoint m_dummymp;
 
 	CQuaternion m_axisq;//ボーンの軸のクォータニオン表現。
@@ -1911,25 +1911,25 @@ private:
 	CUSTOMRIG m_customrig[MAXRIGNUM];
 
 	//CBone*は子供ジョイントのポインタ。子供の数だけエントリーがある。
-	//std::map<CBone*, CRigidElem*> m_rigidelem;
+	//std::unordered_map<CBone*, CRigidElem*> m_rigidelem;
 	std::string m_rigidelemname;
 
 
-	//m_remapは、jointの名前でセットすればmap<string,CRigidElem*>で済む。
+	//m_remapは、jointの名前でセットすればunordered_map<string,CRigidElem*>で済む。
 	//名前で一意なRigidElemを選択するために子供のボーンの名前を使用する。
 	//そのため子供のボーンの名前とCRigidElemのセットを使う。
 	//m_impmapについても同様のことがいえる。
-	std::map<std::string, std::map<CBone*, CRigidElem*>> m_remap;//map<設定ファイル名, map<子供ボーン, 剛体設定>>
-	std::map<std::string, std::map<CBone*, ChaVector3>> m_impmap;//map<設定ファイル名, map<子供ボーン, インパルス設定>>
+	std::unordered_map<std::string, std::unordered_map<CBone*, CRigidElem*>> m_remap;//unordered_map<設定ファイル名, unordered_map<子供ボーン, 剛体設定>>
+	std::unordered_map<std::string, std::unordered_map<CBone*, ChaVector3>> m_impmap;//unordered_map<設定ファイル名, unordered_map<子供ボーン, インパルス設定>>
 
 
 	int m_btkinflag;//bullet kinematic flag。剛体シミュレーションの根元のボーンが固定モーションに追随する際は０を指定する。その他は１。
 	int m_btforce;//bullet 強制フラグ。モデルに設定されているbtkinflagである。m_btkinflagはシミュレーション開始と終了で変化するが、このフラグは読み込み時に設定されるものである。
-	std::map<CBone*,CBtObject*> m_btobject;//CBtObjectはbulletの剛体オブジェクトをラップしたクラスである。ボーンとCBtObjectのmap。
+	std::unordered_map<CBone*,CBtObject*> m_btobject;//CBtObjectはbulletの剛体オブジェクトをラップしたクラスである。ボーンとCBtObjectのmap。
 
 	//タイムラインのモーション編集マーク
 	//最初のintはmotid。次のmapはframenoと更新フラグ。更新フラグは読み込み時のマークは０、それ以後の編集マークは１にする予定。色を変えるかも。
-	std::map<int, std::map<double,int>> m_motmark;
+	std::unordered_map<int, std::unordered_map<double,int>> m_motmark;
 
 
 	CModel* m_parmodel;
@@ -1971,7 +1971,7 @@ private:
 	//ChaMatrix m_localnodemat;
 	//ChaMatrix m_localnodeanimmat;
 
-	std::map<int, bool> m_hasmotioncurve;
+	std::unordered_map<int, bool> m_hasmotioncurve;
 
 	bool m_ikstopflag;
 	bool m_iktargetflag;

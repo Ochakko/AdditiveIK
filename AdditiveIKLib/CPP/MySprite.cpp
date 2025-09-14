@@ -21,7 +21,7 @@
 #include <TexBank.h>
 #include <TexElem.h>
 
-#include <map>
+#include <unordered_map>
 #include <algorithm>
 #include <iostream>
 #include <iterator>

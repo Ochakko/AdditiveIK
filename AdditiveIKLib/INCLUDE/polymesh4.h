@@ -10,7 +10,7 @@
 
 #include <crtdbg.h>
 
-#include <map>
+#include <unordered_map>
 //using namespace std;
 
 class CMQOObject;
@@ -31,14 +31,14 @@ public:
 		ChaVector3* nptr, ChaVector2* uvptr, ChaVector2* uv1ptr, 
 		CMQOFace* faceptr, CModel* pmodel, int srcuvnum);
 	
-	int ChkAlphaNum( std::map<int,CMQOMaterial*>& srcmat );
+	int ChkAlphaNum( std::unordered_map<int,CMQOMaterial*>& srcmat );
 	int CalcBound();
 
 	int SetPm3Inf(CMQOObject* srcobj);
 	int UpdateMorphBuffer( ChaVector3* mpoint );
 
-	int DumpInfBone( CMQOObject* srcobj, std::map<int,CBone*>& srcbonelist );
-	//int SetPm3InfNoSkin( ID3D12Device* pdev, CMQOObject* srcobj, int clusterno, std::map<int,CBone*>& srcbonelist );
+	int DumpInfBone( CMQOObject* srcobj, std::unordered_map<int,CBone*>& srcbonelist );
+	//int SetPm3InfNoSkin( ID3D12Device* pdev, CMQOObject* srcobj, int clusterno, std::unordered_map<int,CBone*>& srcbonelist );
 
 	void DestroySystemDispObj(bool emptyshape);
 
@@ -158,7 +158,7 @@ public:
 
 		if ((srcindex >= 0) && (srcindex < GetDispMaterialNum())) {
 			int indexcnt = 0;
-			std::map<int, CMQOMaterial*>::iterator itrmaterial;
+			std::unordered_map<int, CMQOMaterial*>::iterator itrmaterial;
 			for (itrmaterial = m_materialoffset.begin(); itrmaterial != m_materialoffset.end(); itrmaterial++) {
 				if (indexcnt == srcindex) {
 					*dstoffset = itrmaterial->first;
@@ -248,7 +248,7 @@ private:
 	int*	m_fbxindex;
 	int m_createoptflag;
 
-	std::map<int, CMQOMaterial*> m_materialoffset;
+	std::unordered_map<int, CMQOMaterial*> m_materialoffset;
 
 
 

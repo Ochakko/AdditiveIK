@@ -207,7 +207,7 @@ typedef struct tag_bntvertex
 
 	CallF( WriteNumber( srcmodel->GetMqoObjectSize() ), return 1 );
 
-	map<int, CMQOObject*>::iterator itrobj;
+	unordered_map<int, CMQOObject*>::iterator itrobj;
 	for( itrobj = srcmodel->GetMqoObjectBegin(); itrobj != srcmodel->GetMqoObjectEnd(); itrobj++ ){
 		CMQOObject* curobj = itrobj->second;
 		if( !curobj ){
@@ -297,7 +297,7 @@ typedef struct tag_bntmaterial
 	}
 
 	//CMQOMaterial* curmate = 0;
-	//map<int, CMQOMaterial*>::iterator itrmate = srcobj->GetMaterialBegin();
+	//unordered_map<int, CMQOMaterial*>::iterator itrmate = srcobj->GetMaterialBegin();
 	//if( itrmate != srcobj->GetMaterialEnd() ){
 	//	curmate = itrmate->second;
 	//}else{

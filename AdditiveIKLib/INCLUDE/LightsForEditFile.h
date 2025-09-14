@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 
 class CLightsForEditFile : public CXMLIO

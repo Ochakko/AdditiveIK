@@ -261,7 +261,7 @@ int CFogDlg::SetPosAndSize(int srcposx, int srcposy, int srcsizex, int srcsizey)
 //}
 
 
-//void CFogDlg::SetModel(CModel* srcmodel, int srccurboneno, std::map<CModel*, int> srcrgdindexmap)
+//void CFogDlg::SetModel(CModel* srcmodel, int srccurboneno, std::unordered_map<CModel*, int> srcrgdindexmap)
 //{
 //	m_model = srcmodel;
 //	m_curboneno = srccurboneno;

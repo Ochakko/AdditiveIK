@@ -10,7 +10,7 @@
 
 #include <OrgWindow.h>
 
-#include <map>
+#include <unordered_map>
 
 //1行の長さ
 #define INFOWINDOWLINEW	300
@@ -57,7 +57,7 @@ private:
 
 	//WCHAR m_stroutput[INFOWINDOWLINEH][INFOWINDOWLINEW];
 	WCHAR* m_stroutput;
-	//std::map<int, int> m_infocolorvec;
+	//std::unordered_map<int, int> m_infocolorvec;
 	std::vector<int> m_infocolorvec;
 
 	int m_dataindex;//データ格納位置

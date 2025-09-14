@@ -14,7 +14,7 @@
 #include <usercoef.h>
 
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <string>
 
 class CModel;
@@ -884,8 +884,8 @@ typedef struct tag_modelelem
 	CModel* modelptr;
 	std::vector<TLELEM> tlarray;
 	int motmenuindex;
-	std::map<int, int> lineno2boneno;
-	std::map<int, int> boneno2lineno;
+	std::unordered_map<int, int> lineno2boneno;
+	std::unordered_map<int, int> boneno2lineno;
 
 	void Init()
 	{

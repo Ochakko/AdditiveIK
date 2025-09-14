@@ -4,7 +4,7 @@
 /******************************************************************************
  * Command-line parsing
  ******************************************************************************/
-#include <map>
+#include <unordered_map>
 #include <algorithm>
 #include <string>
 #include <cstring>
@@ -12,7 +12,7 @@
 class b3CommandLineArgs
 {
 protected:
-	std::map<std::string, std::string> pairs;
+	std::unordered_map<std::string, std::string> pairs;
 
 public:
 	// Constructor
@@ -55,7 +55,7 @@ public:
 
 	bool CheckCmdLineFlag(const char *arg_name)
 	{
-		std::map<std::string, std::string>::iterator itr;
+		std::unordered_map<std::string, std::string>::iterator itr;
 		if ((itr = pairs.find(arg_name)) != pairs.end())
 		{
 			return true;
@@ -75,7 +75,7 @@ public:
 template <typename T>
 inline bool b3CommandLineArgs::GetCmdLineArgument(const char *arg_name, T &val)
 {
-	std::map<std::string, std::string>::iterator itr;
+	std::unordered_map<std::string, std::string>::iterator itr;
 	if ((itr = pairs.find(arg_name)) != pairs.end())
 	{
 		std::istringstream strstream(itr->second);
@@ -88,7 +88,7 @@ inline bool b3CommandLineArgs::GetCmdLineArgument(const char *arg_name, T &val)
 template <>
 inline bool b3CommandLineArgs::GetCmdLineArgument<char *>(const char *arg_name, char *&val)
 {
-	std::map<std::string, std::string>::iterator itr;
+	std::unordered_map<std::string, std::string>::iterator itr;
 	if ((itr = pairs.find(arg_name)) != pairs.end())
 	{
 		std::string s = itr->second;

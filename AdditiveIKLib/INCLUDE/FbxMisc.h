@@ -1,7 +1,7 @@
 ﻿#ifndef FBXMISCH
 #define FBXMISCH
 
-#include <map>
+#include <unordered_map>
 #include <string>
 
 #include <Coef.h>

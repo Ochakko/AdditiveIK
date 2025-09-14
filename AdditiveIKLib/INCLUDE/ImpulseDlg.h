@@ -10,7 +10,7 @@
 
 #include <vector>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 class OrgWinGUI::OrgWindow;
 class OrgWinGUI::OWP_ComboBoxA;
@@ -41,7 +41,7 @@ public:
 		return m_createdflag;
 	};
 
-	void SetModel(CModel* srcmodel, int srccurboneno, std::map<CModel*, int> srcrgdindexmap);
+	void SetModel(CModel* srcmodel, int srccurboneno, std::unordered_map<CModel*, int> srcrgdindexmap);
 	int ParamsToDlg();
 	void SetVisible(bool srcflag);
 
@@ -78,7 +78,7 @@ private:
 
 	CModel* m_model;
 	int m_curboneno;
-	std::map<CModel*, int> m_rgdindexmap;
+	std::unordered_map<CModel*, int> m_rgdindexmap;
 
 	bool m_closeFlag;
 

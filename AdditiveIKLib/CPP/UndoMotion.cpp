@@ -92,7 +92,7 @@ int CUndoMotion::ClearData()
 
 int CUndoMotion::DestroyObjs()
 {
-	map<CBone*, CMotionPoint*>::iterator itrb2mp;
+	unordered_map<CBone*, CMotionPoint*>::iterator itrb2mp;
 	for( itrb2mp = m_bone2mp.begin(); itrb2mp != m_bone2mp.end(); itrb2mp++ ){
 		CMotionPoint* mpptr = itrb2mp->second;
 		CMotionPoint* nextmp = 0;
@@ -109,7 +109,7 @@ int CUndoMotion::DestroyObjs()
 	m_bone2limit.clear();
 
 /***
-	map<CMQOObject*, CMorphKey*>::iterator itrb2mk;
+	unordered_map<CMQOObject*, CMorphKey*>::iterator itrb2mk;
 	for( itrb2mk = m_base2mk.begin(); itrb2mk != m_base2mk.end(); itrb2mk++ ){
 		CMorphKey* mkptr = itrb2mk->second;
 		CMorphKey* nextmk = 0;
@@ -226,7 +226,7 @@ int CUndoMotion::SaveUndoMotion(UNDOSELECT srcundoselect,
 
 		if (LimitDegCheckBoxFlag == false) {//2023/10/27 1.2.0.27 RC5 : LimitDegCheckBoxFlag == true時　つまり　LimitEulボタンのオンオフ時はモーションの保存をスキップ
 
-			map<int, CBone*>::iterator itrbone;
+			unordered_map<int, CBone*>::iterator itrbone;
 			for (itrbone = pmodel->GetBoneListBegin(); itrbone != pmodel->GetBoneListEnd(); itrbone++) {
 				CBone* curbone = itrbone->second;
 				//_ASSERT( curbone );
@@ -276,7 +276,7 @@ int CUndoMotion::SaveUndoMotion(UNDOSELECT srcundoselect,
 					//}
 
 					CMotionPoint* firstundomp = 0;
-					map<CBone*, CMotionPoint*>::iterator itrbone2mp;
+					unordered_map<CBone*, CMotionPoint*>::iterator itrbone2mp;
 					itrbone2mp = m_bone2mp.find(curbone);
 					if (itrbone2mp != m_bone2mp.end()) {
 						firstundomp = itrbone2mp->second;
@@ -345,7 +345,7 @@ int CUndoMotion::SaveUndoMotion(UNDOSELECT srcundoselect,
 						}
 					}
 
-					map<double, int> tmpmap;
+					unordered_map<double, int> tmpmap;
 					curbone->GetMotMarkOfMap2(curmotid, tmpmap);
 					if ((int)tmpmap.size() > 0) {
 						(m_bonemotmark[curbone]).clear();
@@ -365,7 +365,7 @@ int CUndoMotion::SaveUndoMotion(UNDOSELECT srcundoselect,
 			//undomp->SetValidFlag(0)をする
 			//
 			//##########################################################################################################################
-			map<int, CBone*>::iterator itrbone;
+			unordered_map<int, CBone*>::iterator itrbone;
 			for (itrbone = pmodel->GetBoneListBegin(); itrbone != pmodel->GetBoneListEnd(); itrbone++) {
 				CBone* curbone = itrbone->second;
 				//_ASSERT( curbone );
@@ -378,7 +378,7 @@ int CUndoMotion::SaveUndoMotion(UNDOSELECT srcundoselect,
 					m_bone2limit[curbone] = curbone->GetAngleLimit(limitdegflag, getchkflag);
 
 					CMotionPoint* firstundomp = 0;
-					map<CBone*, CMotionPoint*>::iterator itrbone2mp;
+					unordered_map<CBone*, CMotionPoint*>::iterator itrbone2mp;
 					itrbone2mp = m_bone2mp.find(curbone);
 					if (itrbone2mp != m_bone2mp.end()) {
 						firstundomp = itrbone2mp->second;
@@ -547,7 +547,7 @@ int CUndoMotion::RollBackMotion(ChaScene* pchascene,
 
 		/*
 	/////// destroy
-		map<int, CBone*>::iterator itrbone;
+		unordered_map<int, CBone*>::iterator itrbone;
 		for( itrbone = opemodel->GetBoneListBegin(); itrbone != opemodel->GetBoneListEnd(); itrbone++ ){
 			CBone* curbone = itrbone->second;
 			_ASSERT( curbone );
@@ -559,7 +559,7 @@ int CUndoMotion::RollBackMotion(ChaScene* pchascene,
 		*/
 
 		///////// set
-		map<int, CBone*>::iterator itrbone;
+		unordered_map<int, CBone*>::iterator itrbone;
 		for (itrbone = opemodel->GetBoneListBegin(); itrbone != opemodel->GetBoneListEnd(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			_ASSERT(curbone);
@@ -586,7 +586,7 @@ int CUndoMotion::RollBackMotion(ChaScene* pchascene,
 				//ANGLELIMIT of CBone
 				//######################
 
-				map<CBone*, ANGLELIMIT>::iterator itrbone2limit;
+				unordered_map<CBone*, ANGLELIMIT>::iterator itrbone2limit;
 				itrbone2limit = m_bone2limit.find(curbone);
 				if (itrbone2limit != m_bone2limit.end()) {
 					curbone->SetAngleLimit(limitdegflag, itrbone2limit->second);
@@ -649,7 +649,7 @@ int CUndoMotion::RollBackMotion(ChaScene* pchascene,
 		}
 
 		if (oldleng > newleng) {
-			map<int, CBone*>::iterator itrbone2;
+			unordered_map<int, CBone*>::iterator itrbone2;
 			for (itrbone2 = opemodel->GetBoneListBegin(); itrbone2 != opemodel->GetBoneListEnd(); itrbone2++) {
 				CBone* curbone = itrbone2->second;
 				if (curbone && (curbone->IsSkeleton() || curbone->IsNullAndChildIsCamera() || curbone->IsCamera())) {

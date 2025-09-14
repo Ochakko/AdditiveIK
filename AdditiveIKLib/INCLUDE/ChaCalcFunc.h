@@ -116,7 +116,7 @@ public:
 //##############
 public:
 	void RetargetReq(CModel* srcmodel, CModel* srcbvhmodel, CBone* modelbone,
-		double srcframe, CBone* befbvhbone, float hrate, std::map<CBone*, CBone*>& sconvbonemap);
+		double srcframe, CBone* befbvhbone, float hrate, std::unordered_map<CBone*, CBone*>& sconvbonemap);
 	CMotionPoint* RotBoneQReq(CBone* srcbone, bool limitdegflag, int wallscrapingikflag, bool infooutflag,
 		CBone* parentbone, int srcmotid, double srcframe,
 		CQuaternion rotq, ChaMatrix srcbefparentwm, ChaMatrix srcnewparentwm,

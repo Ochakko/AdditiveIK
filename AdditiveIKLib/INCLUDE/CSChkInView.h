@@ -5,7 +5,7 @@
 #include <mqomaterial.h>
 #include "../../AdditiveIKLib/Grimoire/RenderingEngine.h"
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 class CMQOObject;
@@ -137,7 +137,7 @@ private:
 private:
 	ID3D12Device* m_pdev;//外部メモリ、Direct3Dのデバイス。
 
-	std::map<CMQOObject*, int> m_indexmap;//mqoobject-->bufferindex
+	std::unordered_map<CMQOObject*, int> m_indexmap;//mqoobject-->bufferindex
 	std::vector<CSBSphere> m_bsvec;
 
 	bool m_workingChkInView;

@@ -16,18 +16,18 @@
 #include <GetMaterial.h>
 
 //#include <mqomaterial.h>
-//#include <map>
+//#include <unordered_map>
 
 #include <algorithm>
 #include <iostream>
 #include <iterator>
 
 
-CMQOMaterial* GetMaterialFromNo(std::map<int, CMQOMaterial*>& srcmaterial, int matno)
+CMQOMaterial* GetMaterialFromNo(std::unordered_map<int, CMQOMaterial*>& srcmaterial, int matno)
 {
 	CMQOMaterial* retmat = 0;
 
-	std::map<int,CMQOMaterial*>::iterator itr= srcmaterial.find(matno); 
+	std::unordered_map<int,CMQOMaterial*>::iterator itr= srcmaterial.find(matno); 
 	if( itr == srcmaterial.end() ) { 
 		return 0;
 	}else{ 

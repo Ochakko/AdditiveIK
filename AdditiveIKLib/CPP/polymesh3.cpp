@@ -915,7 +915,7 @@ int CPolyMesh3::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* p
 	return 0;
 }
 
-int CPolyMesh3::ChkAlphaNum( map<int,CMQOMaterial*>& srcmat )
+int CPolyMesh3::ChkAlphaNum( unordered_map<int,CMQOMaterial*>& srcmat )
 {
 	chkalpha.alphanum = 0;
 	chkalpha.notalphanum = 0;
@@ -1038,21 +1038,18 @@ typedef struct tag_modelbaund
 	int fno;
 	MODELBOUND curbound;
 	curbound.Init();
-	bool firstflag = true;
+	bool setflag2 = false;
 	for (fno = 0; fno < face_count; fno++) {
+		if ((fno != 0) && ((fno % PM3BOUNDINGFACENUM) == 0)) {
+			curbound.center = (curbound.min + curbound.max) * 0.5f;
+			ChaVector3 diff1;
+			diff1 = curbound.center - curbound.min;
+			curbound.r = (float)ChaVector3LengthDbl(&diff1);
+			curbound.SetIsValid(setflag2);
 
-		if ((fno % PM3BOUNDINGFACENUM) == 0) {
-			if (!firstflag) {
-				curbound.center = (curbound.min + curbound.max) * 0.5f;
-				ChaVector3 diff1;
-				diff1 = curbound.center - curbound.min;
-				curbound.r = (float)ChaVector3LengthDbl(&diff1);
-				curbound.SetIsValid(setflag);
+			m_ar_bound.push_back(curbound);
 
-				m_ar_bound.push_back(curbound);
-			}
 			curbound.Init();
-			firstflag = false;
 		}
 
 		int index0, index1, index2;
@@ -1088,13 +1085,13 @@ typedef struct tag_modelbaund
 				curbound.max.z = curv->pos.z;
 			}
 		}
-
+		setflag2 = true;
 	}
 	curbound.center = (curbound.min + curbound.max) * 0.5f;
 	ChaVector3 diff2;
 	diff2 = curbound.center - curbound.min;
 	curbound.r = (float)ChaVector3LengthDbl(&diff2);
-	curbound.SetIsValid(setflag);
+	curbound.SetIsValid(setflag2);
 	m_ar_bound.push_back(curbound);
 
 

@@ -223,7 +223,7 @@ int CThreadingRetarget::AddFramenoList(double srcframeno)
 }
 
 void CThreadingRetarget::RetargetReqOne(int srclimitdegflag, CModel* srcmodel, CModel* srcbvhmodel, CBone* srcmodelbone,
-	CBone* srcbvhtopbone, float srchrate, std::map<CBone*, CBone*>& srcsconvbonemap)
+	CBone* srcbvhtopbone, float srchrate, std::unordered_map<CBone*, CBone*>& srcsconvbonemap)
 {
 
 	if (!m_model) {

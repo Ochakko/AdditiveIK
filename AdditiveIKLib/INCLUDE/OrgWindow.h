@@ -5,7 +5,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include <list>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <corecrt_wstring.h>
 #include <process.h>
@@ -1280,7 +1280,7 @@ void s_dummyfunc()
 
 		std::list<OrgWindowParts*> partsList;
 
-		static std::map<HWND,OrgWindow*> hWndAndClassMap;
+		static std::unordered_map<HWND,OrgWindow*> hWndAndClassMap;
 
 		//ユーザーイベントリスナー
 		std::function<void()> closeListener;
@@ -4225,7 +4225,7 @@ void s_dummyfunc()
 
 		OWP_EditBox* peditbox;
 
-		std::map<int, std::wstring> copymap;
+		std::unordered_map<int, std::wstring> copymap;
 
 		//////////////////////////// Method //////////////////////////////
 		//	Method : ボタンアップのスレッド
@@ -4563,7 +4563,7 @@ void s_dummyfunc()
 
 		OWP_EditBox* peditbox;
 
-		std::map<int, std::wstring> copymap;
+		std::unordered_map<int, std::wstring> copymap;
 
 		//////////////////////////// Method //////////////////////////////
 		//	Method : ボタンアップのスレッド

@@ -8,7 +8,7 @@
 
 #include <vector>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 #include <MQOMaterial.h>
 
@@ -26,7 +26,7 @@ private:
 	virtual int DestroyObjs();
 
 	int WriteFileInfo();
-	//int WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, std::map<CModel*, CFrameCopyDlg*> srcselbonedlgmap);
+	//int WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname, std::unordered_map<CModel*, CFrameCopyDlg*> srcselbonedlgmap);
 
 	////int CheckFileVersion( XMLIOBUF* xmliobuf );
 	int ReadProjectInfo( XMLIOBUF* xmliobuf, int* charanumptr );

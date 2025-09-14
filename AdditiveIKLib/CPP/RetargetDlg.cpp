@@ -314,7 +314,7 @@ int CRetargetDlg::CreateRetargetWnd()
 		WCHAR bvhbonename[MAX_PATH];
 		int listno = 0;
 		int cbno = 0;
-		map<int, CBone*>::iterator itrbone;
+		unordered_map<int, CBone*>::iterator itrbone;
 		for (itrbone = m_convbone_model->GetBoneListBegin(); itrbone != m_convbone_model->GetBoneListEnd(); itrbone++) {
 			CBone* curbone = itrbone->second;
 			if (curbone && (curbone->IsSkeleton())) {
@@ -714,7 +714,7 @@ int CRetargetDlg::InitJointPair2ConvBoneWnd()
 
 	WCHAR bvhbonename[MAX_PATH];
 	int cbno = 0;
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_convbone_model->GetBoneListBegin(); itrbone != m_convbone_model->GetBoneListEnd(); itrbone++) {
 		CBone* curbone = itrbone->second;
 		if (curbone && (curbone->IsSkeleton())) {
@@ -739,7 +739,7 @@ int CRetargetDlg::SetJointPair2ConvBoneWnd()
 
 	WCHAR bvhbonename[MAX_PATH];
 	int cbno = 0;
-	map<int, CBone*>::iterator itrbone;
+	unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = m_convbone_model->GetBoneListBegin(); itrbone != m_convbone_model->GetBoneListEnd(); itrbone++) {
 		CBone* curbone = itrbone->second;
 		if (curbone && (curbone->IsSkeleton())) {

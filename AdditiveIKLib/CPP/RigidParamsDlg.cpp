@@ -545,7 +545,7 @@ void CRigidParamsDlg::InitParams()
 }
 
 int CRigidParamsDlg::SetModel(CModel* srcmodel, int srcboneno, 
-	std::map<CModel*, int>& srcreindexmap, std::map<CModel*, int>& srcrgdindexmap)
+	std::unordered_map<CModel*, int>& srcreindexmap, std::unordered_map<CModel*, int>& srcrgdindexmap)
 {
 	m_model = srcmodel;
 	m_curboneno = srcboneno;

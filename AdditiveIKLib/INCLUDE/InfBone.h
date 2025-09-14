@@ -2,7 +2,7 @@
 #define INFBONEH
 
 #include <coef.h>
-#include <map>
+#include <unordered_map>
 
 class CMQOObject;
 
@@ -92,7 +92,7 @@ private:
 	int InitElem( INFDATA* infptr );
 
 private:
-	std::map<CMQOObject*, INFDATA*> m_infdata;//影響度データ
+	std::unordered_map<CMQOObject*, INFDATA*> m_infdata;//影響度データ
 
 };
 

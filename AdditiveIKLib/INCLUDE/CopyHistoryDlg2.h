@@ -150,8 +150,8 @@ private:
 	//int m_selectedindex;//m_selectindexmapへ変更
 	bool m_ischeckedmostrecent;
 
-	std::map<CModel*, std::wstring> m_selectnamemap;
-	std::map<CModel*, int> m_selectindexmap;
+	std::unordered_map<CModel*, std::wstring> m_selectnamemap;
+	std::unordered_map<CModel*, int> m_selectindexmap;
 
 
 	//int m_startno;

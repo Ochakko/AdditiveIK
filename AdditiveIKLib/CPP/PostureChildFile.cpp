@@ -74,7 +74,7 @@ int CPostureChildFile::WritePostureChildFile(const WCHAR* srcfilepath, CModel* s
 	CallF( WriteFileInfo(), return 1 );
 
 
-	std::map<int, CBone*>::iterator itrbone;
+	std::unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = srcmodel->GetBoneListBegin(); itrbone != srcmodel->GetBoneListEnd(); itrbone++) {
 		CBone* curbone = (CBone*)itrbone->second;
 		if (curbone && (curbone->IsSkeleton()) && (curbone->GetPostureChildModel() != nullptr)) {

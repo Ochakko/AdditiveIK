@@ -16,7 +16,7 @@
 #include <ChaVecCalc.h>
 
 #include <string>
-#include <map>
+#include <unordered_map>
 
 
 class CMQOFace;
@@ -80,7 +80,7 @@ public:
 	int MakePolymesh4(ID3D12Device* pdev, CModel* pmodel);
 	int MakeExtLine(CModel* srcmodel);
 	int MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag);
-//	int MakeExtLine( map<int,CMQOMaterial*>& srcmat );
+//	int MakeExtLine( unordered_map<int,CMQOMaterial*>& srcmat );
 	int SetGPUInteraction(bool srcflag);
 
 
@@ -100,7 +100,7 @@ public:
 	//int GetTopLevelMikoBone( CMQOFace** pptopface, int* topnumptr, int maxnum );
 	//int SetTreeMikoBone( CMQOFace* srctopface );
 	//int CheckLoopedMikoBoneReq( CMQOFace* faceptr, int* isloopedptr, int* jointnumptr );
-	//int SetMikoBoneName( std::map<int, CMQOMaterial*> &srcmaterial );
+	//int SetMikoBoneName( std::unordered_map<int, CMQOMaterial*> &srcmaterial );
 	//int SetMikoFloatBoneName();
 
 	int GetMaterialNoInUse( int* noptr, int arrayleng, int* getnumptr );
@@ -119,15 +119,15 @@ public:
 
 
 	//CPU計算　polymesh3用
-	int CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirlocal,
+	int CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirlocal, double rayleng,
 		bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos);
-	int CollisionLocal_Ray_BB(ChaVector3 startlocal, ChaVector3 dirlocal);
-	int CollisionLocal_Ray_BB(MODELBOUND objbb, ChaVector3 startlocal, ChaVector3 dirlocal);
-
+	int CollisionLocal_Ray_BB(ChaVector3 startlocal, ChaVector3 dirlocal, double rayleng);
+	int CollisionLocal_Ray_BB(MODELBOUND objbb, ChaVector3 startlocal, ChaVector3 dirlocal, double rayleng);
+	int CollisionLocal_Ray_BB_Sph(MODELBOUND objbb, ChaVector3 startlocal, ChaVector3 dirlocal, double rayleng);
 
 	//int MakeXBoneno2wno( int arrayleng, int* boneno2wno, int* infnumptr );
 	//int GetSkinMeshHeader( int leng, int* maxpervert, int* maxperface );
-	//int MakeXBoneInfluence( std::map<int, CBone*>& bonelist, int arrayleng, int bonenum, int* boneno2wno, BONEINFLUENCE* biptr );
+	//int MakeXBoneInfluence( std::unordered_map<int, CBone*>& bonelist, int arrayleng, int bonenum, int* boneno2wno, BONEINFLUENCE* biptr );
 
 	int AddInfBone( int srcboneno, int srcvno, float srcweight, int isadditive );
 	int NormalizeInfBone();
@@ -195,7 +195,7 @@ private:
 	int IsSameFaceIndex( CMQOFace* face1, CMQOFace* face2 );
 	//int IsSameFacePos( CMQOFace* face1, CMQOFace* face2, VEC3F* pointptr );
 
-	int CheckMaterialSameName( int srcmatno, std::map<int, CMQOMaterial*> &srcmaterial, int* nameflag );
+	int CheckMaterialSameName( int srcmatno, std::unordered_map<int, CMQOMaterial*> &srcmaterial, int* nameflag );
 	//int SetXInfluenceArray( CInfBone* ibptr, int vnum, int boneserino, DWORD* vertices, float* weights, int infnum, DWORD* setnumptr );
 
 public:
@@ -400,12 +400,12 @@ public:
 		return existname;
 	};
 
-	//void GetShapeVert2( std::map<std::string,ChaVector3*>& dstmap ){
+	//void GetShapeVert2( std::unordered_map<std::string,ChaVector3*>& dstmap ){
 	//	dstmap = m_shapevert;
 	//};
 
 	ChaVector3* GetShapeVert(std::string srcname) {
-		std::map<std::string, ChaVector3*>::iterator itrfind;
+		std::unordered_map<std::string, ChaVector3*>::iterator itrfind;
 		itrfind = m_shapevert.find(srcname);
 		if (itrfind != m_shapevert.end()) {
 			return itrfind->second;
@@ -572,9 +572,9 @@ private:
 	std::vector<CBone*> m_cluster;//中身のCBone*は外部メモリ
 
 	std::vector<std::string> m_shapenamevec;
-	std::map<std::string,ChaVector3*> m_shapevert;
-	std::map<std::string, std::map<int,float*>> m_shapeanim2;//複数アニメ対応
-	std::map<int,int> m_shapeanimleng2;//複数アニメ対応
+	std::unordered_map<std::string,ChaVector3*> m_shapevert;
+	std::unordered_map<std::string, std::unordered_map<int,float*>> m_shapeanim2;//複数アニメ対応
+	std::unordered_map<int,int> m_shapeanimleng2;//複数アニメ対応
 
 	FbxNode* m_pnode;
 
@@ -616,9 +616,9 @@ private:
 	CMQOFace* m_connectface;
 
 	ChaMatrix m_multmat;
-	//std::map<std::string, CMQOMaterial*> m_namematerial;
+	//std::unordered_map<std::string, CMQOMaterial*> m_namematerial;
 	int m_shapenum;
-	//std::map<std::string,float> m_shapeweight;
+	//std::unordered_map<std::string,float> m_shapeweight;
 	std::vector<float> m_shapeweightvec;//[channelindex]
 	std::vector<float> m_shapeweightvecBef;//[channelindex]
 	ChaVector3* m_mpoint;

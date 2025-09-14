@@ -23,7 +23,7 @@
 
 #include <GlobalVar.h>
 
-#include <map>
+#include <unordered_map>
 using namespace std;
 
 typedef struct tag_limaniminfo

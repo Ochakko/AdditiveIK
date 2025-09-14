@@ -98,7 +98,7 @@ CAMERANODE* CCameraFbx::FindCameraNodeByBone(CBone* srcbone)
 
 CAMERANODE* CCameraFbx::FindCameraNodeByMotId(int srcmotid)
 {
-	map<int, CAMERANODE*>::iterator itrcameranode;
+	unordered_map<int, CAMERANODE*>::iterator itrcameranode;
 	itrcameranode = m_cameramotion.find(srcmotid);
 	if (itrcameranode != m_cameramotion.end()) {
 		CAMERANODE* retcameranode = itrcameranode->second;

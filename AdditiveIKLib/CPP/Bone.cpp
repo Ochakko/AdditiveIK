@@ -56,7 +56,7 @@ using namespace OrgWinGUI;
 //#define EULLIMITPLAY	1
 
 
-map<CModel*,int> g_bonecntmap;
+unordered_map<CModel*,int> g_bonecntmap;
 /*
 extern WCHAR g_basedir[MAX_PATH];
 extern int g_boneaxis;
@@ -658,7 +658,7 @@ int CBone::SetParams(CModel* parmodel)
 	m_parmodel = parmodel;
 	//_ASSERT(m_parmodel);
 
-	map<CModel*, int>::iterator itrcnt;
+	unordered_map<CModel*, int>::iterator itrcnt;
 	itrcnt = g_bonecntmap.find(m_parmodel);
 	if (itrcnt == g_bonecntmap.end()) {
 		g_bonecntmap[m_parmodel] = 0;
@@ -725,7 +725,7 @@ int CBone::DestroyObjs()
 
 	m_motmark.clear();
 
-	map<int, CMotionPoint*>::iterator itrmp;
+	unordered_map<int, CMotionPoint*>::iterator itrmp;
 	for( itrmp = m_motionkey.begin(); itrmp != m_motionkey.end(); itrmp++ ){
 		CMotionPoint* topkey = itrmp->second;
 		if( topkey ){
@@ -744,9 +744,9 @@ int CBone::DestroyObjs()
 	m_motionkey.clear();
 
 
-	map<string, std::map<CBone*, CRigidElem*>>::iterator itrmap;
+	unordered_map<string, std::unordered_map<CBone*, CRigidElem*>>::iterator itrmap;
 	for( itrmap = m_remap.begin(); itrmap != m_remap.end(); itrmap++ ){
-		map<CBone*, CRigidElem*>::iterator itrre;
+		unordered_map<CBone*, CRigidElem*>::iterator itrre;
 		for( itrre = itrmap->second.begin(); itrre != itrmap->second.end(); itrre++ ){
 			CRigidElem* curre = itrre->second;
 			if (curre){
@@ -1671,13 +1671,13 @@ int CBone::ClearLimitedWorldMat(int srcmotid, double srcframe0)
 //
 //
 //	//indexedmotionpointが無ければ作成　内容クリア
-//	std::map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
+//	std::unordered_map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
 //	itrvecmpmap = m_indexedmotionpoint.find(srcmotid);
 //	if (itrvecmpmap == m_indexedmotionpoint.end()) {
 //		std::vector<CMotionPoint*> newvecmp;
 //		m_indexedmotionpoint[srcmotid] = newvecmp;//STL 参照されていれば無くならない？？？
 //
-//		std::map<int, vector<CMotionPoint*>>::iterator itrvecmpmap2;
+//		std::unordered_map<int, vector<CMotionPoint*>>::iterator itrvecmpmap2;
 //		itrvecmpmap2 = m_indexedmotionpoint.find(srcmotid);
 //		if (itrvecmpmap2 == m_indexedmotionpoint.end()) {
 //			_ASSERT(0);
@@ -1832,7 +1832,7 @@ CMotionPoint* CBone::AddMotionPoint(int srcmotid, double srcframe, int* existptr
 
 		//Comment out 2022/10/30 push_back対応が難しいので　AddMotionPoint, 長さが変わるInitMp処理時に　呼び出し側でCreateIndexedMotionPointを呼ぶ
 		//GetMotionPointなどは　indexをチェックして　エントリーが無い場合には　チェインを辿る
-		//std::map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
+		//std::unordered_map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
 		//itrvecmpmap = m_indexedmotionpoint.find(srcmotid);
 		//if (itrvecmpmap != m_indexedmotionpoint.end()) {
 		//	//(itrvecmpmap->second).clear();
@@ -1863,7 +1863,7 @@ CMotionPoint* CBone::AddMotionPoint(int srcmotid, double srcframe, int* existptr
 
 //int CBone::ResizeIndexedMotionPoint(int srcmotid, double animleng)
 //{
-//	//std::map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
+//	//std::unordered_map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
 //	//itrvecmpmap = m_indexedmotionpoint.find(srcmotid);
 //	//if (itrvecmpmap != m_indexedmotionpoint.end()) {
 //	//	(itrvecmpmap->second).resize((int)(animleng + 0.0001));
@@ -2008,7 +2008,7 @@ int CBone::DeleteMotion( int srcmotid )
 	//削除によりm_motionkeyに空きが出来るがmotidは変わらない
 	//#######################################################
 
-	map<int, CMotionPoint*>::iterator itrmp;
+	unordered_map<int, CMotionPoint*>::iterator itrmp;
 	//itrmp = m_motionkey.find( srcmotid - 1 );//2021/08/26
 	itrmp = m_motionkey.find(srcmotid);//2024/06/10
 	if( itrmp != m_motionkey.end() ){
@@ -2032,7 +2032,7 @@ int CBone::DeleteMotion( int srcmotid )
 	m_motionkey[srcmotid] = 0;//2024/06/10
 
 
-	std::map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
+	std::unordered_map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
 	itrvecmpmap = m_indexedmotionpoint.find(srcmotid);
 	if (itrvecmpmap != m_indexedmotionpoint.end()) {
 		(itrvecmpmap->second).clear();
@@ -2078,7 +2078,7 @@ int CBone::DeleteMPOutOfRange( int motid, double srcleng )
 		curmp = nextmp;
 	}
 
-	std::map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
+	std::unordered_map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
 	itrvecmpmap = m_indexedmotionpoint.find(motid);
 	if (itrvecmpmap != m_indexedmotionpoint.end()) {
 		//(itrvecmpmap->second).clear();
@@ -2991,7 +2991,7 @@ int CBone::CalcRigidElemParams(bool setinstancescale, CBone* childbone, int sets
 
 	//if ((setstartflag != 0) || (m_firstcalcrigid == true)){
 	if (curre->GetColtype() == COL_CAPSULE_INDEX) {
-		map<int, CMQOObject*>::iterator itrobj;
+		unordered_map<int, CMQOObject*>::iterator itrobj;
 		for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++) {
 			CMQOObject* curobj = itrobj->second;
 			_ASSERT(curobj);
@@ -3007,7 +3007,7 @@ int CBone::CalcRigidElemParams(bool setinstancescale, CBone* childbone, int sets
 		}
 	}
 	else if (curre->GetColtype() == COL_CONE_INDEX) {
-		map<int, CMQOObject*>::iterator itrobj;
+		unordered_map<int, CMQOObject*>::iterator itrobj;
 		for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++) {
 			CMQOObject* curobj = itrobj->second;
 			_ASSERT(curobj);
@@ -3015,7 +3015,7 @@ int CBone::CalcRigidElemParams(bool setinstancescale, CBone* childbone, int sets
 		}
 	}
 	else if (curre->GetColtype() == COL_SPHERE_INDEX) {
-		map<int, CMQOObject*>::iterator itrobj;
+		unordered_map<int, CMQOObject*>::iterator itrobj;
 		for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++) {
 			CMQOObject* curobj = itrobj->second;
 			_ASSERT(curobj);
@@ -3023,7 +3023,7 @@ int CBone::CalcRigidElemParams(bool setinstancescale, CBone* childbone, int sets
 		}
 	}
 	else if (curre->GetColtype() == COL_BOX_INDEX) {
-		map<int, CMQOObject*>::iterator itrobj;
+		unordered_map<int, CMQOObject*>::iterator itrobj;
 		for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++) {
 			CMQOObject* curobj = itrobj->second;
 			_ASSERT(curobj);
@@ -3188,17 +3188,17 @@ int CBone::CreateRigidElem( CBone* parentbone, int reflag, std::string rename, i
 
 //////////////
 	if( impflag ){
-		map<string, map<CBone*, ChaVector3>>::iterator findimpmap;
+		unordered_map<string, unordered_map<CBone*, ChaVector3>>::iterator findimpmap;
 		findimpmap = parentbone->FindImpMap(impname);
 		if (findimpmap != parentbone->GetImpMapEnd()){
-			map<CBone*, ChaVector3>::iterator itrimp;
+			unordered_map<CBone*, ChaVector3>::iterator itrimp;
 			itrimp = findimpmap->second.find(this);
 			if (itrimp != findimpmap->second.end()){
 				return 0;
 			}
 			findimpmap->second[this].SetParams(0.0f, 0.0f, 0.0f);
 		}else{
-			map<CBone*, ChaVector3> curmap;
+			unordered_map<CBone*, ChaVector3> curmap;
 
 			curmap[this].SetParams( 0.0f, 0.0f, 0.0f );
 			parentbone->m_impmap[impname] = curmap;
@@ -3371,7 +3371,7 @@ int CBone::SetCurrentRigidElem( std::string curname )
 		return 0;
 	}
 
-	map<string, map<CBone*, CRigidElem*>>::iterator itrmap;
+	unordered_map<string, unordered_map<CBone*, CRigidElem*>>::iterator itrmap;
 	itrmap = m_remap.find( curname );
 	if( itrmap == m_remap.end() ){
 		_ASSERT( 0 );
@@ -4121,7 +4121,7 @@ int CBone::DestroyMotionKey( int srcmotid )
 	m_motionkey[srcmotid] = 0;//2024/06/10
 
 
-	std::map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
+	std::unordered_map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
 	itrvecmpmap = m_indexedmotionpoint.find(srcmotid);
 	if (itrvecmpmap != m_indexedmotionpoint.end()) {
 		(itrvecmpmap->second).clear();
@@ -4148,8 +4148,8 @@ int CBone::AddBoneMarkIfNot( int motid, OrgWinGUI::OWP_Timeline* owpTimeline, in
 	}
 
 
-	map<double, int> curmark;
-	map<int, map<double, int>>::iterator itrcur;
+	unordered_map<double, int> curmark;
+	unordered_map<int, unordered_map<double, int>>::iterator itrcur;
 	//itrcur = m_motmark.find( motid - 1 );//2021/08/26
 	itrcur = m_motmark.find(motid);//2024/06/10
 	if( itrcur == m_motmark.end() ){
@@ -4157,7 +4157,7 @@ int CBone::AddBoneMarkIfNot( int motid, OrgWinGUI::OWP_Timeline* owpTimeline, in
 	}else{
 		curmark = itrcur->second;
 	}
-	map<double, int>::iterator itrmark;
+	unordered_map<double, int>::iterator itrmark;
 	itrmark = curmark.find( curframe );
 	if( itrmark == curmark.end() ){
 		curmark[ curframe ] = flag;
@@ -4176,19 +4176,19 @@ int CBone::DelBoneMarkRange( int motid, OrgWinGUI::OWP_Timeline* owpTimeline, in
 		return 1;
 	}
 
-	map<int, map<double, int>>::iterator itrcur;
+	unordered_map<int, unordered_map<double, int>>::iterator itrcur;
 	//itrcur = m_motmark.find( motid - 1 );//2021/08/26
 	itrcur = m_motmark.find(motid);//2024/06/10
 	if( itrcur == m_motmark.end() ){
 		return 0;
 	}
 
-	map<double, int> curmark;
+	unordered_map<double, int> curmark;
 	curmark = itrcur->second;
 
 	double frame;
 	for( frame = (startframe + 1.0); frame <= (endframe - 1.0); frame += 1.0 ){
-		map<double, int>::iterator itrfind;
+		unordered_map<double, int>::iterator itrfind;
 		itrfind = curmark.find( frame );
 		if( itrfind != curmark.end() ){
 			curmark.erase( itrfind );
@@ -7781,13 +7781,13 @@ void CBone::SetRigidElemOfMap(std::string srcstr, CBone* srcbone, CRigidElem* sr
 	}
 
 
-	std::map<std::string, std::map<CBone*, CRigidElem*>>::iterator itrremap;
+	std::unordered_map<std::string, std::unordered_map<CBone*, CRigidElem*>>::iterator itrremap;
 	itrremap = m_remap.find(srcstr);
 	if (itrremap != m_remap.end()){
 
 		//itrremap->second[srcbone] = srcre;
 
-		std::map<CBone*, CRigidElem*>::iterator itrsetmap;
+		std::unordered_map<CBone*, CRigidElem*>::iterator itrsetmap;
 		itrsetmap = itrremap->second.find(srcbone);
 		if (itrsetmap != itrremap->second.end()){
 			CRigidElem* delre = itrsetmap->second;
@@ -7803,7 +7803,7 @@ void CBone::SetRigidElemOfMap(std::string srcstr, CBone* srcbone, CRigidElem* sr
 		}
 	}
 	else{
-		std::map<CBone*, CRigidElem*> newmap;
+		std::unordered_map<CBone*, CRigidElem*> newmap;
 		newmap[srcbone] = srcre;
 		m_remap[srcstr] = newmap;
 	}
@@ -8119,7 +8119,7 @@ void CBone::OnDelModel(CModel* srcparmodel)
 	}
 	//}
 
-	map<CModel*, int>::iterator itrbonecnt;
+	unordered_map<CModel*, int>::iterator itrbonecnt;
 	itrbonecnt = g_bonecntmap.find(srcparmodel);
 	if (itrbonecnt != g_bonecntmap.end()) {
 		g_bonecntmap.erase(itrbonecnt);//エントリー削除
@@ -8746,13 +8746,13 @@ int CBone::CreateIndexedMotionPoint(int srcmotid, double animleng)
 
 
 
-	std::map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
+	std::unordered_map<int, vector<CMotionPoint*>>::iterator itrvecmpmap;
 	itrvecmpmap = m_indexedmotionpoint.find(srcmotid);
 	if (itrvecmpmap == m_indexedmotionpoint.end()) {
 		std::vector<CMotionPoint*> newvecmp;
 		m_indexedmotionpoint[srcmotid] = newvecmp;//STL 参照されていれば無くならない？？？
 
-		std::map<int, vector<CMotionPoint*>>::iterator itrvecmpmap2;
+		std::unordered_map<int, vector<CMotionPoint*>>::iterator itrvecmpmap2;
 		itrvecmpmap2 = m_indexedmotionpoint.find(srcmotid);
 		if (itrvecmpmap2 == m_indexedmotionpoint.end()) {
 			_ASSERT(0);

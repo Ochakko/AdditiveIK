@@ -6,7 +6,7 @@
 #include <coef.h>
 #include <XMLIO.h>
 
-#include <map>
+#include <unordered_map>
 #include <string>
 
 class BPWorld;

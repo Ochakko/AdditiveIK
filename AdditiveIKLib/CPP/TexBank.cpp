@@ -51,7 +51,7 @@ int CTexBank::DestroyObjs()
 {
 	//Invalidate( INVAL_ALL );
 	//
-	map<int,CTexElem*>::iterator itr;
+	unordered_map<int,CTexElem*>::iterator itr;
 	for( itr = m_texmap.begin(); itr != m_texmap.end(); itr++ ){
 		CTexElem* delte = itr->second;
 		if( delte ){
@@ -181,7 +181,7 @@ int CTexBank::AddTex(CGltfLoader* srcloader,
 //	}
 //
 //
-//	//map<int,CTexElem*>::iterator itr;
+//	//unordered_map<int,CTexElem*>::iterator itr;
 //	//for( itr = m_texmap.begin(); itr != m_texmap.end(); itr++ ){
 //	//	CTexElem* delelem = itr->second;
 //	//	if( delelem && (invalmode == INVAL_ALL) || ((invalmode == INVAL_ONLYDEFAULT) && (delelem->GetPool() == 0)) ){
@@ -206,7 +206,7 @@ int CTexBank::AddTex(CGltfLoader* srcloader,
 //		}
 //	}
 //
-//	//map<int,CTexElem*>::iterator itr;
+//	//unordered_map<int,CTexElem*>::iterator itr;
 //	//for( itr = m_texmap.begin(); itr != m_texmap.end(); itr++ ){
 //	//	CTexElem* telem = itr->second;
 //	//	if( telem && telem->IsValid()){
@@ -222,7 +222,7 @@ int CTexBank::AddTex(CGltfLoader* srcloader,
 
 //int CTexBank::DestroyTex( int srcid )
 //{
-//	map<int,CTexElem*>::iterator finditr;
+//	unordered_map<int,CTexElem*>::iterator finditr;
 //	finditr = m_texmap.find( srcid );
 //	if( finditr == m_texmap.end() ){
 //		return 0;

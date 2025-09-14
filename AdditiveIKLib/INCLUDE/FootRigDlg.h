@@ -10,7 +10,7 @@
 
 #include <vector>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 class OrgWinGUI::OrgWindow;
 class OrgWinGUI::OWP_ComboBoxA;
@@ -108,8 +108,8 @@ private:
 
 	CModel* m_model;
 	ChaScene* m_chascene;
-	std::map<CModel*, FOOTRIGELEM> m_footrigelem;
-	std::map<CModel*, ChaMatrix> m_savemodelwm;
+	std::unordered_map<CModel*, FOOTRIGELEM> m_footrigelem;
+	std::unordered_map<CModel*, ChaMatrix> m_savemodelwm;
 
 	OrgWinGUI::OrgWindow* m_dlgWnd;
 

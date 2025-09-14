@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 
 class CThresholdFile : public CXMLIO

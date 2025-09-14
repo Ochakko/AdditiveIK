@@ -492,7 +492,7 @@ int CPolyMesh4::SetOptV(BINORMALDISPV* dispv, int* pleng, int* matnum, CModel* p
 }
 
 
-int CPolyMesh4::ChkAlphaNum( map<int,CMQOMaterial*>& srcmat )
+int CPolyMesh4::ChkAlphaNum( unordered_map<int,CMQOMaterial*>& srcmat )
 {
 
 	chkalpha.alphanum = 0;
@@ -589,7 +589,7 @@ typedef struct tag_modelbaund
 	return 0;
 }
 
-int CPolyMesh4::DumpInfBone( CMQOObject* srcobj, map<int,CBone*>& srcbonelist )
+int CPolyMesh4::DumpInfBone( CMQOObject* srcobj, unordered_map<int,CBone*>& srcbonelist )
 {
 	DbgOut( L"check!!! DumpInfBone %d\r\n", srcobj->GetObjectNo() );
 
@@ -618,7 +618,7 @@ int CPolyMesh4::DumpInfBone( CMQOObject* srcobj, map<int,CBone*>& srcbonelist )
 	return 0;
 }
 
-//int CPolyMesh4::SetPm3InfNoSkin( ID3D12Device* pdev, CMQOObject* srcobj, int clusterno, map<int,CBone*>& srcbonelist )
+//int CPolyMesh4::SetPm3InfNoSkin( ID3D12Device* pdev, CMQOObject* srcobj, int clusterno, unordered_map<int,CBone*>& srcbonelist )
 //{
 //	if (!m_pm3inf || !m_triface || !srcobj) {
 //		_ASSERT(0);
