@@ -106,8 +106,10 @@ int ChkRay( int allowrev, int i1, int i2, int i3,
 		return 1;
 	}
 
-	if( ((dota <= -0.50f) && (dotb <= -0.50f) && (dotc <= -0.50f)) ||
-		((dota >= 0.50f) && (dotb >= 0.50f) && (dotc >= 0.50f)) ){
+	//if (((dota <= -0.50f) && (dotb <= -0.50f) && (dotc <= -0.50f)) ||
+	//	((dota >= 0.50f) && (dotb >= 0.50f) && (dotc >= 0.50f))) {
+	if (((dota <= 0.0f) && (dotb <= 0.0f) && (dotc <= 0.0f)) ||
+		((dota >= 0.0f) && (dotb >= 0.0f) && (dotc >= 0.0f))) {
 		return 1;
 	}else{
 		return 0;
@@ -115,7 +117,9 @@ int ChkRay( int allowrev, int i1, int i2, int i3,
 
 }
 
-int ChkRay(int allowrev, int i1, int i2, int i3,
+int ChkRay(int allowrev, 
+	double nearestdist,//2025/09/14
+	int i1, int i2, int i3,
 	BINORMALDISPV* pointbuf, ChaVector3 startpos, ChaVector3 dir,
 	float justval, int* justptr, ChaVector3* dsthitpos)
 {
@@ -169,6 +173,9 @@ int ChkRay(int allowrev, int i1, int i2, int i3,
 	if (k < 0.0f) {
 		return 0;
 	}
+	if (k > nearestdist) {
+		return 2;//2025/09/14
+	}
 
 	ChaVector3 q;
 	q = v1 + e * k;
@@ -205,9 +212,11 @@ int ChkRay(int allowrev, int i1, int i2, int i3,
 		return 1;
 	}
 
-	if (((dota <= -0.50f) && (dotb <= -0.50f) && (dotc <= -0.50f)) ||
-		((dota >= 0.50f) && (dotb >= 0.50f) && (dotc >= 0.50f))) {
-		return 1;
+	//if (((dota <= -0.50f) && (dotb <= -0.50f) && (dotc <= -0.50f)) ||
+	//	((dota >= 0.50f) && (dotb >= 0.50f) && (dotc >= 0.50f))) {
+	if (((dota <= 0.0f) && (dotb <= 0.0f) && (dotc <= 0.0f)) ||
+		((dota >= 0.0f) && (dotb >= 0.0f) && (dotc >= 0.0f))) {
+			return 1;
 	}
 	else {
 		return 0;
@@ -304,8 +313,10 @@ int ChkRay(int allowrev,
 		return 1;
 	}
 
-	if (((dota <= -0.50f) && (dotb <= -0.50f) && (dotc <= -0.50f)) ||
-		((dota >= 0.50f) && (dotb >= 0.50f) && (dotc >= 0.50f))) {
+	//if (((dota <= -0.50f) && (dotb <= -0.50f) && (dotc <= -0.50f)) ||
+	//	((dota >= 0.50f) && (dotb >= 0.50f) && (dotc >= 0.50f))) {
+	if (((dota <= 0.0f) && (dotb <= 0.0f) && (dotc <= 0.0f)) ||
+		((dota >= 0.0f) && (dotb >= 0.0f) && (dotc >= 0.0f))) {
 		return 1;
 	}
 	else {

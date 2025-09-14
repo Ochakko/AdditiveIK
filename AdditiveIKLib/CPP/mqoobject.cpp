@@ -2537,9 +2537,10 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 		ChaVector3 tmphitpos;
 		tmphitpos.SetParams(0.0f, 0.0f, 0.0f);
 		hitflag = ChkRay(allowrev, 
+			nearestdist,//2025/09/14 
 			index0, index1, index2,
 			dispv, startlocal, dirlocal, justval, &justflag, &tmphitpos);
-		if (hitflag || justflag) {
+		if ((hitflag == 1) || justflag) {
 		//if (hitflag) {
 			ChaVector3 curdistvec = tmphitpos - startlocal;
 			float curdist = (float)ChaVector3LengthDbl(&curdistvec);
