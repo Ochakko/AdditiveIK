@@ -4301,6 +4301,7 @@ int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj,
 	bool excludeinvface = true;
 	int colli = 0;
 	colli = pickobj->CollisionGlobal_Ray_Pm(startglobal, dirglobal, startlocal, dirlocal,
+		rayleng,//2025/09/15
 		excludeinvface, hitfaceindex, dsthitpos, dstdist);//polymesh4の場合のhitposはグローバル座標系で返ってくる
 
 	return colli;
@@ -4331,6 +4332,7 @@ int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
 	if (pickobj->GetGPUInteractionFlag()) {
 		//### GPU ###
 		colli = pickobj->CollisionGlobal_Ray_Pm(startlocal, dirlocal, startlocal, dirlocal,//pm3の場合はmodelwmを掛けていない頂点に対してPickするのでlocalを渡す
+			rayleng,//2025/09/15
 			excludeinvface, hitfaceindex, &tmphitpos, &tmpdist);
 	}
 	else {
@@ -4407,6 +4409,7 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 				float tmpdist = FLT_MAX;
 				//colli = curobj->CollisionGlobal_Ray_Pm(startglobal, dirglobal, startlocal, dirlocal,
 				colli = curobj->CollisionGlobal_Ray_Pm(startlocal, dirlocal, startlocal, dirlocal,//pm3の場合はmodelwmを掛けていない頂点に対してPickするのでlocalを渡す
+					rayleng,//2025/09/15
 					excludeinvface, &hitfaceindex, &tmphitpos, &tmpdist);
 
 				if ((colli != 0) && (tmpdist < nearestdist)) {

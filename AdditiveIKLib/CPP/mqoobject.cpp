@@ -335,6 +335,8 @@ void CMQOObject::InitParams()
 
 	m_gpucollisionflag = false;
 
+	m_clustertopbone = nullptr;
+
 //	next = 0;
 }
 
@@ -1025,6 +1027,9 @@ int CMQOObject::MakeExtLine(CModel* srcmodel)
 
 int CMQOObject::MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag)
 {
+
+	SetClusterTopBone();//2025/09/15
+
 	if (m_dispobj) {
 		delete m_dispobj;
 		m_dispobj = nullptr;
@@ -2566,6 +2571,7 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 
 int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglobal,
 	ChaVector3 startlocal, ChaVector3 dirlocal,
+	double rayleng,//2025/09/15
 	bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist)
 {
 	//ComputeShader版　polymesh3, polymesh4両方OK
@@ -2617,7 +2623,47 @@ int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglo
 	//}
 
 
-	return dispobj->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos, dstdist);
+	//GPU
+	//return dispobj->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos, dstdist);
+
+	if (GetPm3() != nullptr) {
+		int sphcollision = CollisionLocal_Ray_BB_Sph(GetBound(), startlocal, dirlocal, rayleng);//2025/09/15 球で粗く判定(CPU)
+		if (sphcollision == 0) {
+			*hitfaceindex = -1;
+			dsthitpos->SetZeroVec3();
+			return 0;
+		}
+	
+		//GPU
+		return dispobj->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos, dstdist);
+	}
+	else if(GetPm4() != nullptr){
+		//2025/09/15 polymesh4の場合には　バウンダリーもボーントランスフォームした上で　CollisionLocal_Ray_BB_Sphで粗く判定
+		CBone* clusterbone = GetClusterTopBone();
+		if (clusterbone) {
+			MODELBOUND mb = GetBound();
+			//ChaMatrix curwm = clusterbone->GetCurrentWorldMat(true, false);
+			ChaMatrix curwm = clusterbone->GetCurMp().GetWorldMat();
+			ChaVector3 center1;
+			ChaVector3TransformCoord(&center1, &(mb.center), &curwm);
+			mb.center = center1;
+	
+			int sphcollision = CollisionLocal_Ray_BB_Sph(mb, startlocal, dirlocal, rayleng);//2025/09/15 球で粗く判定(CPU)
+			if (sphcollision == 0) {
+				*hitfaceindex = -1;
+				dsthitpos->SetZeroVec3();
+				return 0;
+			}
+		}
+	
+		//GPU
+		return dispobj->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos, dstdist);
+	}
+	else {
+		*hitfaceindex = -1;
+		dsthitpos->SetZeroVec3();
+		return 0;
+	}
 }
 
 int CMQOObject::GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist)
@@ -3384,10 +3430,10 @@ int CMQOObject::ChkInView(ChaMatrix matWorld, ChaMatrix matVP, int refposindex)
 			//hipsが大きく移動すると　視野外になる不具合への対応
 			//hipsのworldmatを考慮する
 			// 
-			//GetHipsBone()はclusterの最初のボーンを親方向へさかのぼって探す
+			//GetClusterTopBone()はclusterの最初のボーンを親方向へさかのぼって探す
 			//##################################################################
 
-			CBone* hipsbone = GetHipsBone();
+			CBone* hipsbone = GetClusterTopBone();
 			if (hipsbone && hipsbone->GetParModel()) {
 				int currentmotid = hipsbone->GetParModel()->GetCurrentMotID();
 				if (currentmotid > 0) {
@@ -3490,28 +3536,28 @@ void CMQOObject::SetInShadow(bool srcflag, int refposindex) {
 	m_frustum[refposindex].SetInShadow(srcflag);
 }
 
-CBone* CMQOObject::GetHipsBone()
+void CMQOObject::SetClusterTopBone()
 {
 	//################################################
 	//clusterの最初のボーンを親方向へさかのぼって探す
 	//################################################
 
-	CBone* hipsbone = 0;
+	CBone* hipsbone = nullptr;
 
-	CBone* firstbone = 0;
+	CBone* firstbone = nullptr;
 	int clusternum = (int)GetClusterSize();
 	if (clusternum > 0) {
 		firstbone = GetCluster(0);
 	}
 	else {
-		firstbone = 0;
+		firstbone = nullptr;
 	}
 
 	CBone* firstskeleton = nullptr;
 	CBone* chkbone = firstbone;
 	while (chkbone) {
 		if (chkbone->IsHipsBone()) {
-			hipsbone = chkbone;
+			firstskeleton = chkbone;
 			break;
 		}
 		if (chkbone->IsSkeleton() && !chkbone->GetENullConvertFlag()) {
@@ -3520,10 +3566,7 @@ CBone* CMQOObject::GetHipsBone()
 		chkbone = chkbone->GetParent(false);
 	}
 
-	if (hipsbone == nullptr) {
-		hipsbone = firstskeleton;//2025/09/13
-	}
-	return hipsbone;
+	m_clustertopbone = firstskeleton;
 }
 
 int CMQOObject::IncludeTransparent(float multalpha, bool* pfound_noalpha, bool* pfound_alpha)

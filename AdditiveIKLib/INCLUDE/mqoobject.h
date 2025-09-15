@@ -114,6 +114,7 @@ public:
 	//ComputeShader版　polymesh3, polymesh4両方OK
 	int CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglobal,
 		ChaVector3 startlocal, ChaVector3 dirlocal,
+		double rayleng,//2025/09/15
 		bool excludeinvface, int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist);
 	int GetResultOfPickRay(int* hitfaceindex, ChaVector3* dsthitpos, float* dstdist);
 
@@ -158,8 +159,11 @@ public:
 
 	int ChkInView(ChaMatrix matWorld, ChaMatrix matVP, int refposindex);
 
-	CBone* GetHipsBone();
-
+	//CBone* GetHipsBone();
+	void SetClusterTopBone();
+	CBone* GetClusterTopBone() {
+		return m_clustertopbone;
+	};
 
 
 
@@ -581,6 +585,7 @@ private:
 	ChaFrustumInfo m_frustum[REFPOSMAXNUM];
 	bool m_cancelshadow;
 
+	CBone* m_clustertopbone;
 
 //以下、クラス外から参照しないのでアクセッサー無し
 	int m_patch;
