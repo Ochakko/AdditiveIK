@@ -1809,7 +1809,7 @@ static unordered_map<int, int> s_boneno2lineno;
 //static ChaScene* g_chascene = 0;
 //static vector<MODELELEM> s_modelindex;
 //static MODELBOUND	s_totalmb;
-static int s_curmodelmenuindex = -1;
+//static int g_curmodelmenuindex = -1;//globalへ
 static int s_savemodelpanelshowposline = -1;
 static int s_savemotionpanelshowposline = -1;
 static int s_savecamerapanelshowposline = -1;
@@ -4274,7 +4274,9 @@ void InitApp()
 
 	{
 		//s_model = NULL;
-		s_curmodelmenuindex = -1;
+		g_curmodelmenuindex = -1;
+		g_curmodelmenuindex_load = -1;
+
 		s_cameramodel = NULL;//2023/05/23
 		s_select = NULL;
 		s_select_posture = NULL;
@@ -7773,7 +7775,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				break;
 			case ID_DELMODEL:
 				s_delmodelFlag = true;
-				//OnDelModel( s_curmodelmenuindex );
+				//OnDelModel( g_curmodelmenuindex );
 				//return 0;
 				break;
 			case ID_DELALLMODEL:
@@ -9751,10 +9753,10 @@ int RetargetBatch()
 	//}
 
 	s_convbone_model_batch = GetCurrentModel();
-	s_convbone_model_batch_selindex = s_curmodelmenuindex;
+	s_convbone_model_batch_selindex = g_curmodelmenuindex;
 
 
-	s_saveretargetmodel = s_curmodelmenuindex;//終了時にOnModelMenuを呼ぶために保存
+	s_saveretargetmodel = g_curmodelmenuindex;//終了時にOnModelMenuを呼ぶために保存
 
 
 	BROWSEINFO bi;
@@ -10449,9 +10451,9 @@ CModel* OpenMQOFile()
 			return 0;
 		}
 	}
-	//if (GetCurrentModel() && (s_curmodelmenuindex >= 0) && g_chascene && (g_chascene->GetModelNum() != 0)) {
-	//	g_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
-	//	g_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
+	//if (GetCurrentModel() && (g_curmodelmenuindex >= 0) && g_chascene && (g_chascene->GetModelNum() != 0)) {
+	//	g_chascene->SetTimelineArray(g_curmodelmenuindex, s_tlarray);
+	//	g_chascene->SetLineno2Boneno(g_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
 	//}
 
 	DestroyTimeLine(1);
@@ -10709,9 +10711,9 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 			return 0;
 		}
 	}
-	//if (GetCurrentModel() && (s_curmodelmenuindex >= 0) && g_chascene && (g_chascene->GetModelNum() != 0)) {
-	//	g_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
-	//	g_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
+	//if (GetCurrentModel() && (g_curmodelmenuindex >= 0) && g_chascene && (g_chascene->GetModelNum() != 0)) {
+	//	g_chascene->SetTimelineArray(g_curmodelmenuindex, s_tlarray);
+	//	g_chascene->SetLineno2Boneno(g_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
 	//}
 
 
@@ -13280,13 +13282,13 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 
 
 	//if (callbymenu == 1) {
-	//	if (GetCurrentModel() && (s_curmodelmenuindex >= 0) && g_chascene && (g_chascene->GetModelNum() != 0)) {
-	//		g_chascene->SetTimelineArray(s_curmodelmenuindex, s_tlarray);
-	//		g_chascene->SetLineno2Boneno(s_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
+	//	if (GetCurrentModel() && (g_curmodelmenuindex >= 0) && g_chascene && (g_chascene->GetModelNum() != 0)) {
+	//		g_chascene->SetTimelineArray(g_curmodelmenuindex, s_tlarray);
+	//		g_chascene->SetLineno2Boneno(g_curmodelmenuindex, s_lineno2boneno, s_boneno2lineno);
 	//	}
 	//}
 
-	s_curmodelmenuindex = selindex;
+	g_curmodelmenuindex = selindex;
 
 	_ASSERT(s_modelmenu);
 	int iMdlSet, cMdlSets;
@@ -13777,7 +13779,7 @@ int OnDelModel(int delmenuindex, bool ondelbutton)//default : ondelbutton == fal
 	if (g_chascene->ModelEmpty()) {
 		s_curboneno = -1;
 		SetCurrentModel(nullptr);
-		s_curmodelmenuindex = -1;
+		g_curmodelmenuindex = -1;
 		s_tlarray.clear();
 		s_motmenuindexmap.clear();
 		s_cameramenuindexmap.clear();
@@ -13829,7 +13831,7 @@ int OnDelAllModel()
 
 	s_curboneno = -1;
 	SetCurrentModel(nullptr);
-	s_curmodelmenuindex = -1;
+	g_curmodelmenuindex = -1;
 	s_tlarray.clear();
 	s_motmenuindexmap.clear();
 	s_cameramenuindexmap.clear();
@@ -13884,9 +13886,9 @@ int refreshModelPanel()
 		s_owpLayerTable->newLine(label, 0);
 	}
 
-	//if (s_modelpanel.radiobutton && ((int)s_modelindex.size() > 0) && (s_curmodelmenuindex >= 0)) {
-	//	//if( s_curmodelmenuindex >= 0 ){
-	//	s_modelpanel.modelindex = s_curmodelmenuindex;
+	//if (s_modelpanel.radiobutton && ((int)s_modelindex.size() > 0) && (g_curmodelmenuindex >= 0)) {
+	//	//if( g_curmodelmenuindex >= 0 ){
+	//	s_modelpanel.modelindex = g_curmodelmenuindex;
 	//	s_modelpanel.radiobutton->setSelectIndex(s_modelpanel.modelindex);
 	//	//}
 	//}
@@ -13896,7 +13898,7 @@ int refreshModelPanel()
 
 //int refreshMotionPanel()
 //{
-//	if (s_motionpanel.radiobutton && ((int)s_modelindex.size() > 0) && (s_curmodelmenuindex >= 0)) {
+//	if (s_motionpanel.radiobutton && ((int)s_modelindex.size() > 0) && (g_curmodelmenuindex >= 0)) {
 //		if (s_model && (s_model->GetMotInfoSize() > 0) && s_motmenuindexmap[s_model] >= 0) {
 //			s_motionpanel.radiobutton->setSelectIndex(s_motmenuindexmap[s_model]);
 //		}
@@ -17107,7 +17109,7 @@ int CreateModelPanel()
 				}
 			}
 
-			s_modelpanel.modelindex = s_curmodelmenuindex;
+			s_modelpanel.modelindex = g_curmodelmenuindex;
 			if (s_modelpanel.radiobutton) {
 				s_modelpanel.radiobutton->setSelectIndex(s_modelpanel.modelindex, false);
 			}
@@ -17463,7 +17465,7 @@ int CreateCameraPanel()
 			}
 
 
-			s_camerapanel.modelindex = s_curmodelmenuindex;
+			s_camerapanel.modelindex = g_curmodelmenuindex;
 			//s_camerapanel.radiobutton->setSelectIndex(0);
 			if (s_cameramodel) {
 				if (s_camerapanel.radiobutton) {
@@ -17782,7 +17784,7 @@ int CreateMotionPanel()
 			}
 
 
-			s_motionpanel.modelindex = s_curmodelmenuindex;
+			s_motionpanel.modelindex = g_curmodelmenuindex;
 			//s_motionpanel.radiobutton->setSelectIndex(0);
 			if (GetCurrentModel()) {
 				if (s_motionpanel.radiobutton) {
@@ -19396,6 +19398,13 @@ int PostOpenChaFile()
 		g_chascene->InitializeBoneAxisKind();
 	}
 
+	//2025/09/15 chaファイルでg_curmodelmenuindex, g_curmodelmenuindex_loadを読み書きするようにした
+	if (g_curmodelmenuindex_load != -1) {
+		CModel* selectmodel = g_chascene->GetModel(g_curmodelmenuindex_load);
+		if (selectmodel != nullptr) {
+			OnChangeModel(g_curmodelmenuindex_load, false, false);
+		}
+	}
 
 	//2025/08/13
 	//PostureChildのフラグなど全モデル読み込み後の設定がboneに付いた後でFillTimelineするために呼び出す(名前に水色で(P)が付く)
@@ -27687,7 +27696,7 @@ int OnFrameToolWnd()
 
 			s_limiteuldlg.SetSaveLimitDegFlag(g_limitdegflag);
 			//ChangeLimitDegFlag(false, true, true);//2023/10/23　1.2.0.27_RC2にて コメントアウト
-			s_saveretargetmodel = s_curmodelmenuindex;//終了時にOnModelMenuを呼ぶために保存
+			s_saveretargetmodel = g_curmodelmenuindex;//終了時にOnModelMenuを呼ぶために保存
 
 			RetargetMotion();
 
@@ -27799,7 +27808,7 @@ int OnFrameToolWnd()
 
 	if (s_delmodelFlag == true) {
 		s_underdelmodel = true;
-		OnDelModel(s_curmodelmenuindex);
+		OnDelModel(g_curmodelmenuindex);
 		s_underdelmodel = false;
 		s_delmodelFlag = false;
 	}
@@ -35365,7 +35374,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				break;
 			case ID_DELMODEL:
 				s_delmodelFlag = true;
-				//OnDelModel(s_curmodelmenuindex);
+				//OnDelModel(g_curmodelmenuindex);
 				//return 0;
 				break;
 			case ID_DELALLMODEL:
@@ -39092,11 +39101,11 @@ void SetMainWindowTitle()
 
 		int modelnum = g_chascene->GetModelNum();
 
-		if ((modelnum >= 1) && (s_curmodelmenuindex >= 0) && (s_curmodelmenuindex < modelnum)) {
+		if ((modelnum >= 1) && (g_curmodelmenuindex >= 0) && (g_curmodelmenuindex < modelnum)) {
 			CModel* curmodel;
-			curmodel = g_chascene->GetModel(s_curmodelmenuindex);
+			curmodel = g_chascene->GetModel(g_curmodelmenuindex);
 			if (curmodel) {
-				swprintf_s(strindexedcharactor, MAX_PATH * 3, L"%d : %s", s_curmodelmenuindex, curmodel->GetFileName());
+				swprintf_s(strindexedcharactor, MAX_PATH * 3, L"%d : %s", g_curmodelmenuindex, curmodel->GetFileName());
 				wcscat_s(strmaintitle, (MAX_PATH * 3), strindexedcharactor);
 				wcscat_s(strmaintitle, (MAX_PATH * 3), L" : ");
 

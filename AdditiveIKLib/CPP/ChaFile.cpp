@@ -157,6 +157,9 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CGColiFile gcofile;
 	CallF( gcofile.WriteGColiFile( wgconame, srcbpw ), return 1 );
 
+	CallF(Write2File("  <BoneMarkDisp>%d</BoneMarkDisp>\r\n", g_bonemarkflag), return 1);
+	CallF(Write2File("  <RigidMarkDisp>%d</RigidMarkDisp>\r\n", g_rigidmarkflag), return 1);
+	CallF(Write2File("  <SelectModel>%d</SelectModel>\r\n", g_curmodelmenuindex), return 1);
 
 	CallF(Write2File("  <ProjFov>%.3f</ProjFov>\r\n", g_fovy * 180.0f / (float)PI), return 1);
 	CallF(Write2File("  <ProjNear>%.3f</ProjNear>\r\n", g_projnear), return 1);
@@ -253,7 +256,9 @@ int CChaFile::WriteFileInfo()
 	//version 1012 : 2024/05/12 1.0.0.20へ向けて  <GrassFlag>, <GrassMat>追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1012</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1013 : 2025/02/11 1.0.0.38へ向けて  <CameraPos>, <CameraTarget>, <CameraUpVec>追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1013</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1013</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1014 : 2025/09/15 1.0.0.52へ向けて  <ModelDisp>, <BoneMarkDisp>, <RigidMarkDisp>, <SelectModel>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1014</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -288,6 +293,7 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 	CallF(Write2File("    <ModelFolder>%s</ModelFolder>\r\n", modelfolder ), return 1 );
 	CallF(Write2File("    <ModelFile>%s</ModelFile>\r\n", filename ), return 1 );
 	CallF(Write2File("    <ModelMult>%f</ModelMult>\r\n", curmodel->GetLoadMult() ), return 1 );
+	CallF(Write2File("    <ModelDisp>%d</ModelDisp>\r\n", (curmodel->GetModelDisp() ? 1 : 0)), return 1);
 
 	if (curmodel->GetGrassFlag() && srcgrasselem) {
 		CallF(Write2File("    <GrassFlag>1</GrassFlag>\r\n"), return 1);
@@ -781,8 +787,27 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 		return 1;
 	}
 
-	bool getfov = false;
+
 	int result = 0;
+	int tempbonemarkdisp = 1;
+	result = Read_Int(&m_xmliobuf, "<BoneMarkDisp>", "</BoneMarkDisp>", &tempbonemarkdisp);
+	if (result == 0) {
+		g_bonemarkflag = tempbonemarkdisp;
+	}
+
+	int temprigidmarkdisp = 1;
+	result = Read_Int(&m_xmliobuf, "<RigidMarkDisp>", "</RigidMarkDisp>", &temprigidmarkdisp);
+	if (result == 0) {
+		g_rigidmarkflag = temprigidmarkdisp;
+	}
+
+	int tempselectmodel = -1;
+	result = Read_Int(&m_xmliobuf, "<SelectModel>", "</SelectModel>", &tempselectmodel);
+	if (result == 0) {
+		g_curmodelmenuindex_load = tempselectmodel;
+	}
+
+	bool getfov = false;
 	float tempfovy = 45.0f * (float)PI / 180.0f;
 	result = Read_Float(&m_xmliobuf, "<ProjFov>", "</ProjFov>", &tempfovy);
 	if (result == 0) {
@@ -1070,6 +1095,10 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	char modelfolder[MAX_PATH] = {0};
 	char filename[MAX_PATH] = {0};
 	float modelmult = 1.0f;
+
+	int getmodeldisp = 0;
+	int modeldisp = 1;
+	
 	int refnum = 0;
 	int impnum = 0;
 	int curre = 0;
@@ -1088,6 +1117,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	CallF( Read_Str( xmlbuf, "<ModelFile>", "</ModelFile>", filename, MAX_PATH ), return 1 );
 
 	CallF(Read_Float(xmlbuf, "<ModelMult>", "</ModelMult>", &modelmult), return 1);
+	getmodeldisp = Read_Int(xmlbuf, "<ModelDisp>", "</ModelDisp>", &modeldisp);
 
 	int grassflag = 0;
 	std::vector<ChaMatrix> grassmatvec;
@@ -1258,8 +1288,14 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	newmodel->SetModelPosition(ChaVector3(posx, posy, posz));
 	newmodel->SetModelRotation(ChaVector3(rotx, roty, rotz));
 	newmodel->CalcModelWorldMatOnLoad(m_footrigdlg);
-	newmodel->SetMaterialDispRate(materialdisprate);
 
+	newmodel->SetMaterialDispRate(materialdisprate);
+	if (getmodeldisp == 0) {
+		newmodel->SetModelDisp((modeldisp == 1) ? true : false);
+	}
+	else {
+		newmodel->SetModelDisp(true);
+	}
 
 	int laternamenum = (int)latername.size();
 	int laterno;

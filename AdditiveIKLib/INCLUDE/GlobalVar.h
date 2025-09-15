@@ -59,7 +59,8 @@ class CInfoWindow;
 #ifdef ADDITIVEIKLIBGLOBALVAR
 
 int g_edittarget = EDITTARGET_BONE;
-
+int g_curmodelmenuindex = -1;
+int g_curmodelmenuindex_load = -1;
 WCHAR g_brushname[MAX_PATH] = { 0 };
 int g_fogindex = 0;
 CFogParams g_fogparams[FOGSLOTNUM];
@@ -380,6 +381,8 @@ double g_playingend = 1.0;
 
 #else
 extern int g_edittarget;
+extern int g_curmodelmenuindex;
+extern int g_curmodelmenuindex_load;
 
 extern WCHAR g_brushname[MAX_PATH];
 extern int g_fogindex;
