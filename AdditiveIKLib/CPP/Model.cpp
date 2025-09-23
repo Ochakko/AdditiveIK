@@ -1875,23 +1875,34 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 {
 	MODELBOUND mb;
 	MODELBOUND addmb;
-	//::ZeroMemory(&mb, sizeof(MODELBOUND));
 	mb.Init();
 	addmb.Init();
 
+	m_bound_per5.clear();
+	MODELBOUND mb5;
+	MODELBOUND addmb5;
+	mb5.Init();
+	addmb5.Init();
+
+	int count5 = 0;
 	int calcflag = 0;
 	unordered_map<int,CMQOObject*>::iterator itr;
 	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
 		CMQOObject* curobj = itr->second;
 		if (curobj && !curobj->IsND()) {
+
+			addmb5.Init();
+
 			if (curobj->GetPm3()) {
 				//curobj->GetPm3()->CalcBound();//MakeDispObj()に移動　ここでは既にpointbufなどが削除された後
 				if (calcflag == 0) {
 					mb = curobj->GetPm3()->GetBound();
+					addmb5 = mb;
 				}
 				else {
 					addmb = curobj->GetPm3()->GetBound();
 					AddModelBound(&mb, &addmb);
+					addmb5 = addmb;
 				}
 				calcflag++;
 			}
@@ -1899,10 +1910,12 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 				//curobj->GetPm4()->CalcBound();//MakeDispObj()に移動　ここでは既にpointbufなどが削除された後
 				if (calcflag == 0) {
 					mb = curobj->GetPm4()->GetBound();
+					addmb5 = mb;
 				}
 				else {
 					addmb = curobj->GetPm4()->GetBound();
 					AddModelBound(&mb, &addmb);
+					addmb5 = addmb;
 				}
 				calcflag++;
 			}
@@ -1910,15 +1923,39 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 				//curobj->GetExtLine()->CalcBound();//MakeDispObj()に移動　ここでは既にpointbufなどが削除された後
 				if (calcflag == 0) {
 					mb = curobj->GetExtLine()->GetBound();
+					addmb5 = mb;
 				}
 				else {
 					addmb = curobj->GetExtLine()->GetBound();
 					AddModelBound(&mb, &addmb);
+					addmb5 = addmb;
 				}
 				calcflag++;
 			}
+
+			//mqoobject５個単位のバウンダリーを作成
+			if ((count5 % OBJBOUNDING_BLOCKNUM) == 0) {
+				if (count5 != 0) {
+					m_bound_per5.push_back(mb5);
+				}
+				//mb5.Init();
+				//if (addmb5.IsValid()) {
+					//AddModelBound(&mb5, &addmb);
+					mb5 = addmb5;
+				//}
+			}
+			else {
+				if (addmb.IsValid()) {
+					AddModelBound(&mb5, &addmb5);
+				}
+			}
+			count5++;
 		}
 	}
+	//if (((count5 - 1) == 0) || (((count5 - 1) % 5) != 0)) {
+		m_bound_per5.push_back(mb5);
+	//}
+
 
 	if (GetTopBone() && (calcflag == 0)) {//メッシュが無いときだけボーンのバウンダリを使用
 		if (calcflag == 0) {
@@ -4380,10 +4417,39 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 	float nearestdist = FLT_MAX;
 	bool findflag = false;
 
+	int count5 = 0;
+	int mb5num = (int)m_bound_per5.size();
+	bool skip5flag = false;
+
 	unordered_map<int, CMQOObject*>::iterator itr;
 	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 		CMQOObject* curobj = itr->second;
-		if (curobj) {
+		if (curobj && !curobj->IsND()) {
+
+			//2025/09/23
+			//mqoobjectをOBJBOUNDING_BLOCKNUM個単位で粗く判定　当たらない場合は次のOBJBOUNDING_BLOCKNUM個単位までcontinue
+			if ((skip5flag == true) && ((count5 % OBJBOUNDING_BLOCKNUM) != 0)) {
+				count5++;
+				continue;
+			}
+			else {
+				skip5flag = false;
+			}
+			if ((mb5num >= 1) && ((count5 % OBJBOUNDING_BLOCKNUM) == 0)) {
+				MODELBOUND mb5 = m_bound_per5[count5 / OBJBOUNDING_BLOCKNUM];
+
+				//int collibb = curobj->CollisionLocal_Ray_BB(mb5, startlocal, dirlocal, rayleng);
+				if (mb5.IsValid() == true) {
+					int sphcollision = curobj->CollisionLocal_Ray_BB_Sph(mb5, startlocal, dirlocal, rayleng);
+					if (sphcollision == 0) {
+						//バウンダリーで衝突しない場合には　次のバウンダリーの判定にジャンプ
+						skip5flag = true;
+						count5++;
+						continue;
+					}
+				}
+			}
+
 			bool excludeinvface = true;
 			int colli = 0;
 			int hitfaceindex = -1;
@@ -4421,6 +4487,8 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 					findflag = true;
 				}
 			}
+
+			count5++;
 		}
 	}
 

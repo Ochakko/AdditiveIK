@@ -3633,6 +3633,9 @@ private:
 	bool m_inmorph;
 	ChaFrustumInfo m_frustum;
 	MODELBOUND m_bound;
+	std::vector<MODELBOUND> m_bound_per5;
+
+
 
 	bool m_updatefl4x4flag;
 	bool m_csfirstdispatchflag;
