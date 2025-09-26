@@ -1,6 +1,14 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2025/09/27
+　FootRigダイアログにOnlyOnGroundチェックボックスを追加
+　　OnlyOnGroundにチェックを入れると足を曲げずに設置するだけになり多少高速化します
+　　たくさんモデルを表示する場合など、目立たないモデルに対してはOnlyOnGroundをオンにして高速化
+　　OnlyOnGround設定はモデル単位の設定です
+　　
+　FootRigの接地用衝突判定関数の調整
+　　2025/09/23の複数メッシュまとめバウンダリーの修正
 
 2025/09/23
 　FootRig高速化のテスト

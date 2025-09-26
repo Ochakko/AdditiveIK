@@ -91,6 +91,10 @@ int CFootRigDlg::DestroyObjs()
 		delete m_gpuChk;
 		m_gpuChk = nullptr;
 	}
+	if (m_onlyOnGChk) {
+		delete m_onlyOnGChk;
+		m_onlyOnGChk = nullptr;
+	}
 	if (m_leftfootlabel) {
 		delete m_leftfootlabel;
 		m_leftfootlabel = nullptr;
@@ -415,6 +419,7 @@ void CFootRigDlg::InitParams()
 	m_groundlabel = nullptr;
 	m_groundCombo = nullptr;
 	m_gpuChk = nullptr;
+	m_onlyOnGChk = nullptr;
 	m_leftfootlabel = nullptr;
 	m_leftfootBonelabel = nullptr;
 	m_leftfootBoneCombo = nullptr;
@@ -710,6 +715,11 @@ int CFootRigDlg::CreateFootRigWnd()
 		}
 		m_gpuChk = new OWP_CheckBoxA(L"GPU Collision", false, labelheight, false);
 		if (!m_gpuChk) {
+			_ASSERT(0);
+			abort();
+		}
+		m_onlyOnGChk = new OWP_CheckBoxA(L"Only on Ground", false, labelheight, false);
+		if (!m_onlyOnGChk) {
 			_ASSERT(0);
 			abort();
 		}
@@ -1088,7 +1098,8 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_groundmeshsp->addParts1(*m_groundlabel);
 		m_groundmeshsp->addParts2(*m_groundCombo);
 		m_dlgWnd->addParts(*m_gpusp);
-		m_gpusp->addParts2(*m_gpuChk);
+		m_gpusp->addParts1(*m_gpuChk);
+		m_gpusp->addParts2(*m_onlyOnGChk);
 
 		m_dlgWnd->addParts(*m_spacerlabel1);
 		m_dlgWnd->addParts(*m_leftfootlabel);
@@ -1200,6 +1211,19 @@ int CFootRigDlg::CreateFootRigWnd()
 				}
 			}
 		});
+
+		m_onlyOnGChk->setButtonListener([=, this]() {
+			bool value = m_onlyOnGChk->getValue();
+			if (m_model) {
+				std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				itrelem = m_footrigelem.find(m_model);
+				if (itrelem != m_footrigelem.end()) {
+					itrelem->second.onlyonground = value;
+				}
+			}
+		});
+
+
 
 		//############
 		//ComboBox
@@ -1479,6 +1503,10 @@ int CFootRigDlg::ParamsToDlg()
 		if (m_gpuChk) {
 			bool value = curfootrigelem.gpucollision;
 			m_gpuChk->setValue(value, false);
+		}
+		if (m_onlyOnGChk) {
+			bool value = curfootrigelem.onlyonground;
+			m_onlyOnGChk->setValue(value, false);
 		}
 
 
@@ -2395,7 +2423,6 @@ void CFootRigDlg::FootRig(bool secondcalling,
 		return;
 	}
 
-
 	float hdiffoffset;
 	if (!secondcalling) {
 		hdiffoffset = 0.0f;
@@ -2462,26 +2489,28 @@ void CFootRigDlg::FootRig(bool secondcalling,
 				//higherdoneflag = true;
 			}
 
-			if (!lowerfootinfo->IsHigherFootThanGround(ROUNDINGPOS)) {
+			if (!curelem.onlyonground) {//2025/09/27 check onlyonground
+				if (!lowerfootinfo->IsHigherFootThanGround(ROUNDINGPOS)) {
 
-				//低い方の足をFootRigで曲げて接地
-				lowerfootinfo->RigControlFootRig(limitdegflag, srcmodel, curframe,
-					curelem.rigstep, curelem.maxcalccount,
-					modelwm, matView, matProj);
+					//低い方の足をFootRigで曲げて接地
+					lowerfootinfo->RigControlFootRig(limitdegflag, srcmodel, curframe,
+						curelem.rigstep, curelem.maxcalccount,
+						modelwm, matView, matProj);
 
-				lowerdoneflag = true;
-			}
+					lowerdoneflag = true;
+				}
 
-			if (forcehigherfootrig ||
-				(!higherdoneflag && !higherfootinfo->IsHigherFootThanGround(0.0f))
-				) {
+				if (forcehigherfootrig ||
+					(!higherdoneflag && !higherfootinfo->IsHigherFootThanGround(0.0f))
+					) {
 
-				//高い方の足をFootRigで曲げて接地
-				higherfootinfo->RigControlFootRig(limitdegflag, srcmodel, curframe,
-					curelem.rigstep, curelem.maxcalccount,
-					modelwm, matView, matProj);
+					//高い方の足をFootRigで曲げて接地
+					higherfootinfo->RigControlFootRig(limitdegflag, srcmodel, curframe,
+						curelem.rigstep, curelem.maxcalccount,
+						modelwm, matView, matProj);
 
-				higherdoneflag = true;
+					higherdoneflag = true;
+				}
 			}
 		}
 
@@ -2829,6 +2858,7 @@ void CFootInfo::SetFootInfo(int footrigLR, FOOTRIGELEM srcelem) {
 	}
 	m_groundmodel = srcelem.groundmodel;
 	m_gpucollision = srcelem.gpucollision;
+	m_onlyonground = srcelem.onlyonground;
 };
 
 

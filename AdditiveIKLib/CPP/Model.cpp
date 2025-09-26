@@ -517,6 +517,7 @@ int CModel::InitParams()
 	m_updateslot = 0;
 
 	m_underfootrig = false;
+	//m_footrig_onlyonground = false;
 
 	m_csfirstdispatchflag = true;
 
@@ -4419,7 +4420,6 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 
 	int count5 = 0;
 	int mb5num = (int)m_bound_per5.size();
-	bool skip5flag = false;
 
 	unordered_map<int, CMQOObject*>::iterator itr;
 	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
@@ -4427,26 +4427,22 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 		if (curobj && !curobj->IsND()) {
 
 			//2025/09/23
-			//mqoobjectをOBJBOUNDING_BLOCKNUM個単位で粗く判定　当たらない場合は次のOBJBOUNDING_BLOCKNUM個単位までcontinue
-			if ((skip5flag == true) && ((count5 % OBJBOUNDING_BLOCKNUM) != 0)) {
-				count5++;
-				continue;
-			}
-			else {
-				skip5flag = false;
-			}
 			if ((mb5num >= 1) && ((count5 % OBJBOUNDING_BLOCKNUM) == 0)) {
 				MODELBOUND mb5 = m_bound_per5[count5 / OBJBOUNDING_BLOCKNUM];
 
-				//int collibb = curobj->CollisionLocal_Ray_BB(mb5, startlocal, dirlocal, rayleng);
-				if (mb5.IsValid() == true) {
-					int sphcollision = curobj->CollisionLocal_Ray_BB_Sph(mb5, startlocal, dirlocal, rayleng);
-					if (sphcollision == 0) {
-						//バウンダリーで衝突しない場合には　次のバウンダリーの判定にジャンプ
-						skip5flag = true;
-						count5++;
-						continue;
+				int sphcollision = curobj->CollisionLocal_Ray_BB_Sph(mb5, startlocal, dirlocal, rayleng);
+				if (sphcollision == 0) {
+				//int collision = curobj->CollisionLocal_Ray_BB(mb5, startlocal, dirlocal, rayleng);
+				//if (collision == 0) {
+					//バウンダリーで衝突しない場合には　次のバウンダリーの判定にジャンプ
+					int skipcount;
+					for (skipcount = 0; skipcount < OBJBOUNDING_BLOCKNUM; skipcount++) {
+						if (itr != m_object.end()) {
+							itr++;
+							count5++;
+						}
 					}
+					continue;
 				}
 			}
 

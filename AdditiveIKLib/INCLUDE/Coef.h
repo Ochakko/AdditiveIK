@@ -141,7 +141,7 @@ enum {
 //2025/09/23
 //mqoobjectをOBJBOUNDING_BLOCKNUM単位でまとめてバウンダリー作成して粗く判定し高速化につなげる
 //#define OBJBOUNDING_BLOCKNUM 5
-#define OBJBOUNDING_BLOCKNUM 10
+#define OBJBOUNDING_BLOCKNUM 40
 
 
 #define HISTORYCOMMENTLEN	32
@@ -763,6 +763,7 @@ typedef struct tag_footrigelem
 	bool gpucollision;//2024/09/15
 	float hopyperstep;//2024/09/16 hop Y per step
 	float wmblend;//2024/10/06 blend rate of ModelWorldMat
+	bool onlyonground;//2025/09/27
 
 	void Init() {
 		enablefootrig = false;
@@ -787,6 +788,7 @@ typedef struct tag_footrigelem
 		gpucollision = false;
 		hopyperstep = 100.0f;
 		wmblend = 0.0f;
+		onlyonground = false;
 	};
 
 	tag_footrigelem()

@@ -104,8 +104,10 @@ int CFootRigFile::WriteFileInfo()
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0006</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	//2024/10/17 ver1007 toebaseのoffsetをOffset1に　footのoffsetをOffset2に
-	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0007</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0007</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
+	//2025/09/27 ver1008 <OnlyOnGround>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0008</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	return 0;
 }
@@ -190,6 +192,11 @@ int CFootRigFile::WriteFootRigElem(FOOTRIGELEM srcfootrigelem)
 	gpucollision = (srcfootrigelem.gpucollision) ? 1 : 0;
 	CallF(Write2File("    <GPUInteraction>%d</GPUInteraction>\r\n",
 		gpucollision), return 1);//2024/09/15 ver1003
+
+	int onlyonground;
+	onlyonground = (srcfootrigelem.onlyonground) ? 1 : 0;
+	CallF(Write2File("    <OnlyOnGround>%d</OnlyOnGround>\r\n",
+		onlyonground), return 1);//2025/09/27 ver1008
 
 	CallF(Write2File("    <HopYPerStep>%.2f</HopYPerStep>\r\n",
 		srcfootrigelem.hopyperstep), return 1);
@@ -365,6 +372,10 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 	int gpucollision = 0;
 	getgpucollision = Read_Int(xmlbuf, "<GPUInteraction>", "</GPUInteraction>", &gpucollision);//2024/09/15 ver1003
 
+	int getOnlyOnG = 0;
+	int OnlyOnG = 0;
+	getOnlyOnG = Read_Int(xmlbuf, "<OnlyOnGround>", "</OnlyOnGround>", &OnlyOnG);//2025/09/27 ver1008
+
 	int gethopyperstep = 0;
 	float hopyperstep = 0;
 	gethopyperstep = Read_Float(xmlbuf, "<HopYPerStep>", "</HopYPerStep>", &hopyperstep);//2024/09/16 ver1004
@@ -478,6 +489,11 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 			}
 		}
 	}
+
+	if (getOnlyOnG == 0) {//2025/09/27
+		dstfootrigelem->onlyonground = (OnlyOnG == 1) ? true : false;
+	}
+
 
 	return 0;
 }

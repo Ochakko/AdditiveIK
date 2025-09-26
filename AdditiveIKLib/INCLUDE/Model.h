@@ -3441,6 +3441,15 @@ public: //accesser
 	{
 		return m_underfootrig;
 	};
+	//void SetFootRigOnlyOnGround(bool srcflag)
+	//{
+	//	m_footrig_onlyonground = srcflag;
+	//}
+	//bool GetFootRigOnlyOnGround()
+	//{
+	//	return m_footrig_onlyonground;
+	//}
+
 	CGltfLoader* GetGltfLoader()
 	{
 		return m_gltfloader;
@@ -3641,6 +3650,7 @@ private:
 	bool m_csfirstdispatchflag;
 
 	bool m_underfootrig;
+	//bool m_footrig_onlyonground;
 
 	int m_vrmtexcount;
 

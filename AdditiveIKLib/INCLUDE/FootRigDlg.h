@@ -119,6 +119,8 @@ private:
 	OrgWinGUI::OWP_Label* m_groundlabel;
 	OrgWinGUI::OWP_ComboBoxA* m_groundCombo;
 	OrgWinGUI::OWP_CheckBoxA* m_gpuChk;//2024/09/15
+	OrgWinGUI::OWP_CheckBoxA* m_onlyOnGChk;//2025/09/27
+
 
 	OrgWinGUI::OWP_Label* m_leftfootlabel;
 	OrgWinGUI::OWP_Label* m_leftfootBonelabel;
@@ -234,6 +236,7 @@ public:
 		m_rigdir = 0;
 		m_groundmodel = nullptr;
 		m_gpucollision = false;
+		m_onlyonground = false;
 	};
 	void DestroyObjs() { InitParams(); };
 
@@ -482,6 +485,7 @@ private:
 	int m_rigdir;
 	CModel* m_groundmodel;
 	bool m_gpucollision;
+	bool m_onlyonground;
 };
 
 
