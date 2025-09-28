@@ -4441,6 +4441,9 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 							itr++;
 							count5++;
 						}
+						else {
+							count5++;
+						}
 					}
 					continue;
 				}
@@ -23335,41 +23338,14 @@ int CModel::ChkInView(int refposindex)
 		m_chkinview->ComputeChkInView(cb);
 
 
-
 		int objnum = 0;
 		int inviewnum = 0;
 		int inshadownum = 0;
-		unordered_map<int, CMQOObject*>::iterator itr;
-		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-			CMQOObject* curobj = itr->second;
-			if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
 
+		//mqoobjectに対する処理　一度に全部取得してセット
+		m_chkinview->GetResultOfChkInViewAll(refposindex, &inviewnum, &inshadownum);
 
-				//##################################
-				//コンピュートシェーダによる計算結果を取得
-				//##################################
-				CSInView csresult = m_chkinview->GetResultOfChkInView(curobj);
-
-
-				if (csresult.inview[0] == 1) {
-					curobj->SetInView(true, refposindex);
-					inviewnum++;//!!!!!
-				}
-				else {
-					curobj->SetInView(false, refposindex);
-				}
-				if (csresult.inview[1] == 1) {
-					curobj->SetInShadow(true, refposindex);
-					inshadownum++;//!!!!!
-				}
-				else {
-					curobj->SetInShadow(false, refposindex);
-				}
-
-				objnum++;
-			}
-		}
-
+		//モデルに対する処理
 		if (inviewnum != 0) {
 			SetInView(true, refposindex);//メッシュ１つでも視野内にある場合には　モデルとして視野内のマークをする
 
@@ -23395,10 +23371,6 @@ int CModel::ChkInView(int refposindex)
 			SetInShadow(false, refposindex);
 		}
 	}
-
-
-
-
 
 	s_workingChkinView = false;
 	return 0;

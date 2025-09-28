@@ -126,6 +126,7 @@ public:
 	int CreateDispObj(ID3D12Device* pdev);
 
 	int ComputeChkInView(CSConstantBufferChkInView srccb);
+	void GetResultOfChkInViewAll(int refposindex, int* inviewnum, int* inshadownum);
 	CSInView GetResultOfChkInView(CMQOObject* srcobj);
 
 private:

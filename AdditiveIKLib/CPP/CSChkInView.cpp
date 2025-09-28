@@ -354,6 +354,93 @@ int CSChkInView::ComputeChkInView(CSConstantBufferChkInView srccb)
 	return 0;
 }
 
+//2025/09/28
+//mqoobjectまとめて全部を一度に取得
+void CSChkInView::GetResultOfChkInViewAll(int refposindex, int* inviewnum, int* inshadownum)
+{
+	CSInView curresult;
+	curresult.Init();
+	if (!m_IMChkInView || (m_csbsnum <= 0) || (m_cscreatebsnum <= 0)) {
+		//Meshが１つも無いモデルの場合にここを通る可能性有
+		return;
+	}
+	else {
+		CSInView* outputData = (CSInView*)m_outputChkInViewSB.GetResourceOnCPU();
+
+		unordered_map<CMQOObject*, int>::iterator itrmqoindex;
+		for (itrmqoindex = m_indexmap.begin(); itrmqoindex != m_indexmap.end(); itrmqoindex++) {
+			curresult.Init();
+
+			CMQOObject* curobj = itrmqoindex->first;
+			int dataIndex = itrmqoindex->second;
+			if ((dataIndex >= 0) && (dataIndex < m_csbsnum)) {
+				curresult = *(outputData + dataIndex);
+			}
+			else {
+				_ASSERT(0);
+				curresult.Init();
+			}
+
+			if (curresult.inview[0] == 1) {
+				curobj->SetInView(true, refposindex);
+				(*inviewnum)++;//!!!!!
+			}
+			else {
+				curobj->SetInView(false, refposindex);
+			}
+			if (curresult.inview[1] == 1) {
+				curobj->SetInShadow(true, refposindex);
+				(*inshadownum)++;//!!!!!
+			}
+			else {
+				curobj->SetInShadow(false, refposindex);
+			}
+		}
+
+
+
+		//unordered_map<int, CMQOObject*>::iterator itr;
+		//for (itr = mqoobject.begin(); itr != mqoobject.end(); itr++) {
+		//	CMQOObject* curobj = itr->second;
+		//	if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
+		//		unordered_map<CMQOObject*, int>::iterator itrindex;
+		//		itrindex = m_indexmap.find(curobj);
+		//		if (itrindex != m_indexmap.end()) {
+		//			int dataIndex = itrindex->second;
+		//			if ((dataIndex >= 0) && (dataIndex < m_csbsnum)) {
+		//				retresult = *(outputData + dataIndex);
+		//			}
+		//			else {
+		//				_ASSERT(0);
+		//				retresult.Init();
+		//			}
+		//		}
+		//		else {
+		//			//boundaryのIsValid==falseのときには　エントリーは無い
+		//			retresult.Init();
+		//		}
+
+		//		if (retresult.inview[0] == 1) {
+		//			curobj->SetInView(true, refposindex);
+		//			(*inviewnum)++;//!!!!!
+		//		}
+		//		else {
+		//			curobj->SetInView(false, refposindex);
+		//		}
+		//		if (retresult.inview[1] == 1) {
+		//			curobj->SetInShadow(true, refposindex);
+		//			(*inshadownum)++;//!!!!!
+		//		}
+		//		else {
+		//			curobj->SetInShadow(false, refposindex);
+		//		}
+
+		//	}
+		//}
+	}
+}
+
+
 CSInView CSChkInView::GetResultOfChkInView(CMQOObject* srcobj)
 {
 	CSInView retresult;
