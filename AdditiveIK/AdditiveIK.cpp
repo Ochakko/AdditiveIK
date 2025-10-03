@@ -1966,7 +1966,7 @@ static CBone* GetEditTargetOpeBone(int* pmotid, int* pframeleng);
 static void CalcTotalBound();
 static int SetCameraModel();
 static void SetCamera3DFromEyePos();
-static int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider);
+static int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider, bool secondcall = false);
 
 //--------------------------------------------------------------------------------------
 // Global variables
@@ -15534,7 +15534,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.51\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.52\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -34489,18 +34489,31 @@ void AutoCameraTarget()
 			g_befcamtargetpos = g_camtargetpos;
 			g_camtargetpos = curbone->GetChildWorld();
 
-			//#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));//!!!!!!!!!!!
-			////#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));//!!!!!!!!!!!
+			if (s_moveeyepos) {
+				//2025/10/04
+				//joint注視中　かつ　MoveEyePosチェック中は　カメラ距離を保ってカメラが動く
+				ChangeCameraDist(g_camdist, s_moveeyepos, false);
+			}
+			else {
+				//MoveEyePosチェックしていない場合　カメラ距離を変える
+				ChaVector3 diffv;
+				diffv = g_camEye - g_camtargetpos;
+				float newcamdist = (float)ChaVector3LengthDbl(&diffv);
+				ChangeCameraDist(newcamdist, false, false);//2024/03/08
+			}
 
-			//!!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-			//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-			ChaVector3 diffv;
-			diffv = g_camEye - g_camtargetpos;
-			float newcamdist = (float)ChaVector3LengthDbl(&diffv);
-			ChangeCameraDist(newcamdist, false, false);//2024/03/08
-
-			////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-			////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
+			////#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));//!!!!!!!!!!!
+			//////#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));//!!!!!!!!!!!
+			//
+			////!!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+			////ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+			//ChaVector3 diffv;
+			//diffv = g_camEye - g_camtargetpos;
+			//float newcamdist = (float)ChaVector3LengthDbl(&diffv);
+			//ChangeCameraDist(newcamdist, false, false);//2024/03/08
+			//
+			//////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
+			//////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
 
 		}
 		else {
@@ -44219,7 +44232,7 @@ void InitRootSignature(RootSignature& rs)
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP);
 }
 
-int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider)
+int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider, bool secondcall)
 {
 	float savecamdist = g_camdist;
 
@@ -44230,8 +44243,31 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider)
 		ChaVector3Normalize(&camvec, &camvec);
 
 		if (moveeyeposflag == true) {//2024/02/26
+			ChaVector3 newcampos = g_camtargetpos + camvec * g_camdist;
+
+			if (!secondcall && !s_camtargetOnceflag && s_camtargetflag) {
+				//2025/10/04 カメラ酔い防止策　カメラの位置は徐々に変える
+				float newcamX = g_camEye.x + (newcampos.x - g_camEye.x) * 0.10f;
+				float newcamY = g_camEye.y + (g_camtargetpos.y - g_camEye.y) * 0.010f;
+				float newcamZ = g_camEye.z + (newcampos.z - g_camEye.z) * 0.10f;
+				newcampos.x = newcamX;
+				newcampos.y = newcamY;
+				newcampos.z = newcamZ;
+
+				g_camEye = newcampos;
+
+				//distを保つために　eyeposを変えてから　呼び直す
+				bool secondcallflag = true;
+				return ChangeCameraDist(g_camdist, moveeyeposflag, calledbyslider, secondcallflag);
+			}
+			else {
+				//Onceフラグがオンの場合には　一回で所定位置に
+				newcampos = newcampos;
+			}
+
 			g_befcamEye = g_camEye;
-			g_camEye = g_camtargetpos + camvec * g_camdist;
+			//g_camEye = g_camtargetpos + camvec * g_camdist;
+			g_camEye = newcampos;
 		}
 		else {
 			g_befcamtargetpos = g_camtargetpos;
