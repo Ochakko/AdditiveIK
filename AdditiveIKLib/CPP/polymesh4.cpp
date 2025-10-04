@@ -39,7 +39,6 @@ using namespace std;
 static int sortfunc_material( void *context, const void *elem1, const void *elem2);
 
 
-
 CPolyMesh4::CPolyMesh4()
 {
 	InitParams();
@@ -53,6 +52,7 @@ void CPolyMesh4::InitParams()
 	m_normalmappingmode = 0;//0:polygonvertex, 1:controlpoint
 
 	m_materialoffset.clear();
+	m_vec_materialoffset.clear();
 
 	m_orgpointnum = 0;
 	m_orgfacenum = 0;
@@ -268,6 +268,8 @@ int CPolyMesh4::CreatePM4(int normalmappingmode, int pointnum, int facenum, int 
 		return 1;
 	}
 
+	CreateVecMaterialOffset();
+
 	BuildTangentAndBinormal(srcuvnum);
 
 	CallF( CalcBound(), return 1 );
@@ -298,6 +300,50 @@ int CPolyMesh4::CreatePM4(int normalmappingmode, int pointnum, int facenum, int 
 	return 0;
 }
 	
+int CPolyMesh4::CreateVecMaterialOffset()
+{
+	m_vec_materialoffset.clear();
+
+	int materialnum = GetDispMaterialNum();
+
+	int srcindex;
+	for (srcindex = 0; srcindex < materialnum; srcindex++) {
+		std::map<int, CMQOMaterial*>::iterator itrmaterial;
+
+		bool findflag = false;
+		int indexcnt = 0;
+		MATERIALOFFSETELEM offsetelem;
+		offsetelem.Init();
+
+		for (itrmaterial = m_materialoffset.begin(); itrmaterial != m_materialoffset.end(); itrmaterial++) {
+			if (indexcnt == srcindex) {
+				offsetelem.offset = itrmaterial->first;
+				offsetelem.pmaterial = itrmaterial->second;
+				findflag = true;
+			}
+			else if (indexcnt == (srcindex + 1)) {
+				if (findflag == true) {
+					int nextindex = itrmaterial->first;
+					offsetelem.trinum = (nextindex - offsetelem.offset) / 3;
+					m_vec_materialoffset.push_back(offsetelem);
+					break;
+				}
+			}
+			if (indexcnt == (GetDispMaterialNum() - 1)) {
+				if (findflag == true) {
+					offsetelem.trinum = (GetFaceNum() * 3 - offsetelem.offset) / 3;
+					m_vec_materialoffset.push_back(offsetelem);
+					break;
+				}
+			}
+			indexcnt++;
+		}
+	}
+
+	return 0;
+}
+
+
 int CPolyMesh4::SetTriFace( CMQOFace* faceptr, int* numptr )
 {
 	int fno;

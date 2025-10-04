@@ -20,6 +20,26 @@ class CInfBone;
 //class CInfScope;
 class CBone;
 
+
+typedef struct tag_materialoffsetelem
+{
+	CMQOMaterial* pmaterial;
+	int offset;
+	int trinum;
+
+	tag_materialoffsetelem()
+	{
+		Init();
+	};
+	void Init()
+	{
+		pmaterial = nullptr;
+		offset = 0;
+		trinum = 0;
+	};
+}MATERIALOFFSETELEM;
+
+
 class CPolyMesh4
 {
 public:
@@ -48,6 +68,7 @@ private:
 
 	int SetTriFace( CMQOFace* faceptr, int* numptr );
 	int SetOptV(BINORMALDISPV* optv, int* pleng, int* matnum, CModel* pmodel, int srcuvnum);
+	int CreateVecMaterialOffset();
 	int SetLastValidVno();
 	int BuildTangentAndBinormal(int srcuvnum);
 
@@ -155,33 +176,14 @@ public:
 		*dsttrinum = 0;
 
 		bool findflag = false;
+		int materialnum = (int)m_vec_materialoffset.size();
 
-		if ((srcindex >= 0) && (srcindex < GetDispMaterialNum())) {
-			int indexcnt = 0;
-			std::unordered_map<int, CMQOMaterial*>::iterator itrmaterial;
-			for (itrmaterial = m_materialoffset.begin(); itrmaterial != m_materialoffset.end(); itrmaterial++) {
-				if (indexcnt == srcindex) {
-					*dstoffset = itrmaterial->first;
-					*dstmaterial = itrmaterial->second;
-					findflag = true;
-				}
-				else if (indexcnt == (srcindex + 1)) {
-					if (findflag == true) {
-						int nextindex = itrmaterial->first;
-						*dsttrinum = (nextindex - *dstoffset) / 3;
-						return 0;
-					}
-				}
-				if (indexcnt == (GetDispMaterialNum() - 1)) {
-					if (findflag == true) {
-						*dsttrinum = (GetFaceNum() * 3 - *dstoffset) / 3;
-						return 0;
-					}
-				}
-				indexcnt++;
-			}
-
-			return 1;
+		if ((srcindex >= 0) && (srcindex < materialnum)) {
+			MATERIALOFFSETELEM offsetelem = m_vec_materialoffset[srcindex];
+			*dstmaterial = offsetelem.pmaterial;
+			*dstoffset = offsetelem.offset;
+			*dsttrinum = offsetelem.trinum;
+			return 0;
 		}
 		else {
 			return 1;
@@ -248,9 +250,8 @@ private:
 	int*	m_fbxindex;
 	int m_createoptflag;
 
-	std::unordered_map<int, CMQOMaterial*> m_materialoffset;
-
-
+	std::map<int, CMQOMaterial*> m_materialoffset;//データエントリー順番が重要なのでunordered_mapには出来ない
+	std::vector<MATERIALOFFSETELEM> m_vec_materialoffset;//2025/10/04 m_materialoffsetを高速検索するためのvector
 
 	MODELBOUND	m_bound;
 

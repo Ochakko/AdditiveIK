@@ -29,15 +29,17 @@ public:
 
 public:
 	//accesser
-	CTexElem* GetTexElem( int srcindex ){
-		auto it = m_texmap.find(srcindex);
-		if (it != m_texmap.end()) {
-			//return it->second.get();
-			return it->second;
-		}
-		else {
-			return nullptr;
-		}
+	CTexElem* GetTexElem( int srcindex )
+	{
+		return m_texmap[srcindex];
+		//std::unordered_map<int, CTexElem*>::iterator itrtex = m_texmap.find(srcindex);
+		//if (itrtex != m_texmap.end()) {
+		//	//return it->second.get();
+		//	return itrtex->second;
+		//}
+		//else {
+		//	return nullptr;
+		//}
 	};
 
 private:

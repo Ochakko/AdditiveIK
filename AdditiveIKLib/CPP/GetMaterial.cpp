@@ -25,13 +25,13 @@
 
 CMQOMaterial* GetMaterialFromNo(std::unordered_map<int, CMQOMaterial*>& srcmaterial, int matno)
 {
-	CMQOMaterial* retmat = 0;
-
-	std::unordered_map<int,CMQOMaterial*>::iterator itr= srcmaterial.find(matno); 
-	if( itr == srcmaterial.end() ) { 
-		return 0;
-	}else{ 
-		return (CMQOMaterial*)itr->second;
-	} 
+	return srcmaterial[matno];
+	//CMQOMaterial* retmat = 0;
+	//std::unordered_map<int,CMQOMaterial*>::iterator itr= srcmaterial.find(matno); 
+	//if( itr == srcmaterial.end() ) { 
+	//	return 0;
+	//}else{ 
+	//	return (CMQOMaterial*)itr->second;
+	//} 
 }
 

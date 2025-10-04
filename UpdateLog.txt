@@ -3,11 +3,12 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/10/04
-　AdditiveIK 1.0.0.52RC1 (リリース候補1)
+　AdditiveIK 1.0.0.52RC2 (リリース候補2)
 　　1.0.0.51からの変更点
 　　　高速化
 　　　　FootRig高速化
 　　　　ChkInView高速化(メッシュ数が多いアセットステージで効果有)
+　　　　スキンメッシュのマテリアル検索高速化
 　　　カメラ位置がモデルを追従するように.
 　　　　右ペイン上のAlwaysLockチェックとMoveEyePosチェックをした場合にカメラ位置がジョイントに追従するように.
 　　　　例えば、カメラ位置(向きだけでなく)がカメラ距離を保ちながらモデルの後ろを追いかけ続けます
@@ -20,6 +21,9 @@ https://github.com/Ochakko/AdditiveIK
 　　　HipsBone取得部分の修正
 　　　　Fbx読み込み時にHipsBoneを検索してセットしておき、以降はそれを参照するだけに.
 　　　　Hipsの名前が付いているボーンが存在しない場合には、一番親のskeletonをHipsBoneにするように.
+　　　　
+　　RC2:
+　　　mapをunordered_mapに切り替えたことによりマテリアルインデックスがずれることがあったのを修正
 
 
 2025/09/28
