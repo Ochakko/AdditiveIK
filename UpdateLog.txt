@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/10/04
-　AdditiveIK 1.0.0.52RC2 (リリース候補2)
+　AdditiveIK 1.0.0.52 release
 　　1.0.0.51からの変更点
 　　　高速化
 　　　　FootRig高速化
