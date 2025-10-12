@@ -33,8 +33,9 @@ Fig.5 PlayFbxCameraAnim (UnityAsset TheHuntを読込. model:VRoid).<br>
 ![TopFig6](ScreenShots/SS_For10031/AdditiveIK_10031_OX_1_900.png "トップ絵6")<br>
 Fig.6 (UnityAsset FantasyTownを読込  model:VRoid).<br>
 <br>
-![TopFig7](ScreenShots/SS_For10032/SS_AdditiveIK_To10032_FootRigWithBtSimu_Annotation3.png "トップ絵7")<br>
-Fig.7 (FootRigで足を曲げて自動接地  model:VRoid).<br>
+![TopFig7](ScreenShots/SS_For10052/SS_AdditiveIK_10052_FootRig_2_0-3.png "トップ絵7")<br>
+Fig.7 (ただの走るモーション＋FootRig足曲げ接地  model:UnityAsset CosmoDragonGirl).<br>
+https://youtu.be/tSSufCXFsdk<br>
 <br>
 ![TopFig8](ScreenShots/SS_For10033/FootRig_HDiffMax_Cmp3_1_Annotation.png "トップ絵8")<br>
 Fig.8 (足曲げを調整可能なFootRig model:VRoid).<br>
@@ -42,6 +43,11 @@ Fig.8 (足曲げを調整可能なFootRig model:VRoid).<br>
 ![TopFig9](ScreenShots/SS_For10036/SS_AdditiveIK_10036_MOA2_1_Trim.png "トップ絵9")<br>
 Fig.9 (モーションアクセラレータMOA2.0 model作成:ぼおんさん).<br>
 MOA2.0 https://youtu.be/GFEmF8dnV_M<br>
+<br>
+![TopFig10](ScreenShots/SS_For10052/SS_AdditiveIK_Water.png "トップ絵10")<br>
+Fig.10 (シーンの中でモーション編集 model:UnityAsset CosmoDragonGirl FantasyAnimal ithappyFantasy).<br>
+<br>
+<br>
 <br>
 # 免責<br>
 このソフトにより問題が起きたとしてもその責任は持ちません。<br>
@@ -291,7 +297,7 @@ Smooth平滑化<br>
 
 [ちょっと前のAdditiveIKのオペ画面 2025/05/06](https://youtu.be/40jmur2J2CY "Usage example14")<br>
 
-[【AdditiveIK】乗り物に乗って 2025/08/17](https://youtu.be/ZiJG6xh96YE "Usage example15")<br>
+[FootRigの曲げ具合調整パラメータ 2025/10/12](https://youtu.be/tSSufCXFsdk "Usage example15")<br>
 <br>
 <br>
 # Site

@@ -2,6 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/10/12
+　ショートムービー
+　　https://youtu.be/tSSufCXFsdk
+　　
+　README.mdに絵を１枚追加、絵を1枚差し替え
+
+
 2025/10/04
 　AdditiveIK 1.0.0.52 release
 　　1.0.0.51からの変更点
