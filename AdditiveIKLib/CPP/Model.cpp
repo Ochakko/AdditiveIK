@@ -10249,19 +10249,40 @@ int CModel::SetBtMotionOnBt(bool limitdegflag,
 					if ((curbone2->GetParent(false)->GetBtKinFlag() != 0) ||
 						(curbone2->GetParent(false)->GetTmpKinematic() == true)) {
 
-						//parentがkinematicの場合　worldmat, limitedworldmatをセット
-						bool calcslotflag = true;
-						//bool calcslotflag = false;
-						CMotionPoint tmpmp2 = curbone2->GetParent(false)->GetCurMp(calcslotflag);//motid, curframeを参照してもうなくいかない。GetCurMpを使う。
-						if (limitdegflag == false) {
-							curbone2->SetBtMat(tmpmp2.GetWorldMat());
-						}
-						else {
-							curbone2->SetBtMat(tmpmp2.GetLimitedWM());
-						}
+						//キネマティックの場合
+
+						//#######################################################################################################
+						//2025/10/13
+						//ここのコメントアウトを外すと　BtSimu時に　指の一番先の関節が曲がっていなかった
+						//この処理を入れた理由は　つま先エンドジョイントの影響度を持つ頂点が　物理シミュ時に移動せずに伸びてしまうことへの対応だった
+						//現在、そのようなモデルには出会っていない
+						// 
+						//今後また問題になることがあった場合には　
+						//		”ジョイントごとのオプションとして以下のコメントアウト部分の処理を実行する"
+						//#######################################################################################################
+
+						////parentがkinematicの場合　worldmat, limitedworldmatをセット
+						//bool calcslotflag = true;
+						////bool calcslotflag = false;
+						//CMotionPoint tmpmp2 = curbone2->GetParent(false)->GetCurMp(calcslotflag);//motid, curframeを参照してもうなくいかない。GetCurMpを使う。
+						//if (limitdegflag == false) {
+						//	curbone2->SetBtMat(tmpmp2.GetWorldMat());
+						//}
+						//else {
+						//	curbone2->SetBtMat(tmpmp2.GetLimitedWM());
+						//}
 
 					}
 					else {
+
+						//物理シミュレーションの場合
+
+						//###############################################################
+						//2025/10/13
+						//次の処理は必要だった
+						//例えば　CosmoDragonGirlのtailの先端部が伸びないようにするために必要
+						//###############################################################
+
 						//parentが　simuの場合　btmatをセット
 						curbone2->SetBtMat(curbone2->GetParent(false)->GetBtMat(true));
 					}
