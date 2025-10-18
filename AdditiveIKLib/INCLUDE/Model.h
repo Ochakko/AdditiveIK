@@ -3474,9 +3474,23 @@ public: //accesser
 	};
 	void SetMoaNextFrame(int srcval) {
 		m_moa_nextframe = srcval;
+		m_moa_nextframe = max(1, m_moa_nextframe);//モーションフレームは１から。フレーム０はバインドポーズ。
 	};
 	int GetMoaNextFrame() {
 		return m_moa_nextframe;
+	};
+	void SetMoaTmpNextMotId(int srcval) {
+		m_moa_tmp_nextmotid = srcval;
+	};
+	int GetMoaTmpNextMotId() {
+		return m_moa_tmp_nextmotid;
+	};
+	void SetMoaTmpNextFrame(int srcval) {
+		m_moa_tmp_nextframe = srcval;
+		m_moa_tmp_nextframe = max(1, m_moa_tmp_nextframe);//モーションフレームは１から。フレーム０はバインドポーズ。
+	};
+	int GetMoaTmpNextFrame() {
+		return m_moa_tmp_nextframe;
 	};
 	void SetMoaStartFillUpFrame(double srcval) {
 		m_moa_startfillupframe = srcval;
@@ -3623,6 +3637,66 @@ public: //accesser
 	bool GetPostureParentFlag() {
 		return m_postureparentflag;
 	}
+
+	void SetMoaEventTime(double srctime) {
+		m_moaeventtime = srctime;
+	};
+	double GetMoaEventTime() {
+		return m_moaeventtime;
+	};
+	
+	void SetMoaEventRepeatsKey(int srcindex, int srcval) {
+		if ((srcindex >= 0) && (srcindex < 256)) {
+			m_moaeventrepeats[srcindex] = srcval;
+		}
+		else {
+			_ASSERT(0);
+		}
+	};
+	void PlusPlusMoaEventRepeatsKey(int srcindex) {
+		if ((srcindex >= 0) && (srcindex < 256)) {
+			m_moaeventrepeats[srcindex] = m_moaeventrepeats[srcindex] + 1;
+		}
+		else {
+			_ASSERT(0);
+		}
+	};
+	int GetMoaEventRepeatsKey(int srcindex) {
+		if ((srcindex >= 0) && (srcindex < 256)) {
+			return m_moaeventrepeats[srcindex];
+		}
+		else {
+			_ASSERT(0);
+			return 0;
+		}
+	};
+
+	void SetMoaEventRepeatsPAD(int srcindex, int srcval) {
+		if ((srcindex >= 0) && (srcindex < MOA_PADNUM)) {
+			m_moaeventrepeats_pad[srcindex] = srcval;
+		}
+		else {
+			_ASSERT(0);
+		}
+	};
+	void PlusPlusMoaEventRepeatsPAD(int srcindex) {
+		if ((srcindex >= 0) && (srcindex < MOA_PADNUM)) {
+			m_moaeventrepeats_pad[srcindex] = m_moaeventrepeats_pad[srcindex] + 1;
+		}
+		else {
+			_ASSERT(0);
+		}
+	};
+	int GetMoaEventRepeatsPAD(int srcindex) {
+		if ((srcindex >= 0) && (srcindex < MOA_PADNUM)) {
+			return m_moaeventrepeats_pad[srcindex];
+		}
+		else {
+			_ASSERT(0);
+			return 0;
+		}
+	};
+
 
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
@@ -3855,10 +3929,15 @@ private:
 	bool m_moa_changeunderblending;
 	int m_moa_nextmotid;
 	int m_moa_nextframe;
+	int m_moa_tmp_nextmotid;
+	int m_moa_tmp_nextframe;
 	double m_moa_startfillupframe;
 	int m_moa_freezecount;
 	int m_moa_fillupcount;
 	int m_moa_rand1;
+	double m_moaeventtime;//最後にeventno != 0を処理した時間
+	int m_moaeventrepeats[256];
+	int m_moaeventrepeats_pad[MOA_PADNUM];
 
 	bool m_mocapwalk;
 
@@ -3868,6 +3947,8 @@ private:
 	std::vector<IKROTREC> m_ikrotrec;
 	std::vector<IKROTREC> m_ikrotrec_u;
 	std::vector<IKROTREC> m_ikrotrec_v;
+
+
 };
 
 

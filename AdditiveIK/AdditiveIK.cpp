@@ -320,9 +320,12 @@ static int s_ik_timer_id = 9876;
 static double s_fTime = 0.0;
 static float s_fElapsedTime = 0.0;
 static double s_befftime = 0.0;
-static double s_moaeventtime = 0.0;//最後にeventno != 0を処理した時間
-static int s_moaeventrepeats[256];
-static int s_moaeventrepeats_pad[MOA_PADNUM];
+
+//以下３つは　CModelに移動　2025/10/18
+//static double s_moaeventtime = 0.0;//最後にeventno != 0を処理した時間
+//static int s_moaeventrepeats[256];
+//static int s_moaeventrepeats_pad[MOA_PADNUM];
+
 static double s_mousemoveBefTime = 0.0;
 static double s_fps100[FPSSAVENUM];
 static int s_fps100index = 0;
@@ -707,10 +710,11 @@ void OnDSUpdate();
 //static void OnDSMouseHereApeal();
 static void OnArrowKey();//DS関数でキーボードの矢印キーに対応
 
-static int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe);
-static int ChangeMotionWithGUI(int srcmotid);
-static int s_moa_nextmotid;
-static int s_moa_nextframe;
+static int SetNewPoseByMoa_All(CModel* ps5model, double* pnextframe);
+static int SetNewPoseByMoa_One(CModel* srcmodel, bool dualsenseflag, double* pnextframe);
+static int ChangeMotionWithGUI(CModel* srcmodel, int srcmotid);
+//static int s_moa_nextmotid;
+//static int s_moa_nextframe;
 
 static void SelectNextWindow(int nextwndid);
 
@@ -3785,11 +3789,6 @@ void InitApp()
 	//g_ikmaxdeg = 8.0f;
 	//g_iktargettimes = 100;
 
-
-	s_moa_nextmotid = 0;
-	s_moa_nextframe = 0;
-
-
 	g_edittarget = EDITTARGET_BONE;
 	s_LchangeTargetFlag = false;
 	s_LrefreshEditTarget = 0;
@@ -4355,9 +4354,6 @@ void InitApp()
 
 	s_fTime = 0.0;
 	s_fElapsedTime = 0.0;
-	s_moaeventtime = 0.0;//最後にeventno != 0を処理した時間
-	ZeroMemory(&s_moaeventrepeats, sizeof(int) * 256);
-	ZeroMemory(&s_moaeventrepeats_pad, sizeof(int) * MOA_PADNUM);
 
 
 	int saveno;
@@ -25887,7 +25883,7 @@ int OnFramePreviewNormal(double nextframe, double difftime, int endflag, int loo
 
 
 	if (g_previewMOA != 0) {
-		SetNewPoseByMoa(GetCurrentModel(), &nextframe);//呼び出し場所変更　OnFrameProcessTime()かどちらかを呼ぶように.
+		SetNewPoseByMoa_All(GetCurrentModel(), &nextframe);//呼び出し場所変更　OnFrameProcessTime()かどちらかを呼ぶように.
 	}
 	g_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, nextframe, loopstartflag);
 
@@ -25942,7 +25938,7 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 
 
 	if (GetCurrentModel() && (g_previewMOA != 0)) {
-		SetNewPoseByMoa(GetCurrentModel(), &nextframe);
+		SetNewPoseByMoa_All(GetCurrentModel(), &nextframe);
 	}
 
 
@@ -41670,7 +41666,8 @@ int PickManipulator(UIPICKINFO* ppickinfo, bool pickring)
 		return -1;
 	}
 
-	if (s_dispselect) {
+	if ((!s_spdispsw[SPDISPSW_DISPGROUP].state && !s_spdispsw[SPDISPSW_SHADERTYPE].state) &&
+		s_dispselect && GetCurrentModel() && (!GetCurrentModel()->GetNoBoneFlag()) && (GetCurrentModel()->GetCurrentMotID() > 0)) {
 		bool excludeinvface = false;
 		int colliobjx, colliobjy, colliobjz, colliringx, colliringy, colliringz;
 		colliobjx = 0;
@@ -47451,8 +47448,37 @@ CModel* GetCurrentModel()
 	}
 }
 
+int SetNewPoseByMoa_All(CModel* ps5model, double* pnextframe)
+{
+	int modelnum = g_chascene->GetModelNum();
+	int modelcnt;
+	for (modelcnt = 0; modelcnt < modelnum; modelcnt++) {
+		CModel* curmodel = g_chascene->GetModel(modelcnt);
+		if (curmodel) {
 
-int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
+			//開発環境にPS5Controllerが　まだ１つしかないので
+			//カレントモデルに対してのみPS5Controllerを使用
+			bool dualsenseflag;
+			dualsenseflag = (curmodel == ps5model);
+
+			double nextframe = 0.0;
+			//dualsenseflag == false時にも　キーボード入力は効く
+			SetNewPoseByMoa_One(curmodel, dualsenseflag, &nextframe);
+
+			if ((pnextframe != nullptr) && (curmodel == GetCurrentModel())) {
+				*pnextframe = nextframe;
+			}
+		}
+	}
+
+	//SetNewPoseByMoa_One(GetCurrentModel(), true, pnextframe);
+
+
+	return 0;
+}
+
+
+int SetNewPoseByMoa_One(CModel* srcmodel, bool dualsenseflag, double* pnextframe)
 {
 	static int s_dbgflag1 = 0;
 
@@ -47487,8 +47513,8 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 		return 0;
 	}
 	int idlingmotid = mch->GetIdlingMotID(nullptr, 0);
-	if (idlingmotid < 0) {
-		_ASSERT(0);
+	if (idlingmotid <= 0) {
+		//_ASSERT(0);
 		return 0;
 	}
 
@@ -47516,12 +47542,12 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 	for (cno = 0; cno < 256; cno++) {
 		if (g_keybuf[cno] & 0x80) {
 			if (g_savekeybuf[cno] & 0x80) {
-				s_moaeventrepeats[cno] = s_moaeventrepeats[cno] + 1;//２回目以降
+				srcmodel->PlusPlusMoaEventRepeatsKey(cno);//２回目以降
 			} 
 			else {
-				s_moaeventrepeats[cno] = 1;//初回
+				srcmodel->SetMoaEventRepeatsKey(cno, 1);//初回
 			}
-			eventno = eventkey->GetEventNo(cno, s_moaeventrepeats[cno]);
+			eventno = eventkey->GetEventNo(cno, srcmodel->GetMoaEventRepeatsKey(cno));
 			//_ASSERT( 0 );
 			//if (eventno != 0) {
 			//	int dbgflag1 = 1;
@@ -47537,7 +47563,7 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 	for (cno = 0; cno < 256; cno++) {
 		if ((findindex >= 0) && (cno != findindex)) {
 			//採用イベント以外のリピート情報を初期化　2025/01/12
-			s_moaeventrepeats[cno] = 0;
+			srcmodel->SetMoaEventRepeatsKey(cno, 0);
 		}
 	}
 
@@ -47549,7 +47575,7 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 	//注意 s_dsaxisvalue[][, s_dsaxisOverTh[], s_dsaxisMOverTh[], s_bef_dsaxisOverTh[], s_bef_dsaxisMOverTh[]のインデックスは 0からMB3D_DSAXISNUM(6)
 	//注意 EVENTPAD.padの値は　0からMOA_PADNUM(20)
 
-	if ((eventno == 0) && (g_enableDS == true)) {
+	if (dualsenseflag && (eventno == 0) && (g_enableDS == true)) {
 
 		if ((s_dsaxisOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) || (s_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) ||
 			(s_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) || (s_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0)) {
@@ -47558,19 +47584,19 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 				
 			int padno_leftud = MB3D_DSBUTTONNUM + MB3D_DSAXIS_LEFT_UPDOWN;
 			if ((s_bef_dsaxisOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) || (s_bef_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0)) {
-				s_moaeventrepeats_pad[padno_leftud] = s_moaeventrepeats_pad[padno_leftud] + 1;//２回目以降
+				srcmodel->PlusPlusMoaEventRepeatsPAD(padno_leftud);//２回目以降
 			}
 			else {
-				s_moaeventrepeats_pad[padno_leftud] = 1;//初回
+				srcmodel->SetMoaEventRepeatsPAD(padno_leftud, 1);//初回
 			}
 			int padno_leftlr = MB3D_DSBUTTONNUM + MB3D_DSAXIS_LEFT_LR;
 			if ((s_bef_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) || (s_bef_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0)) {
-				s_moaeventrepeats_pad[padno_leftlr] = s_moaeventrepeats_pad[padno_leftlr] + 1;//２回目以降
+				srcmodel->PlusPlusMoaEventRepeatsPAD(padno_leftlr);//２回目以降
 			}
 			else {
-				s_moaeventrepeats_pad[padno_leftlr] = 1;//初回
+				srcmodel->SetMoaEventRepeatsPAD(padno_leftlr, 1);//初回
 			}
-			int eventrepeats = max(s_moaeventrepeats_pad[padno_leftud], s_moaeventrepeats_pad[padno_leftlr]);
+			int eventrepeats = max(srcmodel->GetMoaEventRepeatsPAD(padno_leftud), srcmodel->GetMoaEventRepeatsPAD(padno_leftlr));
 
 
 			if (jumpflag0 == false) {
@@ -47607,12 +47633,12 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 				if (padno < MB3D_DSBUTTONNUM) {
 					if (s_dsbuttondown[padno]) {
 						if (s_bef_dsbuttondown[padno]) {
-							s_moaeventrepeats_pad[padno] = s_moaeventrepeats_pad[padno] + 1;//２回目以降
+							srcmodel->PlusPlusMoaEventRepeatsPAD(padno);//２回目以降
 						}
 						else {
-							s_moaeventrepeats_pad[padno] = 1;//初回
+							srcmodel->SetMoaEventRepeatsPAD(padno, 1);//初回
 						}
-						eventno = eventpad->GetEventNo(padno, s_moaeventrepeats_pad[padno]);
+						eventno = eventpad->GetEventNo(padno, srcmodel->GetMoaEventRepeatsPAD(padno));
 						findindex = padno;//moaeventrepeats初期化時のヒント用
 						break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
 					}
@@ -47627,13 +47653,13 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 						((s_dsaxisOverTh[analogno] != 0) || (s_dsaxisMOverTh[analogno] != 0))) {
 						//float value = s_dsaxisvalue[analogno];
 						if ((s_bef_dsaxisOverTh[analogno] != 0) || (s_bef_dsaxisMOverTh[analogno] != 0)) {
-							s_moaeventrepeats_pad[padno] = s_moaeventrepeats_pad[padno] + 1;//２回目以降
+							srcmodel->PlusPlusMoaEventRepeatsPAD(padno);//２回目以降
 						}
 						else {
-							s_moaeventrepeats_pad[padno] = 1;//初回
+							srcmodel->SetMoaEventRepeatsPAD(padno, 1);//初回
 						}
 
-						eventno = eventpad->GetEventNo(padno, s_moaeventrepeats_pad[padno]);
+						eventno = eventpad->GetEventNo(padno, srcmodel->GetMoaEventRepeatsPAD(padno));
 						findindex = padno;//moaeventrepeats初期化時のヒント用
 
 						break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
@@ -47655,7 +47681,7 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 			if ((padno2 != findindex) && (padno2 != findindex2) || 
 				(padno2 != findindex3) && (padno2 != findindex4)) {
 				//採用イベント以外のリピート情報を初期化　2025/01/12
-				s_moaeventrepeats_pad[padno2] = 0;
+				srcmodel->SetMoaEventRepeatsPAD(padno2, 0);
 			}
 		}
 
@@ -47696,7 +47722,7 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 	double chkframe = 0;//GetNextMotion()用
 	double chkframeleng = 0;//GetNextMotion()用
 
-	if (srcmodel->GetMoaNextMotId() == -1) {
+	if (srcmodel->GetMoaNextMotId() <= 0) {
 		chkmotid = curmotid;
 		chkframe = curframe;
 		MOTINFO chkmi = srcmodel->GetMotInfo(curmotid);
@@ -47733,10 +47759,10 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 		int dbgflag2 = 1;
 	}
 
-//#################################
-//次モーション決定処理
-//ブレンド中、ブレンド中ではない場合両方
-//#################################
+	//#################################
+	//次モーション決定処理
+	//ブレンド中、ブレンド中ではない場合両方
+	//#################################
 	{
 		//###############################################################################################
 		//現在のモーション情報とイベント番号から次に再生するモーション情報を取得する
@@ -47744,14 +47770,22 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 		//2025/01/12
 		//補間ブレンド中にキーを連打した場合に対応するために　GetMoaNextMotion()用の変数は次の状態を指している必要がある
 		//###############################################################################################
+		//int tmp_moa_nextmotid = srcmodel->GetMoaTmpNextMotId();
+		//int tmp_moa_nextframe = srcmodel->GetMoaTmpNextFrame();
+		int tmp_moa_nextmotid = srcmodel->GetMoaNextMotId();
+		int tmp_moa_nextframe = srcmodel->GetMoaNextFrame();
 		ret = mch->GetNextMotion(chkmotid, IntTime(chkframe), eventno,
-			&s_moa_nextmotid, &s_moa_nextframe, &notfu, &tmpnottoidle);
+			&tmp_moa_nextmotid, &tmp_moa_nextframe, &notfu, &tmpnottoidle);
+		//srcmodel->SetMoaTmpNextMotId(tmp_moa_nextmotid);
+		//srcmodel->SetMoaTmpNextFrame(tmp_moa_nextframe);
+		srcmodel->SetMoaNextMotId(tmp_moa_nextmotid);
+		srcmodel->SetMoaNextFrame(tmp_moa_nextframe);
 		if (ret) {
 			DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetNextMotion error !!!\n");
 			_ASSERT(0);
 			return 1;
 		}
-		s_moa_nextframe = max(1, s_moa_nextframe);//モーションフレームは１から。フレーム０はバインドポーズ。
+		//tmp_moa_nextframe = max(1, s_moa_nextframe);//モーションフレームは１から。フレーム０はバインドポーズ。
 
 		if (tmpnottoidle < 0) {
 			nottoidle = 0;
@@ -47773,13 +47807,13 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 			//#####################################################
 			srcmodel->SetMoaStartFillUpFrame(curframe);
 			notfu = 0;
-			if (idlingmotid < 0) {
+			if (idlingmotid <= 0) {
 				DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetIdlingMotID 0 : idling motion not exist error !!!\n");
 				_ASSERT(0);
 				return 1;
 			}
 			fillupflag = 1;
-			s_moaeventtime = s_fTime;
+			srcmodel->SetMoaEventTime(s_fTime);
 			if (srcmodel->GetMoaNextMotId() != -1) {
 				srcmodel->SetChangeUnderBlending(true);
 			}
@@ -47791,7 +47825,7 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 		}
 
 		if (fillupflag == 0) {
-			if ((s_moa_nextmotid >= 0) && (eventno != 0)) {//} && (s_moa_nextmotid != idlingmotid)) {// && (s_moa_nextmotid != curmotid)) {
+			if ((tmp_moa_nextmotid > 0) && (eventno != 0)) {//} && (s_moa_nextmotid != idlingmotid)) {// && (s_moa_nextmotid != curmotid)) {
 				//#######################################################################
 				//ブレンド中にもモーションが変化できるように　ブレンド中もブレンド中ではない場合も処理
 				//s_moa_nextmotidに有効な値が入っていれば処理をする
@@ -47800,22 +47834,22 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 				//s_moa_nextmotid, s_moa_nextframeはそのまま
 				srcmodel->SetMoaStartFillUpFrame(curframe);
 				notfu = 0;
-				if (s_moa_nextmotid < 0) {
-					DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetIdlingMotID 0 : idling motion not exist error !!!\n");
+				if (tmp_moa_nextmotid <= 0) {
+					DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : fillup 0 : tmp_moa_nextmotid <= 0 !!!\n");
 					_ASSERT(0);
 					return 1;
 				}
 				fillupflag = 1;
-				s_moaeventtime = s_fTime;
+				srcmodel->SetMoaEventTime(s_fTime);
 				if (srcmodel->GetMoaNextMotId() != -1) {
 					srcmodel->SetChangeUnderBlending(true);
 				}
-				srcmodel->SetMoaNextMotId(s_moa_nextmotid);
-				srcmodel->SetMoaNextFrame(s_moa_nextframe);
+				srcmodel->SetMoaNextMotId(tmp_moa_nextmotid);
+				srcmodel->SetMoaNextFrame(tmp_moa_nextframe);
 				srcmodel->SetMoaRand1();//2025/01/12 連打対応
 				srcmodel->SetUnderBlending(true);//2025/01/12 連打対応
 
-				if (s_moa_nextmotid == 2) {
+				if (tmp_moa_nextmotid == 2) {
 					s_dbgflag1 = 1;
 				}
 			}
@@ -47831,7 +47865,7 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 					srcmodel->SetMoaNextFrame(1);
 					srcmodel->SetMoaStartFillUpFrame(curframe);
 				}
-				else if ((srcmodel->GetMoaNextMotId() == -1)) {
+				else if ((srcmodel->GetMoaNextMotId() <= 0)) {
 					srcmodel->SetMoaNextMotId(idlingmotid);
 					srcmodel->SetMoaNextFrame(1);
 					srcmodel->SetMoaStartFillUpFrame(curframe);
@@ -47852,7 +47886,7 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 					return 1;
 				}
 				fillupflag = 1;//モーション遷移処理のため
-				s_moaeventtime = s_fTime;
+				srcmodel->SetMoaEventTime(s_fTime);
 			}
 
 		}
@@ -47864,7 +47898,6 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 	}
 
 
-
 //##########################
 //モーション遷移処理
 //イベント発生時またはブレンド中
@@ -47873,7 +47906,7 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 
 		//################################################################################################
 		//モーション変化決定時のパラメータを使う
-		//s_moa_nextmotidはモーション変化しない場合にすぐにidlingmotidになることがあるのでSetMoa*()で設定した値を使う
+		//moa_nextmotidはモーション変化しない場合にすぐにidlingmotidになることがあるのでSetMoa*()で設定した値を使う
 		//################################################################################################
 		int model_nextmotid = srcmodel->GetMoaNextMotId();
 		int model_nextframe = srcmodel->GetMoaNextFrame();
@@ -47935,7 +47968,7 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 							s_matWorld = srcmodel->Move2HipsPos(&s_footrigdlg, idlingmotid, 1.0);
 							srcmodel->SetMocapWalkFlag(false);
 						}
-						ChangeMotionWithGUI(idlingmotid);
+						ChangeMotionWithGUI(srcmodel, idlingmotid);
 						srcmodel->SetMotionFrame(1.0);
 						srcmodel->SetMoaStartFillUpFrame(1.0);
 						srcmodel->SetChangeUnderBlending(false);
@@ -48025,7 +48058,7 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 							s_matWorld = srcmodel->Move2HipsPos(&s_footrigdlg, model_nextmotid, (double)filluppoint);
 							srcmodel->SetMocapWalkFlag(false);
 						}
-						ChangeMotionWithGUI(model_nextmotid);
+						ChangeMotionWithGUI(srcmodel, model_nextmotid);
 						srcmodel->SetMotionFrame((double)filluppoint);
 						//srcmodel->SetMotionFrame(model_nextframe);
 						srcmodel->SetMoaStartFillUpFrame(1.0);
@@ -48045,7 +48078,7 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 							s_matWorld = srcmodel->Move2HipsPos(&s_footrigdlg, idlingmotid, 1.0);
 							srcmodel->SetMocapWalkFlag(false);
 						}
-						ChangeMotionWithGUI(idlingmotid);
+						ChangeMotionWithGUI(srcmodel, idlingmotid);
 						srcmodel->SetMotionFrame(1.0);
 						srcmodel->SetMoaStartFillUpFrame(1.0);
 						srcmodel->SetChangeUnderBlending(false);
@@ -48074,7 +48107,7 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 					s_matWorld = srcmodel->Move2HipsPos(&s_footrigdlg, model_nextmotid, 1.0);
 					srcmodel->SetMocapWalkFlag(false);
 				}
-				ChangeMotionWithGUI(model_nextmotid);
+				ChangeMotionWithGUI(srcmodel, model_nextmotid);
 				srcmodel->SetMotionFrame(1.0);
 				srcmodel->SetMoaStartFillUpFrame(1.0);
 				srcmodel->SetChangeUnderBlending(false);
@@ -48110,23 +48143,28 @@ int SetNewPoseByMoa(CModel* srcmodel, double* pnextframe)
 }
 
 
-int ChangeMotionWithGUI(int srcmotid)
+int ChangeMotionWithGUI(CModel* srcmodel, int srcmotid)
 {
-	if (!g_chascene) {
+	if (!g_chascene || !srcmodel || (srcmotid <= 0)) {
 		_ASSERT(0);
 		return 1;
 	}
 
-	int selindex = g_chascene->MotID2SelIndex(g_chascene->FindModelIndex(GetCurrentModel()), srcmotid);
-	if (selindex >= 0) {
-		bool dorefreshtl;
-		if ((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false))) {
-			dorefreshtl = true;
+	if (srcmodel == GetCurrentModel()) {
+		int selindex = g_chascene->MotID2SelIndex(g_chascene->FindModelIndex(GetCurrentModel()), srcmotid);
+		if (selindex >= 0) {
+			bool dorefreshtl;
+			if ((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false))) {
+				dorefreshtl = true;
+			}
+			else {
+				dorefreshtl = false;
+			}
+			OnAnimMenu(dorefreshtl, selindex);
 		}
-		else {
-			dorefreshtl = false;
-		}
-		OnAnimMenu(dorefreshtl, selindex);
+	}
+	else {
+		srcmodel->SetCurrentMotion(srcmotid);
 	}
 
 	return 0;

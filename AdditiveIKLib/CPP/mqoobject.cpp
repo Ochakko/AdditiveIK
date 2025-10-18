@@ -2648,7 +2648,7 @@ int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglo
 			ChaVector3TransformCoord(&center1, &(mb.center), &curwm);
 			mb.center = center1;
 	
-			int sphcollision = CollisionLocal_Ray_BB_Sph(mb, startlocal, dirlocal, rayleng);//2025/09/15 球で粗く判定(CPU)
+			int sphcollision = CollisionLocal_Ray_BB_Sph(mb, startglobal, dirglobal, rayleng);//2025/09/15 球で粗く判定(CPU)
 			if (sphcollision == 0) {
 				*hitfaceindex = -1;
 				dsthitpos->SetZeroVec3();

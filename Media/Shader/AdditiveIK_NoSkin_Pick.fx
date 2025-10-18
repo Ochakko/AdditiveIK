@@ -173,8 +173,11 @@ void CSMain(uint3 DTid : SV_DispatchThreadID)
         return;
     }
 
-    if (((dota <= -0.50f) && (dotb <= -0.50f) && (dotc <= -0.50f)) ||
-		((dota >= 0.50f) && (dotb >= 0.50f) && (dotc >= 0.50f))
+  //  if (((dota <= -0.50f) && (dotb <= -0.50f) && (dotc <= -0.50f)) ||
+		//((dota >= 0.50f) && (dotb >= 0.50f) && (dotc >= 0.50f))
+  //      )
+    if (((dota <= 0.0f) && (dotb <= 0.0f) && (dotc <= 0.0f)) ||
+		((dota >= 0.0f) && (dotb >= 0.0f) && (dotc >= 0.0f))
         )
     {
         float3 curdistvec = q - mStartglobal.xyz;

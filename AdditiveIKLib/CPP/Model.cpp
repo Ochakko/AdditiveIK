@@ -697,6 +697,8 @@ int CModel::InitParams()
 	m_moa_changeunderblending = false;
 	m_moa_nextmotid = -1;
 	m_moa_nextframe = 0;
+	m_moa_tmp_nextmotid = 0;
+	m_moa_tmp_nextframe = 0;
 	m_moa_startfillupframe = 1.0;
 	m_moa_freezecount = 0;
 	m_moa_fillupcount = 0;
@@ -704,8 +706,14 @@ int CModel::InitParams()
 
 	m_mocapwalk = false;
 
+	m_moaeventtime = 0.0;//最後にeventno != 0を処理した時間
+	ZeroMemory(m_moaeventrepeats, sizeof(int) * 256);
+	ZeroMemory(m_moaeventrepeats_pad, sizeof(int)* MOA_PADNUM);
+
 	m_postureparentmat.SetIdentity();
 	m_postureparentflag = false;
+
+
 
 	return 0;
 }
@@ -4329,12 +4337,14 @@ int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj,
 	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 	*dstdist = FLT_MAX;
 
+	double rayleng;
 	ChaVector3 startglobal, dirglobal;
 	CalcMouseGlobalRay(pickinfo, &startglobal, &dirglobal);
 
 	ChaVector3 startlocal, dirlocal;
-	double rayleng;
 	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal, &rayleng);
+
+	rayleng = g_projfar * g_pickdistrate;
 
 	bool excludeinvface = true;
 	int colli = 0;
@@ -4573,7 +4583,9 @@ int CModel::CalcMouseLocalRay( UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVe
 
 	*startptr = startlocal;
 	*dirptr = dirlocal;
-	*rayleng = leng;
+
+	//*rayleng = leng;
+	*rayleng = g_projfar * g_pickdistrate;//2025/10/19
 
 	return 0;
 }
@@ -10240,7 +10252,9 @@ int CModel::SetBtMotionOnBt(bool limitdegflag,
 	for (itrbone2 = m_bonelist.begin(); itrbone2 != m_bonelist.end(); itrbone2++) {
 		CBone* curbone2 = itrbone2->second;
 		if (curbone2 && (curbone2->IsSkeleton())) {
-			if ((curbone2->GetChild(false) == NULL) || (curbone2->GetChild(false)->IsNull())) {//2023/05/09 eNullの場合も
+			//if ((curbone2->GetChild(false) == NULL) || (curbone2->GetChild(false)->IsNull())) {//2023/05/09 eNullの場合も
+			if ((curbone2->GetChild(false) == NULL) || 
+				(curbone2->GetChild(false)->IsNull() && !curbone2->GetChild(false)->GetENullConvertFlag())) {//2025/10/18
 				if (curbone2->GetParent(false)) {
 					//2023/05/09
 					//Kinematic == falseの場合だけ　BtMatはセットされている
