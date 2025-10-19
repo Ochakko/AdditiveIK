@@ -25340,16 +25340,16 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 		//2025/01/12
 		//補間ブレンド中にキーを連打した場合に対応するために　GetMoaNextMotion()用の変数は次の状態を指している必要がある
 		//###############################################################################################
-		//int tmp_moa_nextmotid = GetMoaTmpNextMotId();
-		//int tmp_moa_nextframe = GetMoaTmpNextFrame();
-		int tmp_moa_nextmotid = GetMoaNextMotId();
-		int tmp_moa_nextframe = GetMoaNextFrame();
+		int tmp_moa_nextmotid = GetMoaTmpNextMotId();
+		int tmp_moa_nextframe = GetMoaTmpNextFrame();
+		//int tmp_moa_nextmotid = GetMoaNextMotId();
+		//int tmp_moa_nextframe = GetMoaNextFrame();
 		ret = mch->GetNextMotion(chkmotid, IntTime(chkframe), eventno,
 			&tmp_moa_nextmotid, &tmp_moa_nextframe, &notfu, &tmpnottoidle);
-		//SetMoaTmpNextMotId(tmp_moa_nextmotid);
-		//SetMoaTmpNextFrame(tmp_moa_nextframe);
-		SetMoaNextMotId(tmp_moa_nextmotid);
-		SetMoaNextFrame(tmp_moa_nextframe);
+		SetMoaTmpNextMotId(tmp_moa_nextmotid);
+		SetMoaTmpNextFrame(tmp_moa_nextframe);
+		//SetMoaNextMotId(tmp_moa_nextmotid);
+		//SetMoaNextFrame(tmp_moa_nextframe);
 		if (ret) {
 			DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetNextMotion error !!!\n");
 			_ASSERT(0);
