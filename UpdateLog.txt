@@ -2,7 +2,7 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2025/10/19
-　AdditiveIK 1.0.0.53 RC2(リリース候補2)
+　AdditiveIK 1.0.0.53 release
 　　1.0.0.52からの変更点
 　　　物理シミュ時に指の第一関節が曲がっていなかったのを修正
 　　　　"エンドジョイントの影響度を持つ頂点が物理シミュ時に遅れて動いて伸びる不具合"
