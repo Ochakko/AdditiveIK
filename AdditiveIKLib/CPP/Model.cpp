@@ -56,6 +56,7 @@
 #include <ChaScene.h>
 #include <CSChkInView.h>
 #include <FootRigDlg.h>
+#include <MotChangeDlg.h>
 
 #include <string>
 
@@ -112,6 +113,25 @@ using namespace std;
 
 //extern
 //extern TResourceBank<CMQOMaterial> g_materialbank;
+
+//#####################################
+//後で　ラップ関数でアクセスするように修正予定
+//#####################################
+extern int g_dsbuttondown[MB3D_DSBUTTONNUM];
+extern int g_bef_dsbuttondown[MB3D_DSBUTTONNUM];
+extern int g_dsbuttonup[MB3D_DSBUTTONNUM];
+extern int g_bef_dsbuttonup[MB3D_DSBUTTONNUM];
+extern float g_dsaxisvalue[MB3D_DSAXISNUM];
+extern float g_dsaxisvalueAnalogLeft;//UDとLRの合成ベクトルの大きさ
+extern float g_dsaxisvalueAnalogRight;//UDとLRの合成ベクトルの大きさ
+extern float g_bef_dsaxisvalue[MB3D_DSAXISNUM];
+extern int g_dsaxisOverTh[MB3D_DSAXISNUM];
+extern int g_bef_dsaxisOverTh[MB3D_DSAXISNUM];
+extern int g_dsaxisMOverTh[MB3D_DSAXISNUM];
+extern int g_bef_dsaxisMOverTh[MB3D_DSAXISNUM];
+extern int g_dspushedOK;
+extern int g_dspushedL3;
+extern int g_dspushedR3;
 
 
 static bool s_workingChkinView = false;
@@ -706,7 +726,7 @@ int CModel::InitParams()
 
 	m_mocapwalk = false;
 
-	m_moaeventtime = 0.0;//最後にeventno != 0を処理した時間
+	//m_moaeventtime = 0.0;//最後にeventno != 0を処理した時間
 	ZeroMemory(m_moaeventrepeats, sizeof(int) * 256);
 	ZeroMemory(m_moaeventrepeats_pad, sizeof(int)* MOA_PADNUM);
 
@@ -25023,3 +25043,672 @@ double CModel::GetFbxTimeScale() {
 
 	return m_fbxtimescale;
 };
+
+
+
+int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotchangedlg,
+	int (*pChangeMotionWithGUI)(CModel* srcmodel, int srcmotid), 
+	bool dualsenseflag, double* pnextframe)
+{
+	static int s_dbgflag1 = 0;
+
+
+	if (!pnextframe || !pfootrigdlg || !pmotchangedlg || !pChangeMotionWithGUI) {
+		_ASSERT(0);
+		return 0;
+	}
+
+	if (GetNoBoneFlag()) {
+		return 0;
+	}
+	else {
+		int dbgflag1 = 1;
+	}
+
+
+	//CModel* currentmodel = GetCurrentModel();
+	//if (!currentmodel) {
+	//	return 0;
+	//}
+	CEventKey* eventkey = GetEventKey();
+	if (!eventkey) {
+		return 0;
+	}
+	CEventPad* eventpad = GetEventPad();
+	if (!eventpad) {
+		return 0;
+	}
+	CMCHandler* mch = GetMotChangeHandler();
+	if (!mch) {
+		return 0;
+	}
+	int idlingmotid = mch->GetIdlingMotID(nullptr, 0);
+	if (idlingmotid <= 0) {
+		//_ASSERT(0);
+		return 0;
+	}
+
+	bool jumpflag0;
+	MOTINFO mi0 = GetCurMotInfo();
+	if ((mi0.motid > 0) && mi0.GetJumpFlag()) {
+		jumpflag0 = true;
+	}
+	else {
+		jumpflag0 = false;
+	}
+
+	//#################################
+	//キーボード入力をイベント番号に変換する
+	//#################################
+	int ret;
+	int eventno = 0;
+	int findindex = -1;
+	int findindex2 = -1;
+	int findindex3 = -1;
+	int findindex4 = -1;
+	double motionspeed = g_dspeed;
+	//bool backplay = false;
+	int cno;
+	for (cno = 0; cno < 256; cno++) {
+		if (g_keybuf[cno] & 0x80) {
+			if (g_savekeybuf[cno] & 0x80) {
+				PlusPlusMoaEventRepeatsKey(cno);//２回目以降
+			}
+			else {
+				SetMoaEventRepeatsKey(cno, 1);//初回
+			}
+			eventno = eventkey->GetEventNo(cno, GetMoaEventRepeatsKey(cno));
+			//_ASSERT( 0 );
+			//if (eventno != 0) {
+			//	int dbgflag1 = 1;
+			//}
+			findindex = cno;//moaeventrepeats初期化時のヒント用
+			break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
+		}
+		//else {
+			//s_moaeventrepeats[cno] = 0;
+			//初期化は別ループで
+		//}
+	}
+	for (cno = 0; cno < 256; cno++) {
+		if ((findindex >= 0) && (cno != findindex)) {
+			//採用イベント以外のリピート情報を初期化　2025/01/12
+			SetMoaEventRepeatsKey(cno, 0);
+		}
+	}
+
+	//#############################################################
+	//キーボード入力が無くゲームパッドSonyDualSenseが接続認識されている場合
+	//#############################################################
+
+	//注意 g_dsbuttondown[], g_bef_dsbuttondown[]のインデックスは　0からMB3D_DSBUTTONNUM(14)
+	//注意 g_dsaxisvalue[][, g_dsaxisOverTh[], g_dsaxisMOverTh[], g_bef_dsaxisOverTh[], g_bef_dsaxisMOverTh[]のインデックスは 0からMB3D_DSAXISNUM(6)
+	//注意 EVENTPAD.padの値は　0からMOA_PADNUM(20)
+
+	if (dualsenseflag && (eventno == 0) && (g_enableDS == true)) {
+
+		if ((g_dsaxisOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) ||
+			(g_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0)) {
+
+			//MocapWalkLoop
+
+			int padno_leftud = MB3D_DSBUTTONNUM + MB3D_DSAXIS_LEFT_UPDOWN;
+			if ((g_bef_dsaxisOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) || (g_bef_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0)) {
+				PlusPlusMoaEventRepeatsPAD(padno_leftud);//２回目以降
+			}
+			else {
+				SetMoaEventRepeatsPAD(padno_leftud, 1);//初回
+			}
+			int padno_leftlr = MB3D_DSBUTTONNUM + MB3D_DSAXIS_LEFT_LR;
+			if ((g_bef_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) || (g_bef_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0)) {
+				PlusPlusMoaEventRepeatsPAD(padno_leftlr);//２回目以降
+			}
+			else {
+				SetMoaEventRepeatsPAD(padno_leftlr, 1);//初回
+			}
+			int eventrepeats = max(GetMoaEventRepeatsPAD(padno_leftud), GetMoaEventRepeatsPAD(padno_leftlr));
+
+
+			if (jumpflag0 == false) {
+				eventno = eventpad->GetEventNo(padno_leftud, eventrepeats);
+			}
+			else {
+				eventno = 0;
+			}
+
+			motionspeed = g_dsaxisvalueAnalogLeft * g_dspeed * 2.0;
+			//if (g_bef_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) {
+			//	backplay = true;
+			//}
+			//else {
+			//	backplay = false;
+			//}
+
+
+			if ((g_dsaxisOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0)) {
+				findindex = padno_leftud;//moaeventrepeats初期化時のヒント用
+			}
+			if ((g_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0)) {
+				findindex2 = padno_leftlr;//moaeventrepeats初期化時のヒント用
+			}
+
+			if ((jumpflag0 == false) && (eventno != 0)) {
+				SetMocapWalkFlag(true);
+			}
+		}
+		else {
+			int padno;
+			for (padno = 0; padno < MOA_PADNUM; padno++) {
+
+				if (padno < MB3D_DSBUTTONNUM) {
+					if (g_dsbuttondown[padno]) {
+						if (g_bef_dsbuttondown[padno]) {
+							PlusPlusMoaEventRepeatsPAD(padno);//２回目以降
+						}
+						else {
+							SetMoaEventRepeatsPAD(padno, 1);//初回
+						}
+						eventno = eventpad->GetEventNo(padno, GetMoaEventRepeatsPAD(padno));
+						findindex = padno;//moaeventrepeats初期化時のヒント用
+						break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
+					}
+				}
+				else {
+
+					//####################################################################
+					//アナログスティックはボタンと併用することがある　今回は排他的にどちらかだけに対応
+					//####################################################################
+					int analogno = padno - MB3D_DSBUTTONNUM;
+					if ((analogno != MB3D_DSAXIS_LEFT_UPDOWN) && (analogno != MB3D_DSAXIS_LEFT_LR) &&
+						((g_dsaxisOverTh[analogno] != 0) || (g_dsaxisMOverTh[analogno] != 0))) {
+						//float value = g_dsaxisvalue[analogno];
+						if ((g_bef_dsaxisOverTh[analogno] != 0) || (g_bef_dsaxisMOverTh[analogno] != 0)) {
+							PlusPlusMoaEventRepeatsPAD(padno);//２回目以降
+						}
+						else {
+							SetMoaEventRepeatsPAD(padno, 1);//初回
+						}
+
+						eventno = eventpad->GetEventNo(padno, GetMoaEventRepeatsPAD(padno));
+						findindex = padno;//moaeventrepeats初期化時のヒント用
+
+						break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
+					}
+				}
+			}
+
+			if ((g_dsaxisOverTh[MB3D_DSAXIS_RIGHT_UPDOWN] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_RIGHT_UPDOWN] != 0)) {
+				findindex3 = MB3D_DSBUTTONNUM + MB3D_DSAXIS_RIGHT_UPDOWN;//moaeventrepeats初期化時のヒント用
+			}
+			if ((g_dsaxisOverTh[MB3D_DSAXIS_RIGHT_LR] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_RIGHT_LR] != 0)) {
+				findindex4 = MB3D_DSBUTTONNUM + MB3D_DSAXIS_RIGHT_LR;//moaeventrepeats初期化時のヒント用
+			}
+
+		}
+
+		int padno2;
+		for (padno2 = 0; padno2 < MOA_PADNUM; padno2++) {
+			if ((padno2 != findindex) && (padno2 != findindex2) ||
+				(padno2 != findindex3) && (padno2 != findindex4)) {
+				//採用イベント以外のリピート情報を初期化　2025/01/12
+				SetMoaEventRepeatsPAD(padno2, 0);
+			}
+		}
+
+
+		//MocapWalkLoop Rotation
+		if (g_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) {
+			double orgval = g_dsaxisvalue[MB3D_DSAXIS_LEFT_LR];
+			double rotval = (orgval - MB3D_DSAXISSRH) / (1.0 - MB3D_DSAXISSRH);
+			RotMocapWalk(pfootrigdlg, rotval);
+		}
+		else if (g_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0) {
+			double orgval = g_dsaxisvalue[MB3D_DSAXIS_LEFT_LR];
+			double rotval = (orgval + MB3D_DSAXISSRH) / (1.0 - MB3D_DSAXISSRH);
+			RotMocapWalk(pfootrigdlg, rotval);
+		}
+
+	}
+
+
+
+	//////////////		
+
+	//########################
+	//現在のモーションの状態を取得
+	//########################
+	int curmotid = -1;
+	double curframe = 0;
+	double curframeleng = 0;
+	ret = GetMotionFrame(&curmotid, &curframe);
+	if (ret || (curmotid < 0)) {
+		DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mh GetMotionFrameNo error !!!\n");
+		_ASSERT(0);
+		return 1;
+	}
+	curframeleng = GetCurrentMotLeng();
+
+	int chkmotid = -1;//GetNextMotion()用
+	double chkframe = 0;//GetNextMotion()用
+	double chkframeleng = 0;//GetNextMotion()用
+
+	if (GetMoaNextMotId() <= 0) {
+		chkmotid = curmotid;
+		chkframe = curframe;
+		MOTINFO chkmi = GetMotInfo(curmotid);
+		chkframeleng = chkmi.frameleng;
+	}
+	else {
+		//2025/01/12
+		//補間ブレンド中にキーを連打した場合に対応するために　GetMoaNextMotion()用の変数は次の状態を指している必要がある
+		chkmotid = GetMoaNextMotId();
+		chkframe = 1.0;// GetMoaNextFrame();
+		MOTINFO chkmi = GetMotInfo(chkmotid);
+		chkframeleng = chkmi.frameleng;
+	}
+
+	//int idlingmotid = mch->GetIdlingMotID(nullptr, 0);//上に移動
+	double fillupleng = 0.0;// = mch->GetFillUpLeng();
+
+
+	int nextframeleng = 0;
+	int befmotid = -1;
+	int befframe = 0;
+	int fillupflag = 0;
+	int notfu = 0;
+	int ev0idle = 0;
+	int nottoidle = 0;
+	int tmpnottoidle = 0;
+
+
+	//for debug
+	//if (GetMoaNextMotId() == 2) {
+	//	int dbgflag1 = 1;
+	//}
+	if ((s_dbgflag1 == 1) && (eventno != 0)) {
+		int dbgflag2 = 1;
+	}
+
+	//#################################
+	//次モーション決定処理
+	//ブレンド中、ブレンド中ではない場合両方
+	//#################################
+	{
+		//###############################################################################################
+		//現在のモーション情報とイベント番号から次に再生するモーション情報を取得する
+		//
+		//2025/01/12
+		//補間ブレンド中にキーを連打した場合に対応するために　GetMoaNextMotion()用の変数は次の状態を指している必要がある
+		//###############################################################################################
+		//int tmp_moa_nextmotid = GetMoaTmpNextMotId();
+		//int tmp_moa_nextframe = GetMoaTmpNextFrame();
+		int tmp_moa_nextmotid = GetMoaNextMotId();
+		int tmp_moa_nextframe = GetMoaNextFrame();
+		ret = mch->GetNextMotion(chkmotid, IntTime(chkframe), eventno,
+			&tmp_moa_nextmotid, &tmp_moa_nextframe, &notfu, &tmpnottoidle);
+		//SetMoaTmpNextMotId(tmp_moa_nextmotid);
+		//SetMoaTmpNextFrame(tmp_moa_nextframe);
+		SetMoaNextMotId(tmp_moa_nextmotid);
+		SetMoaNextFrame(tmp_moa_nextframe);
+		if (ret) {
+			DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetNextMotion error !!!\n");
+			_ASSERT(0);
+			return 1;
+		}
+		//tmp_moa_nextframe = max(1, s_moa_nextframe);//モーションフレームは１から。フレーム０はバインドポーズ。
+
+		if (tmpnottoidle < 0) {
+			nottoidle = 0;
+		}
+		else {
+			nottoidle = tmpnottoidle;//アイドリングに戻さない指定がされている場合がある
+		}
+
+		ret = mch->GetEv0Idle(chkmotid, &ev0idle);
+		if (ret) {
+			DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetEv0Idle 0 error !!!\n");
+			_ASSERT(0);
+			return 1;
+		}
+
+		if ((eventno == 0) && (ev0idle != 0)) {
+			//#####################################################
+			//ev0idleは キー入力が途切れた場合にすぐにidlingに戻すフラグ.
+			//#####################################################
+			SetMoaStartFillUpFrame(curframe);
+			notfu = 0;
+			if (idlingmotid <= 0) {
+				DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetIdlingMotID 0 : idling motion not exist error !!!\n");
+				_ASSERT(0);
+				return 1;
+			}
+			fillupflag = 1;
+			//SetMoaEventTime(s_fTime);
+			if (GetMoaNextMotId() != -1) {
+				SetChangeUnderBlending(true);
+			}
+
+			SetMoaNextMotId(idlingmotid);
+			SetMoaNextFrame(1);
+			SetMoaRand1();//2025/01/12 連打対応
+			SetUnderBlending(true);//2025/01/12 連打対応
+		}
+
+		if (fillupflag == 0) {
+			if ((tmp_moa_nextmotid > 0) && (eventno != 0)) {//} && (s_moa_nextmotid != idlingmotid)) {// && (s_moa_nextmotid != curmotid)) {
+				//#######################################################################
+				//ブレンド中にもモーションが変化できるように　ブレンド中もブレンド中ではない場合も処理
+				//s_moa_nextmotidに有効な値が入っていれば処理をする
+				//#######################################################################
+				//イベント番号の指示通りのs_moa_nextmotidへ変化させる
+				//s_moa_nextmotid, s_moa_nextframeはそのまま
+				SetMoaStartFillUpFrame(curframe);
+				notfu = 0;
+				if (tmp_moa_nextmotid <= 0) {
+					DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : fillup 0 : tmp_moa_nextmotid <= 0 !!!\n");
+					_ASSERT(0);
+					return 1;
+				}
+				fillupflag = 1;
+				//SetMoaEventTime(s_fTime);
+				if (GetMoaNextMotId() != -1) {
+					SetChangeUnderBlending(true);
+				}
+				SetMoaNextMotId(tmp_moa_nextmotid);
+				SetMoaNextFrame(tmp_moa_nextframe);
+				SetMoaRand1();//2025/01/12 連打対応
+				SetUnderBlending(true);//2025/01/12 連打対応
+
+				if (tmp_moa_nextmotid == 2) {
+					s_dbgflag1 = 1;
+				}
+			}
+			else if (//(!GetUnderBlending()) && 
+				//(GetMoaNextMotId() == -1) && //モーション遷移決定後に　現在のモーションが最終フレームに来た場合には　idlingではなくnextmotidへ遷移させるので　blending中はここを通らない 
+				(curframe >= (curframeleng - 1.0 - g_endmotionMargin - 0.0001)) && (nottoidle == 0)) {
+				//###########################################################
+				//モーションを最後まで再生したので　アイドリングに戻す　またはループする
+				//###########################################################
+				if (GetMocapWalkFlag()) {
+					//MocapWalk Loop
+					SetMoaNextMotId(GetCurrentMotID());
+					SetMoaNextFrame(1);
+					SetMoaStartFillUpFrame(curframe);
+				}
+				else if ((GetMoaNextMotId() <= 0)) {
+					SetMoaNextMotId(idlingmotid);
+					SetMoaNextFrame(1);
+					SetMoaStartFillUpFrame(curframe);
+				}
+				else {
+					SetMoaNextMotId(GetMoaNextMotId());
+					SetMoaNextFrame(GetMoaNextFrame());
+					SetMoaStartFillUpFrame(curframe);
+
+					SetChangeUnderBlending(true);
+				}
+
+				notfu = 1;//最終フレームからidlingへの遷移は補間ブレンドしない
+
+				if (idlingmotid < 0) {
+					DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetIdlingMotID 1 : idling motion not exist error !!!\n");
+					_ASSERT(0);
+					return 1;
+				}
+				fillupflag = 1;//モーション遷移処理のため
+				//SetMoaEventTime(s_fTime);
+			}
+
+		}
+	}
+
+	if (GetUnderBlending()) {
+		//リアルタイムでブレンドするために　ブレンド中もモーション遷移処理を実行するようにフラグを立てる
+		fillupflag = 1;
+	}
+
+
+	//##########################
+	//モーション遷移処理
+	//イベント発生時またはブレンド中
+	//##########################
+	if (fillupflag == 1) {
+
+		//################################################################################################
+		//モーション変化決定時のパラメータを使う
+		//moa_nextmotidはモーション変化しない場合にすぐにidlingmotidになることがあるのでSetMoa*()で設定した値を使う
+		//################################################################################################
+		int model_nextmotid = GetMoaNextMotId();
+		int model_nextframe = GetMoaNextFrame();
+
+		bool jumpflag;
+		MOTINFO currentmi = GetCurMotInfo();
+		if ((currentmi.motid > 0) && currentmi.GetJumpFlag()) {
+			jumpflag = true;
+		}
+		else {
+			jumpflag = false;
+		}
+
+		if (model_nextmotid >= 0) {
+			if ((notfu == 0) && (GetMocapWalkFlag() == false) && (jumpflag == false)) {
+				MOTINFO nextmi = GetMotInfo(model_nextmotid);
+				if (nextmi.motid > 0) {
+					//########################################################################################
+					//モーションの変わり目は　補間＋ブレンド
+					//変化開始時の１フレームだけ遷移先ターゲット姿勢を計算してそれをブレンドすることによりブレンド計算を高速化
+					//########################################################################################
+
+
+					g_moa_Freeze_for_a_moment = pmotchangedlg->GetFreezeOption();//モーション変化時にタメを作るモード
+					g_plusrandMOA = pmotchangedlg->GetPlusRandMoa();//補間ブレンド期間の長さに乱数を加えるモード
+
+					if (g_plusrandMOA) {
+						fillupleng = mch->GetFillUpLeng() + GetMoaRand1();//2025/01/12 変化が出るように
+					}
+					else {
+						fillupleng = mch->GetFillUpLeng();
+					}
+					//キーボード連打時に変化が出ないのは
+					//あるキーに対して同じモーションを設定しているから。　(moaファイルで)同じキーでも元モーションが違えば違うモーションに設定しておけば変化が増える。
+					//あるキーに同じモーションを設定していても　補間ブレンド期間中にキーが入れば　補間ブレンドが再び行われるので変化は出る。
+
+					nextframeleng = IntTime(nextmi.frameleng);
+
+					int filluppoint;
+					filluppoint = max(1, min((nextframeleng - 3), (model_nextframe + (int)fillupleng - 1)));
+					int actualfillupleng = max(1, min((int)(nextframeleng - 3 + 1), (int)(filluppoint + 1)));
+					//actualfillupleng = max(1, min((int)(curframeleng - (int)GetMoaStartFillUpFrame() + 1), actualfillupleng));//最終フレーム付近ではfillupleng長の残りフレームは無い
+					actualfillupleng = max(1, min((int)(curframeleng - (int)GetMoaStartFillUpFrame() + 1), actualfillupleng));//最終フレーム付近ではfillupleng長の残りフレームは無い
+
+					double motionrate1, motionrate2;
+					motionrate2 = fmin(1.0, fmax(0.0, (curframe - GetMoaStartFillUpFrame()) / (double)actualfillupleng));
+					motionrate1 = 1.0 - motionrate2;
+
+
+					if (!GetUnderBlending() &&
+						((int)(curframeleng - curframe - 0.0001) <= g_endmotionMargin)
+						) {
+						//#####################################
+						//アイドリングへ戻る
+						//UnderBlendingではない場合の処理
+						//UnderBlendingの場合は　if分の最後で処理
+						//#####################################
+						if (GetMocapWalkFlag() || jumpflag) {
+							Move2HipsPos(pfootrigdlg, idlingmotid, 1.0);
+							SetMocapWalkFlag(false);
+						}
+						(pChangeMotionWithGUI)(this, idlingmotid);
+						SetMotionFrame(1.0);
+						SetMoaStartFillUpFrame(1.0);
+						SetChangeUnderBlending(false);
+						SetUnderBlending(false);
+						SetMoaNextMotId(-1);
+						SetMoaFillupCount(0);
+
+					}
+					else if (GetUnderBlending() &&
+						(
+							((GetChangeUnderBlending() == false) &&
+								(curframe >= GetMoaStartFillUpFrame()) &&
+								((int)(curframe - (int)GetMoaStartFillUpFrame() + 1) < actualfillupleng))
+							||
+							((GetChangeUnderBlending() == true) &&
+								(GetMoaFillupCount() < actualfillupleng))
+							)
+
+						) {
+						//####################
+						//補間＆ブレンド計算期間
+						//####################
+						if (!g_moa_Freeze_for_a_moment) {
+
+							//####################
+							//通常補間ブレンドモード
+							//####################
+
+							CalcFillupTarget(model_nextmotid, filluppoint, motionrate1,
+								IsJustEqualTime(curframe, GetMoaStartFillUpFrame()));
+							//CalcFillupTarget(model_nextmotid, model_nextframe, motionrate1, 
+							// IsJustEqualTime(curframe, curstartfillupframe));
+						}
+						else {
+
+							//####################
+							//フリーズビッグモード
+							//####################
+
+							int freezecount;
+							if (IsJustEqualTime(curframe, GetMoaStartFillUpFrame())) {
+								SetMoaFreezeCount(0);
+								freezecount = 0;
+							}
+							else {
+								freezecount = IncrementMoaFreezeCount();
+							}
+							//if (freezecount < 2) {
+							//	freezemotionrate1 = motionrate1;
+							//}
+							//else {
+							//	freezemotionrate1 = 0.0;//ターゲット姿勢１００％で　fillupleng - 2の間　止めて表示する
+							//}
+							//freezemotionrate1 = 0.0;//ターゲット姿勢１００％で　止めて表示する
+
+							double freezebigrate1 = fmin(3.9, (double)freezecount);
+
+							//2025/01/12 Be Big!!!
+							CalcFillupTarget(model_nextmotid, filluppoint, freezebigrate1, //motionrate1,
+								IsJustEqualTime(curframe, GetMoaStartFillUpFrame()));
+						}
+						SetMotionFrame(curframe);
+						//SetUnderBlending(true);
+
+						if (IsJustEqualTime(curframe, GetMoaStartFillUpFrame())) {
+							SetMoaFillupCount(0);
+						}
+						else {
+							IncrementMoaFillupCount();
+						}
+					}
+					else if (GetUnderBlending() &&
+						(
+							((GetChangeUnderBlending() == false) &&
+								(curframe >= GetMoaStartFillUpFrame()) &&
+								((int)(curframe - (int)GetMoaStartFillUpFrame() + 1) >= actualfillupleng))
+							||
+							((GetChangeUnderBlending() == true) &&
+								(GetMoaFillupCount() >= actualfillupleng))
+							)
+
+						) {
+						//###########################
+						//補間計算終了　nextmotidへ遷移
+						//###########################
+						if (GetMocapWalkFlag()) {
+							Move2HipsPos(pfootrigdlg, model_nextmotid, (double)filluppoint);
+							SetMocapWalkFlag(false);
+						}
+						(pChangeMotionWithGUI)(this, model_nextmotid);
+						SetMotionFrame((double)filluppoint);
+						//SetMotionFrame(model_nextframe);
+						SetMoaStartFillUpFrame(1.0);
+						SetChangeUnderBlending(false);
+						SetMoaNextMotId(-1);
+						SetUnderBlending(false);
+						SetMoaFillupCount(0);
+					}
+					else if (GetUnderBlending() &&
+						((int)(curframeleng - curframe - 0.0001) <= g_endmotionMargin)
+						) {
+						//############################
+						//アイドリングへ戻る
+						//UnderBlending処理の最後で処理
+						//############################
+						if (GetMocapWalkFlag()) {
+							Move2HipsPos(pfootrigdlg, idlingmotid, 1.0);
+							SetMocapWalkFlag(false);
+						}
+						(pChangeMotionWithGUI)(this, idlingmotid);
+						SetMotionFrame(1.0);
+						SetMoaStartFillUpFrame(1.0);
+						SetChangeUnderBlending(false);
+						SetUnderBlending(false);
+						SetMoaNextMotId(-1);
+						SetMoaFillupCount(0);
+					}
+					else {
+						_ASSERT(0);
+					}
+
+					////SetCurrentMotion(s_moa_nextmotid);
+					//ChangeMotionWithGUI(s_moa_nextmotid);
+					//SetMotionFrame(model_nextframe);
+					//SetUnderBlending(false);
+				}
+			}
+			else {
+				// notfu != 0  direct change
+				//SetCurrentMotion(s_moa_nextmotid);
+
+				//###############################
+				//補間無しですぐにモーション遷移を実行
+				//###############################
+				if (GetMocapWalkFlag() || jumpflag) {
+					Move2HipsPos(pfootrigdlg, model_nextmotid, 1.0);
+					SetMocapWalkFlag(false);
+				}
+				(pChangeMotionWithGUI)(this, model_nextmotid);
+				SetMotionFrame(1.0);
+				SetMoaStartFillUpFrame(1.0);
+				SetChangeUnderBlending(false);
+				SetUnderBlending(false);
+				SetMoaNextMotId(-1);
+				SetMoaFillupCount(0);
+			}
+		}
+	}
+
+	if (pnextframe) {
+		//#############################################
+		//2025/01/11 呼び出し元のnextframeを更新する必要有
+		//#############################################
+		*pnextframe = GetCurrentFrame();
+	}
+
+	{
+		MOTINFO curmi = GetCurMotInfo();
+		if (curmi.motid > 0) {
+			SetMotionSpeed(curmi.motid, motionspeed);
+
+			//if (backplay == false) {
+			//	g_previewFlag = 1;
+			//}
+			//else {
+			//	g_previewFlag = -1;//loop条件が変わるのでそのままだと固まる　最終フレーム-->フレーム1.0　後ろ歩きモーションの方が良い？　後ほど対応
+			//}
+		}
+	}
+
+	return 0;
+}
+

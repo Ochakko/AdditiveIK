@@ -57,7 +57,7 @@ class CGltfLoader;
 class CMCHandler;
 class CEventKey;
 class CEventPad;
-class CFootRigDlg;
+class CMotChangeDlg;
 
 typedef struct funcmpparams
 {
@@ -553,6 +553,12 @@ public:
 	int SetMotionFrame(double srcframe);
 	int SetMotionFrame(int srcmotid, double srcframe);
 	int GetMotionFrame(int* dstmotid, double* dstframe);
+
+
+	int SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotchangedlg, 
+		int (*pChangeMotionWithGUI)(CModel* srcmodel, int srcmotid),
+		bool dualsenseflag, double* pnextframe);
+
 
 /**
  * @fn
@@ -3638,12 +3644,12 @@ public: //accesser
 		return m_postureparentflag;
 	}
 
-	void SetMoaEventTime(double srctime) {
-		m_moaeventtime = srctime;
-	};
-	double GetMoaEventTime() {
-		return m_moaeventtime;
-	};
+	//void SetMoaEventTime(double srctime) {
+	//	m_moaeventtime = srctime;
+	//};
+	//double GetMoaEventTime() {
+	//	return m_moaeventtime;
+	//};
 	
 	void SetMoaEventRepeatsKey(int srcindex, int srcval) {
 		if ((srcindex >= 0) && (srcindex < 256)) {
@@ -3935,7 +3941,7 @@ private:
 	int m_moa_freezecount;
 	int m_moa_fillupcount;
 	int m_moa_rand1;
-	double m_moaeventtime;//最後にeventno != 0を処理した時間
+	//double m_moaeventtime;//最後にeventno != 0を処理した時間
 	int m_moaeventrepeats[256];
 	int m_moaeventrepeats_pad[MOA_PADNUM];
 

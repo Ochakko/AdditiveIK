@@ -51,7 +51,7 @@ enum {
 //######################
 #define MB3D_DSAXISSRH		(0.10f)
 
-enum {//s_dsbuttondown[], s_dsbuttonup[]のインデックス
+enum {//g_dsbuttondown[], g_dsbuttonup[]のインデックス
 	//順番はGameController Sony Dual Senseの設定に依るので変更しないように.
 	//ボタン
 	MB3D_DSBUTTON_SQUARE,
@@ -70,7 +70,7 @@ enum {//s_dsbuttondown[], s_dsbuttonup[]のインデックス
 	MB3D_DSBUTTON_R3,
 	MB3D_DSBUTTONNUM
 };
-enum {//s_dsaxisvalue[], s_dsaxisOverTh[], s_dsaxisMOverTh[]のインデックス
+enum {//g_dsaxisvalue[], g_dsaxisOverTh[], g_dsaxisMOverTh[]のインデックス
 	//順番はGameController Sony Dual Senseの設定に依るので変更しないように.
 	//アナログスティック
 	MB3D_DSAXIS_RIGHT_LR,
