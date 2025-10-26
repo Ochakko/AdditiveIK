@@ -7360,9 +7360,9 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					if (posturebone) {
 						if (posturebone->GetPostureChildModel() == childmodelelem.modelptr) {
 							//ONだったものをOFFに
-							posturebone->SetPostureChildModel(nullptr);
-							posturebone->SetPostureChildFlag(false);
 							childmodelelem.modelptr->SetPostureParentFlag(false);
+							posturebone->SetPostureChildFlag(false);
+							posturebone->SetPostureChildModel(nullptr);
 						}
 						else {
 							//セットしてONに
@@ -24103,10 +24103,12 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 		case IDOK:
 			ShowWindow(hDlgWnd, SW_HIDE);
 			s_dispmodelworldmat = false;
+			s_pickmodelworldmat = false;
 			break;
 		case IDCANCEL:
 			ShowWindow(hDlgWnd, SW_HIDE);
 			s_dispmodelworldmat = false;
+			s_pickmodelworldmat = false;
 			break;
 
 		case IDC_CHECK_PICKANDSET:
@@ -24185,6 +24187,7 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 	case WM_CLOSE:
 		ShowWindow(hDlgWnd, SW_HIDE);
 		s_dispmodelworldmat = false;
+		s_pickmodelworldmat = false;
 		break;
 	default:
 		DefWindowProc(hDlgWnd, msg, wp, lp);
@@ -35596,7 +35599,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.53 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.54 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -39105,7 +39108,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.53 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.54 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {
@@ -41661,6 +41664,11 @@ int PickManipulator(UIPICKINFO* ppickinfo, bool pickring)
 	}
 	if (s_camtargetdisp) {
 		//カメラターゲット位置にマニピュレータ表示時にはpickしない
+		return -1;
+	}
+	if (s_dispmodelworldmat && s_pickmodelworldmat) {
+		//2025/10/26
+		//モデルワールドマット設定ダイアログ表示中　かつ　Pickフラグオンの場合　マニピュレータはpickしない
 		return -1;
 	}
 	if (FindGrassElem(GetCurrentModel()) != nullptr) {

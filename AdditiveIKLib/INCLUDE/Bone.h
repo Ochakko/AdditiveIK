@@ -1770,6 +1770,27 @@ public: //accesser
 
 	void SetPostureChildFlag(bool srcflag) {
 		m_posture_child_flag = srcflag;
+
+		//2025/10/26
+		// PostureChildのオンオフの間にChildModelが移動することを想定して修正していた
+		// リセットの問題よりも　ChildModelが原点にあるときにうまくいく計算だったことが判明
+		// ParentとChildの位置と向きの差異を考えて計算する必要有
+		// 以下はコメントアウトして　まず位置と向きの差異を計算に入れるオプションを作る予定
+		// 
+		//if (srcflag == false) {
+		//	//PostureChildをオフにする場合
+		//
+		//	//オフセットをリセット
+		//	ResetPostureChildOffset_Position();
+		//	ResetPostureChildOffset_Rotation();
+		//
+		//	if (GetPostureChildModel()) {
+		//		//2025/10/26
+		//		//モデルのworldmatオフセットをベイクする
+		//		GetPostureChildModel()->BakePostureChildMatToModelWorldMat(nullptr);
+		//		GetPostureChildModel()->CalcModelWorldMatOnLoad(nullptr);
+		//	}
+		//}
 	}
 	bool GetPostureChildFlag() {
 		return m_posture_child_flag;
@@ -1786,12 +1807,18 @@ public: //accesser
 	void SetPostureChildOffset_Position(ChaVector3 srcoffset) {
 		m_posture_child_pos_offset = srcoffset;
 	}
+	void ResetPostureChildOffset_Position() {
+		m_posture_child_pos_offset.SetParams(0.0f, 0.0f, 0.0f);
+	}
 	ChaVector3 GetPostureChildOffset_Position() {
 		return m_posture_child_pos_offset;
 	}
 
 	void SetPostureChildOffset_Rotation(ChaVector3 srcoffset) {
 		m_posture_child_rot_offset = srcoffset;
+	}
+	void ResetPostureChildOffset_Rotation() {
+		m_posture_child_rot_offset.SetParams(0.0f, 0.0f, 0.0f);
 	}
 	ChaVector3 GetPostureChildOffset_Rotation() {
 		return m_posture_child_rot_offset;

@@ -22645,6 +22645,33 @@ void CModel::CalcModelWorldMatOnLoad(CFootRigDlg* srcfootrigdlg)
 
 }
 
+void CModel::BakePostureChildMatToModelWorldMat(CFootRigDlg* srcfootrigdlg)
+{
+	//PostureChild入りのmatWorldをベイクする
+
+	CalcModelWorldMatOnLoad(srcfootrigdlg);
+
+	ChaVector3 svec, travec;
+	ChaMatrix rmat;
+	GetSRTMatrix(m_matWorld, &svec, &rmat, &travec);
+
+	CQuaternion rotq;
+	rotq.RotationMatrix(rmat);
+
+	int notmodify180flag = 0;//!!!!!!!!!!!!!!!
+	BEFEUL befeul;
+	befeul.Init();
+	befeul.befframeeul.SetZeroVec3();
+	befeul.currentframeeul.SetZeroVec3();
+	ChaVector3 newroteul;
+	rotq.Q2EulXYZusingQ(true, false, nullptr, befeul, &newroteul, 1, 0, notmodify180flag);
+	SetModelRotation(newroteul);
+
+	SetModelPosition(travec);
+
+	CalcModelWorldMatOnLoad(srcfootrigdlg);
+}
+
 CBone* CModel::GetTopBone(bool excludenullflag)//default : excludenullflag = true
 {
 	ChaCalcFunc chacalcfunc;

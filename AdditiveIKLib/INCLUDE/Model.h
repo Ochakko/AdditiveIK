@@ -2671,7 +2671,7 @@ public: //accesser
 		return m_modelrotation;
 	};
 	void CalcModelWorldMatOnLoad(CFootRigDlg* srcfootrigdlg);
-
+	void BakePostureChildMatToModelWorldMat(CFootRigDlg* srcfootrigdlg);
 
 	//void SetWorldMatFromCamera(ChaMatrix srcmat){
 	//	m_worldmat = srcmat;
