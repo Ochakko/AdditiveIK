@@ -1,6 +1,11 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2025/11/02
+　PostureChildのオンオフイベントの準備
+　　オンの時にはChildModelのWorldMatをIdentityにしてParentボーンの位置にChildModelを置く
+　　オフの時にはParentボーンの位置をChildModelのWorldMatにベイクしてChildModelのParentPostureはリセットする
+
 2025/10/26
 　モデルワールドマット設定ダイアログにPickにチェックが機能しなくなっていたのを修正
 　　当たり判定の計算が変わったので、マニピュレータピックが先にヒットして、上記機能が動いていなかったのを修正

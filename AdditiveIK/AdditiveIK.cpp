@@ -7360,15 +7360,12 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					if (posturebone) {
 						if (posturebone->GetPostureChildModel() == childmodelelem.modelptr) {
 							//ONだったものをOFFに
-							childmodelelem.modelptr->SetPostureParentFlag(false);
 							posturebone->SetPostureChildFlag(false);
-							posturebone->SetPostureChildModel(nullptr);
 						}
 						else {
 							//セットしてONに
 							posturebone->SetPostureChildModel(childmodelelem.modelptr);
 							posturebone->SetPostureChildFlag(true);
-							childmodelelem.modelptr->SetPostureParentFlag(true);
 
 							//PostureChildDlgProc()内で使用
 							s_posturechildmodel = childmodelelem.modelptr;

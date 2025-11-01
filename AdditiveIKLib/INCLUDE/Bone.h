@@ -1748,49 +1748,43 @@ public: //accesser
 	}
 
 	void SetPostureChildModel(CModel* srcmodel) {
-		if (GetPostureChildModel()) {
-			//古い設定のフラグをリセット
-			GetPostureChildModel()->SetPostureParentFlag(false);
-			SetPostureChildFlag(false);
-		}
-		
-		if (srcmodel) {
-			m_posture_child_model = srcmodel;
-			//新しい設定のフラグをON
-			m_posture_child_model->SetPostureParentFlag(true);
-			SetPostureChildFlag(true);
-		}
-		else {
-			//srcmodelがnullptrの場合　リセット
-			m_posture_child_model = nullptr;
-			SetPostureChildFlag(false);
-		}
+		m_posture_child_model = srcmodel;
 	}
+
 	CModel* GetPostureChildModel();
 
 	void SetPostureChildFlag(bool srcflag) {
 		m_posture_child_flag = srcflag;
 
-		//2025/10/26
-		// PostureChildのオンオフの間にChildModelが移動することを想定して修正していた
-		// リセットの問題よりも　ChildModelが原点にあるときにうまくいく計算だったことが判明
-		// ParentとChildの位置と向きの差異を考えて計算する必要有
-		// 以下はコメントアウトして　まず位置と向きの差異を計算に入れるオプションを作る予定
-		// 
-		//if (srcflag == false) {
-		//	//PostureChildをオフにする場合
-		//
-		//	//オフセットをリセット
-		//	ResetPostureChildOffset_Position();
-		//	ResetPostureChildOffset_Rotation();
-		//
-		//	if (GetPostureChildModel()) {
-		//		//2025/10/26
-		//		//モデルのworldmatオフセットをベイクする
-		//		GetPostureChildModel()->BakePostureChildMatToModelWorldMat(nullptr);
-		//		GetPostureChildModel()->CalcModelWorldMatOnLoad(nullptr);
-		//	}
-		//}
+		if (srcflag == false) {
+			//PostureChildをオフにする場合
+				
+			if (GetPostureChildModel()) {
+				//2025/10/26
+				//モデルのworldmatオフセットをベイクする
+				GetPostureChildModel()->BakePostureChildMatToModelWorldMat(nullptr);
+				GetPostureChildModel()->SetPostureParentFlag(false);
+				GetPostureChildModel()->CalcModelWorldMatOnLoad(nullptr);
+			}
+
+			//次回オンにした場合に再設定しないで済むように次の２つのリセットはコメントアウト
+			//ResetPostureChildOffset_Position();
+			//ResetPostureChildOffset_Rotation();
+
+			SetPostureChildModel(nullptr);
+		}
+		else {
+			//PostureChildをオンにする場合
+
+			//2025/11/02
+			//ChildModelをボーンの位置にセットするために
+			//ChildModelのWorldMatをidentityにする
+			if (GetPostureChildModel()) {
+				GetPostureChildModel()->ResetModelWorldMat(nullptr);
+				GetPostureChildModel()->CalcModelWorldMatOnLoad(nullptr);
+				GetPostureChildModel()->SetPostureParentFlag(true);
+			}
+		}
 	}
 	bool GetPostureChildFlag() {
 		return m_posture_child_flag;

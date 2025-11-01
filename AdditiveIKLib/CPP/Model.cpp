@@ -22666,11 +22666,29 @@ void CModel::BakePostureChildMatToModelWorldMat(CFootRigDlg* srcfootrigdlg)
 	ChaVector3 newroteul;
 	rotq.Q2EulXYZusingQ(true, false, nullptr, befeul, &newroteul, 1, 0, notmodify180flag);
 	SetModelRotation(newroteul);
-
 	SetModelPosition(travec);
+
+
+	//ベイク済のPostureParentMatを初期化する
+	ChaMatrix identitymat;
+	identitymat.SetIdentity();
+	SetPostureParentMat(identitymat);
+
 
 	CalcModelWorldMatOnLoad(srcfootrigdlg);
 }
+
+void CModel::ResetModelWorldMat(CFootRigDlg* srcfootrigdlg)
+{
+	//リセット
+	ChaVector3 zerovec;
+	zerovec.SetZeroVec3();
+	SetModelRotation(zerovec);
+	SetModelPosition(zerovec);
+
+	CalcModelWorldMatOnLoad(srcfootrigdlg);
+}
+
 
 CBone* CModel::GetTopBone(bool excludenullflag)//default : excludenullflag = true
 {
