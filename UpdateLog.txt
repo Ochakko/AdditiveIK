@@ -1,6 +1,14 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+
+2025/11/16
+　ModelWorldMatダイアログでモデルをカメラのPostureChildにできるように.
+　　カメラをモデルのPostureParentにした場合に　モデルの動きがカクカクするのは
+　　多分、モデルの姿勢はcalcslotで計算するのに対して、　matViewなどは即値を使用していることによる　同期のずれだと思う
+　　matWorld, matView, matProjをslot化する必要有
+　　次回対応予定
+
 2025/11/02
 　PostureChildのオンオフイベントの準備
 　　オンの時にはChildModelのWorldMatをIdentityにしてParentボーンの位置にChildModelを置く

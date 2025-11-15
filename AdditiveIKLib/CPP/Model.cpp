@@ -732,7 +732,8 @@ int CModel::InitParams()
 
 	m_postureparentmat.SetIdentity();
 	m_postureparentflag = false;
-
+	m_posture_parent_pos_offset.SetZeroVec3();
+	m_posture_parent_rot_offset.SetZeroVec3();
 
 
 	return 0;

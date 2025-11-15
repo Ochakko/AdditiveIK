@@ -1199,7 +1199,7 @@ static std::vector<CGrassElem*> s_grassElemVec;
 
 static CModel* s_posturechildmodel = nullptr;
 static CBone* s_postureparentbone = nullptr;
-
+static CModel* s_posturechildofcamera = nullptr;
 
 static int s_rigsphere_num;
 static int s_rigringX_num;
@@ -24107,7 +24107,30 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			s_dispmodelworldmat = false;
 			s_pickmodelworldmat = false;
 			break;
-
+		
+		case IDC_CHECK_CHILDOFCAMERA:
+		{
+			UINT ischecked = 0;
+			ischecked = IsDlgButtonChecked(hDlgWnd, IDC_CHECK_CHILDOFCAMERA);
+			if (ischecked == BST_CHECKED) {
+				s_posturechildofcamera = GetCurrentModel();
+				s_posturechildofcamera->ResetModelWorldMat(nullptr);
+				s_posturechildofcamera->CalcModelWorldMatOnLoad(nullptr);
+				s_posturechildofcamera->SetPostureParentFlag(true);
+			}
+			else {
+				if (s_posturechildofcamera == GetCurrentModel()) {
+					CModel* savemodel = s_posturechildofcamera;
+					s_posturechildofcamera = nullptr;
+					if (g_chascene->FindModelIndex(savemodel) >= 0) {
+						savemodel->BakePostureChildMatToModelWorldMat(nullptr);
+						savemodel->SetPostureParentFlag(false);
+						savemodel->CalcModelWorldMatOnLoad(nullptr);
+					}
+				}
+			}
+		}
+			break;
 		case IDC_CHECK_PICKANDSET:
 		{
 			UINT ischecked = 0;
@@ -24181,6 +24204,81 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			return FALSE;
 		}
 		break;
+
+
+	case WM_HSCROLL:
+		if ((s_posturechildofcamera != nullptr) && (s_posturechildofcamera == GetCurrentModel())) {
+			if (GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_X) == (HWND)lp) {
+				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_X), TBM_GETPOS, 0, 0);
+				float currentoffset = (float)((double)cursliderpos * 0.1);
+
+				swprintf_s(strval, 256, L"Offset Position X : %.2f", (double)currentoffset);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_X, strval);
+
+				ChaVector3 currentposoffset = s_posturechildofcamera->GetPostureParentOffset_Position();
+				currentposoffset.x = currentoffset;
+				s_posturechildofcamera->SetPostureParentOffset_Position(currentposoffset);
+			}
+			else if (GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Y) == (HWND)lp) {
+				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Y), TBM_GETPOS, 0, 0);
+				float currentoffset = (float)((double)cursliderpos * 0.1);
+
+				swprintf_s(strval, 256, L"Offset Position Y : %.2f", (double)currentoffset);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_Y, strval);
+
+				ChaVector3 currentposoffset = s_posturechildofcamera->GetPostureParentOffset_Position();
+				currentposoffset.y = currentoffset;
+				s_posturechildofcamera->SetPostureParentOffset_Position(currentposoffset);
+			}
+			else if (GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Z) == (HWND)lp) {
+				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETPOSITION_Z), TBM_GETPOS, 0, 0);
+				float currentoffset = (float)((double)cursliderpos * 0.1);
+
+				swprintf_s(strval, 256, L"Offset Position Z : %.2f", (double)currentoffset);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETPOSITION_Z, strval);
+
+				ChaVector3 currentposoffset = s_posturechildofcamera->GetPostureParentOffset_Position();
+				currentposoffset.z = currentoffset;
+				s_posturechildofcamera->SetPostureParentOffset_Position(currentposoffset);
+			}
+
+
+			else if (GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_X2) == (HWND)lp) {
+				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_X2), TBM_GETPOS, 0, 0);
+				float currentoffset = (float)((double)cursliderpos * 0.1);
+
+				swprintf_s(strval, 256, L"Offset ROTATION X : %.2f", (double)currentoffset);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETROTATION_X2, strval);
+
+				ChaVector3 currentoffset_rotation = s_posturechildofcamera->GetPostureParentOffset_Rotation();
+				currentoffset_rotation.x = currentoffset;
+				s_posturechildofcamera->SetPostureParentOffset_Rotation(currentoffset_rotation);
+			}
+			else if (GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_Y2) == (HWND)lp) {
+				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_Y2), TBM_GETPOS, 0, 0);
+				float currentoffset = (float)((double)cursliderpos * 0.1);
+
+				swprintf_s(strval, 256, L"Offset Rotation Y : %.2f", (double)currentoffset);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETROTATION_Y2, strval);
+
+				ChaVector3 currentoffset_rotation = s_posturechildofcamera->GetPostureParentOffset_Rotation();
+				currentoffset_rotation.y = currentoffset;
+				s_posturechildofcamera->SetPostureParentOffset_Rotation(currentoffset_rotation);
+			}
+			else if (GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_Z2) == (HWND)lp) {
+				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SLIDER_OFFSETROTATION_Z2), TBM_GETPOS, 0, 0);
+				float currentoffset = (float)((double)cursliderpos * 0.1);
+
+				swprintf_s(strval, 256, L"Offset Rotation Z : %.2f", (double)currentoffset);
+				SetDlgItemTextW(hDlgWnd, IDC_STATIC_OFFSETROTATION_Z2, strval);
+
+				ChaVector3 currentoffset_rotation = s_posturechildofcamera->GetPostureParentOffset_Rotation();
+				currentoffset_rotation.z = currentoffset;
+				s_posturechildofcamera->SetPostureParentOffset_Rotation(currentoffset_rotation);
+			}
+		}
+		break;
+
 	case WM_CLOSE:
 		ShowWindow(hDlgWnd, SW_HIDE);
 		s_dispmodelworldmat = false;
@@ -43737,6 +43835,63 @@ int SetModel2ModelWorldMatDlg(CModel* srcmodel)
 			CheckDlgButton(s_modelworldmatdlgwnd, IDC_CHECK_REMOVEPOS, false);
 		}
 
+		if ((s_posturechildofcamera != nullptr) && (s_posturechildofcamera == srcmodel)) {
+			CheckDlgButton(s_modelworldmatdlgwnd, IDC_CHECK_CHILDOFCAMERA, true);
+		}
+		else {
+			CheckDlgButton(s_modelworldmatdlgwnd, IDC_CHECK_CHILDOFCAMERA, false);
+		}
+
+
+		//PostureChildOfCamera
+		{
+			ChaVector3 currentoffset_position = srcmodel->GetPostureParentOffset_Position();
+			ChaVector3 currentoffset_rotation = srcmodel->GetPostureParentOffset_Rotation();
+
+			swprintf_s(strval, 256, L"Offset Position X : %.2f", (double)currentoffset_position.x);
+			SetDlgItemTextW(s_modelworldmatdlgwnd, IDC_STATIC_OFFSETPOSITION_X, strval);
+			int sliderposx = int(fmax(-5000.0, fmin(5000.0, (double)currentoffset_position.x * 10.0)));
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETPOSITION_X), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-5000);
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETPOSITION_X), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)5000);
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETPOSITION_X), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderposx);
+
+			swprintf_s(strval, 256, L"Offset Position Y : %.2f", (double)currentoffset_position.y);
+			SetDlgItemTextW(s_modelworldmatdlgwnd, IDC_STATIC_OFFSETPOSITION_Y, strval);
+			int sliderposy = int(fmax(-5000.0, fmin(5000.0, (double)currentoffset_position.y * 10.0)));
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETPOSITION_Y), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-5000);
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETPOSITION_Y), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)5000);
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETPOSITION_Y), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderposy);
+
+			swprintf_s(strval, 256, L"Offset Position Z : %.2f", (double)currentoffset_position.z);
+			SetDlgItemTextW(s_modelworldmatdlgwnd, IDC_STATIC_OFFSETPOSITION_Z, strval);
+			int sliderposz = int(fmax(-5000.0, fmin(5000.0, (double)currentoffset_position.z * 10.0)));
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETPOSITION_Z), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-5000);
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETPOSITION_Z), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)5000);
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETPOSITION_Z), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderposz);
+
+
+
+			swprintf_s(strval, 256, L"Offset Rotation X : %.2f", (double)currentoffset_rotation.x);
+			SetDlgItemTextW(s_modelworldmatdlgwnd, IDC_STATIC_OFFSETROTATION_X2, strval);
+			int sliderrotx = int(fmax(-1800.0, fmin(1800.0, (double)currentoffset_rotation.x * 10.0)));
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETROTATION_X2), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-1800);
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETROTATION_X2), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)1800);
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETROTATION_X2), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderrotx);
+
+			swprintf_s(strval, 256, L"Offset Rotation Y : %.2f", (double)currentoffset_rotation.y);
+			SetDlgItemTextW(s_modelworldmatdlgwnd, IDC_STATIC_OFFSETROTATION_Y2, strval);
+			int sliderroty = int(fmax(-1800.0, fmin(1800.0, (double)currentoffset_rotation.y * 10.0)));
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETROTATION_Y2), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-1800);
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETROTATION_Y2), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)1800);
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETROTATION_Y2), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderroty);
+
+			swprintf_s(strval, 256, L"Offset Rotation Z : %.2f", (double)currentoffset_rotation.z);
+			SetDlgItemTextW(s_modelworldmatdlgwnd, IDC_STATIC_OFFSETROTATION_Z2, strval);
+			int sliderrotz = int(fmax(-1800.0, fmin(1800.0, (double)currentoffset_rotation.z * 10.0)));
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETROTATION_Z2), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)-1800);
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETROTATION_Z2), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)1800);
+			SendMessage(GetDlgItem(s_modelworldmatdlgwnd, IDC_SLIDER_OFFSETROTATION_Z2), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderrotz);
+		}
 	}
 
 	return 0;
@@ -44326,7 +44481,6 @@ void SetCamera3DFromEyePos()
 {
 	g_camera3D->SetNear(g_projnear);
 	g_camera3D->SetFar(g_projfar);
-	//g_camera3D->SetViewAngle(60.0f / 180.0f * (float)PI);
 	g_camera3D->SetViewAngle(g_fovy);//2023/12/30
 	Vector3 cameye;
 	cameye.Set(g_camEye.x, g_camEye.y, g_camEye.z);
@@ -44338,6 +44492,43 @@ void SetCamera3DFromEyePos()
 	g_camera3D->SetWidth((float)g_graphicsEngine->GetFrameBufferWidth());//2023/11/20
 	g_camera3D->SetHeight((float)g_graphicsEngine->GetFrameBufferHeight());//2023/11/20
 	g_camera3D->Update();
+
+	if ((s_posturechildofcamera != nullptr) && (g_chascene->FindModelIndex(s_posturechildofcamera) >= 0)) {
+		ChaVector3 postureoffset_position = s_posturechildofcamera->GetPostureParentOffset_Position();
+		ChaVector3 postureoffset_rotation = s_posturechildofcamera->GetPostureParentOffset_Rotation();
+
+		ChaMatrix postureoffset_tramat;
+		postureoffset_tramat.SetIdentity();
+		postureoffset_tramat.SetTranslation(postureoffset_position);
+		CQuaternion postureoffset_q;
+		postureoffset_q.SetRotationXYZ(nullptr, postureoffset_rotation);
+		ChaMatrix postureoffset_rotmat;
+		postureoffset_rotmat = postureoffset_q.MakeRotMatX();
+		ChaMatrix postureoffsetmat = postureoffset_rotmat * postureoffset_tramat;
+
+		ChaMatrix curcameramat;
+		curcameramat.SetParams(g_camera3D->GetViewMatrix(false));
+		ChaMatrix invcurcameramat = ChaMatrixInv(curcameramat);
+
+		ChaMatrix newposturemat;
+		newposturemat = postureoffsetmat * invcurcameramat;
+
+		//ChaMatrix befposturemat = s_posturechildofcamera->GetPostureParentMat();
+		//ChaMatrix blendposturemat = befposturemat * 0.8 + newposturemat * 0.2;
+		//s_posturechildofcamera->SetPostureParentMat(blendposturemat);
+
+		s_posturechildofcamera->SetPostureParentMat(newposturemat);
+		s_posturechildofcamera->CalcModelWorldMatOnLoad(&s_footrigdlg);
+		s_posturechildofcamera->SetPostureParentFlag(true);
+	}
+
+	//#####################################################################################################
+	//2025/11/16
+	//カメラをモデルのPostureParentにした場合に　モデルの動きがカクカクするのは
+	//多分、モデルの姿勢はcalcslotで計算するのに対して、　matViewなどは即値を使用していることによる　同期のずれだと思う
+	//matWorld, matView, matProjをslot化する必要有
+	// 後で対応
+	//#####################################################################################################
 
 	if (GetCurrentModel()) {
 		s_matWorld = GetCurrentModel()->GetWorldMat();

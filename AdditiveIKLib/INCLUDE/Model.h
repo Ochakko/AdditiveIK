@@ -3645,6 +3645,29 @@ public: //accesser
 		return m_postureparentflag;
 	}
 
+
+	//以下6関数は　カメラがPostureParentのときに使用
+	void SetPostureParentOffset_Position(ChaVector3 srcoffset) {
+		m_posture_parent_pos_offset = srcoffset;
+	}
+	void ResetPostureParentOffset_Position() {
+		m_posture_parent_pos_offset.SetParams(0.0f, 0.0f, 0.0f);
+	}
+	ChaVector3 GetPostureParentOffset_Position() {
+		return m_posture_parent_pos_offset;
+	}
+	void SetPostureParentOffset_Rotation(ChaVector3 srcoffset) {
+		m_posture_parent_rot_offset = srcoffset;
+	}
+	void ResetPostureParentOffset_Rotation() {
+		m_posture_parent_rot_offset.SetParams(0.0f, 0.0f, 0.0f);
+	}
+	ChaVector3 GetPostureParentOffset_Rotation() {
+		return m_posture_parent_rot_offset;
+	}
+
+
+
 	//void SetMoaEventTime(double srctime) {
 	//	m_moaeventtime = srctime;
 	//};
@@ -3950,6 +3973,9 @@ private:
 
 	bool m_postureparentflag;
 	ChaMatrix m_postureparentmat;
+	ChaVector3 m_posture_parent_pos_offset;
+	ChaVector3 m_posture_parent_rot_offset;
+
 
 	std::vector<IKROTREC> m_ikrotrec;
 	std::vector<IKROTREC> m_ikrotrec_u;
