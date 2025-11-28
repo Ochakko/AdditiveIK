@@ -2,6 +2,13 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2025/11/29
+　ModelWorldMatダイアログでモデルをカメラの子供にした場合の動作改善
+　　カメラを動かした際にモデルの動きがカクカクしすぎていたので、動きを細かくし注視点を調整することでカクカクを改善
+　　
+　　matWorld, matView, matProjのslot化についてはマージできてい"ない"
+　　(matWorld, matView, matProjのslot化では上記症状は改善しておらず、使い方が難しくなるので保留)
+
 2025/11/16
 　ModelWorldMatダイアログでモデルをカメラのPostureChildにできるように.
 　　カメラをモデルのPostureParentにした場合に　モデルの動きがカクカクするのは
