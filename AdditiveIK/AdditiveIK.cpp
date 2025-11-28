@@ -7810,7 +7810,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					delta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
 				}
 
-				if (g_ikkind == IKKIND_MOVE) {
+				if ((s_posturechildofcamera != nullptr) && (g_ikkind == IKKIND_MOVE)) {
 					delta *= 0.10f;
 				}
 				if (g_preciseRotation) {
@@ -36563,10 +36563,10 @@ int OnMouseMoveFunc()
 					CameraForEditDist(deltadist);
 				}
 
-				WCHAR strinfo[256] = { 0L };
-				swprintf_s(strinfo, L"OnMouseMoveFunc : posturechildofcamera : deltadist %.4f : cameradist %.4f",
-					deltadist, g_camdist);
-				OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
+				//WCHAR strinfo[256] = { 0L };
+				//swprintf_s(strinfo, L"OnMouseMoveFunc : posturechildofcamera : deltadist %.4f : cameradist %.4f",
+				//	deltadist, g_camdist);
+				//OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
 			}
 			else {
 				if (g_preciseRotation == true) {
@@ -44461,11 +44461,11 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider,
 
 			g_camdist = 1.0f;
 
-			WCHAR strinfo[256] = { 0L };
-			swprintf_s(strinfo, L"ChangeCameraDist : newcamdist > 0.0 : target(%.2f, %.2f, %.2f) : pos(%.2f, %.2f, %.2f)",
-				g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z,
-				g_camEye.x, g_camEye.y, g_camEye.z);
-			OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
+			//WCHAR strinfo[256] = { 0L };
+			//swprintf_s(strinfo, L"ChangeCameraDist : newcamdist > 0.0 : target(%.2f, %.2f, %.2f) : pos(%.2f, %.2f, %.2f)",
+			//	g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z,
+			//	g_camEye.x, g_camEye.y, g_camEye.z);
+			//OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
 		}
 		else {
 			ChaVector3 camvec2 = g_camtargetpos - g_camEye;
@@ -44479,11 +44479,11 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider,
 
 			g_camdist = 1.0f;
 
-			WCHAR strinfo[256] = { 0L };
-			swprintf_s(strinfo, L"ChangeCameraDist : newcamdist < 0.0 : target(%.2f, %.2f, %.2f) : pos(%.2f, %.2f, %.2f)",
-				g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z,
-				g_camEye.x, g_camEye.y, g_camEye.z);
-			OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
+			//WCHAR strinfo[256] = { 0L };
+			//swprintf_s(strinfo, L"ChangeCameraDist : newcamdist < 0.0 : target(%.2f, %.2f, %.2f) : pos(%.2f, %.2f, %.2f)",
+			//	g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z,
+			//	g_camEye.x, g_camEye.y, g_camEye.z);
+			//OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
 		}
 		
 	}
@@ -44530,10 +44530,10 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider,
 				g_camtargetpos = g_camEye - camvec * g_camdist;
 			}
 
-			WCHAR strinfo[256] = { 0L };
-			swprintf_s(strinfo, L"ChangeCameraDist : dist > 1.0, posturechildofcamera nullptr : camdist %.2f",
-				g_camdist);
-			OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
+			//WCHAR strinfo[256] = { 0L };
+			//swprintf_s(strinfo, L"ChangeCameraDist : dist > 1.0, posturechildofcamera nullptr : camdist %.2f",
+			//	g_camdist);
+			//OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
 		}
 		else {
 
@@ -44558,10 +44558,10 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider,
 			}
 			g_camdist = savedist3;
 
-			WCHAR strinfo[256] = { 0L };
-			swprintf_s(strinfo, L"ChangeCameraDist : dist < 1.0, posturechildofcamera nullptr : camdist %.2f",
-				g_camdist);
-			OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
+			//WCHAR strinfo[256] = { 0L };
+			//swprintf_s(strinfo, L"ChangeCameraDist : dist < 1.0, posturechildofcamera nullptr : camdist %.2f",
+			//	g_camdist);
+			//OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
 		}
 	}
 
