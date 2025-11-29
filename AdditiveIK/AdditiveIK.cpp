@@ -7811,7 +7811,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 
 				if ((s_posturechildofcamera != nullptr) && (g_ikkind == IKKIND_MOVE)) {
-					delta *= 0.10f;
+					delta *= 0.20f;
 				}
 				if (g_preciseRotation) {
 					delta *= 0.25f;

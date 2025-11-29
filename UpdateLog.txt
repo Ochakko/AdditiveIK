@@ -9,6 +9,9 @@ https://github.com/Ochakko/AdditiveIK
 　　matWorld, matView, matProjのslot化についてはマージできてい"ない"
 　　(matWorld, matView, matProjのslot化では上記症状は改善しておらず、使い方が難しくなるので保留)
 
+　　matWorld, matView, matProjの計算と描画がずれないように.
+　　　render時の引数にmatWorld, matView, matProjを含めるように.
+
 2025/11/16
 　ModelWorldMatダイアログでモデルをカメラのPostureChildにできるように.
 　　カメラをモデルのPostureParentにした場合に　モデルの動きがカクカクするのは

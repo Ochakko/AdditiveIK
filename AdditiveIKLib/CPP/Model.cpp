@@ -1879,6 +1879,8 @@ int CModel::RenderTest(bool withalpha, ChaScene* srcchascene, int lightflag, Cha
 			renderobj.diffusemult = diffusemult;
 			renderobj.materialdisprate = materialdisprate;
 			renderobj.mWorld = GetWorldMat().TKMatrix();
+			renderobj.mView = GetViewMat().TKMatrix();
+			renderobj.mProj = GetProjMat().TKMatrix();
 			renderobj.calcslotflag = calcslotflag;
 			renderobj.btflag = btflag;
 			renderobj.zcmpalways = zcmpalways;

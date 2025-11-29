@@ -25,6 +25,8 @@ namespace myRenderer
         int shadertype;//MQOSHADER_PBR, MQOSHADER_STD, MQOSHADER_TOONの中から選択　-1指定でAutoSelect
         int renderkind;//CDispObj::Render*()内でセット。RENDERKIND_NORMAL, _SHADOWMAP, _SHADOERECIEVER, ZPREPSSから選択
         Matrix mWorld;
+        Matrix mView;
+        Matrix mProj;
         bool withalpha;
         bool forcewithalpha;//rendergroup >= 2の場合強制半透明
         int lightflag;
@@ -88,6 +90,8 @@ namespace myRenderer
             shadertype = -1;
             renderkind = -1;
             mWorld.SetIdentity();
+            mView.SetIdentity();
+            mProj.SetIdentity();
             withalpha = false;
             forcewithalpha = false;
             //lightflag = 1;

@@ -1480,10 +1480,12 @@ int CDispObj::RenderNormalMaterial(RenderContext* rc, myRenderer::RENDEROBJ rend
 
 	Matrix mView, mProj;
 	if ((renderobj.renderkind != RENDERKIND_SHADOWMAP)) {
-		//mView = g_camera3D->GetViewMatrix(false);
-		//mProj = g_camera3D->GetProjectionMatrix();
-		mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
-		mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
+		////mView = g_camera3D->GetViewMatrix(false);
+		////mProj = g_camera3D->GetProjectionMatrix();
+		//mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
+		//mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
+		mView = renderobj.mView;
+		mProj = renderobj.mProj;
 	}
 	else {
 		//for shadow
@@ -1832,10 +1834,12 @@ int CDispObj::RenderNormalPM3Material(RenderContext* rc, myRenderer::RENDEROBJ r
 
 	Matrix mView, mProj;
 	if ((renderobj.renderkind != RENDERKIND_SHADOWMAP)) {
-		//mView = g_camera3D->GetViewMatrix(false);
-		//mProj = g_camera3D->GetProjectionMatrix();
-		mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
-		mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
+		////mView = g_camera3D->GetViewMatrix(false);
+		////mProj = g_camera3D->GetProjectionMatrix();
+		//mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
+		//mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
+		mView = renderobj.mView;
+		mProj = renderobj.mProj;
 	}
 	else {
 		//for shadow
@@ -2116,10 +2120,12 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 
 
 		Matrix mWorld, mView, mProj;
-		//mView = g_camera3D->GetViewMatrix(false);
-		//mProj = g_camera3D->GetProjectionMatrix();
-		mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
-		mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
+		////mView = g_camera3D->GetViewMatrix(false);
+		////mProj = g_camera3D->GetProjectionMatrix();
+		//mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
+		//mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
+		mView = renderobj.mView;
+		mProj = renderobj.mProj;
 		//定数バッファの設定、更新など描画の共通処理を実行する。
 
 		curmat->InstancingDrawCommon(rc, renderobj, mView, mProj, GetScaleInstancing());
@@ -2197,10 +2203,12 @@ int CDispObj::RenderLine(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 
 		Matrix mView, mProj;
-		//mView = g_camera3D->GetViewMatrix(false);
-		//mProj = g_camera3D->GetProjectionMatrix();
-		mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
-		mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
+		////mView = g_camera3D->GetViewMatrix(false);
+		////mProj = g_camera3D->GetProjectionMatrix();
+		//mView = renderobj.pmodel->GetViewMat().TKMatrix();//2024/03/02
+		//mProj = renderobj.pmodel->GetProjMat().TKMatrix();//2024/03/02
+		mView = renderobj.mView;
+		mProj = renderobj.mProj;
 		//定数バッファの設定、更新など描画の共通処理を実行する。
 		curmat->DrawCommon(rc, renderobj, mView, mProj, 0);
 

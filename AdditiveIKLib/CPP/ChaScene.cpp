@@ -772,6 +772,8 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 									renderobj.diffusemult = diffusemult;
 									renderobj.materialdisprate = materialdisprate;
 									renderobj.mWorld = curmodel->GetWorldMat().TKMatrix();
+									renderobj.mView = curmodel->GetViewMat().TKMatrix();
+									renderobj.mProj = curmodel->GetProjMat().TKMatrix();
 									renderobj.calcslotflag = calcslotflag;
 									renderobj.btflag = btflag;
 									if (curmodel->GetSkyFlag()) {
@@ -1055,6 +1057,8 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 							renderobj.diffusemult = diffusemult;
 							renderobj.materialdisprate = materialdisprate;
 							renderobj.mWorld = curmodel->GetWorldMat().TKMatrix();
+							renderobj.mView = curmodel->GetViewMat().TKMatrix();
+							renderobj.mProj = curmodel->GetProjMat().TKMatrix();
 							renderobj.calcslotflag = calcslotflag;
 							renderobj.btflag = btflag;
 							renderobj.zcmpalways = zcmpalways;
@@ -1204,6 +1208,8 @@ int ChaScene::RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
 							renderobj.diffusemult = diffusemult;
 							renderobj.materialdisprate = materialdisprate;
 							renderobj.mWorld = curmodel->GetWorldMat().TKMatrix();
+							renderobj.mView = curmodel->GetViewMat().TKMatrix();
+							renderobj.mProj = curmodel->GetProjMat().TKMatrix();
 							renderobj.calcslotflag = calcslotflag;
 							renderobj.btflag = btflag;
 							renderobj.zcmpalways = zcmpalways;
@@ -1345,6 +1351,8 @@ int ChaScene::AddToRefPos(CModel* srcmodel, bool forcewithalpha, myRenderer::Ren
 							renderobj.diffusemult = diffusemult;
 							renderobj.materialdisprate = materialdisprate;
 							renderobj.mWorld = curmodel->GetWorldMat().TKMatrix();
+							renderobj.mView = curmodel->GetViewMat().TKMatrix();
+							renderobj.mProj = curmodel->GetProjMat().TKMatrix();
 							renderobj.calcslotflag = calcslotflag;
 							renderobj.btflag = btflag;
 							renderobj.zcmpalways = zcmpalways;
