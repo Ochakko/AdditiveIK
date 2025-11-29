@@ -2454,3 +2454,59 @@ int ChaScene::FindModelIndex(CModel* srcmodel)
 
 	return -1;
 }
+
+BOOL ChaScene::ExistCameraChildModel()
+{
+	int modelnum = GetModelNum();
+	if (modelnum <= 0) {
+		return FALSE;
+	}
+
+	int modelindex;
+	for (modelindex = 0; modelindex < modelnum; modelindex++) {
+		MODELELEM curme = GetModelElem(modelindex);
+		if ((curme.modelptr != nullptr) && (curme.modelptr->GetPostureChildOfCameraFlag() == true)) {
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+void ChaScene::SetCameraPostureToChildModel()
+{
+	int modelnum = GetModelNum();
+	if (modelnum <= 0) {
+		return;
+	}
+
+	int modelindex;
+	for (modelindex = 0; modelindex < modelnum; modelindex++) {
+		MODELELEM curme = GetModelElem(modelindex);
+		CModel* curmodel = curme.modelptr;
+		if ((curmodel != nullptr) && (curmodel->GetPostureChildOfCameraFlag() == true)) {
+			ChaVector3 postureoffset_position = curmodel->GetPostureParentOffset_Position();
+			ChaVector3 postureoffset_rotation = curmodel->GetPostureParentOffset_Rotation();
+
+			ChaMatrix postureoffset_tramat;
+			postureoffset_tramat.SetIdentity();
+			postureoffset_tramat.SetTranslation(postureoffset_position);
+			CQuaternion postureoffset_q;
+			postureoffset_q.SetRotationXYZ(nullptr, postureoffset_rotation);
+			ChaMatrix postureoffset_rotmat;
+			postureoffset_rotmat = postureoffset_q.MakeRotMatX();
+			ChaMatrix postureoffsetmat = postureoffset_rotmat * postureoffset_tramat;
+
+			ChaMatrix curcameramat;
+			curcameramat.SetParams(g_camera3D->GetViewMatrix(false));
+			ChaMatrix invcurcameramat = ChaMatrixInv(curcameramat);
+
+			ChaMatrix newposturemat;
+			newposturemat = postureoffsetmat * invcurcameramat;
+
+			curmodel->SetPostureParentMat(newposturemat);
+			curmodel->CalcModelWorldMatOnLoad(nullptr);
+			curmodel->SetPostureParentFlag(true);
+		}
+	}
+}

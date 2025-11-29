@@ -137,6 +137,8 @@ public:
 
 
 	int FindModelIndex(CModel* srcmodel);
+	BOOL ExistCameraChildModel();
+	void SetCameraPostureToChildModel();
 
 private:
 	void InitParams();

@@ -3644,7 +3644,25 @@ public: //accesser
 	bool GetPostureParentFlag() {
 		return m_postureparentflag;
 	}
+	void SetPostureChildOfCameraFlag(bool srcflag) {
+		m_posturecameraflag = srcflag;
 
+		if (srcflag) {
+			//オン
+			ResetModelWorldMat(nullptr);
+			CalcModelWorldMatOnLoad(nullptr);
+			SetPostureParentFlag(true);
+		}
+		else {
+			//オフ
+			BakePostureChildMatToModelWorldMat(nullptr);
+			SetPostureParentFlag(false);
+			CalcModelWorldMatOnLoad(nullptr);
+		}
+	}
+	bool GetPostureChildOfCameraFlag() {
+		return m_posturecameraflag;
+	}
 
 	//以下6関数は　カメラがPostureParentのときに使用
 	void SetPostureParentOffset_Position(ChaVector3 srcoffset) {
@@ -3972,10 +3990,11 @@ private:
 	bool m_mocapwalk;
 
 	bool m_postureparentflag;
+	bool m_posturecameraflag;
 	ChaMatrix m_postureparentmat;
 	ChaVector3 m_posture_parent_pos_offset;
 	ChaVector3 m_posture_parent_rot_offset;
-
+	
 
 	std::vector<IKROTREC> m_ikrotrec;
 	std::vector<IKROTREC> m_ikrotrec_u;
