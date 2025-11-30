@@ -29,7 +29,7 @@ private:
 	//int CheckFileVersion( XMLIOBUF* xmliobuf );
 	//int ReadFileInfo( XMLIOBUF* xmliobuf, int* charanumptr );
 	int ReadPostureChildElem(CModel* srcmodel, ChaScene* srcchascene, XMLIOBUF* xmlbuf);
-
+	int ReadPostureCamera(CModel* srcmodel, XMLIOBUF* xmlbuf);
 };
 
 #endif

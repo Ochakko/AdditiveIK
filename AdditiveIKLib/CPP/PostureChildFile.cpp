@@ -73,6 +73,32 @@ int CPostureChildFile::WritePostureChildFile(const WCHAR* srcfilepath, CModel* s
 	CallF( Write2File( "<?xml version=\"1.0\" encoding=\"Shift_JIS\"?>\r\n<PostureChild>\r\n" ), return 1 );  
 	CallF( WriteFileInfo(), return 1 );
 
+	{
+		CallF(Write2File("  <PostureCamera>\r\n"), return 1);
+
+		int posturecamera = srcmodel->GetPostureChildOfCameraFlag() ? 1 : 0;
+		CallF(Write2File("    <PostureChildOfCamera>%d</PostureChildOfCamera>\r\n",
+			posturecamera), return 1);
+
+		ChaVector3 offset_position, offset_rotation;
+		offset_position = srcmodel->GetPostureParentOffset_Position();
+		offset_rotation = srcmodel->GetPostureParentOffset_Rotation();
+
+		CallF(Write2File("    <OffsetX>%.2f</OffsetX>\r\n",
+			offset_position.x), return 1);
+		CallF(Write2File("    <OffsetY>%.2f</OffsetY>\r\n",
+			offset_position.y), return 1);
+		CallF(Write2File("    <OffsetZ>%.2f</OffsetZ>\r\n",
+			offset_position.z), return 1);
+		CallF(Write2File("    <OffsetRotationX>%.2f</OffsetRotationX>\r\n",
+			offset_rotation.x), return 1);
+		CallF(Write2File("    <OffsetRotationY>%.2f</OffsetRotationY>\r\n",
+			offset_rotation.y), return 1);
+		CallF(Write2File("    <OffsetRotationZ>%.2f</OffsetRotationZ>\r\n",
+			offset_rotation.z), return 1);
+
+		CallF(Write2File("  </PostureCamera>\r\n"), return 1);
+	}
 
 	std::unordered_map<int, CBone*>::iterator itrbone;
 	for (itrbone = srcmodel->GetBoneListBegin(); itrbone != srcmodel->GetBoneListEnd(); itrbone++) {
@@ -94,7 +120,9 @@ int CPostureChildFile::WritePostureChildFile(const WCHAR* srcfilepath, CModel* s
 int CPostureChildFile::WriteFileInfo()
 {
 
-	CallF(Write2File("  <FileInfo>\r\n    <kind>PostureChildFile</kind>\r\n    <version>0001</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>PostureChildFile</kind>\r\n    <version>0001</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//2025/11/30 <PostureChildOfCamera>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>PostureChildFile</kind>\r\n    <version>0002</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	return 0;
 }
@@ -173,7 +201,6 @@ int CPostureChildFile::LoadPostureChildFile(const WCHAR* srcfilepath, CModel* sr
 	//m_motspeed = 1.0f;
 	//Read_Float( &m_xmliobuf, "<MotSpeed>", "</MotSpeed>", &m_motspeed );
 
-
 	int result = 0;
 	while ((result == 0) || (result == 2)) {
 		XMLIOBUF posturechildbuf;
@@ -184,6 +211,15 @@ int CPostureChildFile::LoadPostureChildFile(const WCHAR* srcfilepath, CModel* sr
 		}
 		else {
 			result = 1;
+		}
+	}
+
+	{
+		XMLIOBUF posturecamerabuf;
+		ZeroMemory(&posturecamerabuf, sizeof(XMLIOBUF));
+		int ret = SetXmlIOBuf(&m_xmliobuf, "<PostureCamera>", "</PostureCamera>", &posturecamerabuf);
+		if (ret == 0) {
+			int result2 = ReadPostureCamera(srcmodel, &posturecamerabuf);
 		}
 	}
 
@@ -225,6 +261,55 @@ int CPostureChildFile::CheckFileVersion( XMLIOBUF* xmlbuf )
 //
 //	return 0;
 //}
+
+int CPostureChildFile::ReadPostureCamera(CModel* srcmodel, XMLIOBUF* xmlbuf)
+{
+	if (!srcmodel || !xmlbuf) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	int getposturecamera = 0;
+	int posturecamera = 0;
+	getposturecamera = Read_Int(xmlbuf, "<PostureChildOfCamera>", "</PostureChildOfCamera>", &posturecamera);
+
+	int getoffsetX = 0;
+	float offsetX = 0.0f;
+	getoffsetX = Read_Float(xmlbuf, "<OffsetX>", "</OffsetX>", &offsetX);
+	int getoffsetY = 0;
+	float offsetY = 0.0f;
+	getoffsetY = Read_Float(xmlbuf, "<OffsetY>", "</OffsetY>", &offsetY);
+	int getoffsetZ = 0;
+	float offsetZ = 0.0f;
+	getoffsetZ = Read_Float(xmlbuf, "<OffsetZ>", "</OffsetZ>", &offsetZ);
+
+	int getoffsetRotationX = 0;
+	float offsetRotationX = 0.0f;
+	getoffsetRotationX = Read_Float(xmlbuf, "<OffsetRotationX>", "</OffsetRotationX>", &offsetRotationX);
+	int getoffsetRotationY = 0;
+	float offsetRotationY = 0.0f;
+	getoffsetRotationY = Read_Float(xmlbuf, "<OffsetRotationY>", "</OffsetRotationY>", &offsetRotationY);
+	int getoffsetRotationZ = 0;
+	float offsetRotationZ = 0.0f;
+	getoffsetRotationZ = Read_Float(xmlbuf, "<OffsetRotationZ>", "</OffsetRotationZ>", &offsetRotationZ);
+
+	if ((getoffsetX == 0) && (getoffsetY == 0) && (getoffsetZ == 0)) {
+		ChaVector3 offset = ChaVector3(offsetX, offsetY, offsetZ);
+		srcmodel->SetPostureParentOffset_Position(offset);
+	}
+	if ((getoffsetRotationX == 0) && (getoffsetRotationY == 0) && (getoffsetRotationZ == 0)) {
+		ChaVector3 offset_rotation = ChaVector3(offsetRotationX, offsetRotationY, offsetRotationZ);
+		srcmodel->SetPostureParentOffset_Rotation(offset_rotation);
+	}
+	if (getposturecamera == 0) {
+		if (posturecamera == 1) {
+			srcmodel->SetPostureChildOfCameraFlag(true);
+		}
+	}
+
+	return 0;
+}
+
 int CPostureChildFile::ReadPostureChildElem(CModel* srcmodel, ChaScene* srcchascene, XMLIOBUF* xmlbuf)
 {
 	if (!srcmodel || !srcchascene || !xmlbuf) {
@@ -255,7 +340,6 @@ int CPostureChildFile::ReadPostureChildElem(CModel* srcmodel, ChaScene* srcchasc
 	int getchildmodelname = 0;
 	char childmodelname[MAX_PATH] = { 0 };
 	getchildmodelname = Read_Str(xmlbuf, "<PostureChildModelName>", "</PostureChildModelName>", childmodelname, MAX_PATH);
-
 
 	int getoffsetX = 0;
 	float offsetX = 0.0f;
@@ -299,6 +383,7 @@ int CPostureChildFile::ReadPostureChildElem(CModel* srcmodel, ChaScene* srcchasc
 					parentbone->SetPostureChildModel(childmodel);
 					parentbone->SetPostureChildFlag(true);
 				}
+
 			}
 			else {
 				_ASSERT(0);

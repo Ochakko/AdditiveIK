@@ -1035,7 +1035,8 @@ static double s_cameraframe = 0.0;
 static float s_fAspectRatio = 1.0f;
 //static float g_fovy = (float)(PI / 4.0);
 //static float s_cammvstep = 100.0f;
-static float s_cammvstep = 500.0f;
+//static float s_cammvstep = 500.0f;
+static float s_cammvstep = 1000.0f;//2025/11/30
 static int s_editmotionflag = -1;
 static int s_editcameraflag = -1;//2024/06/16
 static int s_tkeyflag = 0;
@@ -36494,8 +36495,6 @@ int OnMouseMoveFunc()
 			}
 			cammv *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
 
-			//2025/11/24 SetPostureChildOfCamera使用時に　ChildModelがカクカクしないように細かく動かす必要有り
-			//cammv *= 0.10f;
 			ChaVector3Normalize(&cammv, &cammv);
 
 			CameraForEditMove(cammv);
@@ -44449,8 +44448,10 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider,
 			g_befcamEye = g_camEye;
 			g_befcamtargetpos = g_camtargetpos;
 
-			g_camEye = g_camEye + camvec * 5.0f;
-			g_camtargetpos = g_camEye - camvec * 4.0f;
+			//g_camEye = g_camEye + camvec * 5.0f;
+			//g_camtargetpos = g_camEye - camvec * 4.0f;
+			g_camEye = g_camEye + camvec * newcamdist;
+			g_camtargetpos = g_camEye - camvec * 1.0f;
 
 			g_camdist = 1.0f;
 
@@ -44467,7 +44468,9 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider,
 			g_befcamEye = g_camEye;
 			g_befcamtargetpos = g_camtargetpos;
 
-			g_camtargetpos = g_camtargetpos + camvec2 * 5.0f;
+			//g_camtargetpos = g_camtargetpos + camvec2 * 5.0f;
+			//g_camEye = g_camtargetpos - camvec2 * 1.0f;
+			g_camtargetpos = g_camtargetpos + camvec2 * -newcamdist;
 			g_camEye = g_camtargetpos - camvec2 * 1.0f;
 
 			g_camdist = 1.0f;
