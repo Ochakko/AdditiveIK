@@ -3408,14 +3408,14 @@ public: //accesser
 	}
 	void ResetBtMovableReq(CBone* srcbone);
 
-	void SetCSFirstDispatchFlag(bool srcflag)
-	{
-		m_csfirstdispatchflag = srcflag;
-	}
-	bool GetCSFirstDispatchFlag()
-	{
-		return m_csfirstdispatchflag;
-	}
+	//void SetCSFirstDispatchFlag(bool srcflag)
+	//{
+	//	m_csfirstdispatchflag = srcflag;
+	//}
+	//bool GetCSFirstDispatchFlag()
+	//{
+	//	return m_csfirstdispatchflag;
+	//}
 
 	void SetSecondCallOfMotion2Bt(bool secondcall) {
 		m_secondCallOfMotion2Bt = secondcall;
@@ -3769,7 +3769,7 @@ private:
 
 
 	bool m_updatefl4x4flag;
-	bool m_csfirstdispatchflag;
+	//bool m_csfirstdispatchflag;
 
 	bool m_underfootrig;
 	//bool m_footrig_onlyonground;

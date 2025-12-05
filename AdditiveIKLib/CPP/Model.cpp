@@ -539,7 +539,7 @@ int CModel::InitParams()
 	m_underfootrig = false;
 	//m_footrig_onlyonground = false;
 
-	m_csfirstdispatchflag = true;
+	//m_csfirstdispatchflag = true;
 
 
 	m_instancingnum = 0;

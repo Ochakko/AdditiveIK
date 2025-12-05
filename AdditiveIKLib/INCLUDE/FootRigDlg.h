@@ -64,7 +64,8 @@ public:
 	int SaveFootRigFile(WCHAR* srcprojectdir, WCHAR* srcprojectname, ChaScene* srcchascene);
 	int LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname);
 
-	int Update(bool limitdegflag);
+	int OnFrameMove(bool limitdegflag, bool restoreflag);
+	int RestoreBoneMotionForFootRig();
 	void SetSaveModelWM(CModel* srcmodel, ChaMatrix srcmat);
 
 	bool IsEnableFootRig(CModel* srcmodel);
@@ -87,7 +88,7 @@ private:
 
 	bool IsValidModel(CModel* srcmodel);//modelが削除されている場合はfalseを返す
 
-
+	int Update(bool limitdegflag);
 	int Update(bool limitdegflag, CModel* srcmodel);
 	void FootRig(bool secondcalling,
 		bool limitdegflag, CModel* srcmodel,

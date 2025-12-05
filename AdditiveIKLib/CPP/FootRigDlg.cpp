@@ -2207,6 +2207,51 @@ int CFootRigDlg::LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname)
 	return 0;
 }
 
+int CFootRigDlg::OnFrameMove(bool limitdegfag, bool restoreflag)
+{
+	//2025/12/06
+	//updateに関するモデルループを1回に.
+
+	if (g_underRetargetFlag == false) {//2025/02/09 retarget中は実行しない
+		std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
+		for (itrelem = m_footrigelem.begin(); itrelem != m_footrigelem.end(); itrelem++)//FootRigに登録されているモデルだけ
+		{
+			CModel* curmodel = itrelem->first;
+			if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
+				curmodel->ResetFootRigUpdated();
+				curmodel->SaveBoneMotionWM();
+				int result = Update(limitdegfag, curmodel);
+
+				if (restoreflag) {
+					//bt simu時にはUpdateMatrixをWaitした後で単独で呼び出す
+					//UpdateMatrixで編集したフレームモーションをcurmpにセットした後で、フレームモーションを編集前に元に戻す
+					curmodel->RestoreBoneMotionWM();
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+int CFootRigDlg::RestoreBoneMotionForFootRig()
+{
+	//この処理はOnFrameMove()に含まれているが
+	//bt simu時にはUpdateMatrixをWaitした後で単独で呼び出す
+
+	if (g_underRetargetFlag == false) {//2025/02/09 retarget中は実行しない
+		std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
+		for (itrelem = m_footrigelem.begin(); itrelem != m_footrigelem.end(); itrelem++)//FootRigに登録されているモデルだけ
+		{
+			CModel* curmodel = itrelem->first;
+			if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
+				//UpdateMatrixで編集したフレームモーションをcurmpにセットした後で、フレームモーションを編集前に元に戻す
+				curmodel->RestoreBoneMotionWM();
+			}
+		}
+	}
+	return 0;
+}
+
 int CFootRigDlg::Update(bool limitdegflag)
 {
 	if (g_underRetargetFlag) {

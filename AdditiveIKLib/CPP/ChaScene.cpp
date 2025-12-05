@@ -191,19 +191,19 @@ void ChaScene::SetUpdateSlot()
 	}
 }
 
-void ChaScene::ResetCSFirstDispatchFlag()
-{
-	if (!m_modelindex.empty()) {
-		int modelnum = (int)m_modelindex.size();
-		int modelindex;
-		for (modelindex = 0; modelindex < modelnum; modelindex++) {
-			CModel* curmodel = m_modelindex[modelindex].modelptr;
-			if (curmodel) {
-				curmodel->SetCSFirstDispatchFlag(true);
-			}
-		}
-	}
-}
+//void ChaScene::ResetCSFirstDispatchFlag()
+//{
+//	if (!m_modelindex.empty()) {
+//		int modelnum = (int)m_modelindex.size();
+//		int modelindex;
+//		for (modelindex = 0; modelindex < modelnum; modelindex++) {
+//			CModel* curmodel = m_modelindex[modelindex].modelptr;
+//			if (curmodel) {
+//				curmodel->SetCSFirstDispatchFlag(true);
+//			}
+//		}
+//	}
+//}
 
 
 
@@ -892,36 +892,13 @@ void ChaScene::WaitForUpdateMatrixModels()
 	//2024/09/03
 	//UpdateMatrixの計算が終わってからFootRigのアップデートをする
 	//BtSimu中(previewFlag 4 or 5)は　Motion2Bt()からFootRigのアップデートを呼ぶ
-	bool underRetarget = false;
-	if ((g_underRetargetFlag == false) && (g_previewFlag != 4) && (g_previewFlag != 5) && m_footrigdlg) {//2025/02/09 retarget中は実行しない
-		{
-			int modelnum = (int)m_modelindex.size();
-			int modelindex;
-			for (modelindex = 0; modelindex < modelnum; modelindex++) {
-				CModel* curmodel = m_modelindex[modelindex].modelptr;
-				if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
-					curmodel->ResetFootRigUpdated();
-					curmodel->SaveBoneMotionWM();
-				}
-			}
-		}
-
-		if (g_underRetargetFlag == false) {//2025/02/09 retarget中は実行しない
-			m_footrigdlg->Update(g_limitdegflag);
-		}
+	if (m_footrigdlg && (g_previewFlag != 4) && (g_previewFlag != 5)) {
+		bool restoreflag = true;
+		m_footrigdlg->OnFrameMove(g_limitdegflag, restoreflag);
 	}
-
-	//2025/02/09 retarget中は実行しない
-	//previewFlag == 4のときにも実行
-	if (g_underRetargetFlag == false) {
-		int modelnum = (int)m_modelindex.size();
-		int modelindex;
-		for (modelindex = 0; modelindex < modelnum; modelindex++) {
-			CModel* curmodel = m_modelindex[modelindex].modelptr;
-			if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
-				curmodel->RestoreBoneMotionWM();
-			}
-		}
+	else if (m_footrigdlg && ((g_previewFlag == 4) || (g_previewFlag == 5))) {
+		//bt simu時には　このタイミングでRestoreだけ呼び出す
+		m_footrigdlg->RestoreBoneMotionForFootRig();
 	}
 
 }
@@ -2005,30 +1982,14 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 		return 1;
 	}
 
-	{
-		int modelnum = (int)m_modelindex.size();
-		int modelindex;
-		for (modelindex = 0; modelindex < modelnum; modelindex++) {
-			CModel* curmodel = m_modelindex[modelindex].modelptr;
-			if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
-				curmodel->ResetFootRigUpdated();
-				curmodel->SaveBoneMotionWM();
-
-				//ChaMatrix wmat = curmodel->GetWorldMat();
-				//bool needwait = true;
-				//int refposindex = 0;
-				//curmodel->UpdateMatrix(false, &wmat, pmView, pmProj, needwait, refposindex);
-			}
-		}
-	}
-
 	//########
 	//FootRig
 	//########
 	//previewFlag 4 or 5の場合のFootRig
 	//BtSimu以外のときのFootRigはWaitForUpdateMatrixModels()から呼ぶ
 	if (m_footrigdlg) {
-		m_footrigdlg->Update(g_limitdegflag);
+		bool restoreflag = false;
+		m_footrigdlg->OnFrameMove(g_limitdegflag, restoreflag);
 	}
 
 	bool secondcall = false;

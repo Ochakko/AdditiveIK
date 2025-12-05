@@ -3494,10 +3494,12 @@ INT WINAPI wWinMain(
 			//SetWindowText(g_mainhwnd, strmaintitle);
 			if (g_writeFbxState == WRITEFBX_NONE) {//2024/02/10
 
-				//2024/08/09
-				//リターゲットバッチ中にタイミングでエラー　OnUserFrameMove()の中に入れて バッチ中はスキップ
-				//g_chascene->SetUpdateSlot();//2023/03/13 
-				////g_chascene->ResetCSFirstDispatchFlag();
+				//計算用スロットインデックスの更新
+				//2025/12/06 処理の流れがわかりやすいようにここに移動(条件分付きで)
+				if ((InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_retargetbatchflag, 0) == 0)) {
+					//リターゲットバッチ中にタイミングでエラー(ChaSceneのm_modelindexのCModel*の値が不正)　OnUserFrameMove()の中に入れて バッチ中はスキップ
+					g_chascene->SetUpdateSlot();
+				}
 
 				//ドキュメント更新
 				int loopstartflag = 0;
@@ -3505,6 +3507,10 @@ INT WINAPI wWinMain(
 
 				//ビュー更新
 				OnFrameRender(&renderingEngine, &renderContext, s_fTime, s_fElapsedTime, loopstartflag);
+
+				////UpdateMatrixスレッド終了待ち
+				////ここで呼ぶよりも、GraphicsEngine.cppのEndRender()で描画の終了待ちの前で実行する(描画の間もUpdateMatrixを計算する)のが一番速いようだ.FootRigをオフにして時間比較すると顕著に差が出る.
+				//g_chascene->WaitForUpdateMatrixModels();
 
 				if (g_infownd && (dbgcount < 60)) {
 					g_infownd->UpdateWindow();//起動時に白くなる不具合に対して　応急処置
@@ -5980,12 +5986,6 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		return;//!!!!!!!!!!!!!!!!!!!
 	}
 
-
-	//2024/08/09
-	//リターゲットバッチ中にタイミングでエラー(ChaSceneのm_modelindexのCModel*の値が不正)　OnUserFrameMove()の中に入れて バッチ中はスキップ
-	g_chascene->SetUpdateSlot();
-
-
 	SetCameraModel();
 
 
@@ -6065,6 +6065,13 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		////#replacing comment out#g_Camera->FrameMove(fElapsedTime);
 		double difftime = fTime - savetime;
 		//double difftime = fElapsedTime;
+
+
+		//2025/12/06 PreviewStop時には時間を進めない
+		if (g_previewFlag == 0) {
+			difftime = 0.0;
+		}
+
 
 		//Preview前に　CameraAnimのために　時間を確定する必要がある
 		//時間が確定 --> CameraAnim --> s_matWorld, s_matProj, s_matVP確定 --> Preview時のUpdataMatrix(  s_matVP )
@@ -15545,7 +15552,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.53\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.54\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -35697,7 +35704,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.54 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.55 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -36494,8 +36501,6 @@ int OnMouseMoveFunc()
 				cammv *= 0.250f;
 			}
 			cammv *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
-
-			ChaVector3Normalize(&cammv, &cammv);
 
 			CameraForEditMove(cammv);
 		}
@@ -39229,7 +39234,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.54 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.55 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {
