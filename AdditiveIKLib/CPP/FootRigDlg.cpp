@@ -2207,7 +2207,7 @@ int CFootRigDlg::LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname)
 	return 0;
 }
 
-int CFootRigDlg::OnFrameMove(bool limitdegfag, bool restoreflag)
+int CFootRigDlg::OnFrameMove(bool limitdegflag, bool restoreflag)
 {
 	//2025/12/06
 	//updateに関するモデルループを1回に.
@@ -2218,14 +2218,27 @@ int CFootRigDlg::OnFrameMove(bool limitdegfag, bool restoreflag)
 		{
 			CModel* curmodel = itrelem->first;
 			if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
-				curmodel->ResetFootRigUpdated();
-				curmodel->SaveBoneMotionWM();
-				int result = Update(limitdegfag, curmodel);
+				if (itrelem->second.IsEnable()) {
+					//FootRigがオンの場合
+					curmodel->ResetFootRigUpdated();
+					curmodel->SaveBoneMotionWM();
+					int result = Update(limitdegflag, curmodel);
 
-				if (restoreflag) {
-					//bt simu時にはUpdateMatrixをWaitした後で単独で呼び出す
-					//UpdateMatrixで編集したフレームモーションをcurmpにセットした後で、フレームモーションを編集前に元に戻す
-					curmodel->RestoreBoneMotionWM();
+					if (restoreflag) {
+						//bt simu時にはUpdateMatrixをWaitした後で単独で呼び出す
+						//UpdateMatrixで編集したフレームモーションをcurmpにセットした後で、フレームモーションを編集前に元に戻す
+						curmodel->RestoreBoneMotionWM();
+					}
+				}
+				else {
+					//FootRigがオフの場合
+					curmodel->ResetFootRigUpdated();
+
+					//ChaMatrix matWorld = curmodel->GetWorldMat(GETWM_MIXED);
+					//ChaMatrix matView = curmodel->GetViewMat();
+					//ChaMatrix matProj = curmodel->GetProjMat();
+					//int refposindex = 0;
+					//curmodel->UpdateMatrix(limitdegflag, &matWorld, &matView, &matProj, true, refposindex);
 				}
 			}
 		}
@@ -2243,7 +2256,10 @@ int CFootRigDlg::RestoreBoneMotionForFootRig()
 		for (itrelem = m_footrigelem.begin(); itrelem != m_footrigelem.end(); itrelem++)//FootRigに登録されているモデルだけ
 		{
 			CModel* curmodel = itrelem->first;
-			if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
+			if (curmodel && (curmodel->ExistCurrentMotion() == true) && 
+				itrelem->second.IsEnable()) {
+				//FootRigがオンの場合のみ
+				// 
 				//UpdateMatrixで編集したフレームモーションをcurmpにセットした後で、フレームモーションを編集前に元に戻す
 				curmodel->RestoreBoneMotionWM();
 			}

@@ -897,10 +897,10 @@ void ChaScene::WaitForUpdateMatrixModels()
 		m_footrigdlg->OnFrameMove(g_limitdegflag, restoreflag);
 	}
 	else if (m_footrigdlg && ((g_previewFlag == 4) || (g_previewFlag == 5))) {
+		//footrigdlg->OnFarmeMove()のrestoreflagにfalseを指定した場合、ここで処理
 		//bt simu時には　このタイミングでRestoreだけ呼び出す
-		m_footrigdlg->RestoreBoneMotionForFootRig();
+		m_footrigdlg->RestoreBoneMotionForFootRig();//FootRigがオンのModelだけ処理される
 	}
-
 }
 
 int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
@@ -1916,7 +1916,7 @@ int ChaScene::SetBtMotion(bool limitdegflag, double nextframe,
 		int modelindex;
 		for (modelindex = 0; modelindex < modelnum; modelindex++) {
 			CModel* curmodel = m_modelindex[modelindex].modelptr;
-			if (curmodel && (curmodel->ExistCurrentMotion() == false)) {
+			if (curmodel && (curmodel->ExistCurrentMotion() == false)) {//###### motion無しの場合
 				ChaMatrix wmat = curmodel->GetWorldMat();
 				bool needwait = true;
 				int refposindex = 0;

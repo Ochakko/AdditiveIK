@@ -3509,7 +3509,8 @@ INT WINAPI wWinMain(
 				OnFrameRender(&renderingEngine, &renderContext, s_fTime, s_fElapsedTime, loopstartflag);
 
 				////UpdateMatrixスレッド終了待ち
-				////ここで呼ぶよりも、GraphicsEngine.cppのEndRender()で描画の終了待ちの前で実行する(描画の間もUpdateMatrixを計算する)のが一番速いようだ.FootRigをオフにして時間比較すると顕著に差が出る.
+				////ここで呼ぶよりも、GraphicsEngine.cppのEndRender()で描画の終了待ちの前で実行する(描画の間もUpdateMatrixを計算する)のが一番速いようだ.
+				////FootRigをオフにして呼び出し場所による時間比較をすると顕著に差が出る.
 				//g_chascene->WaitForUpdateMatrixModels();
 
 				if (g_infownd && (dbgcount < 60)) {

@@ -1001,11 +1001,6 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 	}
 
 	//###########################
-	if (GetFootRigUpdated()) {//2024/09/06
-		return 0;
-	}
-
-
 
 	//2023/08/26
 	if (GetParModel() && (GetParModel()->GetInView(refposindex) == false)) {
@@ -1019,6 +1014,12 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 	//一方で　GetBefNextMPには　フレーム間姿勢の補間のために　小数有りの時間を渡す　justが無くても　befとnextを返す
 
 	double roundingframe = RoundingTime(srcframe);
+
+	if (GetFootRigUpdated() && !(GetParent(false) && GetParent(false)->GetFootRigUpdated())) {//2025/12/06
+		//下方コードの必要処理
+		CalcPostureChildWorldMat(limitdegflag, srcmotid, roundingframe);
+		return 0;
+	}
 
 	//2023/04/28
 	if (IsNotSkeleton()) {
@@ -1059,15 +1060,16 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 			ChaMatrix newworldmat;
 			ChaMatrixIdentity(&newworldmat);
 
-
-			//###################################
-			//補間のためにroundingframeではない
-			//###################################
 			if (GetFootRigUpdated() || (GetParent(false) && GetParent(false)->GetFootRigUpdated())) {
+				//親がFootRig対象の場合
+				// 
 				//2024/09/06
 				newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 			}
 			else {
+				//###################################
+				//補間のためにroundingframeではない
+				//###################################				
 				CallF(CalcFBXMotion(limitdegflag, srcmotid, srcframe, &(m_curmp[m_updateslot]), &existflag), return 1);
 				//newworldmat = m_curmp.GetWorldMat();// * *wmat;
 				newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
@@ -1199,7 +1201,10 @@ void CBone::CalcPostureChildWorldMat(int limitdegflag, int srcmotid, double roun
 		if (GetPostureChildModel()) {
 			if (GetPostureChildFlag() && GetPostureChildModel()->GetPostureParentFlag()) {
 				//ChaMatrix posturemat = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
-				ChaMatrix posturemat = GetWorldMat(limitdegflag, srcmotid, roundingframe, nullptr);
+				//ChaMatrix posturemat = GetWorldMat(limitdegflag, srcmotid, roundingframe, nullptr);
+				
+				ChaMatrix posturemat = m_curmp[m_updateslot].GetAnimMat();//2025/12/06 FootRigの場合もあるのでcurmpを使用する
+
 				////ChaMatrix modelworldmat = GetPostureChildModel()->GetWorldMat(GETWM_NO_POSTUREPARENT);
 				ChaMatrix posturerotmat = ChaMatrixRot(posturemat);
 
