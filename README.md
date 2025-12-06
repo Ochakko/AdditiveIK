@@ -298,6 +298,8 @@ Smooth平滑化<br>
 [ちょっと前のAdditiveIKのオペ画面 2025/05/06](https://youtu.be/40jmur2J2CY "Usage example14")<br>
 
 [FootRigの曲げ具合調整パラメータ 2025/10/12](https://youtu.be/tSSufCXFsdk "Usage example15")<br>
+
+[モデルをカメラの子供に設定 2025/11/29](https://youtu.be/PL3fJrAVSS0 "Usage example16")<br>
 <br>
 <br>
 # Site

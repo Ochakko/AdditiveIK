@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/12/06
-　AdditiveIK 1.0.0.55 RC1(リリース候補1)
+　AdditiveIK 1.0.0.55 release
 　　1.0.0.54からの変更点
 　　　不具合修正
 　　　　カメラアイコンドラッグ時のカメラ移動量を修正
