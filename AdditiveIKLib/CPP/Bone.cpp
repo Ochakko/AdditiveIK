@@ -1015,7 +1015,8 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 	double roundingframe = RoundingTime(srcframe);
 
-	if (GetFootRigUpdated() && !(GetParent(false) && GetParent(false)->GetFootRigUpdated())) {//2025/12/06
+	//if (GetFootRigUpdated()) {//2025/12/06 C1_01_ModelSelect_02.chaで物理無しMOAのWalkLoop時に PostureChildモデルの位置が瞬間的に前方に大きくずれた
+	if (GetFootRigUpdated() && !(GetParent(false) && GetParent(false)->GetFootRigUpdated())) {//2025/12/06 10055RC1　C1_01_ModelSelect_02.chaで物理無しMOAのWalkLoop時にうまくいく 
 		//下方コードの必要処理
 		CalcPostureChildWorldMat(limitdegflag, srcmotid, roundingframe);
 		return 0;
@@ -1060,7 +1061,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 			ChaMatrix newworldmat;
 			ChaMatrixIdentity(&newworldmat);
 
-			if (GetFootRigUpdated() || (GetParent(false) && GetParent(false)->GetFootRigUpdated())) {
+			if (GetParent(false) && GetParent(false)->GetFootRigUpdated()) {//2025/12/06 10055RC1　C1_01_ModelSelect_02.chaで物理無しMOAのWalkLoop時にうまくいく
 				//親がFootRig対象の場合
 				// 
 				//2024/09/06
