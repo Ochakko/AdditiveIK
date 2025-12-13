@@ -2222,13 +2222,14 @@ int CFootRigDlg::OnFrameMove(bool limitdegflag)
 			if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
 				if (itrelem->second.IsEnable()) {
 					//FootRigがオンの場合
-					//curmodel->ResetFootRigUpdated();
+					//curmodel->ResetFootRigUpdated();//2025/12/13 フラグリセットはFootRigオフの時だけ. フラグオンはRigControlFootRig()内で行う.
 					int result = Update(limitdegflag, curmodel);
 				}
 				else {
 					//FootRigがオフの場合
 					curmodel->ResetFootRigUpdated();
 
+					//2025/12/13 全ボーンに対するUpdateMatrix()はOnFrameMove()呼び出しレベルで呼び出すので、ここでは不要.
 					//ChaMatrix matWorld = curmodel->GetWorldMat(GETWM_MIXED);
 					//ChaMatrix matView = curmodel->GetViewMat();
 					//ChaMatrix matProj = curmodel->GetProjMat();
@@ -2412,6 +2413,7 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 			//	}
 			//}
 
+			//2025/12/13 RigControlFootRig()でフラグを付けながら足を曲げて、全ボーンに対するUpdateMatrix()でフラグをみて処理を分けることにした.GetUpdateBoneForUpdateMatrix()は不要.
 			////2025/09/07
 			//ChaMatrix matWorld = srcmodel->GetWorldMat(GETWM_MIXED);
 			//ChaMatrix matView = srcmodel->GetViewMat();
@@ -2420,6 +2422,9 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 			//	pleftfootinfo->GetUpdateBoneForUpdateMatrix(), &matWorld, &matView, &matProj, false);
 			//srcmodel->UpdateMatrixFootRigReq(false, limitdegflag,
 			//	prightfootinfo->GetUpdateBoneForUpdateMatrix(), &matWorld, &matView, &matProj, false);
+			 
+			
+			//2025/12/13 全ボーンに対するUpdateMatrix()はOnFrameMove()呼び出しレベルで呼び出すので、ここでは不要.
 			////### どのボーンの上にchildmodelが乗っているかここではわからないので　TopBoneからのUpdateMatrixが必要 ### --> FootRigのOnFrameMove()呼び出しレベルでUpdateMatrix()を呼び出すのでコメントアウト
 			////int refposindex = 0;
 			////srcmodel->UpdateMatrix(limitdegflag, &matWorld, &matView, &matProj, true, refposindex);

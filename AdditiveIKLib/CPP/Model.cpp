@@ -15755,7 +15755,7 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 
 						int ismovable2 = 1;
 
-						curbone->SetFootRigUpdated(true);//###### 2025/12/13 #######
+						curbone->SetFootRigUpdated(true);//###### 2025/12/13 ####### FootRigで編集したboneにはマークを付けてUpdateMatrix時に別処理をする
 
 						bool keynum1flag = true;
 						bool skip_ikconstraint_flag = false;

@@ -1199,7 +1199,11 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 	m_befupdatetime = srcframe;
 
 
-	if (GetFootRigUpdated() && (g_previewFlag != 4) && (g_previewFlag != 5)) {
+	//2025/12/13 RestoreMotionForFootRig()は、BtSimu時にもここで呼び出す.
+	//BtSimu以外の場合には、ここでボーン姿勢をFootRigでの編集以前の姿勢に戻す.
+	//BtSimu時には、ChaSceneのWaitForUpdateMatrixModels()内から呼び出す.
+	//if (GetFootRigUpdated() && (g_previewFlag != 4) && (g_previewFlag != 5)) {
+	if (GetFootRigUpdated()) {
 		RestoreMotionForFootRig(srcmotid, roundingframe);
 	}
 
