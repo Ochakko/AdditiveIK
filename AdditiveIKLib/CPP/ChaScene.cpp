@@ -216,6 +216,11 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* 
 
 	if (!m_modelindex.empty()) {
 
+
+		if (m_footrigdlg) {
+			m_footrigdlg->OnFrameMove(g_limitdegflag);
+		}
+
 		//m_totalupdatethreadsnum = 0;
 
 		vector<CModel*> posturechildmodel;
@@ -889,14 +894,16 @@ void ChaScene::WaitForUpdateMatrixModels()
 	//}
 
 
-	//2024/09/03
-	//UpdateMatrixの計算が終わってからFootRigのアップデートをする
-	//BtSimu中(previewFlag 4 or 5)は　Motion2Bt()からFootRigのアップデートを呼ぶ
-	if (m_footrigdlg && (g_previewFlag != 4) && (g_previewFlag != 5)) {
-		bool restoreflag = true;
-		m_footrigdlg->OnFrameMove(g_limitdegflag, restoreflag);
-	}
-	else if (m_footrigdlg && ((g_previewFlag == 4) || (g_previewFlag == 5))) {
+	////2024/09/03
+	////UpdateMatrixの計算が終わってからFootRigのアップデートをする
+	////BtSimu中(previewFlag 4 or 5)は　Motion2Bt()からFootRigのアップデートを呼ぶ
+	//if (m_footrigdlg && (g_previewFlag != 4) && (g_previewFlag != 5)) {
+	////	//bool restoreflag = true;
+	////	bool restoreflag = false;
+	//	m_footrigdlg->OnFrameMove(g_limitdegflag);
+	//}
+	//else 
+	if (m_footrigdlg && ((g_previewFlag == 4) || (g_previewFlag == 5))) {
 		//footrigdlg->OnFarmeMove()のrestoreflagにfalseを指定した場合、ここで処理
 		//bt simu時には　このタイミングでRestoreだけ呼び出す
 		m_footrigdlg->RestoreBoneMotionForFootRig();//FootRigがオンのModelだけ処理される
@@ -1988,8 +1995,7 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 	//previewFlag 4 or 5の場合のFootRig
 	//BtSimu以外のときのFootRigはWaitForUpdateMatrixModels()から呼ぶ
 	if (m_footrigdlg) {
-		bool restoreflag = false;
-		m_footrigdlg->OnFrameMove(g_limitdegflag, restoreflag);
+		m_footrigdlg->OnFrameMove(g_limitdegflag);
 	}
 
 	bool secondcall = false;

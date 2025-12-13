@@ -1,6 +1,11 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2025/12/13
+　FootRigに関する修正
+　　FootRigの一番親のボーンと同階層のボーンの姿勢が不安定になっていたのを修正
+　　　FootRigを設定したモデルのポスチャーちゃいるどのモデルが必要以上にガタガタ動いていた症状が解消
+　　処理の呼び出し方を修正
 
 2025/12/06
 　AdditiveIK 1.0.0.55 release

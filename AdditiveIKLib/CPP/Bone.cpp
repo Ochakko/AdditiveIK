@@ -1015,18 +1015,10 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 	double roundingframe = RoundingTime(srcframe);
 
-	//if (GetFootRigUpdated()) {//2025/12/06 C1_01_ModelSelect_02.chaで物理無しMOAのWalkLoop時に PostureChildモデルの位置が瞬間的に前方に大きくずれた
-	if (GetFootRigUpdated() && !(GetParent(false) && GetParent(false)->GetFootRigUpdated())) {//2025/12/06 10055RC1　C1_01_ModelSelect_02.chaで物理無しMOAのWalkLoop時にうまくいく 
-		//下方コードの必要処理
-		CalcPostureChildWorldMat(limitdegflag, srcmotid, roundingframe);
-		return 0;
-	}
-
 	//2023/04/28
 	if (IsNotSkeleton()) {
 		return 0;
 	}
-
 
 	//2024/06/09
 	//カメラモーションの場合
@@ -1061,8 +1053,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 			ChaMatrix newworldmat;
 			ChaMatrixIdentity(&newworldmat);
 
-			if (GetParent(false) && GetParent(false)->GetFootRigUpdated()) {//2025/12/06 10055RC1　C1_01_ModelSelect_02.chaで物理無しMOAのWalkLoop時にうまくいく
-				//親がFootRig対象の場合
+			if (GetFootRigUpdated()) {
 				// 
 				//2024/09/06
 				newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
@@ -1148,6 +1139,20 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 			SetBtFlag(1);
 		}
 
+
+		if (GetFootRigUpdated()) {
+			//2024/09/06
+			//物理乱れ防止
+			//FootRigジョイントの場合とkinematicジョイントの場合にはCBtObject::SetBtMotion()が処理をしないので　ここでSetBtMatする
+
+			bool settobothflag = false;
+			ChaMatrix matforbt = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
+			//SetBtMatLimited(limitdegflag, true, false, matforbt);
+			SetBtMat(matforbt, settobothflag);
+			SetBtEul(m_curmp[m_updateslot].GetLocalEul());
+			SetBtFlag(1);
+		}
+
 		//2024/09/06
 		//if (GetFootRigUpdated() || 
 		//	(GetParent(false) && GetParent(false)->GetFootRigUpdated()) || 
@@ -1192,6 +1197,11 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 	CalcPostureChildWorldMat(limitdegflag, srcmotid, roundingframe);
 
 	m_befupdatetime = srcframe;
+
+
+	if (GetFootRigUpdated() && (g_previewFlag != 4) && (g_previewFlag != 5)) {
+		RestoreMotionForFootRig(srcmotid, roundingframe);
+	}
 
 	return 0;
 }
@@ -1239,186 +1249,25 @@ void CBone::CalcPostureChildWorldMat(int limitdegflag, int srcmotid, double roun
 	}
 }
 
-int CBone::UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, double srcframe,
-	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
-{
-
-	//######################################
-	//角度制限あり無し両方に　現状の姿勢を格納
-	//リグの指定と高さの閾値でリミット済とする　
-	//limitdegflag = trueで処理すると可動フレームで止まるのでパタパタしすぎる　ブレンドしてもパタパタし過ぎる
-	//bool limitdegflag = false;//2024/09/13 引数化　制限してかつパタパタしないようにデバッグ
-	
-	//######################################
-
-	SetFootRigUpdated(true);//2024/09/05
-
-
-	if (!wmat || !vmat || !pmat) {
-		_ASSERT(0);
-		return 1;
-	}
-
-	int refposindex = 0;//!!!!!!!!!
-
-
-	//if (GetParModel() && (GetParModel()->GetInView(refposindex) == false)) {
-	//	return 0;
-	//}
-
-	double roundingframe = RoundingTime(srcframe);
-
-	//2023/04/28
-	if (IsNotSkeleton()) {
-		return 0;
-	}
-
-
-	if (srcframe >= 0.0) {
-		ChaMatrix newworldmat;
-		ChaMatrixIdentity(&newworldmat);
-		//2024/09/06
-		newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-		m_curmp[m_updateslot].SetAnimMat(newworldmat);
-		ChaMatrix tmpmat = newworldmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-		//SetWorldMat(limitdegflag, srcmotid, roundingframe, tmpmat, &(m_curmp[m_updateslot]));//roundingframe!!!!
-		m_curmp[m_updateslot].SetWorldMat(tmpmat);//modelwmが掛かっている
-		m_curmp[m_updateslot].SetLimitedWM(tmpmat);//modelwmが掛かっている
-
-
-		if (limitdegflag == true) {
-			m_curmp[m_updateslot].SetCalcLimitedWM(2);
-		}
-
-		ChaVector3 jpos = GetJointFPos();
-		ChaVector3TransformCoord(&m_childworld, &jpos, &tmpmat);
-		ChaMatrix vpmat = *vmat * *pmat;
-		ChaMatrix wvpmat = tmpmat * vpmat;
-		ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);//*wmatで変換した位置に対して　vp変換
-	}
-	else {
-		_ASSERT(0);
-		m_curmp[m_updateslot].InitParams();
-		m_curmp[m_updateslot].SetWorldMat(*wmat);
-		m_curmp[m_updateslot].SetFrame(roundingframe);
-		//SetWorldMat(limitdegflag, srcmotid, roundingframe, *wmat, &(m_curmp[m_updateslot]));//roundingframe!!!!
-		m_curmp[m_updateslot].SetWorldMat(*wmat);//modelwmが掛かっている
-		m_curmp[m_updateslot].SetLimitedWM(*wmat);//modelwmが掛かっている
-	}
-
-	if (GetParModel() && (GetParModel()->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
-		bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
-		SetBtMat(GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot])), settobothflag);
-		SetBtFlag(1);
-	}
-
-	//2024/09/06
-	//if (GetFootRigUpdated() ||
-	//	(GetParent(false) && GetParent(false)->GetFootRigUpdated()) ||
-	//	(GetBtKinFlag() != 0)) 
-	{
-		//2024/09/06
-		//物理乱れ防止
-		//FootRigジョイントの場合とkinematicジョイントの場合にはCBtObject::SetBtMotion()が処理をしないので　ここでSetBtMatする
-
-		bool settobothflag = false;
-		ChaMatrix matforbt = GetWorldMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
-		//SetBtMatLimited(limitdegflag, true, false, matforbt);
-		SetBtMat(matforbt, settobothflag);
-		SetBtEul(m_curmp[m_updateslot].GetLocalEul());
-		SetBtFlag(1);
-	}
-
-	////2024/06/09
-	////カメラモーションの場合
-	////カメラモーションにはskeletonのモーションポイントが存在しない
-	////モーションパネルでカメラモーションをセレクトして　カメラモーションの長さを変えた場合に
-	////モデル表示が消えないように　初期状態をセットしてリターン
-	//if (GetParModel() && GetParModel()->IsCameraMotion(srcmotid)) {
-	//	ChaMatrix initwm;
-	//	initwm.SetIdentity();
-	//	ChaMatrix modelwm = modelworldmat;
-	//	ChaVector3 zeroeul;
-	//	zeroeul.SetParams(0.0f, 0.0f, 0.0f);
-	//	m_curmp[m_updateslot].InitParams();
-	//	m_curmp[m_updateslot].SetFrame(roundingframe);
-	//	m_curmp[m_updateslot].SetWorldMat(modelwm);
-	//	m_curmp[m_updateslot].SetLimitedWM(modelwm);
-	//	m_curmp[m_updateslot].SetLocalMat(initwm);
-	//	m_curmp[m_updateslot].SetAnimMat(initwm);
-	//	m_curmp[m_updateslot].SetLocalEul(zeroeul);
-	//	m_curmp[m_updateslot].SetCalcLimitedWM(2);
-	//	SetBtMat(modelwm, true);
-
-	//	return 0;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//}
-
-
-
-	//int existflag = 0;
-
-	//if ((g_previewFlag != 5) || (GetParModel() && (GetParModel()->GetBtCnt() == 0))) {
-	//	ChaMatrix newworldmat;
-	//	ChaMatrixIdentity(&newworldmat);
-
-	//	newworldmat = GetWorldMat(false, srcmotid, roundingframe, 0);
-
-	////2023/02/02
-	////modelのworldmatが掛かっていないアニメ姿勢も保存　GetCurrent..., CalcCurrent...用
-	//	m_curmp[m_updateslot].SetAnimMat(newworldmat);
-
-	//	//modelのworldmatを掛ける
-	//		//skinmeshの変換の際にはシェーダーでg_hmWorldは掛けない　すでにg_hmWorldが掛かっている必要有
-	//	ChaMatrix tmpmat = newworldmat * modelworldmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//	m_curmp[m_updateslot].SetWorldMat(tmpmat);
-
-	//	ChaVector3 jpos = GetJointFPos();
-	//	ChaVector3TransformCoord(&m_childworld, &jpos, &tmpmat);
-	//	ChaMatrix vpmat = *vmat * *pmat;
-	//	ChaMatrix wvpmat = tmpmat * vpmat;
-	//	ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);//modelworldmatで変換した位置に対して　vp変換
-
-	//	if (GetParModel() && (GetParModel()->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
-	//		bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
-	//		SetBtMat(GetWorldMat(false, srcmotid, roundingframe, &(m_curmp[m_updateslot])), settobothflag);
-	//	}
-	//}
-	//else {
-	//	//RagdollIK時のボーン選択対策
-	//	ChaVector3 jpos = GetJointFPos();
-
-	//	ChaMatrix wmat2, wvpmat;
-	//	if (GetParent(true)) {
-	//		wmat2 = GetParent(true)->GetBtMat(true);// * modelworldmat;
-	//	}
-	//	else {
-	//		wmat2 = GetBtMat(true);// * modelworldmat;
-	//	}
-	//	ChaMatrix vpmat = *vmat * *pmat;
-	//	wvpmat = wmat2 * vpmat;
-
-
-	//	//ChaVector3TransformCoord(&m_childscreen, &m_childworld, &wvpmat);
-	//	//ChaVector3TransformCoord(&m_childworld, &jpos, &wmat);
-	//	ChaVector3TransformCoord(&m_childworld, &jpos, &wmat2);
-
-	//	//ChaVector3TransformCoord(&m_childworld, &jpos, &(GetBtMat()));
-	//	ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);
-	//}
-
-	//2025/08/12
-	CalcPostureChildWorldMat(limitdegflag, srcmotid, roundingframe);
-
-	m_befupdatetime = srcframe;
-
-
-
-
-	return 0;
-
-
-}
+//int CBone::UpdateMatrixFootRig(bool istoebase, bool limitdegflag, int srcmotid, double srcframe,
+//	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
+//{
+//
+//	//2025/12/13
+//	//この関数を呼んだ後に、HipsからのUpdateMatrix()を呼び出すので最小限の処理でよい
+//
+//	//######################################
+//	//角度制限あり無し両方に　現状の姿勢を格納
+//	//リグの指定と高さの閾値でリミット済とする　
+//	//limitdegflag = trueで処理すると可動フレームで止まるのでパタパタしすぎる　ブレンドしてもパタパタし過ぎる
+//	//bool limitdegflag = false;//2024/09/13 引数化　制限してかつパタパタしないようにデバッグ
+//	
+//	//######################################
+//
+//	SetFootRigUpdated(true);//2024/09/05
+//
+//	return 0;
+//}
 
 int CBone::BlendSaveBoneMotion(int srcmotid, double srcframe, float srcblend)
 {

@@ -47,7 +47,7 @@ public:
 	};
 
 	int SetModel(ChaScene* srcchascene, CModel* srcmodel);
-	void SetVisible(bool srcflag);
+	void SetVisible(bool srcflag, CModel* srcmodel);
 	int SetEditedRig(CModel* srcmodel, CBone* srcrigbone, CUSTOMRIG updatedrig);
 
 	void InitParams();
@@ -64,8 +64,9 @@ public:
 	int SaveFootRigFile(WCHAR* srcprojectdir, WCHAR* srcprojectname, ChaScene* srcchascene);
 	int LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname);
 
-	int OnFrameMove(bool limitdegflag, bool restoreflag);
+	int OnFrameMove(bool limitdegflag);
 	int RestoreBoneMotionForFootRig();
+	void AddFootInfo(CModel* srcmodel, bool forceupdate);
 	void SetSaveModelWM(CModel* srcmodel, ChaMatrix srcmat);
 
 	bool IsEnableFootRig(CModel* srcmodel);
@@ -111,6 +112,9 @@ private:
 	ChaScene* m_chascene;
 	std::unordered_map<CModel*, FOOTRIGELEM> m_footrigelem;
 	std::unordered_map<CModel*, ChaMatrix> m_savemodelwm;
+	std::unordered_map<CModel*, CFootInfo*> m_leftfootinfo;
+	std::unordered_map<CModel*, CFootInfo*> m_rightfootinfo;
+
 
 	OrgWinGUI::OrgWindow* m_dlgWnd;
 

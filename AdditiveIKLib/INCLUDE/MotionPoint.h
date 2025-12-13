@@ -294,13 +294,13 @@ public:
 		m_saveforfootrig.absmat = GetAbsMat();
 	};
 	void RestoreMotionForFootRig() {
-		//SetTra(m_saveforfootrig.tra);
-		//SetQ(m_saveforfootrig.q);
+		SetTra(m_saveforfootrig.tra);
+		SetQ(m_saveforfootrig.q);
 		SetLocalEul(m_saveforfootrig.localeul);
-		//SetLocalScale(m_saveforfootrig.scale);
+		SetLocalScale(m_saveforfootrig.scale);
 		SetWorldMat(m_saveforfootrig.worldmat);
-		//SetLocalMat(m_saveforfootrig.localmat);
-		//SetAnimMat(m_saveforfootrig.animmat);
+		SetLocalMat(m_saveforfootrig.localmat);
+		SetAnimMat(m_saveforfootrig.animmat);
 		SetLimitedWM(m_saveforfootrig.limitedwm);
 		SetLimitedLocalEul(m_saveforfootrig.limitedlocaleul);
 		SetAbsMat(m_saveforfootrig.absmat);

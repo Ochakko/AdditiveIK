@@ -2754,29 +2754,29 @@ void CModel::ResetFootRigUpdated()
 }
 
 
-void CModel::UpdateMatrixFootRigReq(bool istoebase, bool limitdegflag, CBone* srcbone,
-	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat)
-{
-
-	//角度制限あり無し両方に　現状の姿勢を格納
-
-	if (srcbone && wmat && vmat && pmat) {
-
-		if (srcbone->IsSkeleton()) {
-			int srcmotid = GetCurrentMotID();
-			double srcframe = RoundingTime(GetCurrentFrame());
-			srcbone->UpdateMatrixFootRig(istoebase, limitdegflag, srcmotid, srcframe, wmat, vmat, pmat);
-		}
-
-		if (srcbone->GetChild(false)) {
-			UpdateMatrixFootRigReq(istoebase, limitdegflag, srcbone->GetChild(false), wmat, vmat, pmat);
-		}
-		if (srcbone->GetBrother(false)) {
-			UpdateMatrixFootRigReq(istoebase, limitdegflag, srcbone->GetBrother(false), wmat, vmat, pmat);
-		}
-	}
-
-}
+//void CModel::UpdateMatrixFootRigReq(bool istoebase, bool limitdegflag, CBone* srcbone,
+//	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, bool broflag)
+//{
+//
+//	//角度制限あり無し両方に　現状の姿勢を格納
+//
+//	if (srcbone && wmat && vmat && pmat) {
+//
+//		if (srcbone->IsSkeleton()) {
+//			int srcmotid = GetCurrentMotID();
+//			double srcframe = RoundingTime(GetCurrentFrame());
+//			srcbone->UpdateMatrixFootRig(istoebase, limitdegflag, srcmotid, srcframe, wmat, vmat, pmat);
+//		}
+//
+//		if (srcbone->GetChild(false)) {
+//			UpdateMatrixFootRigReq(istoebase, limitdegflag, srcbone->GetChild(false), wmat, vmat, pmat, true);
+//		}
+//		if (broflag && srcbone->GetBrother(false)) {
+//			UpdateMatrixFootRigReq(istoebase, limitdegflag, srcbone->GetBrother(false), wmat, vmat, pmat, broflag);
+//		}
+//	}
+//
+//}
 void CModel::BlendSaveBoneMotionReq(CBone* srcbone, float srcblend)
 {
 
@@ -15755,6 +15755,8 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 
 						int ismovable2 = 1;
 
+						curbone->SetFootRigUpdated(true);//###### 2025/12/13 #######
+
 						bool keynum1flag = true;
 						bool skip_ikconstraint_flag = false;
 						bool fromiktarget = false;
@@ -24696,31 +24698,35 @@ const WCHAR* CModel::GetWBoneName(int srcboneno) {
 	}
 }
 
-void CModel::SaveBoneMotionWM()
+void CModel::SaveBoneMotionWMReq(CBone* srcbone, bool broflag)
 {
-	int curmotid = GetCurrentMotID();
-	double curframe = RoundingTime(GetCurrentFrame());
+	if (srcbone) {
+		int curmotid = GetCurrentMotID();
+		double curframe = RoundingTime(GetCurrentFrame());
 
-	unordered_map<int, CBone*>::iterator itrbone;
-	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
-		CBone* curbone = itrbone->second;
-		//if (curbone && curbone->IsSkeleton()) {
-		if (curbone) {
-			curbone->SaveMotionForFootRig(curmotid, curframe);
+		srcbone->SaveMotionForFootRig(curmotid, curframe);
+
+		if (srcbone->GetChild(false)) {
+			SaveBoneMotionWMReq(srcbone->GetChild(false), true);
+		}
+		if (broflag && srcbone->GetBrother(false)) {
+			SaveBoneMotionWMReq(srcbone->GetBrother(false), broflag);
 		}
 	}
 }
-void CModel::RestoreBoneMotionWM()
+void CModel::RestoreBoneMotionWMReq(CBone* srcbone, bool broflag)
 {
-	int curmotid = GetCurrentMotID();
-	double curframe = RoundingTime(GetCurrentFrame());
+	if (srcbone) {
+		int curmotid = GetCurrentMotID();
+		double curframe = RoundingTime(GetCurrentFrame());
 
-	unordered_map<int, CBone*>::iterator itrbone;
-	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
-		CBone* curbone = itrbone->second;
-		//if (curbone && curbone->IsSkeleton()) {
-		if (curbone) {
-			curbone->RestoreMotionForFootRig(curmotid, curframe);
+		srcbone->RestoreMotionForFootRig(curmotid, curframe);
+
+		if (srcbone->GetChild(false)) {
+			RestoreBoneMotionWMReq(srcbone->GetChild(false), true);
+		}
+		if (broflag && srcbone->GetBrother(false)) {
+			RestoreBoneMotionWMReq(srcbone->GetBrother(false), broflag);
 		}
 	}
 }

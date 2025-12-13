@@ -475,8 +475,8 @@ public:
 	int CalcFillupTarget(int nextmotid, int filluppoint, double motionrate1, bool calcwm);
 
 	void ResetFootRigUpdated();
-	void UpdateMatrixFootRigReq(bool istoebase, bool limitdegflag, CBone* srcbone,
-		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat);
+	//void UpdateMatrixFootRigReq(bool istoebase, bool limitdegflag, CBone* srcbone,
+	//	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, bool broflag);
 
 	void UpdateModelWMFootRig(CFootRigDlg* srcfootrigdlg, ChaMatrix newwm);
 	void UpdateModelWMFootRigReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm);
@@ -1065,8 +1065,8 @@ public:
 		int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag);
 
 
-	void SaveBoneMotionWM();
-	void RestoreBoneMotionWM();
+	void SaveBoneMotionWMReq(CBone* srcbone, bool broflag);
+	void RestoreBoneMotionWMReq(CBone* srcbone, bool broflag);
 	void BlendSaveBoneMotionReq(CBone* srcbone, float srcblend);
 
 	int SetGPUInteraction(bool srcflag);

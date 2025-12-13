@@ -37,10 +37,6 @@ using namespace OrgWinGUI;
 extern HWND g_mainhwnd;//アプリケーションウインドウハンドル
 
 
-CFootInfo* s_leftfootinfo = nullptr;
-CFootInfo* s_rightfootinfo = nullptr;
-
-
 /////////////////////////////////////////////////////////////////////////////
 // CFootRigDlg
 
@@ -60,16 +56,6 @@ int CFootRigDlg::DestroyObjs()
 		m_dlgWnd->setVisible(false);
 		m_dlgWnd->setListenMouse(false);
 	}
-
-	if (s_leftfootinfo) {
-		delete s_leftfootinfo;
-		s_leftfootinfo = nullptr;
-	}
-	if (s_rightfootinfo) {
-		delete s_rightfootinfo;
-		s_rightfootinfo = nullptr;
-	}
-
 
 	if (m_enableChk) {
 		delete m_enableChk;
@@ -387,7 +373,23 @@ int CFootRigDlg::DestroyObjs()
 		m_rightinfolabel = nullptr;
 	}
 
+	std::unordered_map<CModel*, CFootInfo*>::iterator itrleftfi;
+	for (itrleftfi = m_leftfootinfo.begin(); itrleftfi != m_leftfootinfo.end(); itrleftfi++) {
+		CFootInfo* delfi = itrleftfi->second;
+		if (delfi) {
+			delete delfi;
+		}
+	}
+	m_leftfootinfo.clear();
 
+	std::unordered_map<CModel*, CFootInfo*>::iterator itrrightfi;
+	for (itrrightfi = m_rightfootinfo.begin(); itrrightfi != m_rightfootinfo.end(); itrrightfi++) {
+		CFootInfo* delfi = itrrightfi->second;
+		if (delfi) {
+			delete delfi;
+		}
+	}
+	m_rightfootinfo.clear();
 
 	if (m_dlgWnd) {
 		delete m_dlgWnd;
@@ -411,6 +413,8 @@ void CFootRigDlg::InitParams()
 	m_chascene = nullptr;
 	m_footrigelem.clear();
 	m_savemodelwm.clear();
+	m_leftfootinfo.clear();
+	m_rightfootinfo.clear();
 
 	m_dlgWnd = nullptr;
 
@@ -542,6 +546,9 @@ int CFootRigDlg::SetModel(ChaScene* srcchascene, CModel* srcmodel)
 			newmodelwm = m_model->GetWorldMat();
 			SetSaveModelWM(m_model, newmodelwm);
 
+			AddFootInfo(m_model, false);
+
+
 			CreateFootRigWnd();//作成済の場合は０リターン
 			ParamsToDlg();
 		}
@@ -603,18 +610,21 @@ int CFootRigDlg::SetEditedRig(CModel* srcmodel, CBone* srcrigbone, CUSTOMRIG upd
 	}
 
 
+	AddFootInfo(srcmodel, true);
 
 
 	return 0;
 }
 
-void CFootRigDlg::SetVisible(bool srcflag)
+void CFootRigDlg::SetVisible(bool srcflag, CModel* srcmodel)
 {
 	if (srcflag) {
 
 		//CreateFootRigWnd();//作成済の場合は０リターン
 
 		if (m_dlgWnd) {
+			AddFootInfo(srcmodel, true);
+
 			ParamsToDlg();
 
 			m_dlgWnd->setListenMouse(true);
@@ -646,22 +656,9 @@ void CFootRigDlg::SetVisible(bool srcflag)
 
 int CFootRigDlg::CreateFootRigWnd()
 {
-	if (!s_leftfootinfo) {
-		s_leftfootinfo = new CFootInfo(this);
-		if (!s_leftfootinfo) {
-			_ASSERT(0);
-			return 1;
-		}
+	if (m_model) {
+		AddFootInfo(m_model, true);
 	}
-	if (!s_rightfootinfo) {
-		s_rightfootinfo = new CFootInfo(this);
-		if (!s_rightfootinfo) {
-			_ASSERT(0);
-			return 1;
-		}
-	}
-
-
 
 	if (m_dlgWnd) {
 		return 0;
@@ -1266,6 +1263,7 @@ int CFootRigDlg::CreateFootRigWnd()
 					}
 				}
 				ParamsToDlg_LeftRig();//jointが変わったので　rigのComboをセットし直すために呼ぶ
+				AddFootInfo(m_model, true);
 			}
 
 			if (m_dlgWnd) {
@@ -1288,6 +1286,7 @@ int CFootRigDlg::CreateFootRigWnd()
 						itrelem->second.leftrig.Init();
 					}
 				}
+				AddFootInfo(m_model, true);
 			}
 
 			if (m_dlgWnd) {
@@ -1333,6 +1332,7 @@ int CFootRigDlg::CreateFootRigWnd()
 					}
 				}
 				ParamsToDlg_RightRig();//jointが変わったので　rigのComboをセットし直すために呼ぶ
+				AddFootInfo(m_model, true);
 			}
 
 			if (m_dlgWnd) {
@@ -1355,6 +1355,7 @@ int CFootRigDlg::CreateFootRigWnd()
 						itrelem->second.rightrig.Init();
 					}
 				}
+				AddFootInfo(m_model, true);
 			}
 
 			if (m_dlgWnd) {
@@ -1388,6 +1389,7 @@ int CFootRigDlg::CreateFootRigWnd()
 				itrelem = m_footrigelem.find(m_model);
 				if (itrelem != m_footrigelem.end()) {
 					itrelem->second.enablefootrig = value;
+					AddFootInfo(m_model, true);
 				}
 			}
 			});
@@ -2207,7 +2209,7 @@ int CFootRigDlg::LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname)
 	return 0;
 }
 
-int CFootRigDlg::OnFrameMove(bool limitdegflag, bool restoreflag)
+int CFootRigDlg::OnFrameMove(bool limitdegflag)
 {
 	//2025/12/06
 	//updateに関するモデルループを1回に.
@@ -2220,15 +2222,8 @@ int CFootRigDlg::OnFrameMove(bool limitdegflag, bool restoreflag)
 			if (curmodel && (curmodel->ExistCurrentMotion() == true)) {
 				if (itrelem->second.IsEnable()) {
 					//FootRigがオンの場合
-					curmodel->ResetFootRigUpdated();
-					curmodel->SaveBoneMotionWM();
+					//curmodel->ResetFootRigUpdated();
 					int result = Update(limitdegflag, curmodel);
-
-					if (restoreflag) {
-						//bt simu時にはUpdateMatrixをWaitした後で単独で呼び出す
-						//UpdateMatrixで編集したフレームモーションをcurmpにセットした後で、フレームモーションを編集前に元に戻す
-						curmodel->RestoreBoneMotionWM();
-					}
 				}
 				else {
 					//FootRigがオフの場合
@@ -2261,7 +2256,14 @@ int CFootRigDlg::RestoreBoneMotionForFootRig()
 				//FootRigがオンの場合のみ
 				// 
 				//UpdateMatrixで編集したフレームモーションをcurmpにセットした後で、フレームモーションを編集前に元に戻す
-				curmodel->RestoreBoneMotionWM();
+				CFootInfo* pleftfootinfo = m_leftfootinfo[curmodel];
+				if (pleftfootinfo != nullptr) {
+					curmodel->RestoreBoneMotionWMReq(pleftfootinfo->GetUpdateBoneForUpdateMatrix(), false);
+				}
+				CFootInfo* prightfootinfo = m_rightfootinfo[curmodel];
+				if (prightfootinfo != nullptr) {
+					curmodel->RestoreBoneMotionWMReq(prightfootinfo->GetUpdateBoneForUpdateMatrix(), false);
+				}
 			}
 		}
 	}
@@ -2332,7 +2334,9 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 		return 0;
 	}
 
-	if (!s_leftfootinfo || !s_rightfootinfo) {
+	CFootInfo* pleftfootinfo = m_leftfootinfo[srcmodel];
+	CFootInfo* prightfootinfo = m_rightfootinfo[srcmodel];
+	if (!pleftfootinfo || !prightfootinfo) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -2351,27 +2355,31 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 				return 0;//groundmodelは削除済
 			}
 
-			s_leftfootinfo->SetFootInfo(FOOTRIG_LR_LEFT, curelem);
-			s_rightfootinfo->SetFootInfo(FOOTRIG_LR_RIGHT, curelem);
+			//#########################
+			//姿勢修正前に　姿勢を保存する
+			//#########################
+			srcmodel->SaveBoneMotionWMReq(pleftfootinfo->GetUpdateBoneForUpdateMatrix(), false);
+			srcmodel->SaveBoneMotionWMReq(prightfootinfo->GetUpdateBoneForUpdateMatrix(), false);
+
 
 			if (curelem.leftfootbone) {
-				s_leftfootinfo->CalcPos(limitdegflag);
+				pleftfootinfo->CalcPos(limitdegflag);
 			}
 			if (curelem.rightfootbone) {
-				s_rightfootinfo->CalcPos(limitdegflag);
+				prightfootinfo->CalcPos(limitdegflag);
 			}
 
 			{
 				CFootInfo* lowerfootinfo = nullptr;
 				CFootInfo* higherfootinfo = nullptr;
 				//if (leftjointpos.y <= rightjointpos.y) {
-				if (s_leftfootinfo->IsHigherGPos(s_rightfootinfo)) {
-					lowerfootinfo = s_rightfootinfo;
-					higherfootinfo = s_leftfootinfo;
+				if (pleftfootinfo->IsHigherGPos(prightfootinfo)) {
+					lowerfootinfo = prightfootinfo;
+					higherfootinfo = pleftfootinfo;
 				}
 				else {
-					lowerfootinfo = s_leftfootinfo;
-					higherfootinfo = s_rightfootinfo;
+					lowerfootinfo = pleftfootinfo;
+					higherfootinfo = prightfootinfo;
 				}
 				FootRig(false,
 					limitdegflag, srcmodel,
@@ -2404,17 +2412,17 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 			//	}
 			//}
 
-			//2025/09/07
-			ChaMatrix matWorld = srcmodel->GetWorldMat(GETWM_MIXED);
-			ChaMatrix matView = srcmodel->GetViewMat();
-			ChaMatrix matProj = srcmodel->GetProjMat();
-			srcmodel->UpdateMatrixFootRigReq(false, limitdegflag,
-				s_leftfootinfo->GetUpdateBoneForUpdateMatrix(), &matWorld, &matView, &matProj);
-			srcmodel->UpdateMatrixFootRigReq(false, limitdegflag,
-				s_rightfootinfo->GetUpdateBoneForUpdateMatrix(), &matWorld, &matView, &matProj);
-			//### どのボーンの上にchildmodelが乗っているかここではわからないので　TopBoneからのUpdateMatrixが必要 ###
-			int refposindex = 0;
-			srcmodel->UpdateMatrix(limitdegflag, &matWorld, &matView, &matProj, true, refposindex);
+			////2025/09/07
+			//ChaMatrix matWorld = srcmodel->GetWorldMat(GETWM_MIXED);
+			//ChaMatrix matView = srcmodel->GetViewMat();
+			//ChaMatrix matProj = srcmodel->GetProjMat();
+			//srcmodel->UpdateMatrixFootRigReq(false, limitdegflag,
+			//	pleftfootinfo->GetUpdateBoneForUpdateMatrix(), &matWorld, &matView, &matProj, false);
+			//srcmodel->UpdateMatrixFootRigReq(false, limitdegflag,
+			//	prightfootinfo->GetUpdateBoneForUpdateMatrix(), &matWorld, &matView, &matProj, false);
+			////### どのボーンの上にchildmodelが乗っているかここではわからないので　TopBoneからのUpdateMatrixが必要 ### --> FootRigのOnFrameMove()呼び出しレベルでUpdateMatrix()を呼び出すのでコメントアウト
+			////int refposindex = 0;
+			////srcmodel->UpdateMatrix(limitdegflag, &matWorld, &matView, &matProj, true, refposindex);
 		}
 		else {
 
@@ -2627,6 +2635,45 @@ void CFootRigDlg::FootRig(bool secondcalling,
 
 }
 
+void CFootRigDlg::AddFootInfo(CModel* srcmodel, bool forceupdate)
+{
+	if (forceupdate || (m_leftfootinfo[srcmodel] == nullptr)) {
+		if (m_leftfootinfo[srcmodel]) {
+			delete m_leftfootinfo[srcmodel];
+			m_leftfootinfo[srcmodel] = nullptr;
+		}
+		CFootInfo* newfootinfo = new CFootInfo(this);
+		if (newfootinfo) {
+			m_leftfootinfo[srcmodel] = newfootinfo;
+
+			if (g_underRetargetFlag == false) {//2025/02/09 retarget中は実行しない
+				FOOTRIGELEM currigelem = m_footrigelem[srcmodel];
+				if (currigelem.IsEnable()) {
+					m_leftfootinfo[srcmodel]->SetFootInfo(FOOTRIG_LR_LEFT, currigelem);
+				}
+			}
+		}
+	}
+
+
+	if (forceupdate || (m_rightfootinfo[srcmodel] == nullptr)) {
+		if (m_rightfootinfo[srcmodel]) {
+			delete m_rightfootinfo[srcmodel];
+			m_rightfootinfo[srcmodel] = nullptr;
+		}
+		CFootInfo* newfootinfo = new CFootInfo(this);
+		if (newfootinfo) {
+			m_rightfootinfo[srcmodel] = newfootinfo;
+
+			if (g_underRetargetFlag == false) {//2025/02/09 retarget中は実行しない
+				FOOTRIGELEM currigelem = m_footrigelem[srcmodel];
+				if (currigelem.IsEnable()) {
+					m_rightfootinfo[srcmodel]->SetFootInfo(FOOTRIG_LR_RIGHT, currigelem);
+				}
+			}
+		}
+	}
+}
 
 void CFootRigDlg::SetSaveModelWM(CModel* srcmodel, ChaMatrix srcmat)
 {
@@ -2898,7 +2945,6 @@ void CFootInfo::SetFootInfo(int footrigLR, FOOTRIGELEM srcelem) {
 		m_rignum = 0;
 		m_updatebone = GetUpdateBone(m_toebasejoint->GetParModel(),
 			m_toebasejoint, m_rig, m_rigdir, &m_rignum);
-
 	}
 	else if (footrigLR == FOOTRIG_LR_RIGHT) {
 		m_toebasejoint = srcelem.rightfootbone;
@@ -2971,8 +3017,11 @@ bool CFootInfo::IsHigherGPos(CFootInfo* cmpinfo)
 }
 
 CBone* CFootInfo::GetUpdateBoneForUpdateMatrix() {
-	m_updatebone = GetUpdateBone(m_toebasejoint->GetParModel(),
-		m_toebasejoint, m_rig, m_rigdir, &m_rignum);
+
+	//2025/12/13 m_updateboneはSetFootInfoでセット済なのでコメントアウト
+	//m_updatebone = GetUpdateBone(m_toebasejoint->GetParModel(),
+	//	m_toebasejoint, m_rig, m_rigdir, &m_rignum);
+	
 	return m_updatebone;
 };
 
