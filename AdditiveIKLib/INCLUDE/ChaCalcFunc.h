@@ -105,6 +105,8 @@ public:
 		int srcmotid, double srcframe, ChaMatrix newwm);
 	void UpdateParentWMReq(CBone* srcbone, bool limitdegflag, 
 		bool setbroflag, int srcmotid, double srcframe, ChaMatrix oldparentwm, ChaMatrix newparentwm);
+	void UpdateParentFootRigWMReq(CBone* srcbone, bool limitdegflag,
+		bool setbroflag, int srcmotid, double srcframe, ChaMatrix oldparentwm, ChaMatrix newparentwm);
 
 
 	int Motion2Bt(CModel* srcmodel, bool limitdegflag, double nextframe, 

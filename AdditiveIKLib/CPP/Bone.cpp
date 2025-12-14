@@ -407,6 +407,9 @@ int CBone::InitParams()
 	m_btchildpos.SetParams(0.0f, 0.0f, 0.0f);
 	ChaMatrixIdentity(&m_btdiffmat);
 
+	m_footrigmat.SetIdentity();
+	m_footrigtime = 1.0;
+
 	m_initcustomrigflag = 0;
 	//InitCustomRig();//<-- after set name
 
@@ -1056,7 +1059,8 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 			if (GetFootRigUpdated()) {
 				// 
 				//2024/09/06
-				newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+				//newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
+				newworldmat = GetFootRigMat(limitdegflag, srcmotid, roundingframe);
 			}
 			else {
 				//###################################
@@ -1197,15 +1201,6 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 	CalcPostureChildWorldMat(limitdegflag, srcmotid, roundingframe);
 
 	m_befupdatetime = srcframe;
-
-
-	//2025/12/13 RestoreMotionForFootRig()は、BtSimu時にもここで呼び出す.
-	//BtSimu以外の場合には、ここでボーン姿勢をFootRigでの編集以前の姿勢に戻す.
-	//BtSimu時には、ChaSceneのWaitForUpdateMatrixModels()内から呼び出す.
-	//if (GetFootRigUpdated() && (g_previewFlag != 4) && (g_previewFlag != 5)) {
-	if (GetFootRigUpdated()) {
-		RestoreMotionForFootRig(srcmotid, roundingframe);
-	}
 
 	return 0;
 }
@@ -3557,6 +3552,13 @@ void CBone::UpdateParentWMReq(bool limitdegflag, bool setbroflag, int srcmotid, 
 {
 	ChaCalcFunc chacalcfunc;
 	chacalcfunc.UpdateParentWMReq(this, limitdegflag, 
+		setbroflag, srcmotid, srcframe, oldparentwm, newparentwm);
+}
+void CBone::UpdateParentFootRigWMReq(bool limitdegflag, bool setbroflag, int srcmotid, double srcframe,
+	ChaMatrix oldparentwm, ChaMatrix newparentwm)
+{
+	ChaCalcFunc chacalcfunc;
+	chacalcfunc.UpdateParentFootRigWMReq(this, limitdegflag,
 		setbroflag, srcmotid, srcframe, oldparentwm, newparentwm);
 }
 

@@ -313,7 +313,10 @@ public:
 	void UpdateParentWMReq(bool limitdegflag, 
 		bool setbroflag, int srcmotid, double srcframe,
 		ChaMatrix oldparentwm, ChaMatrix newparentwm);
-	
+	void UpdateParentFootRigWMReq(bool limitdegflag,
+		bool setbroflag, int srcmotid, double srcframe,
+		ChaMatrix oldparentwm, ChaMatrix newparentwm);
+
 	//directsetで　ツリーの姿勢を更新　再帰
 	void UpdateCurrentWM(bool limitdegflag, 
 		int srcmotid, double srcframe, ChaMatrix newwm);
@@ -1344,6 +1347,61 @@ public: //accesser
 		return m_btdiffmat;
 	};
 
+	ChaMatrix GetFootRigMat(int limitdegflag, int srcmotid, double srcframe) {
+		double roundingframe = RoundingTime(srcframe);
+		if (IsEqualRoundingTime(roundingframe, m_footrigtime)) {
+			return m_footrigmat;
+		}
+		else {//applyframeのworldmatなどはこちらを通る
+			CMotionPoint* curmp = GetMotionPoint(srcmotid, roundingframe);
+			if (curmp) {
+				if (limitdegflag == 0) {
+					return curmp->GetWorldMat();
+				}
+				else {
+					return curmp->GetLimitedWM();
+				}
+			}
+			else {
+				ChaMatrix inimat;
+				inimat.SetIdentity();
+				return inimat;
+			}
+		}
+	};
+	void SetFootRigMat(int limitdegflag, int srcmotid, double srcframe, ChaMatrix srcmat, bool firstsetflag) {
+		double roundingframe = RoundingTime(srcframe);
+
+		ChaMatrix saveworldmat = m_footrigmat;
+		m_footrigmat = srcmat;
+		m_footrigtime = roundingframe;
+
+		//if (firstsetflag == true) {
+		//	if (GetChild(false)) {
+		//		bool setbroflag = true;
+		//		GetChild(false)->UpdateParentFootRigWMReq(limitdegflag,
+		//			setbroflag, srcmotid, roundingframe,
+		//			saveworldmat, srcmat);
+		//	}
+		//}
+	};
+	void SetFootRigMatOrg(int limitdegflag, int srcmotid, double srcframe) {
+		//FootRigUpdatedフラグが立っているのでCBone::GetWorldMat()はここでは使えない
+		{
+			double roundingframe = RoundingTime(srcframe);
+			CMotionPoint* curmp = GetMotionPoint(srcmotid, roundingframe);
+			if (curmp) {
+				if (limitdegflag == 0) {
+					m_footrigmat = curmp->GetWorldMat();
+				}
+				else {
+					m_footrigmat = curmp->GetLimitedWM();
+				}
+				m_footrigtime = roundingframe;
+			}
+		}
+	};
+
 
 	//ChaMatrix GetBefBtMat(){ return m_befbtmat; };
 	//void SetBefBtMat(ChaMatrix srcmat){ m_befbtmat = srcmat; };
@@ -1923,6 +1981,9 @@ private:
 	//ChaMatrix m_befbtmat[2];
 	int m_setbtflag;
 	ChaVector3 m_bteul;
+
+	ChaMatrix m_footrigmat;
+	double m_footrigtime;
 
 	ChaVector3 m_firstframebonepos;
 

@@ -479,7 +479,7 @@ public:
 	//	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, bool broflag);
 
 	void UpdateModelWMFootRig(CFootRigDlg* srcfootrigdlg, ChaMatrix newwm);
-	void UpdateModelWMFootRigReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm);
+	//void UpdateModelWMFootRigReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm);
 
 	int ChkInView(int refposindex);
 	//int SwapCurrentMotionPoint();
@@ -1065,8 +1065,7 @@ public:
 		int srcboneno, int uvno, float srcdelta, CUSTOMRIG ikcustomrig, int buttonflag);
 
 
-	void SaveBoneMotionWMReq(CBone* srcbone, bool broflag);
-	void RestoreBoneMotionWMReq(CBone* srcbone, bool broflag);
+	void SetOrg2FootRigMatReq(int limitdegflag, CBone* srcbone, bool broflag);
 	void BlendSaveBoneMotionReq(CBone* srcbone, float srcblend);
 
 	int SetGPUInteraction(bool srcflag);
@@ -1795,7 +1794,7 @@ public: //accesser
 	};
 	CBone* GetBoneByID( int srcid ){
 		if (srcid < 0) {
-			_ASSERT(0);
+			//_ASSERT(0);
 			return nullptr;
 		}
 		//std::unordered_map<int, CBone*>::iterator itrbone;

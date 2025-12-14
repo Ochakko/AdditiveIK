@@ -65,8 +65,7 @@ public:
 	int LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname);
 
 	int OnFrameMove(bool limitdegflag);
-	int RestoreBoneMotionForFootRig();
-	void AddFootInfo(CModel* srcmodel, bool forceupdate);
+	void AddFootInfo(CModel* srcmodel);
 	void SetSaveModelWM(CModel* srcmodel, ChaMatrix srcmat);
 
 	bool IsEnableFootRig(CModel* srcmodel);

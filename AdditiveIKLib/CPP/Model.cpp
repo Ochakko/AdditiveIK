@@ -2814,53 +2814,53 @@ void CModel::UpdateModelWMFootRig(CFootRigDlg* srcfootrigdlg, ChaMatrix newwm)
 	//m_matWorld = newwm;
 	CalcModelWorldMatOnLoad(srcfootrigdlg);
 
-	UpdateModelWMFootRigReq(GetTopBone(false), newwm, befwm);
+	//UpdateModelWMFootRigReq(GetTopBone(false), newwm, befwm);
 }
-void CModel::UpdateModelWMFootRigReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm)
-{
-	if (srcbone) {
-
-		if (srcbone->GetFootRigUpdated()) {//2024/09/09 FootRigだけに処理　他の部分に処理をすると　LimitEul+BtSimu時に他の部分がびよーーんとなる
-			bool calcslotflag = true;
-			CMotionPoint curmp = srcbone->GetCurMp(calcslotflag);
-			ChaMatrix curwm = curmp.GetWorldMat();
-
-			ChaMatrix setwm = curwm * ChaMatrixInv(befwm) * newwm;
-			curmp.SetWorldMat(setwm);
-			curmp.SetLimitedWM(setwm);//2024/09/09
-			srcbone->SetCurMp(curmp);
-
-
-			srcbone->SetBtMat(setwm, false);
-
-
-			//ChaMatrix curbtmat = srcbone->GetBtMat(true);
-			//ChaMatrix setbtmat = curbtmat * ChaMatrixInv(befwm) * newwm;
-			//srcbone->SetBtMat(setbtmat, true);
-
-			//ChaMatrix curbtmat2 = srcbone->GetBtMat(false);
-			//ChaMatrix setbtmat2 = curbtmat2 * ChaMatrixInv(befwm) * newwm;
-			//srcbone->SetBtMat(setbtmat2, false);
-
-			ChaVector3 jpos = srcbone->GetJointFPos();
-			ChaVector3 childworld;
-			ChaVector3TransformCoord(&childworld, &jpos, &setwm);
-			ChaMatrix vpmat = m_matView * m_matProj;
-			ChaMatrix wvpmat = setwm * vpmat;
-			ChaVector3 childscreen;
-			ChaVector3TransformCoord(&childscreen, &childworld, &vpmat);//wmatで変換した位置に対して　vp変換
-			srcbone->SetChildWorld(childworld);
-			srcbone->SetChildScreen(childscreen);
-		}
-
-		if (srcbone->GetChild(false)) {
-			UpdateModelWMFootRigReq(srcbone->GetChild(false), newwm, befwm);
-		}
-		if (srcbone->GetBrother(false)) {
-			UpdateModelWMFootRigReq(srcbone->GetBrother(false), newwm, befwm);
-		}
-	}
-}
+//void CModel::UpdateModelWMFootRigReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm)
+//{
+//	if (srcbone) {
+//
+//		if (srcbone->GetFootRigUpdated()) {//2024/09/09 FootRigだけに処理　他の部分に処理をすると　LimitEul+BtSimu時に他の部分がびよーーんとなる
+//			bool calcslotflag = true;
+//			CMotionPoint curmp = srcbone->GetCurMp(calcslotflag);
+//			ChaMatrix curwm = curmp.GetWorldMat();
+//
+//			ChaMatrix setwm = curwm * ChaMatrixInv(befwm) * newwm;
+//			curmp.SetWorldMat(setwm);
+//			curmp.SetLimitedWM(setwm);//2024/09/09
+//			srcbone->SetCurMp(curmp);
+//
+//
+//			srcbone->SetBtMat(setwm, false);
+//
+//
+//			//ChaMatrix curbtmat = srcbone->GetBtMat(true);
+//			//ChaMatrix setbtmat = curbtmat * ChaMatrixInv(befwm) * newwm;
+//			//srcbone->SetBtMat(setbtmat, true);
+//
+//			//ChaMatrix curbtmat2 = srcbone->GetBtMat(false);
+//			//ChaMatrix setbtmat2 = curbtmat2 * ChaMatrixInv(befwm) * newwm;
+//			//srcbone->SetBtMat(setbtmat2, false);
+//
+//			ChaVector3 jpos = srcbone->GetJointFPos();
+//			ChaVector3 childworld;
+//			ChaVector3TransformCoord(&childworld, &jpos, &setwm);
+//			ChaMatrix vpmat = m_matView * m_matProj;
+//			ChaMatrix wvpmat = setwm * vpmat;
+//			ChaVector3 childscreen;
+//			ChaVector3TransformCoord(&childscreen, &childworld, &vpmat);//wmatで変換した位置に対して　vp変換
+//			srcbone->SetChildWorld(childworld);
+//			srcbone->SetChildScreen(childscreen);
+//		}
+//
+//		if (srcbone->GetChild(false)) {
+//			UpdateModelWMFootRigReq(srcbone->GetChild(false), newwm, befwm);
+//		}
+//		if (srcbone->GetBrother(false)) {
+//			UpdateModelWMFootRigReq(srcbone->GetBrother(false), newwm, befwm);
+//		}
+//	}
+//}
 
 
 int CModel::CopyLimitedWorldToWorldOne(CBone* srcbone, int srcmotid, double srcframe)
@@ -15665,7 +15665,6 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 					aplybone = curbone;
 				}
 
-
 				int rigaxiskind = currigelem.transuv[uvno].axiskind;
 				int rigaxis0, rigaxis1;
 				rigaxis0 = rigaxiskind / 3;//BONEAXIS_CURRENT, BONEAXIS_PARENT, BONEAXIS_GLOBAL, BONEAXIS_BINDPOSE
@@ -15754,8 +15753,6 @@ int CModel::RigControlFootRig(bool limitdegflag, int wallscrapingikflag, int dep
 						//curbone->SaveSRT(limitdegflag, curmotid, applyframe);//2024/09/06
 
 						int ismovable2 = 1;
-
-						curbone->SetFootRigUpdated(true);//###### 2025/12/13 ####### FootRigで編集したboneにはマークを付けてUpdateMatrix時に別処理をする
 
 						bool keynum1flag = true;
 						bool skip_ikconstraint_flag = false;
@@ -24698,38 +24695,39 @@ const WCHAR* CModel::GetWBoneName(int srcboneno) {
 	}
 }
 
-void CModel::SaveBoneMotionWMReq(CBone* srcbone, bool broflag)
+void CModel::SetOrg2FootRigMatReq(int limitdegflag, CBone* srcbone, bool broflag)
 {
 	if (srcbone) {
 		int curmotid = GetCurrentMotID();
 		double curframe = RoundingTime(GetCurrentFrame());
 
-		srcbone->SaveMotionForFootRig(curmotid, curframe);
+		srcbone->SetFootRigUpdated(true);//GetWorldMat, SetWorldMatがCBone::m_footrigmatに対して行われるようにするフラグ
+		srcbone->SetFootRigMatOrg(limitdegflag, curmotid, curframe);
 
 		if (srcbone->GetChild(false)) {
-			SaveBoneMotionWMReq(srcbone->GetChild(false), true);
+			SetOrg2FootRigMatReq(limitdegflag, srcbone->GetChild(false), true);
 		}
 		if (broflag && srcbone->GetBrother(false)) {
-			SaveBoneMotionWMReq(srcbone->GetBrother(false), broflag);
+			SetOrg2FootRigMatReq(limitdegflag, srcbone->GetBrother(false), broflag);
 		}
 	}
 }
-void CModel::RestoreBoneMotionWMReq(CBone* srcbone, bool broflag)
-{
-	if (srcbone) {
-		int curmotid = GetCurrentMotID();
-		double curframe = RoundingTime(GetCurrentFrame());
-
-		srcbone->RestoreMotionForFootRig(curmotid, curframe);
-
-		if (srcbone->GetChild(false)) {
-			RestoreBoneMotionWMReq(srcbone->GetChild(false), true);
-		}
-		if (broflag && srcbone->GetBrother(false)) {
-			RestoreBoneMotionWMReq(srcbone->GetBrother(false), broflag);
-		}
-	}
-}
+//void CModel::RestoreBoneMotionWMReq(CBone* srcbone, bool broflag)
+//{
+//	if (srcbone) {
+//		int curmotid = GetCurrentMotID();
+//		double curframe = RoundingTime(GetCurrentFrame());
+//
+//		srcbone->RestoreMotionForFootRig(curmotid, curframe);
+//
+//		if (srcbone->GetChild(false)) {
+//			RestoreBoneMotionWMReq(srcbone->GetChild(false), true);
+//		}
+//		if (broflag && srcbone->GetBrother(false)) {
+//			RestoreBoneMotionWMReq(srcbone->GetBrother(false), broflag);
+//		}
+//	}
+//}
 
 int CModel::SetGPUInteraction(bool srcflag)
 {

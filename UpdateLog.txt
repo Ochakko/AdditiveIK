@@ -1,6 +1,13 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+
+2025/12/14
+　FootRigに関する修正
+　　FootRig計算を専用の変数で行うように.
+　　　SaveとRestoreのタイミングによる不具合が解消.
+　　　プレビューを止めてタイムラインを操作した際にFootRig部分が伸びたりする不具合も解消.
+
 2025/12/13
 　FootRigに関する修正
 　　FootRigの一番親のボーンと同階層のボーンの姿勢が不安定になっていたのを修正

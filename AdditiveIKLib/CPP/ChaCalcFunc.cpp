@@ -2262,6 +2262,14 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, int wallscraping
 		return 0;
 	}
 
+	////2025/12/14
+	if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
+		//ChaMatrix saveworldmat = srcbone->GetWorldMat(limitdegflag, srcmotid, srcframe, nullptr);
+		bool firstsetflag = true;
+		srcbone->SetFootRigMat(limitdegflag, srcmotid, srcframe, srcmat, firstsetflag);
+		return 0;//################################
+	}
+
 
 	//if pose is change, return 1 else return 0
 	CMotionPoint* curmp;
@@ -3005,8 +3013,13 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 	}
 
 
+	if (srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
+		//2025/12/14 FootRig計算中 かつ　FootRig対象ボーンの場合
+		curmat = srcbone->GetFootRigMat(limitdegflag, srcmotid, srcframe);
+	}
+
 	//2023/04/28
-	if (srcbone->IsNull()) {
+	else if (srcbone->IsNull()) {
 		//2023/05/07  
 		//return GetENullMatrix();
 
@@ -3815,6 +3828,61 @@ void ChaCalcFunc::UpdateParentWMReq(CBone* srcbone, bool limitdegflag,
 	}
 	if (srcbone->GetBrother(false) && (setbroflag == true)) {
 		UpdateParentWMReq(srcbone->GetBrother(false), limitdegflag, 
+			setbroflag, srcmotid, roundingframe,
+			oldparentwm, newparentwm);
+	}
+
+}
+
+void ChaCalcFunc::UpdateParentFootRigWMReq(CBone* srcbone, bool limitdegflag,
+	bool setbroflag, int srcmotid, double srcframe, ChaMatrix oldparentwm, ChaMatrix newparentwm)
+{
+	if (!srcbone) {
+		_ASSERT(0);
+		return;
+	}
+
+	double roundingframe = RoundingTime(srcframe);
+
+	ChaMatrix currentbefwm;
+	ChaMatrix currentnewwm;
+	currentbefwm.SetIdentity();
+	currentnewwm.SetIdentity();
+
+	//#############
+	//For FootRig
+	//#############
+
+	if (srcbone->GetFootRigUpdated()) {
+		{//btSimuの際にも必要な処理
+			currentbefwm = srcbone->GetFootRigMat(limitdegflag, srcmotid, roundingframe);
+			currentnewwm = currentbefwm * ChaMatrixInv(oldparentwm) * newparentwm;
+
+			bool setfirstflag = false;
+			srcbone->SetFootRigMat(limitdegflag, srcmotid, roundingframe, currentnewwm, setfirstflag);
+		}
+		//else {
+		if ((g_previewFlag == 4) || (g_previewFlag == 5)) {
+			currentbefwm = srcbone->GetBtMat(true);
+			currentnewwm = currentbefwm * ChaMatrixInv(oldparentwm) * newparentwm;
+
+			bool directsetflag = true;
+			int wallscrapingikflag = 0;//directsetの場合は関係ない
+			bool setchildflag = false;//この後ろの部分でUpdateParentWMReqを明示的に呼び出すので、ここのsetchildflagはfalse
+			srcbone->SetBtMatLimited(limitdegflag, directsetflag, setchildflag, currentnewwm);
+		}
+	}
+
+	if (srcbone->GetChild(false)) {
+		//For FootRig
+		bool setbroflag2 = true;
+		UpdateParentFootRigWMReq(srcbone->GetChild(false), limitdegflag,
+			setbroflag2, srcmotid, roundingframe,
+			currentbefwm, currentnewwm);
+	}
+	if (srcbone->GetBrother(false) && (setbroflag == true)) {
+		//For FootRig
+		UpdateParentFootRigWMReq(srcbone->GetBrother(false), limitdegflag,
 			setbroflag, srcmotid, roundingframe,
 			oldparentwm, newparentwm);
 	}

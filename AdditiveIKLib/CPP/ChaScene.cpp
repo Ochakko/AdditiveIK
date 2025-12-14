@@ -893,24 +893,6 @@ void ChaScene::WaitForUpdateMatrixModels()
 	//	//プレビュー中以外のときには同期する(UpdaetMatrixModelsの終わりで終了待機)　Render()においてはcalcslotflag=trueで描画
 	//}
 
-
-	//2025/12/13 OnFrameMove()は通常プレビュー時はUpdateMatrixModels()内から呼び出し、bt simu時にはUpdateBtFunc()から呼び出す.
-	////2024/09/03
-	////UpdateMatrixの計算が終わってからFootRigのアップデートをする
-	////BtSimu中(previewFlag 4 or 5)は　Motion2Bt()からFootRigのアップデートを呼ぶ
-	//if (m_footrigdlg && (g_previewFlag != 4) && (g_previewFlag != 5)) {
-	////	//bool restoreflag = true;
-	////	bool restoreflag = false;
-	//	m_footrigdlg->OnFrameMove(g_limitdegflag);
-	//}
-	//else 
-	
-	//2025/12/13 RestoreBoneMotionForFootRig()はBtSimu時にもCBone::UpdateMatrix()内から呼び出す.
-	//if (m_footrigdlg && ((g_previewFlag == 4) || (g_previewFlag == 5))) {
-	//	//bt simu時には　このタイミングでRestoreだけ呼び出す
-	//	//通常プレビュー時にはCBone::UpdateMatarix()内から呼び出す.
-	//	m_footrigdlg->RestoreBoneMotionForFootRig();//FootRigがオンのModelだけ処理される
-	//}
 }
 
 int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,

@@ -25959,6 +25959,9 @@ int OnFramePreviewStop()
 		currenttime = 0.0;
 	}
 	
+	//2025/12/14
+	//currenttimeはCModelのtimerangeでクランプしていない値であることに注意！！！
+
 	int loopstartflag = 1;
 	g_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, currenttime, loopstartflag);
 
