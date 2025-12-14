@@ -869,7 +869,7 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 			//###################################
 			//補間のためにroundingframeではない
 			//###################################
-			if (GetFootRigUpdated() || (GetParent(false) && GetParent(false)->GetFootRigUpdated())) {
+			if (GetFootRigUpdated()) {
 				//2024/09/06
 				newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
 			}
@@ -3633,14 +3633,27 @@ int CBone::GetLocalTraAnimMat(bool limitdegflag, int srcmotid, double srcframe, 
 	curmp = GetMotionPoint(srcmotid, curframe);
 	if (curmp) {
 		ChaMatrix curwm, parentwm, localmat;
-		curwm = GetWorldMat(limitdegflag, srcmotid, curframe, curmp);
-		if (GetParent(false)) {
-			parentwm = GetParent(false)->GetWorldMat(limitdegflag, srcmotid, curframe, 0);
-			localmat = curwm * ChaMatrixInv(parentwm);
+		if (GetParModel() && GetParModel()->GetUnderFootRig() && GetFootRigUpdated()) {
+			curwm = GetWorldMat(limitdegflag, srcmotid, curframe, nullptr);
+			if (GetParent(false)) {
+				parentwm = GetParent(false)->GetWorldMat(limitdegflag, srcmotid, curframe, nullptr);
+				localmat = curwm * ChaMatrixInv(parentwm);
+			}
+			else {
+				parentwm.SetIdentity();
+				localmat = curwm;
+			}
 		}
 		else {
-			parentwm.SetIdentity();
-			localmat = curwm;
+			curwm = GetWorldMat(limitdegflag, srcmotid, curframe, curmp);
+			if (GetParent(false)) {
+				parentwm = GetParent(false)->GetWorldMat(limitdegflag, srcmotid, curframe, 0);
+				localmat = curwm * ChaMatrixInv(parentwm);
+			}
+			else {
+				parentwm.SetIdentity();
+				localmat = curwm;
+			}
 		}
 
 		ChaMatrix smat, rmat, tmat, tanimmat;
@@ -6280,20 +6293,25 @@ ChaMatrix CBone::GetCurrentWorldMat(bool multmodelwm, bool calcslotflag)
 				////	}
 				////}
 
-				CMotionPoint curmp = GetCurMp(calcslotflag);
-				ChaMatrix curmpwm = curmp.GetWorldMat();
-				if (multmodelwm) {
-					newworldmat = curmpwm;
-				}
-				else {
-					if (GetParModel()) {
-						ChaMatrix modelwm = GetParModel()->GetWorldMat();
-						newworldmat = curmpwm * ChaMatrixInv(modelwm);
-					}
-					else {
-						_ASSERT(0);
-						newworldmat = curmpwm;
-					}
+				//CMotionPoint curmp = GetCurMp(calcslotflag);
+				//ChaMatrix curmpwm = curmp.GetWorldMat();
+				//if (multmodelwm) {
+				//	newworldmat = curmpwm;
+				//}
+				//else {
+				//	if (GetParModel()) {
+				//		ChaMatrix modelwm = GetParModel()->GetWorldMat();
+				//		newworldmat = curmpwm * ChaMatrixInv(modelwm);
+				//	}
+				//	else {
+				//		_ASSERT(0);
+				//		newworldmat = curmpwm;
+				//	}
+				//}
+
+				newworldmat = GetFootRigMat(currentlimitdegflag, curmotid, curframe);
+				if (multmodelwm == true) {
+					newworldmat = newworldmat * GetParModel()->GetWorldMat();
 				}
 			}
 			return newworldmat;

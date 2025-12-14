@@ -1233,7 +1233,6 @@ int CBtObject::SetBtMotion(bool limitdegflag, ChaMatrix curtraanim)
 
 	//2024/09/06 FootRig
 	if (m_bone->GetFootRigUpdated() ||
-		(m_bone->GetParent(false) && m_bone->GetParent(false)->GetFootRigUpdated()) ||
 		(m_bone->GetBtKinFlag() != 0)) {
 		return 0;
 	}

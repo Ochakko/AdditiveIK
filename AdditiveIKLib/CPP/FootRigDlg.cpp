@@ -623,8 +623,6 @@ void CFootRigDlg::SetVisible(bool srcflag, CModel* srcmodel)
 		//CreateFootRigWnd();//作成済の場合は０リターン
 
 		if (m_dlgWnd) {
-			AddFootInfo(srcmodel);
-
 			ParamsToDlg();
 
 			m_dlgWnd->setListenMouse(true);
@@ -642,6 +640,8 @@ void CFootRigDlg::SetVisible(bool srcflag, CModel* srcmodel)
 			//	m_lightsSc->autoResize();
 			//}
 			m_dlgWnd->callRewrite();//2024/07/24
+
+			AddFootInfo(srcmodel);
 		}
 	}
 	else {

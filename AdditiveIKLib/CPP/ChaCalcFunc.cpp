@@ -2262,13 +2262,13 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, int wallscraping
 		return 0;
 	}
 
-	////2025/12/14
-	if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
-		//ChaMatrix saveworldmat = srcbone->GetWorldMat(limitdegflag, srcmotid, srcframe, nullptr);
-		bool firstsetflag = true;
-		srcbone->SetFootRigMat(limitdegflag, srcmotid, srcframe, srcmat, firstsetflag);
-		return 0;//################################
-	}
+	//////2025/12/14
+	//if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
+	//	//ChaMatrix saveworldmat = srcbone->GetWorldMat(limitdegflag, srcmotid, srcframe, nullptr);
+	//	bool firstsetflag = true;
+	//	srcbone->SetFootRigMat(limitdegflag, srcmotid, srcframe, srcmat, firstsetflag);
+	//	return 0;//################################
+	//}
 
 
 	//if pose is change, return 1 else return 0
@@ -2287,9 +2287,13 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, int wallscraping
 	//変更前を保存
 	ChaMatrix saveworldmat;
 	ChaVector3 saveeul;
-	saveworldmat = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp);
+	if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
+		saveworldmat = srcbone->GetFootRigMat(limitdegflag, srcmotid, roundingframe);
+	}
+	else {
+		saveworldmat = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp);
+	}
 	saveeul = srcbone->GetLocalEul(limitdegflag, srcmotid, roundingframe, curmp);
-
 
 	//if ((directsetflag == false) && (g_underRetargetFlag == false)){
 
@@ -2333,7 +2337,14 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, int wallscraping
 		GetSRTandTraAnim(newlocalmat, srcbone->GetNodeMat(), &newsmat, &newrmat, &newtmat, &newtanimmat);
 
 		//calc new eul
-		srcbone->SetWorldMat(limitdegflag, srcmotid, roundingframe, srcmat, curmp);//tmp time
+		if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
+			////2025/12/14
+			bool firstsetflag = true;
+			srcbone->SetFootRigMat(limitdegflag, srcmotid, roundingframe, srcmat, firstsetflag);
+		}
+		else {
+			srcbone->SetWorldMat(limitdegflag, srcmotid, roundingframe, srcmat, curmp);//tmp time
+		}
 		ChaVector3 neweul;
 		neweul.SetParams(0.0f, 0.0f, 0.0f);
 		neweul = srcbone->CalcLocalEulXYZ(limitdegflag, -1, srcmotid, roundingframe, BEFEUL_BEFFRAME);
@@ -2423,8 +2434,16 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, int wallscraping
 		}
 		else {
 			//only check : 仮セットしていたのを元に戻す
-			srcbone->SetWorldMat(limitdegflag, srcmotid, roundingframe, saveworldmat, curmp);
-			srcbone->SetLocalEul(limitdegflag, srcmotid, roundingframe, saveeul, curmp);
+			if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
+				////2025/12/14
+				bool firstsetflag = true;
+				srcbone->SetFootRigMat(limitdegflag, srcmotid, srcframe, saveworldmat, firstsetflag);
+				srcbone->SetLocalEul(limitdegflag, srcmotid, roundingframe, saveeul, curmp);
+			}
+			else {
+				srcbone->SetWorldMat(limitdegflag, srcmotid, roundingframe, saveworldmat, curmp);
+				srcbone->SetLocalEul(limitdegflag, srcmotid, roundingframe, saveeul, curmp);
+			}
 		}
 	}
 	else {
@@ -2433,7 +2452,14 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, int wallscraping
 
 		ismovable = 1;
 		if (onlycheck == 0) {
-			srcbone->SetWorldMat(limitdegflag, srcmotid, roundingframe, srcmat, curmp);
+			if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
+				////2025/12/14
+				bool firstsetflag = true;
+				srcbone->SetFootRigMat(limitdegflag, srcmotid, srcframe, srcmat, firstsetflag);
+			}
+			else {
+				srcbone->SetWorldMat(limitdegflag, srcmotid, roundingframe, srcmat, curmp);
+			}
 
 			//if (g_underCopyW2LW) {
 			if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderCopyW2LW()) {
@@ -2468,17 +2494,30 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, int wallscraping
 
 			if (setchildflag == 1) {
 				if (srcbone->GetChild(false)) {
-					bool setbroflag = true;
-					srcbone->GetChild(false)->UpdateParentWMReq(limitdegflag,
-						setbroflag, srcmotid, roundingframe,
-						saveworldmat, srcmat);
+					if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
+						//SetFootRigMat()で呼び出している
+					}
+					else {
+						bool setbroflag = true;
+						srcbone->GetChild(false)->UpdateParentWMReq(limitdegflag,
+							setbroflag, srcmotid, roundingframe,
+							saveworldmat, srcmat);
+					}
 				}
 			}
 		}
 		else {
 			//only check : 仮セットしていたのを元に戻す
-			srcbone->SetWorldMat(limitdegflag, srcmotid, roundingframe, saveworldmat, curmp);
-			srcbone->SetLocalEul(limitdegflag, srcmotid, roundingframe, saveeul, curmp);
+			if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
+				////2025/12/14
+				bool firstsetflag = true;
+				srcbone->SetFootRigMat(limitdegflag, srcmotid, srcframe, saveworldmat, firstsetflag);
+				srcbone->SetLocalEul(limitdegflag, srcmotid, roundingframe, saveeul, curmp);
+			}
+			else {
+				srcbone->SetWorldMat(limitdegflag, srcmotid, roundingframe, saveworldmat, curmp);
+				srcbone->SetLocalEul(limitdegflag, srcmotid, roundingframe, saveeul, curmp);
+			}
 		}
 	}
 
@@ -2839,25 +2878,31 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag,
 		return 0;
 	}
 
-	if (srcmp) {
-		if (limitdegflag == false) {
-			srcmp->SetWorldMat(srcmat);
-		}
-		else {
-			srcmp->SetLimitedWM(srcmat);
-			//srcmp->SetCalcLimitedWM(2);
-		}
+	if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
+		bool firstsetflag = false;
+		srcbone->SetFootRigMat(limitdegflag, srcmotid, roundingframe, srcmat, firstsetflag);
 	}
 	else {
-		CMotionPoint* curmp;
-		curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
-		if (curmp) {
+		if (srcmp) {
 			if (limitdegflag == false) {
-				curmp->SetWorldMat(srcmat);
+				srcmp->SetWorldMat(srcmat);
 			}
 			else {
-				curmp->SetLimitedWM(srcmat);
-				//curmp->SetCalcLimitedWM(2);
+				srcmp->SetLimitedWM(srcmat);
+				//srcmp->SetCalcLimitedWM(2);
+			}
+		}
+		else {
+			CMotionPoint* curmp;
+			curmp = srcbone->GetMotionPoint(srcmotid, roundingframe);
+			if (curmp) {
+				if (limitdegflag == false) {
+					curmp->SetWorldMat(srcmat);
+				}
+				else {
+					curmp->SetLimitedWM(srcmat);
+					//curmp->SetCalcLimitedWM(2);
+				}
 			}
 		}
 	}
@@ -2934,8 +2979,17 @@ int ChaCalcFunc::SetWorldMatFromEulAndScaleAndTra(CBone* srcbone, bool limitdegf
 	}
 
 	if (curmp) {
-		//curmp->SetBefWorldMat(curmp->GetWorldMat());
-		srcbone->SetWorldMat(limitdegflag, srcmotid, roundingframe, newmat, curmp);
+
+		if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
+			////2025/12/14
+			bool firstsetflag = true;
+			srcbone->SetFootRigMat(limitdegflag, srcmotid, roundingframe, newmat, firstsetflag);
+		}
+		else {
+			//curmp->SetBefWorldMat(curmp->GetWorldMat());
+			srcbone->SetWorldMat(limitdegflag, srcmotid, roundingframe, newmat, curmp);
+		}
+
 		
 		//#######################################################################################################################
 		//2023/10/19
@@ -2954,11 +3008,16 @@ int ChaCalcFunc::SetWorldMatFromEulAndScaleAndTra(CBone* srcbone, bool limitdegf
 		}
 
 		if (setchildflag == 1) {
-			if (srcbone->GetChild(false)) {
-				bool setbroflag = true;
-				srcbone->GetChild(false)->UpdateParentWMReq(limitdegflag, 
-					setbroflag,
-					srcmotid, roundingframe, befwm, newmat);
+			if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
+				//srcbone->SetFootRigMat()から呼び出し済
+			}
+			else {
+				if (srcbone->GetChild(false)) {
+					bool setbroflag = true;
+					srcbone->GetChild(false)->UpdateParentWMReq(limitdegflag,
+						setbroflag,
+						srcmotid, roundingframe, befwm, newmat);
+				}
 			}
 		}
 	}

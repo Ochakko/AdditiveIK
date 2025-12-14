@@ -1376,14 +1376,14 @@ public: //accesser
 		m_footrigmat = srcmat;
 		m_footrigtime = roundingframe;
 
-		//if (firstsetflag == true) {
-		//	if (GetChild(false)) {
-		//		bool setbroflag = true;
-		//		GetChild(false)->UpdateParentFootRigWMReq(limitdegflag,
-		//			setbroflag, srcmotid, roundingframe,
-		//			saveworldmat, srcmat);
-		//	}
-		//}
+		if (firstsetflag == true) {
+			if (GetChild(false)) {
+				bool setbroflag = true;
+				GetChild(false)->UpdateParentFootRigWMReq(limitdegflag,
+					setbroflag, srcmotid, roundingframe,
+					saveworldmat, srcmat);
+			}
+		}
 	};
 	void SetFootRigMatOrg(int limitdegflag, int srcmotid, double srcframe) {
 		//FootRigUpdatedフラグが立っているのでCBone::GetWorldMat()はここでは使えない

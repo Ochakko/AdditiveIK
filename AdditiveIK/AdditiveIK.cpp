@@ -19425,6 +19425,10 @@ int PostOpenChaFile()
 		}
 	}
 
+
+	SetModel2Dlgs(GetCurrentModel());//2025/12/14 ここで呼ばないとFootRigオンのモデルが宙に浮く
+
+
 	//2025/08/13
 	//PostureChildのフラグなど全モデル読み込み後の設定がboneに付いた後でFillTimelineするために呼び出す(名前に水色で(P)が付く)
 	if (s_owpTimeline) {
