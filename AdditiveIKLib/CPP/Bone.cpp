@@ -409,6 +409,8 @@ int CBone::InitParams()
 
 	m_footrigmat.SetIdentity();
 	m_footrigtime = 1.0;
+	m_footrigeul.SetZeroVec3();
+	m_footrigeultime = 1.0;
 
 	m_initcustomrigflag = 0;
 	//InitCustomRig();//<-- after set name
@@ -8179,6 +8181,13 @@ ChaVector3 CBone::GetLimitedLocalEul(int srcmotid, double srcframe)
 
 
 	double roundingframe = RoundingTime(srcframe);
+
+	if (GetParModel()->GetUnderFootRig() && GetFootRigUpdated()) {
+		//2025/12/14 FootRig計算中 かつ　FootRig対象ボーンの場合
+		int limitdegflag = 1;
+		reteul = GetFootRigEul(limitdegflag, srcmotid, srcframe);
+		return reteul;//#################
+	}
 
 	CMotionPoint* curmp;
 	curmp = GetMotionPoint(srcmotid, roundingframe);

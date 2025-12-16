@@ -1393,15 +1393,46 @@ public: //accesser
 			if (curmp) {
 				if (limitdegflag == 0) {
 					m_footrigmat = curmp->GetWorldMat();
+					m_footrigeul = curmp->GetLocalEul();
 				}
 				else {
 					m_footrigmat = curmp->GetLimitedWM();
+					m_footrigeul = curmp->GetLimitedLocalEul();
 				}
 				m_footrigtime = roundingframe;
+				m_footrigeultime = roundingframe;
 			}
 		}
 	};
 
+	ChaVector3 GetFootRigEul(int limitdegflag, int srcmotid, double srcframe) {
+		double roundingframe = RoundingTime(srcframe);
+		if (IsEqualRoundingTime(roundingframe, m_footrigeultime)) {
+			return m_footrigeul;
+		}
+		else {//applyframeのworldmatなどはこちらを通る
+			CMotionPoint* curmp = GetMotionPoint(srcmotid, roundingframe);
+			if (curmp) {
+				if (limitdegflag == 0) {
+					return curmp->GetLocalEul();
+				}
+				else {
+					return curmp->GetLimitedLocalEul();
+				}
+			}
+			else {
+				ChaVector3 zeroeul;
+				zeroeul.SetZeroVec3();
+				return zeroeul;
+			}
+		}
+	};
+	void SetFootRigEul(int limitdegflag, int srcmotid, double srcframe, ChaVector3 srceul) {
+		double roundingframe = RoundingTime(srcframe);
+
+		m_footrigeul = srceul;
+		m_footrigeultime = roundingframe;
+	};
 
 	//ChaMatrix GetBefBtMat(){ return m_befbtmat; };
 	//void SetBefBtMat(ChaMatrix srcmat){ m_befbtmat = srcmat; };
@@ -1984,6 +2015,8 @@ private:
 
 	ChaMatrix m_footrigmat;
 	double m_footrigtime;
+	ChaVector3 m_footrigeul;
+	double m_footrigeultime;
 
 	ChaVector3 m_firstframebonepos;
 

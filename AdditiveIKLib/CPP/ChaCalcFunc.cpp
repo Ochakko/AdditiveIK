@@ -2289,11 +2289,12 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, int wallscraping
 	ChaVector3 saveeul;
 	if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
 		saveworldmat = srcbone->GetFootRigMat(limitdegflag, srcmotid, roundingframe);
+		saveeul = srcbone->GetFootRigEul(limitdegflag, srcmotid, roundingframe);
 	}
 	else {
 		saveworldmat = srcbone->GetWorldMat(limitdegflag, srcmotid, roundingframe, curmp);
+		saveeul = srcbone->GetLocalEul(limitdegflag, srcmotid, roundingframe, curmp);
 	}
-	saveeul = srcbone->GetLocalEul(limitdegflag, srcmotid, roundingframe, curmp);
 
 	//if ((directsetflag == false) && (g_underRetargetFlag == false)){
 
@@ -3412,7 +3413,12 @@ int ChaCalcFunc::SetLocalEul(CBone* srcbone, bool limitdegflag, int srcmotid, do
 		return 0;
 	}
 
-	if (srcmp) {
+
+	if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
+		srcbone->SetFootRigEul(limitdegflag, srcmotid, roundingframe, srceul);
+	}
+
+	else if (srcmp) {
 		if (limitdegflag == false) {
 			srcmp->SetLocalEul(srceul);
 		}
@@ -3456,8 +3462,12 @@ ChaVector3 ChaCalcFunc::GetLocalEul(CBone* srcbone, bool limitdegflag, int srcmo
 		return reteul;
 	}
 
+	if (srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
+		//2025/12/14 FootRig計算中 かつ　FootRig対象ボーンの場合
+		reteul = srcbone->GetFootRigEul(limitdegflag, srcmotid, srcframe);
+	}
 
-	if (srcmp) {
+	else if (srcmp) {
 		if (limitdegflag == false) {
 			reteul = srcmp->GetLocalEul();
 		}

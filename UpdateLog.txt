@@ -1,6 +1,9 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2025/12/16
+　FootRigに関する修正
+　　オイラー角の計算もFootRig専用の変数で行うように.
 
 2025/12/14
 　FootRigに関する修正
@@ -10,7 +13,6 @@ https://github.com/Ochakko/AdditiveIK
 　　　
 　　　アニマルだけでテストしていたが人型でテストしたら関節の曲がり方がおかしかったのを修正.
 　　　　割と根本的に修正.
-
 
 2025/12/13
 　FootRigに関する修正
