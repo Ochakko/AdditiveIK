@@ -33,6 +33,57 @@ class CThreadingMotion2Bt;
 class CThreadingSetBtMotion;
 class CFootRigDlg;
 
+typedef struct tag_matrixcalling
+{
+	bool initflag[2];
+	ChaMatrix matWorld[2];
+	ChaMatrix matView[2];
+	ChaMatrix matProj[2];
+
+	void Init() {
+		initflag[0] = false;
+		initflag[1] = false;
+		matWorld[0].SetIdentity();
+		matWorld[1].SetIdentity();
+		matView[0].SetIdentity();
+		matView[1].SetIdentity();
+		matView[0].SetIdentity();
+		matView[1].SetIdentity();
+	};
+	tag_matrixcalling() {
+		Init();
+	};
+	void Set(int updateslot, ChaMatrix srcmw, ChaMatrix srcmv, ChaMatrix srcmp) {
+		if ((updateslot == 0) || (updateslot == 1)) {
+			matWorld[updateslot] = srcmw;
+			matView[updateslot] = srcmv;
+			matProj[updateslot] = srcmp;
+			initflag[updateslot] = true;
+
+			//初回は両方のslotにセット
+			int renderslot = (updateslot == 0) ? 1 : 0;
+			if (initflag[renderslot] == false) {
+				matWorld[renderslot] = srcmw;
+				matView[renderslot] = srcmv;
+				matProj[renderslot] = srcmp;
+				initflag[renderslot] = true;
+			}
+		}
+	};
+	ChaMatrix GetMatWorldForRender(int updateslot) {
+		int renderslot = (updateslot == 0) ? 1 : 0;
+		return matWorld[renderslot];
+	};
+	ChaMatrix GetMatViewForRender(int updateslot) {
+		int renderslot = (updateslot == 0) ? 1 : 0;
+		return matView[renderslot];
+	};
+	ChaMatrix GetMatProjForRender(int updateslot) {
+		int renderslot = (updateslot == 0) ? 1 : 0;
+		return matProj[renderslot];
+	};
+}MATRIXCALLING;
+
 class ChaScene
 {
 public:
@@ -75,8 +126,10 @@ public:
 
 
 	void SetUpdateSlot();
+	MATRIXCALLING UpdateMatrixCalling(CModel* srcmodel);
+	MATRIXCALLING GetMatrixCalling(CModel* srcmodel);
 	//void ResetCSFirstDispatchFlag();
-	int UpdateMatrixModels(bool limitdegflag, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe, int loopstartflag);
+	int UpdateMatrixModels(bool limitdegflag, double srcframe, int loopstartflag);
 	int UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, 
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe, int refposindex);
 	int WaitUpdateThreads();
@@ -139,7 +192,7 @@ public:
 	int FindModelIndex(CModel* srcmodel);
 	BOOL ExistCameraChildModel();
 	void SetCameraPostureToChildModel();
-
+	void SetCameraPostureToChildModel(CModel* srcmodel);
 private:
 	void InitParams();
 	void DestroyObjs();
@@ -484,6 +537,7 @@ private:
 	MODELBOUND	m_totalmb;
 	int m_curmodelmenuindex;
 
+	std::unordered_map<CModel*,MATRIXCALLING> m_matrixcalling;
 
 	int m_totalupdatethreadsnum;
 	int m_updateslot;

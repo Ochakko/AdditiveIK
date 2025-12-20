@@ -2316,6 +2316,9 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 		_ASSERT(0);
 		return 0;
 	}
+	if (!pleftfootinfo->IsValid() || !prightfootinfo->IsValid()) {//2025/12/20
+		return 0;
+	}
 
 
 	std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
@@ -2324,7 +2327,6 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 
 		FOOTRIGELEM curelem = itrelem->second;
 		if (curelem.IsEnable()) {
-
 
 			CModel* chkgroundmodel = curelem.groundmodel;
 			if (!IsValidModel(chkgroundmodel)) {

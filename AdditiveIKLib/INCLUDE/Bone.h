@@ -887,7 +887,8 @@ public: //accesser
 	CMotionPoint GetCurMp(bool calcslotflag = false) {
 		if (calcslotflag == false) {
 			//計算済のm_curmpを取得する場合
-			int renderslot = (int)(!(m_updateslot != 0));
+			//int renderslot = (int)(!(m_updateslot != 0));
+			int renderslot = (m_updateslot == 0) ? 1 : 0;
 			return m_curmp[renderslot];
 		}
 		else {
@@ -1439,7 +1440,8 @@ public: //accesser
 	ChaMatrix GetBtMat(bool calcslotflag = false){
 		if (calcslotflag == false) {
 			//計算済のm_curmpを取得する場合
-			int renderslot = (int)(!(m_updateslot != 0));
+			//int renderslot = (int)(!(m_updateslot != 0));
+			int renderslot = (m_updateslot == 0) ? 1 : 0;
 			return m_btmat[renderslot];
 		}
 		else {

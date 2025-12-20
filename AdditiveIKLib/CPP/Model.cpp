@@ -3827,7 +3827,8 @@ int CModel::SetMotionFrame(double srcframe)
 		}
 	}
 
-	m_curmotinfo->befframe = m_curmotinfo->curframe;
+	//m_curmotinfo->befframe = m_curmotinfo->curframe;
+	SetRenderSlotFrame(m_curmotinfo->curframe);
 	m_curmotinfo->curframe = fmax(0.0, fmin((m_curmotinfo->frameleng - 1.0), srcframe));
 	return 0;
 }
@@ -3836,7 +3837,8 @@ int CModel::SetMotionFrame(int srcmotid, double srcframe)
 	MOTINFO* curmi = GetMotInfoPtr(srcmotid);
 	if (curmi) {
 		curmi->curframe = fmax(0.0, fmin((curmi->frameleng - 1.0), srcframe));
-		curmi->befframe = m_curmotinfo->curframe;
+		//urmi->befframe = m_curmotinfo->curframe;
+		SetRenderSlotFrame(m_curmotinfo->curframe);
 		m_curmotinfo = curmi;//2025/01/11 m_curmotinfoの更新
 	}
 	else {

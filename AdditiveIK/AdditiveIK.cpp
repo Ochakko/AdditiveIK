@@ -313,6 +313,8 @@ enum {
 	SPMENU_MAX
 };
 
+static bool s_callingUpdateFlag = false;
+static float s_camdistOnFPS = 1.0f;
 
 static int s_ik_timer_id = 9876;
 //#define FPSSAVENUM 100
@@ -3501,12 +3503,16 @@ INT WINAPI wWinMain(
 					g_chascene->SetUpdateSlot();
 				}
 
+				s_callingUpdateFlag = true;//for debug
+
 				//ドキュメント更新
 				int loopstartflag = 0;
 				OnUserFrameMove(s_fTime, s_fElapsedTime, &loopstartflag);
 
 				//ビュー更新
 				OnFrameRender(&renderingEngine, &renderContext, s_fTime, s_fElapsedTime, loopstartflag);
+
+				s_callingUpdateFlag = false;//for debug
 
 				////UpdateMatrixスレッド終了待ち
 				////ここで呼ぶよりも、GraphicsEngine.cppのEndRender()で描画の終了待ちの前で実行する(描画の間もUpdateMatrixを計算する)のが一番速いようだ.
@@ -3756,6 +3762,9 @@ void InitApp()
 	s_cancelLButtonDown = false;
 	s_cancelRButtonDown = false;
 	s_LButtonDown = false;
+
+	s_callingUpdateFlag = false;
+	s_camdistOnFPS = 1.0f;
 
 	s_posturechildmodel = nullptr;
 	s_postureparentbone = nullptr;
@@ -6049,7 +6058,7 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		OnFrameUtCheckBox();
 		SetCamera6Angle();
 		AutoCameraTarget();
-
+		
 
 		if ((g_previewFlag == 0) && (s_savepreviewFlag != 0)) {
 			s_cursorFlag = true;
@@ -15553,7 +15562,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.55\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.56\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -18594,6 +18603,8 @@ int SetCamera6Angle()
 	ChaVector3 neweye;
 	float delta = 0.10f;
 
+	bool setflag = false;
+
 	if (g_keybuf[VK_F1] & 0x80) {
 		neweye.x = g_camtargetpos.x;
 		neweye.y = g_camtargetpos.y;
@@ -18608,6 +18619,7 @@ int SetCamera6Angle()
 		//!!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
 		//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
 
+		setflag = true;
 	}
 	else if (g_keybuf[VK_F2] & 0x80) {
 		neweye.x = g_camtargetpos.x;
@@ -18622,6 +18634,8 @@ int SetCamera6Angle()
 		g_camEye = neweye;
 		//!!!!!!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
 		//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+
+		setflag = true;
 	}
 	else if (g_keybuf[VK_F3] & 0x80) {
 		neweye.x = g_camtargetpos.x - camdist;
@@ -18636,6 +18650,8 @@ int SetCamera6Angle()
 		g_camEye = neweye;
 		//!!!!!!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
 		//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+
+		setflag = true;
 	}
 	else if (g_keybuf[VK_F4] & 0x80) {
 		neweye.x = g_camtargetpos.x + camdist;
@@ -18664,6 +18680,8 @@ int SetCamera6Angle()
 		g_camEye = neweye;
 		//!!!!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
 		//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+
+		setflag = true;
 	}
 	else if (g_keybuf[VK_F6] & 0x80) {
 		neweye.x = g_camtargetpos.x;
@@ -18678,13 +18696,16 @@ int SetCamera6Angle()
 		g_camEye = neweye;
 		//!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
 		//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+
+		setflag = true;
 	}
 
-	ChaVector3 diffv;
-	diffv = g_camEye - g_camtargetpos;
-	g_camdist = (float)ChaVector3LengthDbl(&diffv);
-
-	SetCamera3DFromEyePos();
+	if (setflag) {
+		ChaVector3 diffv;
+		diffv = g_camEye - g_camtargetpos;
+		g_camdist = (float)ChaVector3LengthDbl(&diffv);
+		SetCamera3DFromEyePos();
+	}
 
 	return 0;
 }
@@ -23511,7 +23532,7 @@ int ExportFBXFile()
 	s_owpLTimeline->setCurrentTime(0.0, true);
 
 	int loopstartflag = 1;
-	g_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, 0.0, loopstartflag);
+	g_chascene->UpdateMatrixModels(g_limitdegflag, 0.0, loopstartflag);
 	
 	WCHAR filename[MAX_PATH] = { 0L };
 	OPENFILENAME ofn1;
@@ -23627,7 +23648,7 @@ int ExportBntFile()
 	s_owpLTimeline->setCurrentTime(0.0, true);
 
 	int loopstartflag = 1;
-	g_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, 0.0, loopstartflag);
+	g_chascene->UpdateMatrixModels(g_limitdegflag, 0.0, loopstartflag);
 
 
 
@@ -25964,10 +25985,10 @@ int OnFramePreviewStop()
 	}
 	
 	//2025/12/14
-	//currenttimeはCModelのtimerangeでクランプしていない値であることに注意！！！
+	//currenttimeはCModelのtimerangeでクランプしていない値であることに注意！！
 
 	int loopstartflag = 1;
-	g_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, currenttime, loopstartflag);
+	g_chascene->UpdateMatrixModels(g_limitdegflag, currenttime, loopstartflag);
 
 	//s_tum.UpdateMatrix(s_modelindex, &s_matVP);//ブロッキング
 
@@ -26008,7 +26029,7 @@ int OnFramePreviewNormal(double nextframe, double difftime, int endflag, int loo
 	if (g_previewMOA != 0) {
 		SetNewPoseByMoa_All(GetCurrentModel(), &nextframe);//呼び出し場所変更　OnFrameProcessTime()かどちらかを呼ぶように.
 	}
-	g_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, nextframe, loopstartflag);
+	g_chascene->UpdateMatrixModels(g_limitdegflag, nextframe, loopstartflag);
 
 #ifndef SKIP_EULERGRAPH__
 	if (s_owpTimeline) {
@@ -26820,7 +26841,7 @@ int OnFrameTimeLineWnd()
 		}
 		if (g_chascene && (g_previewFlag != 4) && (g_previewFlag != 5)) {
 			int loopstartflag = 1;
-			g_chascene->UpdateMatrixModels(g_limitdegflag, &s_matView, &s_matProj, s_buttonselectstart, loopstartflag);
+			g_chascene->UpdateMatrixModels(g_limitdegflag, s_buttonselectstart, loopstartflag);
 		}
 
 		s_limiteuldlg.Bone2AngleLimit(s_curboneno);
@@ -34614,7 +34635,7 @@ void AutoCameraTarget()
 				ChangeCameraDist(g_camdist, s_moveeyepos, false);
 			}
 			else {
-				//MoveEyePosチェックしていない場合　カメラ距離を変える
+				//MoveEyePosチェックしていない場合　かつ　FPS以外の場合　カメラ距離を変える
 				ChaVector3 diffv;
 				diffv = g_camEye - g_camtargetpos;
 				float newcamdist = (float)ChaVector3LengthDbl(&diffv);
@@ -34646,7 +34667,8 @@ void AutoCameraTarget()
 		//ChangeCameraDist(newcamdist, false, false);
 	}
 
-	SetCamera3DFromEyePos();
+
+	//SetCamera3DFromEyePos();
 }
 
 
@@ -36563,26 +36585,11 @@ int OnMouseMoveFunc()
 			s_pickinfo.mousepos = ptCursor;
 
 			float deltadist = (float)((s_pickinfo.mousepos.x - s_pickinfo.mousebefpos.x) + (s_pickinfo.mousepos.y - s_pickinfo.mousebefpos.y)) * 0.5f;
-			//float mdelta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
-			//float deltadist = mdelta * g_camdist * 0.0010f;
-			if (s_cameraHasChildFlag) {
-				g_camdist = 1.0f;
-				if ((deltadist >= 0.01f) || (deltadist <= -0.01f)) {
-					CameraForEditDist(deltadist);
-				}
-
-				//WCHAR strinfo[256] = { 0L };
-				//swprintf_s(strinfo, L"OnMouseMoveFunc : posturechildofcamera : deltadist %.4f : cameradist %.4f",
-				//	deltadist, g_camdist);
-				//OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
+			if (g_preciseRotation == true) {
+				deltadist *= 0.250f;
 			}
-			else {
-				if (g_preciseRotation == true) {
-					deltadist *= 0.250f;
-				}
-				deltadist *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
-				CameraForEditDist(deltadist);
-			}
+			deltadist *= g_physicsmvrate;//2024/01/30 DispAndLimitsPlateMenu : EditRateSlider
+			CameraForEditDist(deltadist);
 
 		}
 	}
@@ -42699,9 +42706,6 @@ int SetModelWorldMat()
 
 				SetCameraPostureToModel();
 
-				//子供モデルとの距離を1.0fにすることで　回転時のカクカクを防ぐ
-				ChangeCameraDist(1.0f, false, false);
-
 				//リアルタイムのカメラの姿勢はSetCamera3D...でセットする
 			}
 			else {
@@ -44453,50 +44457,12 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider,
 {
 	float savecamdist = g_camdist;
 
-	if (s_cameraHasChildFlag) {
-		if (newcamdist > 0.0f) {
-			ChaVector3 camvec = g_camEye - g_camtargetpos;
-			ChaVector3Normalize(&camvec, &camvec);
+	//double diffdist = fabs(savecamdist - newcamdist);
+	//if (diffdist < 0.0001) {
+	//	return 0;
+	//}
 
-			g_befcamEye = g_camEye;
-			g_befcamtargetpos = g_camtargetpos;
-
-			//g_camEye = g_camEye + camvec * 5.0f;
-			//g_camtargetpos = g_camEye - camvec * 4.0f;
-			g_camEye = g_camEye + camvec * newcamdist;
-			g_camtargetpos = g_camEye - camvec * 1.0f;
-
-			g_camdist = 1.0f;
-
-			//WCHAR strinfo[256] = { 0L };
-			//swprintf_s(strinfo, L"ChangeCameraDist : newcamdist > 0.0 : target(%.2f, %.2f, %.2f) : pos(%.2f, %.2f, %.2f)",
-			//	g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z,
-			//	g_camEye.x, g_camEye.y, g_camEye.z);
-			//OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
-		}
-		else {
-			ChaVector3 camvec2 = g_camtargetpos - g_camEye;
-			ChaVector3Normalize(&camvec2, &camvec2);
-
-			g_befcamEye = g_camEye;
-			g_befcamtargetpos = g_camtargetpos;
-
-			//g_camtargetpos = g_camtargetpos + camvec2 * 5.0f;
-			//g_camEye = g_camtargetpos - camvec2 * 1.0f;
-			g_camtargetpos = g_camtargetpos + camvec2 * -newcamdist;
-			g_camEye = g_camtargetpos - camvec2 * 1.0f;
-
-			g_camdist = 1.0f;
-
-			//WCHAR strinfo[256] = { 0L };
-			//swprintf_s(strinfo, L"ChangeCameraDist : newcamdist < 0.0 : target(%.2f, %.2f, %.2f) : pos(%.2f, %.2f, %.2f)",
-			//	g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z,
-			//	g_camEye.x, g_camEye.y, g_camEye.z);
-			//OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
-		}
-		
-	}
-	else {
+	{
 		g_camdist = (float)fmin(s_maxcamdist, newcamdist);//2024/06/04 最大値でクランプしてからtargetを再計算する
 		//WCHAR strinfo[256] = { 0L };
 		//swprintf_s(strinfo, L"ChangeCameraDist : newcamdist %f : g_camdist %f",
@@ -44574,7 +44540,27 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider,
 		}
 	}
 
-	SetCamera3DFromEyePos();
+
+	//if (s_cameraHasChildFlag) {
+	//	ChaVector3 camvec = g_camEye - g_camtargetpos;
+	//	ChaVector3Normalize(&camvec, &camvec);
+	//
+	//	g_befcamEye = g_camEye;
+	//	g_befcamtargetpos = g_camtargetpos;
+	//
+	//	if (moveeyeposflag == true) {
+	//		g_camEye = g_camtargetpos + camvec * newcamdist;
+	//		g_camtargetpos = g_camEye - camvec * s_camdistOnFPS;
+	//	}
+	//	else {
+	//		g_camtargetpos = g_camEye + camvec * s_camdistOnFPS;
+	//	}
+	//
+	//	g_camdist = s_camdistOnFPS;
+	//}
+
+
+	//SetCamera3DFromEyePos();
 
 
 	if (s_sidemenuWnd && s_sidemenu_camdistSlider && (calledbyslider == false)) {
@@ -44602,7 +44588,7 @@ void SetCamera3DFromEyePos()
 	g_camera3D->SetHeight((float)g_graphicsEngine->GetFrameBufferHeight());//2023/11/20
 	g_camera3D->Update();
 
-	SetCameraPostureToModel();
+	//SetCameraPostureToModel();//2025/12/20 ずれないようにChaScene::UpdateMatrixModels()から呼ぶ
 
 	//#####################################################################################################
 	//2025/11/16
@@ -48237,12 +48223,12 @@ int CameraForEditDist(float deltadist)
 		}
 		else {
 			float newcamdist;
-			if (s_cameraHasChildFlag) {
-				newcamdist = deltadist;
-			}
-			else {
+			//if (s_cameraHasChildFlag) {
+			//	newcamdist = deltadist;
+			//}
+			//else {
 				newcamdist = g_camdist + deltadist;
-			}
+			//}
 			ChangeCameraDist(newcamdist, true, false);
 		}
 	}
