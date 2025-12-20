@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2025/12/20
-　AdditiveIK 1.0.0.56 RC1(リリース候補1)
+　AdditiveIK 1.0.0.56 release
 　　1.0.0.55からの変更点
 　　　FootRigの修正
 　　　　FootRigとぽすちゃーチャイルド併用時に必要以上にパタパタ動くのを修正
