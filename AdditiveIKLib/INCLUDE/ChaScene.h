@@ -532,6 +532,15 @@ public:
 		return m_currentmodel;
 	};
 
+	void SetFirstUpdateMatrix(bool srcval)
+	{
+		m_firstupdatematrix = srcval;
+	};
+	bool GetFirstUpdateMatrix()
+	{
+		return m_firstupdatematrix;
+	};
+
 private:
 	std::vector<MODELELEM> m_modelindex;
 	MODELBOUND	m_totalmb;
@@ -541,6 +550,8 @@ private:
 
 	int m_totalupdatethreadsnum;
 	int m_updateslot;
+
+	bool m_firstupdatematrix;
 
 	CThreadingMotion2Bt* m_Motion2BtThreads;//モデル数分配列
 	CThreadingSetBtMotion* m_SetBtMotionThreads;//モデル数分配列

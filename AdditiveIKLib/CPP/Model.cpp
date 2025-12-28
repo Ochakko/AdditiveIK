@@ -667,6 +667,7 @@ int CModel::InitParams()
 	m_curmotinfo = nullptr;
 
 	m_modeldisp = true;
+
 	m_topbone = 0;
 	//m_firstbone = 0;
 
@@ -2532,6 +2533,7 @@ int CModel::UpdateMatrix(bool limitdegflag,
 	m_matVP = m_matView * m_matProj;
 	
 
+
 	ChkInView(refposindex);//2023/08/25 //2024/03/24
 	if(!ExistCurrentMotion()){
 		return 0;//!!!!!!!!!!!!
@@ -2541,6 +2543,7 @@ int CModel::UpdateMatrix(bool limitdegflag,
 			return 0;
 		}
 	}
+
 
 	//morphアニメがあるかもしれないので、ボーンが無くてもリターンしない
 	//if (GetBoneForMotionSize() <= 0) {
@@ -4362,6 +4365,10 @@ int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj,
 	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 	*dstdist = FLT_MAX;
 
+	if (!GetInView(0) || !GetModelDisp()) {
+		return 0;//2025/12/28 視野外は当たらないことに.
+	}
+
 	double rayleng;
 	ChaVector3 startglobal, dirglobal;
 	CalcMouseGlobalRay(pickinfo, &startglobal, &dirglobal);
@@ -4393,6 +4400,11 @@ int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
 	}
 	*hitfaceindex = -1;
 	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
+
+	if (!GetInView(0) || !GetModelDisp()) {
+		return 0;//2025/12/28 視野外は当たらないことに.
+	}
+
 
 	ChaVector3 startlocal, dirlocal;
 	double rayleng;
@@ -4432,6 +4444,11 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 	//*hitfaceindex = -1;
 	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 
+	if (!GetInView(0)) {
+		return 0;//2025/12/28 視野外は当たらないことに.
+	}
+
+
 	ChaVector3 dirglobal;
 	dirglobal = endglobal - startglobal;
 	ChaVector3Normalize(&dirglobal, &dirglobal);
@@ -4456,9 +4473,11 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 	int count5 = 0;
 	int mb5num = (int)m_bound_per5.size();
 
+
 	unordered_map<int, CMQOObject*>::iterator itr;
 	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 		CMQOObject* curobj = itr->second;
+		//if (curobj && !curobj->IsND()) {
 		if (curobj && !curobj->IsND()) {
 
 			//2025/09/23
@@ -4484,42 +4503,51 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 				}
 			}
 
+
 			bool excludeinvface = true;
 			int colli = 0;
 			int hitfaceindex = -1;
 			ChaVector3 tmphitpos;
 			tmphitpos.SetParams(0.0f, 0.0f, 0.0f);
-			if (!gpuflag) {//### CPU ###
-				colli = curobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, rayleng, excludeinvface, &hitfaceindex, &tmphitpos);
 
-				if (colli != 0) {
-					ChaVector3 curdistvec = tmphitpos - startlocal;
-					float curdist = (float)ChaVector3LengthDbl(&curdistvec);
-					if (curdist < nearestdist) {
+			bool onlychkinview = true;
+			if (curobj->GetInView(0)) {//2025/12/28 視野内だけ計算
+				if (!gpuflag) {//### CPU ###
+					colli = curobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, rayleng, excludeinvface, &hitfaceindex, &tmphitpos);
+
+					if (colli != 0) {
+						ChaVector3 curdistvec = tmphitpos - startlocal;
+						float curdist = (float)ChaVector3LengthDbl(&curdistvec);
+						if (curdist < nearestdist) {
+							ChaVector3 hitpos;
+							ChaVector3TransformCoord(&hitpos, &tmphitpos, &m_matWorld);
+
+							nearestdist = curdist;
+							nearesthitpos = hitpos;
+							findflag = true;
+						}
+					}
+				}
+				else {//### GPU ###
+					float tmpdist = FLT_MAX;
+					//colli = curobj->CollisionGlobal_Ray_Pm(startglobal, dirglobal, startlocal, dirlocal,
+					colli = curobj->CollisionGlobal_Ray_Pm(startlocal, dirlocal, startlocal, dirlocal,//pm3の場合はmodelwmを掛けていない頂点に対してPickするのでlocalを渡す
+						rayleng,//2025/09/15
+						excludeinvface, &hitfaceindex, &tmphitpos, &tmpdist);
+
+					if ((colli != 0) && (tmpdist < nearestdist)) {
 						ChaVector3 hitpos;
 						ChaVector3TransformCoord(&hitpos, &tmphitpos, &m_matWorld);
 
-						nearestdist = curdist;
+						nearestdist = tmpdist;
 						nearesthitpos = hitpos;
 						findflag = true;
 					}
 				}
 			}
-			else {//### GPU ###
-				float tmpdist = FLT_MAX;
-				//colli = curobj->CollisionGlobal_Ray_Pm(startglobal, dirglobal, startlocal, dirlocal,
-				colli = curobj->CollisionGlobal_Ray_Pm(startlocal, dirlocal, startlocal, dirlocal,//pm3の場合はmodelwmを掛けていない頂点に対してPickするのでlocalを渡す
-					rayleng,//2025/09/15
-					excludeinvface, &hitfaceindex, &tmphitpos, &tmpdist);
-
-				if ((colli != 0) && (tmpdist < nearestdist)) {
-					ChaVector3 hitpos;
-					ChaVector3TransformCoord(&hitpos, &tmphitpos, &m_matWorld);
-				
-					nearestdist = tmpdist;
-					nearesthitpos = hitpos;
-					findflag = true;
-				}
+			else {
+				//視野外
+				//何もしない
 			}
 
 			count5++;
@@ -4549,6 +4577,10 @@ int CModel::GetResultOfPickRay(CMQOObject* pickobj, int* hitfaceindex, ChaVector
 	*hitfaceindex = -1;
 	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 	*dstdist = FLT_MAX;
+
+	if (!GetInView(0)) {
+		return 0;//2025/12/28 視野外は計算しないことに
+	}
 
 	int colli = 0;
 	colli = pickobj->GetResultOfPickRay(hitfaceindex, dsthitpos, dstdist);
@@ -23475,6 +23507,7 @@ int CModel::ChkInView(int refposindex)
 			SetInShadow(false, refposindex);
 		}
 	}
+
 
 	s_workingChkinView = false;
 	return 0;

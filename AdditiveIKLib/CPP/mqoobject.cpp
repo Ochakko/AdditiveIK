@@ -2583,6 +2583,11 @@ int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglo
 	*hitfaceindex = -1;
 	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 
+	//2025/12/28 視野外は計算しないことに
+	if (!GetInView(0)) {
+		return 0;
+	}
+
 	if (!GetPm4() && !GetPm3()) {
 		_ASSERT(0);
 		return 0;
@@ -3502,6 +3507,15 @@ bool CMQOObject::GetVisible(int refposindex)
 	else {
 		return m_frustum[refposindex].GetVisible();//ChkInView()による視錐体判定結果
 	}
+}
+bool CMQOObject::GetInView(int refposindex)
+{
+	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+		_ASSERT(0);
+		return false;
+	}
+
+	return m_frustum[refposindex].GetVisible();//ChkInView()による視錐体判定結果
 }
 bool CMQOObject::GetInShadow(int refposindex)
 {

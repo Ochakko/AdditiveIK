@@ -2320,7 +2320,6 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 		return 0;
 	}
 
-
 	std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
 	itrelem = m_footrigelem.find(srcmodel);
 	if (itrelem != m_footrigelem.end()) {

@@ -152,6 +152,8 @@ void ChaScene::InitParams()
 
 	m_footrigdlg = nullptr;
 	m_currentmodel = nullptr;
+
+	m_firstupdatematrix = true;
 }
 void ChaScene::DestroyObjs()
 {
@@ -219,7 +221,9 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, double srcframe, int loopsta
 
 	if (!m_modelindex.empty()) {
 
-		if (m_footrigdlg) {
+		//2025/12/28 初回のUpdateMatrixの前に実行すると　地面の下に落ちることがあるので　GetFirstUpdateMatrix()をチェックする
+		//ModelDisp falseの地面へのFootRig処理で問題が出ていた
+		if (m_footrigdlg && !GetFirstUpdateMatrix()) {
 			m_footrigdlg->OnFrameMove(g_limitdegflag);
 		}
 
@@ -311,7 +315,7 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, double srcframe, int loopsta
 		//	WaitUpdateThreads();
 		//}
 
-
+		SetFirstUpdateMatrix(false);
 	}
 
 	return 0;
@@ -2588,4 +2592,7 @@ MATRIXCALLING ChaScene::GetMatrixCalling(CModel* srcmodel)
 	MATRIXCALLING curmc = m_matrixcalling[srcmodel];
 	return curmc;
 }
+
+
+
 

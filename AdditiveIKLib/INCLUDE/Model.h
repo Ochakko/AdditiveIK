@@ -3744,7 +3744,6 @@ public: //accesser
 		}
 	};
 
-
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -3764,8 +3763,6 @@ private:
 	ChaFrustumInfo m_frustum;
 	MODELBOUND m_bound;
 	std::vector<MODELBOUND> m_bound_per5;
-
-
 
 	bool m_updatefl4x4flag;
 	//bool m_csfirstdispatchflag;

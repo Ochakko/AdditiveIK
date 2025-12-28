@@ -217,7 +217,8 @@ public:
 	}
 
 	//accesser
-	bool GetVisible(int refposindex);//chkinview
+	bool GetVisible(int refposindex);//chkinview && modeldisp
+	bool GetInView(int refposindex);//chkinview
 	bool GetInShadow(int refposindex);//chkinview
 	void SetInView(bool srcflag, int refposindex);//chkinview
 	void SetInShadow(bool srcflag, int refposindex);//chkinview

@@ -276,7 +276,6 @@ public:
 		float rigstep, int maxcalccount,
 		ChaMatrix modelwm, ChaMatrix matView, ChaMatrix matProj);
 
-
 public:
 	void SetFootInfo(int footrigLR, FOOTRIGELEM srcelem);
 
