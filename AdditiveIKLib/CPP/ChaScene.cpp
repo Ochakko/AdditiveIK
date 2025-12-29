@@ -230,6 +230,7 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, double srcframe, int loopsta
 		//m_totalupdatethreadsnum = 0;
 
 		vector<CModel*> posturechildmodel;
+		vector<CModel*> posturechildcameramodel;
 
 		bool needwaitflag = false;
 		int modelnum = (int)m_modelindex.size();
@@ -238,7 +239,10 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, double srcframe, int loopsta
 			CModel* curmodel = m_modelindex[modelindex].modelptr;
 			if (curmodel && (curmodel->GetGrassFlag() == false)) {
 
-				if (curmodel->GetPostureParentFlag()) {
+				if (curmodel->GetPostureChildOfCameraFlag()) {
+					posturechildcameramodel.push_back(curmodel);
+				}
+				else if (curmodel->GetPostureParentFlag()) {
 					posturechildmodel.push_back(curmodel);
 				}
 				else {
@@ -268,30 +272,66 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, double srcframe, int loopsta
 			}
 		}
 
+		//################################################################
+		//2025/12/29
+		//PostureChildCameraFlagがTrueのモデルは後でUpdate
+		//PostureChildCameraの子供にPostureChildが設定されていることが有るので　
+		//PostureChildFlagのモデルよりは先にアップデートする
+		//################################################################
+		{
+			int posturechildnum = (int)posturechildcameramodel.size();
+			for (modelindex = 0; modelindex < posturechildnum; modelindex++) {
+				CModel* curmodel = posturechildcameramodel[modelindex];
+				if (curmodel) {
+
+					int curmotid = curmodel->GetCurrentMotID();
+					if (curmotid <= 0) {
+						int dbgflag1 = 1;
+					}
+
+					if (curmodel->ExistCurrentMotion() &&
+						((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false)))) {
+						curmodel->SetMotionFrame(srcframe);//refposの場合にも必要
+					}
+
+					if (curmodel->GetRefPosFlag() == false) {//2024/02/06
+
+						MATRIXCALLING curmc = UpdateMatrixCalling(curmodel);//2025/12/20
+						curmodel->UpdateMatrix(limitdegflag,
+							&(curmc.matWorld[m_updateslot]), &(curmc.matView[m_updateslot]), &(curmc.matProj[m_updateslot]),
+							needwaitflag, 0);
+					}
+				}
+			}
+		}
+
+
 		//#########################################
 		//PostureParentFlagがTrueのモデルは後でUpdate
 		//#########################################
-		int posturechildnum = (int)posturechildmodel.size();
-		for (modelindex = 0; modelindex < posturechildnum; modelindex++) {
-			CModel* curmodel = posturechildmodel[modelindex];
-			if (curmodel) {
+		{
+			int posturechildnum = (int)posturechildmodel.size();
+			for (modelindex = 0; modelindex < posturechildnum; modelindex++) {
+				CModel* curmodel = posturechildmodel[modelindex];
+				if (curmodel) {
 
-				int curmotid = curmodel->GetCurrentMotID();
-				if (curmotid <= 0) {
-					int dbgflag1 = 1;
-				}
+					int curmotid = curmodel->GetCurrentMotID();
+					if (curmotid <= 0) {
+						int dbgflag1 = 1;
+					}
 
-				if (curmodel->ExistCurrentMotion() &&
-					((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false)))) {
-					curmodel->SetMotionFrame(srcframe);//refposの場合にも必要
-				}
+					if (curmodel->ExistCurrentMotion() &&
+						((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false)))) {
+						curmodel->SetMotionFrame(srcframe);//refposの場合にも必要
+					}
 
-				if (curmodel->GetRefPosFlag() == false) {//2024/02/06
+					if (curmodel->GetRefPosFlag() == false) {//2024/02/06
 
-					MATRIXCALLING curmc = UpdateMatrixCalling(curmodel);//2025/12/20
-					curmodel->UpdateMatrix(limitdegflag,
-						&(curmc.matWorld[m_updateslot]), &(curmc.matView[m_updateslot]), &(curmc.matProj[m_updateslot]),
-						needwaitflag, 0);
+						MATRIXCALLING curmc = UpdateMatrixCalling(curmodel);//2025/12/20
+						curmodel->UpdateMatrix(limitdegflag,
+							&(curmc.matWorld[m_updateslot]), &(curmc.matView[m_updateslot]), &(curmc.matProj[m_updateslot]),
+							needwaitflag, 0);
+					}
 				}
 			}
 		}
