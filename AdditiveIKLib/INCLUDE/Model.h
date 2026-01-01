@@ -3744,6 +3744,16 @@ public: //accesser
 		}
 	};
 
+	bool GetIKStopAllOFF()
+	{
+		return m_ikstop_alloff;
+	};
+	void SetIKStopAllOFF(bool srcval)
+	{
+		m_ikstop_alloff = srcval;
+		SetIKStopFlag();
+	};
+
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -3984,6 +3994,7 @@ private:
 	int m_moaeventrepeats_pad[MOA_PADNUM];
 
 	bool m_mocapwalk;
+	bool m_ikstop_alloff;
 
 	bool m_postureparentflag;
 	bool m_posturecameraflag;

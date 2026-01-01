@@ -2,6 +2,12 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2026/01/01
+　右クリックメニューにIK Stop AllOFFコマンドを追加
+　　シーン中のモデルの全てのIK Stop設定を一括でOFFにします
+　　ジョイント命名規則としてエンドジョイントに_endをつけている場合(ドラッグしても動かない)などに使用
+　　IK Stop AllOFF設定はプロジェクト保存時に保存されます
+
 2025/12/29
 　カメラのぽすちゃーチャイルドのぽすちゃーチャイルドを設定すると　動きが1フレームずれる不具合を修正
 　　UpdateMatrixの順番で解決

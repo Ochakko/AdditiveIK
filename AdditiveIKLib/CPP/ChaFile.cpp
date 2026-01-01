@@ -203,7 +203,11 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CallF(Write2File("  <4L_LOD2>%.2f</4L_LOD2>\r\n", g_lodrate4L[CHKINVIEW_LOD2]), return 1);
 	CallF(Write2File("  <4L_LOD2>%.2f</4L_LOD3>\r\n", g_lodrate4L[CHKINVIEW_LOD3]), return 1);
 
+	int ikstopalloff = (g_ikstop_alloff == true) ? 1 : 0;
+	CallF(Write2File("  <IKStopAllOFF>%d</IKStopAllOFF>\r\n", ikstopalloff), return 1);
 
+	
+	
 	int modelnum = (int)m_modelindex.size();
 	int modelcnt;
 	for( modelcnt = 0; modelcnt < modelnum; modelcnt++ ){
@@ -258,7 +262,9 @@ int CChaFile::WriteFileInfo()
 	//version 1013 : 2025/02/11 1.0.0.38へ向けて  <CameraPos>, <CameraTarget>, <CameraUpVec>追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1013</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1014 : 2025/09/15 1.0.0.52へ向けて  <ModelDisp>, <BoneMarkDisp>, <RigidMarkDisp>, <SelectModel>追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1014</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1014</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1015 : 2026/01/01 1.0.0.57へ向けて  <IKStopAllOFF>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1015</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -948,6 +954,12 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	result = Read_Float(&m_xmliobuf, "<4L_LOD2>", "</4L_LOD3>", &templod);
 	if (result == 0) {
 		g_lodrate4L[CHKINVIEW_LOD3] = templod;
+	}
+
+	int tempalloff = 0;
+	result = Read_Int(&m_xmliobuf, "<IKStopAllOFF>", "</IKStopAllOFF>", &tempalloff);
+	if (result == 0) {
+		g_ikstop_alloff = (tempalloff == 1) ? true : false;
 	}
 
 

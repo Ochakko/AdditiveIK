@@ -193,6 +193,9 @@ public:
 	BOOL ExistCameraChildModel();
 	void SetCameraPostureToChildModel();
 	void SetCameraPostureToChildModel(CModel* srcmodel);
+
+	void ChangeIKStopAllOFF();
+
 private:
 	void InitParams();
 	void DestroyObjs();

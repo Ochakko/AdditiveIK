@@ -58,6 +58,7 @@ class CInfoWindow;
 
 #ifdef ADDITIVEIKLIBGLOBALVAR
 
+bool g_ikstop_alloff = false;
 int g_edittarget = EDITTARGET_BONE;
 int g_curmodelmenuindex = -1;
 int g_curmodelmenuindex_load = -1;
@@ -380,6 +381,7 @@ double g_playingend = 1.0;
 
 
 #else
+extern bool g_ikstop_alloff;
 extern int g_edittarget;
 extern int g_curmodelmenuindex;
 extern int g_curmodelmenuindex_load;

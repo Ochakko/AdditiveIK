@@ -2079,6 +2079,7 @@ ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わら�
 #define ID_RMENU_PASTE (ID_RMENU_PHYSICSCONSTRAINT + 18)
 //SET_POSTURE_CHILDは子メニューを出すので　後ろのIDとしてにMAXMODELNUM分予約
 //#define ID_RMENU_SET_POSTURE_CHILD (ID_RMENU_PHYSICSCONSTRAINT + 19)
+#define ID_RMENU_IKSTOP_ALLOFF (ID_RMENU_PHYSICSCONSTRAINT + 20)
 
 
 
@@ -3765,6 +3766,8 @@ void InitApp()
 
 	s_callingUpdateFlag = false;
 	s_camdistOnFPS = 1.0f;
+
+	g_ikstop_alloff = false;
 
 	s_posturechildmodel = nullptr;
 	s_postureparentbone = nullptr;
@@ -7367,6 +7370,24 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 			else {
 				curbone->SetIKStopFlag(false);
+			}
+			if (s_owpTimeline) {
+				refreshTimeline(*s_owpTimeline);
+			}
+		}
+		else if (menuid == (ID_RMENU_IKSTOP_ALLOFF + MENUOFFSET_BONERCLICK)) {
+			//toggle
+			if (g_ikstop_alloff == false) {
+				g_ikstop_alloff = true;
+				if (g_chascene) {
+					g_chascene->ChangeIKStopAllOFF();
+				}
+			}
+			else {
+				g_ikstop_alloff = false;
+				if (g_chascene) {
+					g_chascene->ChangeIKStopAllOFF();
+				}
 			}
 			if (s_owpTimeline) {
 				refreshTimeline(*s_owpTimeline);
@@ -19449,6 +19470,9 @@ int PostOpenChaFile()
 
 	SetModel2Dlgs(GetCurrentModel());//2025/12/14 ここで呼ばないとFootRigオンのモデルが宙に浮く
 
+	if (g_chascene) {
+		g_chascene->ChangeIKStopAllOFF();//2026/01/01
+	}
 
 	//2025/08/13
 	//PostureChildのフラグなど全モデル読み込み後の設定がboneに付いた後でFillTimelineするために呼び出す(名前に水色で(P)が付く)
@@ -34205,6 +34229,18 @@ int BoneRClick(int srcboneno)
 						(ID_RMENU_IKSTOP + MENUOFFSET_BONERCLICK), 
 						L"IK Stop OFF");
 				}
+
+				if (g_ikstop_alloff == false) {
+					AppendMenu(submenu, MF_STRING,
+						(ID_RMENU_IKSTOP_ALLOFF + MENUOFFSET_BONERCLICK),
+						L"IK Stop AllOFF");
+				}
+				else {
+					AppendMenu(submenu, MF_STRING,
+						(ID_RMENU_IKSTOP_ALLOFF + MENUOFFSET_BONERCLICK),
+						L"IK Stop Enable");
+				}
+
 
 				if (g_chascene) {
 					int modelnum = g_chascene->GetModelNum();

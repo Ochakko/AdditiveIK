@@ -2633,6 +2633,17 @@ MATRIXCALLING ChaScene::GetMatrixCalling(CModel* srcmodel)
 	return curmc;
 }
 
+void ChaScene::ChangeIKStopAllOFF()
+{
+	int modelnum = GetModelNum();
+	int modelindex;
+	for (modelindex = 0; modelindex < modelnum; modelindex++) {
+		CModel* srcmodel = GetModel(modelindex);
+		if (srcmodel) {
+			srcmodel->SetIKStopAllOFF(g_ikstop_alloff);
+		}
+	}
+}
 
 
 

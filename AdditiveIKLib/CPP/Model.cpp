@@ -736,6 +736,7 @@ int CModel::InitParams()
 	m_posture_parent_pos_offset.SetZeroVec3();
 	m_posture_parent_rot_offset.SetZeroVec3();
 
+	m_ikstop_alloff = false;
 
 	return 0;
 }
@@ -23236,11 +23237,16 @@ int CModel::SetIKStopFlag()
 	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
 		CBone* srcbone = itrbone->second;
 		if (srcbone) {
-			if (IsIKStopName(srcbone->GetBoneName()) || srcbone->GetENullConvertFlag()) {//2025/07/12 ENullConvertFlag
-				srcbone->SetIKStopFlag(true);
+			if (m_ikstop_alloff) {
+				srcbone->SetIKStopFlag(false);
 			}
 			else {
-				srcbone->SetIKStopFlag(false);
+				if (IsIKStopName(srcbone->GetBoneName()) || srcbone->GetENullConvertFlag()) {//2025/07/12 ENullConvertFlag
+					srcbone->SetIKStopFlag(true);
+				}
+				else {
+					srcbone->SetIKStopFlag(false);
+				}
 			}
 		}
 	}
