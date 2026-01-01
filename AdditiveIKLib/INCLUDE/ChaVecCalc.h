@@ -1312,6 +1312,19 @@ private:
 	ChaVector3 m_heightparams;
 };
 
+typedef struct tag_blendshapetarget
+{
+	ChaVector3 localv;
+	ChaVector3 globalv;
+	void Init() {
+		localv.SetZeroVec3();
+		globalv.SetZeroVec3();
+	};
+	tag_blendshapetarget() {
+		Init();
+	};
+}BLENDSHAPETARGET;
+
 
 #endif
 

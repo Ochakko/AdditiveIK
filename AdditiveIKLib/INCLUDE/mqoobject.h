@@ -147,7 +147,7 @@ public:
 	int DestroyShapeAnim();
 	int DestroyShapeAnim(char* srcname, int srcmotid);
 	int AddShapeName(char* nameptr);
-	int SetShapeVert(char* nameptr, int vno, ChaVector3 srcv);
+	int SetShapeVert(char* nameptr, int vno, BLENDSHAPETARGET srcv);
 	int AddShapeAnim(char* nameptr, int srcmotid, int animleng);
 	int SetShapeAnim(char* nameptr, int srcmotid, int framecnt, float lWeight);
 	int InitShapeWeight();//補間計算結果
@@ -416,8 +416,8 @@ public:
 	//	dstmap = m_shapevert;
 	//};
 
-	ChaVector3* GetShapeVert(std::string srcname) {
-		std::unordered_map<std::string, ChaVector3*>::iterator itrfind;
+	BLENDSHAPETARGET* GetShapeVert(std::string srcname) {
+		std::unordered_map<std::string, BLENDSHAPETARGET*>::iterator itrfind;
 		itrfind = m_shapevert.find(srcname);
 		if (itrfind != m_shapevert.end()) {
 			return itrfind->second;
@@ -584,7 +584,7 @@ private:
 	std::vector<CBone*> m_cluster;//中身のCBone*は外部メモリ
 
 	std::vector<std::string> m_shapenamevec;
-	std::unordered_map<std::string,ChaVector3*> m_shapevert;
+	std::unordered_map<std::string, BLENDSHAPETARGET*> m_shapevert;
 	std::unordered_map<std::string, std::unordered_map<int,float*>> m_shapeanim2;//複数アニメ対応
 	std::unordered_map<int,int> m_shapeanimleng2;//複数アニメ対応
 

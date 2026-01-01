@@ -179,9 +179,9 @@ void CMQOObject::DestroySystemDispObj()
 
 int CMQOObject::DestroyShapeObj()
 {
-	unordered_map<string,ChaVector3*>::iterator itrshape;
+	unordered_map<string, BLENDSHAPETARGET*>::iterator itrshape;
 	for( itrshape = m_shapevert.begin(); itrshape != m_shapevert.end(); itrshape++ ){
-		ChaVector3* curshape = itrshape->second;
+		BLENDSHAPETARGET* curshape = itrshape->second;
 		if( curshape ){
 			free( curshape );
 		}
@@ -2863,14 +2863,14 @@ int CMQOObject::UpdateMorphBuffer()
 		int error1 = 0;
 		string curname = GetShapeName(channelindex, &error1);
 		if (error1 == 0) {
-			ChaVector3* curshape = m_shapevert[curname];
+			BLENDSHAPETARGET* curshape = m_shapevert[curname];
 			if (curshape) {
 				float curweight = m_shapeweightvec[channelindex] * 0.01f;
 				float befweight = m_shapeweightvecBef[channelindex] * 0.01f;
 				if (curweight != 0.0f) {
 					int vno;
 					for (vno = 0; vno < m_vertex; vno++) {
-						ChaVector3 targetv = *(curshape + vno);//2025/01/01 SetShapeVertする際に頂点にmeshmatを掛けてglobalにしておくことにした(ブレンドシェイプアトリビュート:ローカルに対応)
+						ChaVector3 targetv = (curshape + vno)->globalv;//2025/01/01 SetShapeVertする際に頂点にmeshmatを掛けてglobalにしておくことにした(ブレンドシェイプアトリビュート:ローカルに対応)
 						//ChaVector3TransformCoord(&targetv, &targetv, &globalmat);
 						//ChaVector3 orgv = *(m_localpointbuf + vno);//MeshMatが掛かっていない頂点座標
 						ChaVector3 orgv = *(m_pointbuf + vno);
@@ -3196,12 +3196,12 @@ int CMQOObject::AddShapeName( char* nameptr )
 	string setname = nameptr;
 	m_shapenamevec.push_back(setname);
 
-	ChaVector3* newshape = (ChaVector3*)malloc( sizeof( ChaVector3 ) * m_vertex );
+	BLENDSHAPETARGET* newshape = (BLENDSHAPETARGET*)malloc( sizeof(BLENDSHAPETARGET) * m_vertex );
 	if( !newshape ){
 		_ASSERT( 0 );
 		return 1;
 	}
-	ZeroMemory(newshape, sizeof( ChaVector3 ) * m_vertex);
+	ZeroMemory(newshape, sizeof(BLENDSHAPETARGET) * m_vertex);
 	m_shapevert[nameptr] = newshape;
 
 	return 0;
@@ -3247,14 +3247,14 @@ int CMQOObject::AddShapeAnim(char* nameptr, int srcmotid, int animleng)
 
 
 
-int CMQOObject::SetShapeVert( char* nameptr, int vno, ChaVector3 srcv )
+int CMQOObject::SetShapeVert( char* nameptr, int vno, BLENDSHAPETARGET srcv )
 {
 	if (!nameptr) {
 		_ASSERT(0);
 		return 1;
 	}
 
-	ChaVector3* curshape = m_shapevert[ nameptr ];
+	BLENDSHAPETARGET* curshape = m_shapevert[nameptr];
 	if( curshape ){
 		if( (vno < 0) || (vno >= m_vertex) ){
 			_ASSERT( 0 );

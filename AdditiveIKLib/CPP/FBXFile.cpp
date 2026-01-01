@@ -220,7 +220,7 @@ static int ExistBoneInInf( int boneno, CMQOObject* srcobj, int* dstclusterno );
 
 static int MapShapesOnMesh( FbxScene* pScene, FbxNode* lNode, FbxNode* srcnode, CModel* pmodel, CMQOObject* curobj, BLSINDEX* blsindex );
 static int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene, 
-	CMQOObject* curobj, ChaVector3* targetv, const char* targetname, int targetcnt );
+	CMQOObject* curobj, BLENDSHAPETARGET* targetv, const char* targetname, int targetcnt );
 
 static void CreateDummyInfDataReq(CFBXBone* fbxbone, FbxManager*& pSdkManager, FbxScene*& pScene, FbxNode* lMesh, FbxSkin* lSkin, CBone** ppsetbone, int* bonecnt);
 static FbxNode* CreateDummyFbxMesh(FbxManager* pSdkManager, FbxScene* pScene, CBone** ppsetbone);
@@ -2040,7 +2040,7 @@ bool CreateScene(bool limitdegflag, FbxManager* pSdkManager, FbxScene* pScene, C
 //void MapBoxShape(FbxScene* pScene, FbxBlendShapeChannel* lBlendShapeChannel)
 //int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene, CMQOObject* curobj, CMQOObject* curtarget, MATERIALBLOCK* pmb, int mbno )
 int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene, 
-	CMQOObject* curobj, ChaVector3* targetv, const char* targetname, int targetcnt )
+	CMQOObject* curobj, BLENDSHAPETARGET* targetv, const char* targetname, int targetcnt )
 {
 	char shapename[256]={0};
 	//char tmpname[256] = { 0 };
@@ -2105,7 +2105,8 @@ int MapTargetShape( FbxBlendShapeChannel* lBlendShapeChannel, FbxScene* pScene,
 		//int orgvno = *( basepm4->GetDispIndex() + shapevno );
 		//ChaVector3 shapev = *( targetv + orgvno );
 
-		ChaVector3 shapev = *(targetv + shapevno);//2024/05/16
+		//ChaVector3 shapev = *(targetv + shapevno);//2024/05/16
+		ChaVector3 shapev = (targetv + shapevno)->localv;//2026/01/02 fbx書き出し時にはオリジナルの頂点座標を書き出す
 
 		lVector4[ shapevno ].Set( shapev.x, shapev.y, shapev.z, 1.0 );
 	}
@@ -2159,8 +2160,8 @@ int MapShapesOnMesh(FbxScene* pScene, FbxNode* lNode, FbxNode* srcnode, CModel* 
 			int errorname = 0;
 			string targetname = curobj->GetShapeName(targetcnt, &errorname);
 			if (errorname == 0) {
-				ChaVector3* curv = curobj->GetShapeVert(targetname);
-				if (curv) {
+				BLENDSHAPETARGET* curtargetv = curobj->GetShapeVert(targetname);
+				if (curtargetv) {
 					char writetargetname[256] = { 0 };
 					TrimBlendShapeName(targetname.c_str(), writetargetname, 256);//2024/06/16 最後の.以降の文字列を格納
 
@@ -2185,7 +2186,7 @@ int MapShapesOnMesh(FbxScene* pScene, FbxNode* lNode, FbxNode* srcnode, CModel* 
 					lBlendShape->AddBlendShapeChannel(lBlendShapeChannel);
 
 					//MapTargetShape(lBlendShapeChannel, pScene, curobj, curv, targetname, targetcnt);
-					MapTargetShape(lBlendShapeChannel, pScene, curobj, curv, writetargetname, targetcnt);//2024/06/16 最後の.以降の文字列
+					MapTargetShape(lBlendShapeChannel, pScene, curobj, curtargetv, writetargetname, targetcnt);//2024/06/16 最後の.以降の文字列
 
 					
 					BLSINFO blsinfo;

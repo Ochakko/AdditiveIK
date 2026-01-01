@@ -2,6 +2,11 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2026/01/02
+ BlendShape機能の修正
+ 　2026/01/01の修正の続き
+ 　fbxの保存読み込みでBlendShapeが壊れないように.
+
 2026/01/01
 　BlendShape機能の修正
 　　ブレンドシェイプアトリビュートがローカル設定になっている場合にブレンドシェイプがうまくいかないことがあったのを修正

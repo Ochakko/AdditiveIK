@@ -3210,8 +3210,12 @@ int CModel::GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj)//2024/05/16 morphAni
 									xv.y = (float)shapev[j][1];
 									xv.z = (float)shapev[j][2];
 
-									ChaVector3TransformCoord(&xv, &xv, &globalmat);//2025/01/01
-									curobj->SetShapeVert(shapename, j, xv);
+									BLENDSHAPETARGET curshapev;
+									curshapev.Init();
+									curshapev.localv = xv;//fbx書き出しのためにlocalも保持
+									ChaVector3TransformCoord(&xv, &xv, &globalmat);//2025/01/01 モーフベースがglobalなのでブレンド計算高速化のためにモーフターゲットもglobalにしておく
+									curshapev.globalv = xv;
+									curobj->SetShapeVert(shapename, j, curshapev);
 								}
 							}
 							else {
