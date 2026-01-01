@@ -3157,6 +3157,11 @@ float CModel::GetFbxTargetWeight(FbxMesh* srcMesh, std::string channelname, int 
 
 int CModel::GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj)//2024/05/16 morphAnimは別関数で
 {
+	if (!pMesh || !curobj) {
+		_ASSERT(0);
+		return 1;
+	}
+
 	int lVertexCount = pMesh->GetControlPointsCount();
 	if (lVertexCount <= 0) {
 		return 0;
@@ -3168,10 +3173,13 @@ int CModel::GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj)//2024/05/16 morphAni
 
 	curobj->DestroyShapeObj();
 
+	ChaMatrix globalmat = curobj->GetMeshMat();
+
 	int lBlendShapeDeformerCount = pMesh->GetDeformerCount(FbxDeformer::eBlendShape);
 	for(int lBlendShapeIndex = 0; lBlendShapeIndex<lBlendShapeDeformerCount; ++lBlendShapeIndex)
 	{
 		FbxBlendShape* lBlendShape = (FbxBlendShape*)pMesh->GetDeformer(lBlendShapeIndex, FbxDeformer::eBlendShape);
+		
 		int lBlendShapeChannelCount = lBlendShape->GetBlendShapeChannelCount();
 		for(int lChannelIndex = 0; lChannelIndex<lBlendShapeChannelCount; lChannelIndex++)
 		{
@@ -3180,7 +3188,7 @@ int CModel::GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj)//2024/05/16 morphAni
 			{
 				int lShapeIndex = 0;
 				FbxShape* lShape = NULL;
-				lShape = lChannel->GetTargetShape(lShapeIndex);//lShapeIndex+1ではない！！！！！！！！！！！！！！！！
+				lShape = lChannel->GetTargetShape(lShapeIndex);//lShapeIndex+1ではない！！！！！！！！！！！！！！！！			
 				if(lShape)
 				{	
 					char shapename[256] = { 0 };
@@ -3201,6 +3209,8 @@ int CModel::GetFBXShape(FbxMesh* pMesh, CMQOObject* curobj)//2024/05/16 morphAni
 									xv.x = (float)shapev[j][0];
 									xv.y = (float)shapev[j][1];
 									xv.z = (float)shapev[j][2];
+
+									ChaVector3TransformCoord(&xv, &xv, &globalmat);//2025/01/01
 									curobj->SetShapeVert(shapename, j, xv);
 								}
 							}
@@ -5647,6 +5657,12 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 	newobj->SetVertex( controlNum );
 	newobj->SetPointBuf( (ChaVector3*)malloc( sizeof( ChaVector3 ) * controlNum ) );
 	newobj->SetMeshMat(globalmeshmat);
+
+	//int shapecnt = pMesh->GetShapeCount();
+	//if (shapecnt > 0) {
+	//	newobj->SetLocalPointBuf((ChaVector3*)malloc(sizeof(ChaVector3) * controlNum));//2026/01/01
+	//}
+
 	//for ( int i = 0; i < controlNum; ++i ) {
 	for (int i = 0; i < controlNum; i++) {
 		ChaVector3 tmpp;
@@ -5658,9 +5674,15 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 
 		//eNullのtransformによるメッシュ頂点の変換
 		//アニメーションカーブが無い場合には　CBone::GetFbxAnimでworldmatをidentityにしないと副作用が出る
-		ChaVector3* curctrl = newobj->GetPointBuf() + i;
-		ChaVector3TransformCoord(curctrl, &tmpp, &globalmeshmat);
+		if (newobj->GetPointBuf() != nullptr) {
+			ChaVector3* curctrl = newobj->GetPointBuf() + i;
+			ChaVector3TransformCoord(curctrl, &tmpp, &globalmeshmat);
+		}
 
+		//if ((shapecnt > 0) && (newobj->GetLocalPointBuf() != nullptr)) {
+		//	ChaVector3* curlocalctrl = newobj->GetLocalPointBuf() + i;
+		//	*curlocalctrl = tmpp;
+		//}
 
 //DbgOut( L"GetFBXMesh : ctrl %d, (%f, %f, %f)\r\n",
 //	i, curctrl->x, curctrl->y, curctrl->z );

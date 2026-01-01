@@ -274,6 +274,13 @@ public:
 		m_pointbuf = srcbuf;
 	};
 
+	ChaVector3* GetLocalPointBuf() {
+		return m_localpointbuf;
+	};
+	void SetLocalPointBuf(ChaVector3* srcbuf) {
+		m_localpointbuf = srcbuf;
+	};
+
 	CMQOFace* GetFaceBuf(){
 		return m_facebuf;
 	};
@@ -628,6 +635,7 @@ private:
 	std::vector<float> m_shapeweightvec;//[channelindex]
 	std::vector<float> m_shapeweightvecBef;//[channelindex]
 	ChaVector3* m_mpoint;
+	ChaVector3* m_localpointbuf;
 
 
 	//fbx GetFBXMesh()

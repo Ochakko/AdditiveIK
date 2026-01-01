@@ -100,6 +100,10 @@ CMQOObject::~CMQOObject()
 		m_displine = 0;
 	}
 
+	if (m_localpointbuf) {
+		free(m_localpointbuf);
+		m_localpointbuf = 0;
+	}
 
 	DestroyShapeObj();
 	DestroyShapeAnim();
@@ -192,6 +196,7 @@ int CMQOObject::DestroyShapeObj()
 		free(m_mpoint);
 		m_mpoint = 0;
 	}
+
 
 	return 0;
 }
@@ -317,7 +322,8 @@ void CMQOObject::InitParams()
 	m_shapeanimleng2.clear();
 	m_shapeweightvec.clear();
 	m_shapeweightvecBef.clear();
-	m_mpoint = 0;
+	m_mpoint = nullptr;
+	m_localpointbuf = nullptr;
 
 	m_meshmat.SetIdentity();
 
@@ -2824,7 +2830,8 @@ int CMQOObject::UpdateMorphWeight(int srcmotid, int framecnt)
 
 int CMQOObject::UpdateMorphBuffer()
 {
-	if( (!m_pm4 && !m_pm3) || !m_mpoint || !m_dispobj) {
+	//if( (!m_pm4 && !m_pm3) || !m_mpoint || !m_localpointbuf || !m_dispobj) {
+	if ((!m_pm4 && !m_pm3) || !m_mpoint || !m_dispobj) {
 		_ASSERT( 0 );
 		return 1;
 	}
@@ -2843,7 +2850,10 @@ int CMQOObject::UpdateMorphBuffer()
 	//以上のような理由から　とりあえず　この箇所については　シェーダ化しないで　CPU計算のままにする
 	//###############################################################################################################################
 
-	MoveMemory( m_mpoint, m_pointbuf, sizeof( ChaVector3 ) * m_vertex );//ベース形状で初期化
+	MoveMemory(m_mpoint, m_pointbuf, sizeof(ChaVector3) * m_vertex);//ベース形状で初期化
+	//MoveMemory(m_mpoint, m_localpointbuf, sizeof(ChaVector3) * m_vertex);//ベース形状で初期化
+
+	//ChaMatrix globalmat = GetMeshMat();
 
 	bool dirtyflag = false;//!!!!!!!
 	int shapenum = GetShapeNameNum();
@@ -2860,8 +2870,11 @@ int CMQOObject::UpdateMorphBuffer()
 				if (curweight != 0.0f) {
 					int vno;
 					for (vno = 0; vno < m_vertex; vno++) {
-						ChaVector3 targetv = *(curshape + vno);
+						ChaVector3 targetv = *(curshape + vno);//2025/01/01 SetShapeVertする際に頂点にmeshmatを掛けてglobalにしておくことにした(ブレンドシェイプアトリビュート:ローカルに対応)
+						//ChaVector3TransformCoord(&targetv, &targetv, &globalmat);
+						//ChaVector3 orgv = *(m_localpointbuf + vno);//MeshMatが掛かっていない頂点座標
 						ChaVector3 orgv = *(m_pointbuf + vno);
+
 						diffpoint = (targetv - orgv) * curweight;
 						*(m_mpoint + vno) += diffpoint;//結果に加算
 					}
@@ -2884,6 +2897,13 @@ int CMQOObject::UpdateMorphBuffer()
 	}
 
 	if (dirtyflag) {//変化したweightが１つでもあれば　頂点バッファを更新
+
+		//ChaMatrix globalmat = GetMeshMat();
+		//int vno;
+		//for (vno = 0; vno < m_vertex; vno++) {
+		//	ChaVector3TransformCoord((m_mpoint + vno), (m_mpoint + vno), &globalmat);
+		//}
+
 		if (m_pm4) {
 			CallF(m_pm4->UpdateMorphBuffer(m_mpoint), return 1);
 			CallF(m_dispobj->CopyDispV(m_pm4), return 1);
@@ -3156,6 +3176,17 @@ int CMQOObject::AddShapeName( char* nameptr )
 		}
 		ZeroMemory(m_mpoint, sizeof(ChaVector3) * m_vertex);
 	}
+
+	//CModel::GetFbxMesh()内でアロケートしてSetLocalPointBuf()でセットする
+	//if (!m_localpointbuf) {
+	//	//合成結果をCPUで保持していた頃のメモリ
+	//	m_localpointbuf = (ChaVector3*)malloc(sizeof(ChaVector3) * m_vertex);
+	//	if (!m_localpointbuf) {
+	//		_ASSERT(0);
+	//		return 1;
+	//	}
+	//	ZeroMemory(m_localpointbuf, sizeof(ChaVector3) * m_vertex);
+	//}
 
 
 	bool existname = ExistShape(nameptr);
