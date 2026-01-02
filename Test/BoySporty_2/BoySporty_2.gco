@@ -2,7 +2,6 @@
 <GCOLI>
     <FileInfo>1001-01</FileInfo>
     <GROUP>1</GROUP>
-    <MYSELF>1</MYSELF>
     <COLIIDNUM>1</COLIIDNUM>
     <COLIID>2</COLIID>
     <GH>-1.000000</GH>

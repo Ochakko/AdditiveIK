@@ -2,7 +2,7 @@
 <SHADERTYPEFILE>
   <FileInfo>
     <kind>ShaderTypeFile</kind>
-    <version>1006</version>
+    <version>1007</version>
     <type>0</type>
   </FileInfo>
   <Material>
@@ -42,6 +42,13 @@
     <NormalY0>0</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
   <Material>
     <MaterialName>material_2</MaterialName>
@@ -80,5 +87,12 @@
     <NormalY0>0</NormalY0>
     <ShadowCaster>1</ShadowCaster>
     <Lighting>1</Lighting>
+    <SimpleWater>0</SimpleWater>
+    <DistortionScale>1.000</DistortionScale>
+    <RiverOrSea>0</RiverOrSea>
+    <RiverDirU>0.000</RiverDirU>
+    <RiverDirV>1.000</RiverDirV>
+    <RiverFlowRate>1.000</RiverFlowRate>
+    <DistortionMapType>1</DistortionMapType>
   </Material>
 </SHADERTYPEFILE>

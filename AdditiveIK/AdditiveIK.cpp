@@ -10839,7 +10839,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	else {
 		//set default IKStopName
 		newmodel->AddIKStopName("Shoulder");
-		newmodel->AddIKStopName("UpperLeg");
+		//newmodel->AddIKStopName("UpperLeg");//2026/01/02 VRoidの名前と合わないのでコメントアウト
 	}
 	newmodel->SetIKStopFlag();
 

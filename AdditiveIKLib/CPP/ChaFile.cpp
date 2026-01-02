@@ -1220,7 +1220,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 		else {
 			//古いファイルには　IKStopNameタグエントリーは無い　デフォルト設定する
 			ikstopname.push_back("Shoulder");
-			ikstopname.push_back("UpperLeg");
+			//ikstopname.push_back("UpperLeg");//2026/01/02 VRoidの名前と合わないのでコメントアウト
 		}
 	}
 

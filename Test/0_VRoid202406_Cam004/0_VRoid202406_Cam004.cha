@@ -55,7 +55,6 @@
     <AmbientDispRate>1.000000</AmbientDispRate>
     <CustomIKStopName>1</CustomIKStopName>
     <IKStopName>Shoulder</IKStopName>
-    <IKStopName>UpperLeg</IKStopName>
     <RGDMORPH>0</RGDMORPH>
     <CURRE>0</CURRE>
     <RGD>0</RGD>
