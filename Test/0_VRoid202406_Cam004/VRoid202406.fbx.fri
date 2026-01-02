@@ -2,7 +2,7 @@
 <FootRig>
   <FileInfo>
     <kind>FootRigFile</kind>
-    <version>0007</version>
+    <version>0008</version>
     <type>0</type>
   </FileInfo>
   <FootRigElem>
@@ -21,6 +21,7 @@
     <RigStep>0.25</RigStep>
     <MaxCalcCount>50</MaxCalcCount>
     <GPUInteraction>0</GPUInteraction>
+    <OnlyOnGround>0</OnlyOnGround>
     <HopYPerStep>100.00</HopYPerStep>
     <WMBlend>0.00</WMBlend>
   </FootRigElem>

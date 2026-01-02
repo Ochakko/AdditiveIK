@@ -2,13 +2,16 @@
 <CHA>
   <FileInfo>
     <kind>AdditiveIK_ProjectFile</kind>
-    <version>1012</version>
+    <version>1015</version>
     <type>0</type>
   </FileInfo>
   <ProjectInfo>
     <CharaNum>1</CharaNum>
   </ProjectInfo>
   <GcoFile>0_VRoid202406_Cam004.gco</GcoFile>
+  <BoneMarkDisp>1</BoneMarkDisp>
+  <RigidMarkDisp>1</RigidMarkDisp>
+  <SelectModel>0</SelectModel>
   <ProjFov>60.000</ProjFov>
   <ProjNear>30.000</ProjNear>
   <ProjFar>100000.000</ProjFar>
@@ -17,6 +20,9 @@
   <PlayingSpeed>1.000</PlayingSpeed>
   <PhysicalLimitScale>0.000</PhysicalLimitScale>
   <BtMovableRate>100</BtMovableRate>
+  <CameraPos>-1.192, 117.287, 79.957</CameraPos>
+  <CameraTarget>-2.304, 156.192, -200.647</CameraTarget>
+  <CameraUpVec>0.001, 0.989, 0.147</CameraUpVec>
   <CameraDist>283.291</CameraDist>
   <AKScale>1.000</AKScale>
   <BtVScaleOnLimitEul>1.000</BtVScaleOnLimitEul>
@@ -30,10 +36,12 @@
   <4L_LOD1>0.15</4L_LOD1>
   <4L_LOD2>0.50</4L_LOD2>
   <4L_LOD2>0.50</4L_LOD3>
+  <IKStopAllOFF>0</IKStopAllOFF>
   <Chara>
     <ModelFolder>VRoid202406_0</ModelFolder>
     <ModelFile>VRoid202406.fbx</ModelFile>
     <ModelMult>1.000000</ModelMult>
+    <ModelDisp>1</ModelDisp>
     <GrassFlag>0</GrassFlag>
     <ModelPositionX>0.000000</ModelPositionX>
     <ModelPositionY>0.000000</ModelPositionY>

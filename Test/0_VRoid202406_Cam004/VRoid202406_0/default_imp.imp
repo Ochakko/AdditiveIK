@@ -16,13 +16,13 @@
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
-      <ChildName>J_Bip_R_UpperLeg</ChildName>
+      <ChildName>J_Sec_L_SkirtSide0_01</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
-      <ChildName>J_Sec_L_SkirtSide0_01</ChildName>
+      <ChildName>J_Bip_R_UpperLeg</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
@@ -61,25 +61,25 @@
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
-      <ChildName>J_Bip_L_Shoulder</ChildName>
-      <ImpulseX>0.000000</ImpulseX>
-      <ImpulseY>0.000000</ImpulseY>
-      <ImpulseZ>0.000000</ImpulseZ>
-    </RigidElem>
-    <RigidElem>
       <ChildName>J_Bip_R_Shoulder</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
-      <ChildName>J_Sec_L_Bust1</ChildName>
+      <ChildName>J_Bip_L_Shoulder</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
       <ChildName>J_Sec_R_Bust1</ChildName>
+      <ImpulseX>0.000000</ImpulseX>
+      <ImpulseY>0.000000</ImpulseY>
+      <ImpulseZ>0.000000</ImpulseZ>
+    </RigidElem>
+    <RigidElem>
+      <ChildName>J_Sec_L_Bust1</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
@@ -97,31 +97,7 @@
   <Bone>
     <Name>J_Bip_C_Head</Name>
     <RigidElem>
-      <ChildName>J_Adj_L_FaceEye</ChildName>
-      <ImpulseX>0.000000</ImpulseX>
-      <ImpulseY>0.000000</ImpulseY>
-      <ImpulseZ>0.000000</ImpulseZ>
-    </RigidElem>
-    <RigidElem>
       <ChildName>J_Adj_R_FaceEye</ChildName>
-      <ImpulseX>0.000000</ImpulseX>
-      <ImpulseY>0.000000</ImpulseY>
-      <ImpulseZ>0.000000</ImpulseZ>
-    </RigidElem>
-    <RigidElem>
-      <ChildName>J_Sec_Hair1_01</ChildName>
-      <ImpulseX>0.000000</ImpulseX>
-      <ImpulseY>0.000000</ImpulseY>
-      <ImpulseZ>0.000000</ImpulseZ>
-    </RigidElem>
-    <RigidElem>
-      <ChildName>J_Sec_Hair1_02</ChildName>
-      <ImpulseX>0.000000</ImpulseX>
-      <ImpulseY>0.000000</ImpulseY>
-      <ImpulseZ>0.000000</ImpulseZ>
-    </RigidElem>
-    <RigidElem>
-      <ChildName>J_Sec_Hair1_03</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
@@ -133,7 +109,19 @@
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
-      <ChildName>J_Sec_Hair1_05</ChildName>
+      <ChildName>J_Sec_Hair1_01</ChildName>
+      <ImpulseX>0.000000</ImpulseX>
+      <ImpulseY>0.000000</ImpulseY>
+      <ImpulseZ>0.000000</ImpulseZ>
+    </RigidElem>
+    <RigidElem>
+      <ChildName>J_Adj_L_FaceEye</ChildName>
+      <ImpulseX>0.000000</ImpulseX>
+      <ImpulseY>0.000000</ImpulseY>
+      <ImpulseZ>0.000000</ImpulseZ>
+    </RigidElem>
+    <RigidElem>
+      <ChildName>J_Sec_Hair1_02</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
@@ -145,25 +133,43 @@
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
-      <ChildName>J_Sec_Hair1_07</ChildName>
-      <ImpulseX>0.000000</ImpulseX>
-      <ImpulseY>0.000000</ImpulseY>
-      <ImpulseZ>0.000000</ImpulseZ>
-    </RigidElem>
-    <RigidElem>
-      <ChildName>J_Sec_Hair1_08</ChildName>
-      <ImpulseX>0.000000</ImpulseX>
-      <ImpulseY>0.000000</ImpulseY>
-      <ImpulseZ>0.000000</ImpulseZ>
-    </RigidElem>
-    <RigidElem>
       <ChildName>J_Sec_Hair1_09</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
+      <ChildName>J_Sec_Hair1_03</ChildName>
+      <ImpulseX>0.000000</ImpulseX>
+      <ImpulseY>0.000000</ImpulseY>
+      <ImpulseZ>0.000000</ImpulseZ>
+    </RigidElem>
+    <RigidElem>
+      <ChildName>J_Sec_Hair1_05</ChildName>
+      <ImpulseX>0.000000</ImpulseX>
+      <ImpulseY>0.000000</ImpulseY>
+      <ImpulseZ>0.000000</ImpulseZ>
+    </RigidElem>
+    <RigidElem>
       <ChildName>J_Sec_Hair1_10</ChildName>
+      <ImpulseX>0.000000</ImpulseX>
+      <ImpulseY>0.000000</ImpulseY>
+      <ImpulseZ>0.000000</ImpulseZ>
+    </RigidElem>
+    <RigidElem>
+      <ChildName>J_Sec_Hair1_07</ChildName>
+      <ImpulseX>0.000000</ImpulseX>
+      <ImpulseY>0.000000</ImpulseY>
+      <ImpulseZ>0.000000</ImpulseZ>
+    </RigidElem>
+    <RigidElem>
+      <ChildName>J_Sec_Hair1_13</ChildName>
+      <ImpulseX>0.000000</ImpulseX>
+      <ImpulseY>0.000000</ImpulseY>
+      <ImpulseZ>0.000000</ImpulseZ>
+    </RigidElem>
+    <RigidElem>
+      <ChildName>J_Sec_Hair1_08</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
@@ -176,12 +182,6 @@
     </RigidElem>
     <RigidElem>
       <ChildName>J_Sec_Hair1_12</ChildName>
-      <ImpulseX>0.000000</ImpulseX>
-      <ImpulseY>0.000000</ImpulseY>
-      <ImpulseZ>0.000000</ImpulseZ>
-    </RigidElem>
-    <RigidElem>
-      <ChildName>J_Sec_Hair1_13</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
@@ -502,13 +502,13 @@
   <Bone>
     <Name>J_Bip_L_Hand</Name>
     <RigidElem>
-      <ChildName>J_Bip_L_Index1</ChildName>
+      <ChildName>J_Bip_L_Thumb1</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
-      <ChildName>J_Bip_L_Little1</ChildName>
+      <ChildName>J_Bip_L_Index1</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
@@ -520,13 +520,13 @@
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
-      <ChildName>J_Bip_L_Ring1</ChildName>
+      <ChildName>J_Bip_L_Little1</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
-      <ChildName>J_Bip_L_Thumb1</ChildName>
+      <ChildName>J_Bip_L_Ring1</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
@@ -946,13 +946,13 @@
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
-      <ChildName>J_Sec_R_SkirtBack0_01</ChildName>
+      <ChildName>J_Sec_R_SkirtFront0_01</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
-      <ChildName>J_Sec_R_SkirtFront0_01</ChildName>
+      <ChildName>J_Sec_R_SkirtBack0_01</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
@@ -967,13 +967,13 @@
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
-      <ChildName>J_Sec_R_CoatSkirtBack_01</ChildName>
+      <ChildName>J_Sec_R_CoatSkirtFront_01</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
     </RigidElem>
     <RigidElem>
-      <ChildName>J_Sec_R_CoatSkirtFront_01</ChildName>
+      <ChildName>J_Sec_R_CoatSkirtBack_01</ChildName>
       <ImpulseX>0.000000</ImpulseX>
       <ImpulseY>0.000000</ImpulseY>
       <ImpulseZ>0.000000</ImpulseZ>
