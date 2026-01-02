@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2026/01/02
-　AdditiveIK 1.0.0.57RC2 (リリース候補2)
+　AdditiveIK 1.0.0.57 release
 　　1.0.0.56からの変更点
 　　　BlendShape機能の修正
 　　　　ブレンドシェイプアトリビュートがローカル設定になっている場合にブレンドシェイプがうまくいかないことがあったのを修正
@@ -26,6 +26,8 @@ https://github.com/Ochakko/AdditiveIK
 　　TestフォルダのVRoidモデルのIKStopNameが不適切だったのを修正(ひざをドラッグしても動かなかった)
 　　デフォルトのIKStopNameからUpperLegを削除
 　　ドキュメントの00_KnownIssue.docxと0_AboutMocapWalkLoop.docxを少し修正
+　release:
+　　ドキュメントの0_AboutMocapWalkLoop.docxを少し修正
 
 2026/01/02
  BlendShape機能の修正

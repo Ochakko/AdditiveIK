@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="Shift_JIS"?>
+<PostureChild>
+  <FileInfo>
+    <kind>PostureChildFile</kind>
+    <version>0002</version>
+    <type>0</type>
+  </FileInfo>
+  <PostureCamera>
+    <PostureChildOfCamera>0</PostureChildOfCamera>
+    <OffsetX>0.00</OffsetX>
+    <OffsetY>0.00</OffsetY>
+    <OffsetZ>0.00</OffsetZ>
+    <OffsetRotationX>0.00</OffsetRotationX>
+    <OffsetRotationY>0.00</OffsetRotationY>
+    <OffsetRotationZ>0.00</OffsetRotationZ>
+  </PostureCamera>
+</PostureChild>
