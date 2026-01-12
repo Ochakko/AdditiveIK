@@ -8,7 +8,7 @@ MITランセンス.<br>
 <br>
 # ScreenShot
 ![TopFig20260101](ScreenShots/SS_202601/AdditiveIK_10057_BlendShape_1_Trim1.png "トップ絵20260101")<br>
-Fig. ver 1.0.0.57 Loading【UnityAsset】Humanoid 3D character_smP02_REN. Japan Countryside (Anime Environment)..<br>
+Fig. ver 1.0.0.57 BlendShape機能修正【UnityAsset】Humanoid 3D character_smP02_REN. Japan Countryside (Anime Environment)..<br>
 <br>
 ![TopFig0](ScreenShots/0_AdditiveIK_1003_IndexOfMovie_0_W800.png "トップ絵0")<br>
 Fig.0 New Feature of AdditiveIK.<br>
@@ -250,14 +250,22 @@ Smooth平滑化<br>
 　https://vroid.com/studio<br>
 <br>
 <br>
-# 開発環境(ハードウェア)<br>
+# 開発環境(ハードウェア)
+【購入したUnityAssetを60fps以上の描画速度で動かしながらモーション編集 シーン編集したい】<br>
+<br>
+2026/1準備中の環境<br>
+　　ビデオカード【交換準備中】　RTX5070Ti 16GBを注文(到着まで時間がかかるらしい)<br>
+2025/5からの環境<br>
+　　Buffalo個人用NAS 実質4TB　追加<br>
+　　UPS無停電電源追加　正弦波　サージ<br>
+2025/4からの環境<br>
+　　TourBoxNEO追加 左手用デバイス https://www.tourboxtech.com/jp/<br>
 2025/3/1からの環境<br>
 　一世代前のIntelCPU 20コア 28スレッド<br>
 　　GeForce RTX 4070 12GB<br>
 　　DDR5-6000 64GB RAM(2025/3/21)<br>
-　　1T SSD(多分足りない　増設予定)<br>
+　　SSD OS用:1TB, PG用:1TB, 保存用:1TB<br>
 　　Sony GameController DualSense<br>
-　　TourBoxNEO 左手用デバイス(2025/04/16) https://www.tourboxtech.com/jp/<br>
 2025/2/28までの環境<br>
 　古めの８コアIntelマシン<br>
 　　GeForce RTX 2080 8GB<br>
