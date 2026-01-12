@@ -480,13 +480,15 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 
 	if (getgpucollision == 0) {
 		dstfootrigelem->gpucollision = (gpucollision == 1) ? true : false;
-
-		//friファイル読込はfootrigdlg->SetModel()後に呼ばれるので　読込時に以下の処理が必要
-		if (dstfootrigelem->groundmodel) {
-			int result = dstfootrigelem->groundmodel->SetGPUInteraction(dstfootrigelem->gpucollision);
-			if (result != 0) {
-				_ASSERT(0);
-			}
+	}
+	else {
+		dstfootrigelem->gpucollision = false;
+	}
+	//friファイル読込はfootrigdlg->SetModel()後に呼ばれるので　読込時に以下の処理が必要
+	if (dstfootrigelem->groundmodel) {
+		int result = dstfootrigelem->groundmodel->SetGPUInteraction(dstfootrigelem->gpucollision);
+		if (result != 0) {
+			_ASSERT(0);
 		}
 	}
 

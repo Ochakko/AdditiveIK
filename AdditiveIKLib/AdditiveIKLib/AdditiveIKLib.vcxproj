@@ -286,6 +286,7 @@
     <ClCompile Include="..\CPP\ThreadingInitMp.cpp" />
     <ClCompile Include="..\CPP\ThreadingLoadFbx.cpp" />
     <ClCompile Include="..\CPP\ThreadingPostIK.cpp" />
+    <ClCompile Include="..\CPP\ThreadingRenderModels.cpp" />
     <ClCompile Include="..\CPP\ThreadingRetarget.cpp" />
     <ClCompile Include="..\CPP\ThreadingSetBtMotion.cpp" />
     <ClCompile Include="..\CPP\ThreadingUpdateMatrix.cpp" />
@@ -707,6 +708,7 @@
     <ClInclude Include="..\INCLUDE\ThreadingLoadFbx.h" />
     <ClInclude Include="..\INCLUDE\ThreadingMotion2Bt.h" />
     <ClInclude Include="..\INCLUDE\ThreadingPostIK.h" />
+    <ClInclude Include="..\INCLUDE\ThreadingRenderModels.h" />
     <ClInclude Include="..\INCLUDE\ThreadingRetarget.h" />
     <ClInclude Include="..\INCLUDE\ThreadingSetBtMotion.h" />
     <ClInclude Include="..\INCLUDE\ThreadingUpdateMatrix.h" />

@@ -329,11 +329,14 @@ int CDispObj::SetGPUInteraction(bool srcflag)
 {
 	//大きいアセット読込でdescriptorheap数の上限を越えるので　必要に応じて呼び出す
 
-	if (m_csdeform && m_pdev) {
+	if (m_pdev) {
 		if (m_pm3) {
 			if (srcflag) {
 				//CallF(m_csdeform->CreateDispObj(m_pdev, m_pm3), return 1);
-				delete m_csdeform;
+				if (m_csdeform) {
+					delete m_csdeform;
+					m_csdeform = nullptr;
+				}
 				m_csdeform = new CSDeform();
 				if (!m_csdeform) {
 					_ASSERT(0);
@@ -342,13 +345,17 @@ int CDispObj::SetGPUInteraction(bool srcflag)
 				CallF(m_csdeform->CreateDispObj(m_pdev, m_pm3), return 1);
 			}
 			else {
-				//m_csdeform->DestroyObjs();
-				delete m_csdeform;
-				m_csdeform = new CSDeform();
-				if (!m_csdeform) {
-					_ASSERT(0);
-					return 1;
+				if (m_csdeform) {
+					delete m_csdeform;
+					m_csdeform = nullptr;
 				}
+				////m_csdeform->DestroyObjs();
+				//delete m_csdeform;
+				//m_csdeform = new CSDeform();
+				//if (!m_csdeform) {
+				//	_ASSERT(0);
+				//	return 1;
+				//}
 			}
 		}
 		else {

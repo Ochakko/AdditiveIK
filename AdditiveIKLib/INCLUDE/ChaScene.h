@@ -31,6 +31,7 @@ class CModel;
 class BPWorld;
 class CThreadingMotion2Bt;
 class CThreadingSetBtMotion;
+class CThreadingRenderModels;
 class CFootRigDlg;
 
 typedef struct tag_matrixcalling
@@ -101,6 +102,7 @@ public:
 
 			CreateMotion2BtThreads();
 			CreateSetBtMotionThreads();
+			CreateRenderModelsThread();
 
 			return 0;
 		}
@@ -134,7 +136,9 @@ public:
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe, int refposindex);
 	int WaitUpdateThreads();
 	int SetBoneMatrixForShader(int btflag, bool calcslotflag);
+	int RenderModelsThread(bool needwaitfinished, myRenderer::RenderingEngine* Engine, RenderContext* rc);
 	int RenderModels(myRenderer::RenderingEngine* Engine, int lightflag, ChaVector4 diffusemult, int btflag = 0);
+	void WaitForRenderModels();
 	void WaitForUpdateMatrixModels();
 	int RenderOneModel(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderingEngine, 
 		int lightflag, ChaVector4 diffusemult, int btflag, 
@@ -219,6 +223,9 @@ private:
 	int DestroySetBtMotionThreads();
 	void WaitSetBtMotionFinished();
 
+	int CreateRenderModelsThread();
+	int DestroyRenderModelsThread();
+	void WaitRenderModelsFinished();
 
 public:
 	void SetFootRigDlg(CFootRigDlg* srcfootrigdlg)
@@ -558,6 +565,7 @@ private:
 
 	CThreadingMotion2Bt* m_Motion2BtThreads;//モデル数分配列
 	CThreadingSetBtMotion* m_SetBtMotionThreads;//モデル数分配列
+	CThreadingRenderModels* m_RenderModelsThread;
 	int m_created_Motion2BtThreadsNum;
 	int m_created_SetBtMotionThreadsNum;
 

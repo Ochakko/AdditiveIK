@@ -339,6 +339,9 @@
     <ClCompile Include="..\CPP\PostureChildFile.cpp">
       <Filter>FileIO</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\ThreadingRenderModels.cpp">
+      <Filter>Threading</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1596,6 +1599,9 @@
     </ClInclude>
     <ClInclude Include="..\INCLUDE\PostureChildFile.h">
       <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\ThreadingRenderModels.h">
+      <Filter>Threading</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -2232,8 +2232,7 @@ static int OnPluginClose();
 LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd);
 static void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag);
-static void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, 
-	double fTime, float fElapsedTime, int loopstartflag);
+static void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fTime);
 
 //################
 //GUI Plate Menu
@@ -3506,19 +3505,25 @@ INT WINAPI wWinMain(
 
 				s_callingUpdateFlag = true;//for debug
 
+				//ビュー更新
+				//ビュー用のスロット(1フレーム前の計算結果)を使用
+				//2026/01/12 終了を待たない
+				//re->Execute()を別スレッド実行して　OnUserFrameMove()と同時進行する
+				OnFrameRender(&renderingEngine, &renderContext, s_fTime);
+
 				//ドキュメント更新
 				int loopstartflag = 0;
 				OnUserFrameMove(s_fTime, s_fElapsedTime, &loopstartflag);
 
-				//ビュー更新
-				OnFrameRender(&renderingEngine, &renderContext, s_fTime, s_fElapsedTime, loopstartflag);
+				//2026/01/12
+				if (g_chascene) {
+					//ビュー更新終了を待つ
+					g_chascene->WaitForRenderModels();
+					//UpdateMatrixスレッド終了待ち
+					g_chascene->WaitForUpdateMatrixModels();
+				}
 
 				s_callingUpdateFlag = false;//for debug
-
-				////UpdateMatrixスレッド終了待ち
-				////ここで呼ぶよりも、GraphicsEngine.cppのEndRender()で描画の終了待ちの前で実行する(描画の間もUpdateMatrixを計算する)のが一番速いようだ.
-				////FootRigをオフにして呼び出し場所による時間比較をすると顕著に差が出る.
-				//g_chascene->WaitForUpdateMatrixModels();
 
 				if (g_infownd && (dbgcount < 60)) {
 					g_infownd->UpdateWindow();//起動時に白くなる不具合に対して　応急処置
@@ -6481,8 +6486,7 @@ void OnRenderNowLoading()
 
 }
 
-void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, 
-	double fTime, float fElapsedTime, int loopstartflag)
+void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fTime)
 {
 	static double savetooltiptime = 0.0;
 
@@ -6669,16 +6673,19 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc,
 
 
 
-	//レンダリングエンジンを実行
-	re->Execute(rc, g_chascene);
-	// レンダリング終了
-	g_engine->EndFrame(g_chascene);
+	////レンダリングエンジンを実行
+	//re->Execute(rc, g_chascene);
+	//// レンダリング終了
+	//g_engine->EndFrame(g_chascene);
+	////g_chascene->CopyCSDeform();
+	//g_chascene->ClearRenderObjs();//CopyCSDeform()よりも後で呼ぶ
+	////s_dispPickfortip = GetResultOfPickRay();//EndFrame()よりも後で呼ぶ
 
-	//g_chascene->CopyCSDeform();
-	g_chascene->ClearRenderObjs();//CopyCSDeform()よりも後で呼ぶ
 
-	//s_dispPickfortip = GetResultOfPickRay();//EndFrame()よりも後で呼ぶ
-
+	//2026/01/12 
+	//re->Execute, EndFrame, ClearRenderObjsをスレッドで実行
+	bool neededwaitrender = false;
+	g_chascene->RenderModelsThread(neededwaitrender, re, rc);
 
 }
 
@@ -19473,6 +19480,8 @@ int PostOpenChaFile()
 	if (g_chascene) {
 		g_chascene->ChangeIKStopAllOFF();//2026/01/01
 	}
+
+
 
 	//2025/08/13
 	//PostureChildのフラグなど全モデル読み込み後の設定がboneに付いた後でFillTimelineするために呼び出す(名前に水色で(P)が付く)
@@ -35770,7 +35779,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.57 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.58 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -39285,7 +39294,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.57 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.58 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {

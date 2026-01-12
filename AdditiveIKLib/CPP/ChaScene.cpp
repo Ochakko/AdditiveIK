@@ -44,6 +44,7 @@
 
 #include <ThreadingMotion2Bt.h>
 #include <ThreadingSetBtMotion.h>
+#include <ThreadingRenderModels.h>
 
 #include <FootRigDlg.h>
 
@@ -143,8 +144,9 @@ void ChaScene::InitParams()
 	m_totalupdatethreadsnum = 0;
 	m_updateslot = 0;
 
-	m_Motion2BtThreads = 0;//モデル数分配列
-	m_SetBtMotionThreads = 0;//モデル数分配列
+	m_Motion2BtThreads = nullptr;//モデル数分配列
+	m_SetBtMotionThreads = nullptr;//モデル数分配列
+	m_RenderModelsThread = nullptr;
 	m_created_Motion2BtThreadsNum = 0;
 	m_created_SetBtMotionThreadsNum = 0;
 
@@ -160,6 +162,7 @@ void ChaScene::DestroyObjs()
 
 	DestroyMotion2BtThreads();
 	DestroySetBtMotionThreads();
+	DestroyRenderModelsThread();
 
 	vector<MODELELEM>::iterator itrmodel;
 	for (itrmodel = m_modelindex.begin(); itrmodel != m_modelindex.end(); itrmodel++) {
@@ -677,6 +680,29 @@ bool ChaScene::GetResultOfPickRay(int pickkind,
 	return false;
 }
 
+int ChaScene::RenderModelsThread(bool needwaitfinished, myRenderer::RenderingEngine* renderingEngine, RenderContext* rc)
+{
+	if (!renderingEngine || !rc) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	if (g_changeUpdateThreadsNum) {
+		//アップデート用スレッド数を変更中
+		return 0;
+	}
+
+	if (m_RenderModelsThread != nullptr) {
+		m_RenderModelsThread->RenderModels(this, renderingEngine, rc);
+		
+		if (needwaitfinished) {
+			WaitRenderModelsFinished();
+		}
+	}
+
+	return 0;
+}
+
 
 int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lightflag, ChaVector4 diffusemult, int btflag)
 {
@@ -928,6 +954,61 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 	}
 
 	return 0;
+}
+
+void ChaScene::WaitForRenderModels()
+{
+	WaitRenderModelsFinished();
+}
+
+
+int ChaScene::CreateRenderModelsThread()
+{
+
+	DestroyRenderModelsThread();
+	//Sleep(100);
+
+	CThreadingRenderModels* newthreads;
+	newthreads = new CThreadingRenderModels;
+	if (!newthreads) {
+		_ASSERT(0);
+		return 1;
+	}
+	newthreads->CreateThread((DWORD)(1 << 3));
+
+	m_RenderModelsThread = newthreads;
+
+	return 0;
+}
+
+
+int ChaScene::DestroyRenderModelsThread()
+{
+	WaitRenderModelsFinished();
+
+	if (m_RenderModelsThread) {
+		delete m_RenderModelsThread;
+	}
+	m_RenderModelsThread = nullptr;
+
+	return 0;
+}
+
+
+void ChaScene::WaitRenderModelsFinished()
+{
+	bool finished = false;
+	while (finished == false) 
+	{
+		if (m_RenderModelsThread != nullptr) {
+			if (m_RenderModelsThread->IsFinished()) {
+				finished = true;
+			}
+		}
+		else {
+			finished = true;
+		}
+	}
 }
 
 void ChaScene::WaitForUpdateMatrixModels()
@@ -1512,12 +1593,15 @@ int ChaScene::WaitUpdateThreads()
 		int modelindex2;
 		for (modelindex2 = 0; modelindex2 < modelnum; modelindex2++) {
 			CModel* curmodel = m_modelindex[modelindex2].modelptr;
-			if (curmodel && (curmodel->GetNoBoneFlag() == false)) {
-				if (curmodel->GetThreadingUpdateMatrix() != NULL) {
+			if (curmodel && (curmodel->GetNoBoneFlag() == false)) 
+			{
+				if (curmodel->GetThreadingUpdateMatrix() != NULL) 
+				{
 
 					int finishedcount = 0;
 					int updatecount;
-					for (updatecount = 0; updatecount < curmodel->GetThreadingUpdateMatrixNum(); updatecount++) {
+					for (updatecount = 0; updatecount < curmodel->GetThreadingUpdateMatrixNum(); updatecount++) 
+					{
 						CThreadingUpdateMatrix* curupdate = curmodel->GetThreadingUpdateMatrix() + updatecount;
 						if (curupdate->IsFinished()) {
 							donethreadingnum++;
@@ -1722,9 +1806,11 @@ int ChaScene::DelModel(int srcmodelindex, std::vector<CGrassElem*>& grasselemvec
 		////s_modelindex.pop_back();
 
 
+		//作り直し　全有効モデル分
+		//（通常、AddModelElem()で作成）
 		CreateMotion2BtThreads();
 		CreateSetBtMotionThreads();
-
+		CreateRenderModelsThread();
 
 	}
 	else {
@@ -1772,6 +1858,7 @@ int ChaScene::DelAllModel()
 
 	DestroyMotion2BtThreads();
 	DestroySetBtMotionThreads();
+	DestroyRenderModelsThread();
 
 	return 0;
 }

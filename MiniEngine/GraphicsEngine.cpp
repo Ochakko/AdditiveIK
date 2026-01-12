@@ -625,11 +625,11 @@ void GraphicsEngine::EndRender(ChaScene* srcchascene)
 
 	m_directXTKGfxMemroy->GarbageCollect();
 
-	if (srcchascene) {
-		//UpdateMatrixスレッド終了待ち
-		//描画の終了待ちの前で実行する(描画の間もUpdateMatrixを計算する)のが一番速いようだ.FootRigをオフにして呼び出し場所による時間比較をすると顕著に差が出る.
-		srcchascene->WaitForUpdateMatrixModels();
-	}
+	//if (srcchascene) {
+	//	//UpdateMatrixスレッド終了待ち
+	//	//描画の終了待ちの前で実行する(描画の間もUpdateMatrixを計算する)のが一番速いようだ.FootRigをオフにして呼び出し場所による時間比較をすると顕著に差が出る.
+	//	srcchascene->WaitForUpdateMatrixModels();
+	//}
 
 	//描画完了待ち。
 	WaitDraw();
