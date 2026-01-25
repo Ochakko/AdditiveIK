@@ -74,7 +74,7 @@ public:
 
 
 	ChaVector3 GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* srcbone, ChaVector3 srcoffset, bool istoebase);
-	ChaVector3 GetGroundPos(CModel* groundmodel, ChaVector3 basepos, bool gpuflag);
+	int GetGroundPos(bool retryflag, CModel* groundmodel, ChaVector3 basepos, bool gpuflag, ChaVector3* pgpos);
 
 
 private:

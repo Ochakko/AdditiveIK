@@ -224,11 +224,11 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, double srcframe, int loopsta
 
 	if (!m_modelindex.empty()) {
 
-		//2025/12/28 初回のUpdateMatrixの前に実行すると　地面の下に落ちることがあるので　GetFirstUpdateMatrix()をチェックする
-		//ModelDisp falseの地面へのFootRig処理で問題が出ていた
-		if (m_footrigdlg && !GetFirstUpdateMatrix()) {
-			m_footrigdlg->OnFrameMove(g_limitdegflag);
-		}
+
+		//if (!GetFirstUpdateMatrix()) {
+		//	m_footrigdlg->OnFrameMove(g_limitdegflag);
+		//}
+
 
 		//m_totalupdatethreadsnum = 0;
 
@@ -681,7 +681,10 @@ bool ChaScene::GetResultOfPickRay(int pickkind,
 }
 
 int ChaScene::RenderModelsThread(bool needwaitfinished, myRenderer::RenderingEngine* renderingEngine, RenderContext* rc)
+//int ChaScene::RenderModelsThread(bool needwaitfinished, myRenderer::RenderingEngine* renderingEngine, RenderContext* rc, double curtime,
+//	void (*srcRenderFunc)(myRenderer::RenderingEngine* srcEngine, RenderContext* srcrc, double srccurtime))
 {
+	//if (!renderingEngine || !rc || !srcRenderFunc) {
 	if (!renderingEngine || !rc) {
 		_ASSERT(0);
 		return 1;
@@ -694,6 +697,7 @@ int ChaScene::RenderModelsThread(bool needwaitfinished, myRenderer::RenderingEng
 
 	if (m_RenderModelsThread != nullptr) {
 		m_RenderModelsThread->RenderModels(this, renderingEngine, rc);
+		//m_RenderModelsThread->RenderModels(this, renderingEngine, rc, curtime, srcRenderFunc);
 		
 		if (needwaitfinished) {
 			WaitRenderModelsFinished();
@@ -2195,14 +2199,10 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 		return 1;
 	}
 
-	//########
-	//FootRig
-	//########
-	//previewFlag 4 or 5の場合のFootRig
-	//BtSimu以外のときのFootRigはWaitForUpdateMatrixModels()から呼ぶ
-	if (m_footrigdlg) {
-		m_footrigdlg->OnFrameMove(g_limitdegflag);
-	}
+	//if (!GetFirstUpdateMatrix()) {
+	//	m_footrigdlg->OnFrameMove(g_limitdegflag);
+	//}
+
 
 	bool secondcall = false;
 	bool updatematrixflag = true;
@@ -2275,6 +2275,8 @@ int ChaScene::UpdateBtFunc(bool limitdegflag, double nextframe,
 	//		}
 	//	}
 	//}
+
+	SetFirstUpdateMatrix(false);
 
 	return 0;
 }

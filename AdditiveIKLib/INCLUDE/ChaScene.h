@@ -137,6 +137,8 @@ public:
 	int WaitUpdateThreads();
 	int SetBoneMatrixForShader(int btflag, bool calcslotflag);
 	int RenderModelsThread(bool needwaitfinished, myRenderer::RenderingEngine* Engine, RenderContext* rc);
+	//int RenderModelsThread(bool needwaitfinished, myRenderer::RenderingEngine* Engine, RenderContext* rc, double curtime, 
+	//	void (*srcRenderFunc)(myRenderer::RenderingEngine* srcEngine, RenderContext* srcrc, double srccurtime));
 	int RenderModels(myRenderer::RenderingEngine* Engine, int lightflag, ChaVector4 diffusemult, int btflag = 0);
 	void WaitForRenderModels();
 	void WaitForUpdateMatrixModels();

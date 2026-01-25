@@ -2758,29 +2758,29 @@ void CModel::ResetFootRigUpdated()
 }
 
 
-//void CModel::UpdateMatrixFootRigReq(bool istoebase, bool limitdegflag, CBone* srcbone,
-//	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, bool broflag)
-//{
-//
-//	//角度制限あり無し両方に　現状の姿勢を格納
-//
-//	if (srcbone && wmat && vmat && pmat) {
-//
-//		if (srcbone->IsSkeleton()) {
-//			int srcmotid = GetCurrentMotID();
-//			double srcframe = RoundingTime(GetCurrentFrame());
-//			srcbone->UpdateMatrixFootRig(istoebase, limitdegflag, srcmotid, srcframe, wmat, vmat, pmat);
-//		}
-//
-//		if (srcbone->GetChild(false)) {
-//			UpdateMatrixFootRigReq(istoebase, limitdegflag, srcbone->GetChild(false), wmat, vmat, pmat, true);
-//		}
-//		if (broflag && srcbone->GetBrother(false)) {
-//			UpdateMatrixFootRigReq(istoebase, limitdegflag, srcbone->GetBrother(false), wmat, vmat, pmat, broflag);
-//		}
-//	}
-//
-//}
+void CModel::UpdateMatrixFootRigReq(bool istoebase, bool limitdegflag, CBone* srcbone,
+	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, bool broflag)
+{
+
+	//角度制限あり無し両方に　現状の姿勢を格納
+
+	if (srcbone && wmat && vmat && pmat) {
+		if (srcbone->IsSkeleton()) {
+			int srcmotid = GetCurrentMotID();
+			double srcframe = RoundingTime(GetCurrentFrame());
+			//srcbone->UpdateMatrixFootRig(istoebase, limitdegflag, srcmotid, srcframe, wmat, vmat, pmat);
+			srcbone->UpdateMatrix(limitdegflag, srcmotid, srcframe, wmat, vmat, pmat, false, 0);
+		}
+
+		if (srcbone->GetChild(false)) {
+			UpdateMatrixFootRigReq(istoebase, limitdegflag, srcbone->GetChild(false), wmat, vmat, pmat, true);
+		}
+		if (broflag && srcbone->GetBrother(false)) {
+			UpdateMatrixFootRigReq(istoebase, limitdegflag, srcbone->GetBrother(false), wmat, vmat, pmat, broflag);
+		}
+	}
+
+}
 void CModel::BlendSaveBoneMotionReq(CBone* srcbone, float srcblend)
 {
 
@@ -2806,66 +2806,31 @@ void CModel::BlendSaveBoneMotionReq(CBone* srcbone, float srcblend)
 void CModel::UpdateModelWMFootRig(CFootRigDlg* srcfootrigdlg, ChaMatrix newwm)
 {
 	ChaMatrix befwm = m_matWorld;
+	//ChaVector3 beftra = ChaMatrixTraVec(befwm);
+	//ChaVector3 newtra = ChaMatrixTraVec(newwm);
+	//ChaVector3 difftra = newtra - beftra;
+	//ChaVector3 currentmodelpos = GetModelPosition();
+	//ChaVector3 newmodelpos = currentmodelpos + difftra;
+	//SetModelPosition(newmodelpos);
 
-	ChaVector3 beftra = ChaMatrixTraVec(befwm);
+
 	ChaVector3 newtra = ChaMatrixTraVec(newwm);
-	ChaVector3 difftra = newtra - beftra;
+	SetModelPosition(newtra);
 
-	ChaVector3 currentmodelpos = GetModelPosition();
-	ChaVector3 newmodelpos = currentmodelpos + difftra;
-	SetModelPosition(newmodelpos);
 
 	//m_matWorld = newwm;
 	CalcModelWorldMatOnLoad(srcfootrigdlg);
 
+	//if (GetTopBone(false)) {
+	//	GetTopBone(false)->UpdateParentFootRigWMReq(g_limitdegflag, false, GetCurrentMotID(), GetCurrentFrame(), ,);
+	//}
 	//UpdateModelWMFootRigReq(GetTopBone(false), newwm, befwm);
+	//ChaMatrix wm, vm, pm;
+	//wm = GetWorldMat();
+	//vm = GetViewMat();
+	//pm = GetProjMat();
+	//UpdateMatrixFootRigReq(false, g_limitdegflag, GetTopBone(false), &wm, &vm, &pm, true);
 }
-//void CModel::UpdateModelWMFootRigReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm)
-//{
-//	if (srcbone) {
-//
-//		if (srcbone->GetFootRigUpdated()) {//2024/09/09 FootRigだけに処理　他の部分に処理をすると　LimitEul+BtSimu時に他の部分がびよーーんとなる
-//			bool calcslotflag = true;
-//			CMotionPoint curmp = srcbone->GetCurMp(calcslotflag);
-//			ChaMatrix curwm = curmp.GetWorldMat();
-//
-//			ChaMatrix setwm = curwm * ChaMatrixInv(befwm) * newwm;
-//			curmp.SetWorldMat(setwm);
-//			curmp.SetLimitedWM(setwm);//2024/09/09
-//			srcbone->SetCurMp(curmp);
-//
-//
-//			srcbone->SetBtMat(setwm, false);
-//
-//
-//			//ChaMatrix curbtmat = srcbone->GetBtMat(true);
-//			//ChaMatrix setbtmat = curbtmat * ChaMatrixInv(befwm) * newwm;
-//			//srcbone->SetBtMat(setbtmat, true);
-//
-//			//ChaMatrix curbtmat2 = srcbone->GetBtMat(false);
-//			//ChaMatrix setbtmat2 = curbtmat2 * ChaMatrixInv(befwm) * newwm;
-//			//srcbone->SetBtMat(setbtmat2, false);
-//
-//			ChaVector3 jpos = srcbone->GetJointFPos();
-//			ChaVector3 childworld;
-//			ChaVector3TransformCoord(&childworld, &jpos, &setwm);
-//			ChaMatrix vpmat = m_matView * m_matProj;
-//			ChaMatrix wvpmat = setwm * vpmat;
-//			ChaVector3 childscreen;
-//			ChaVector3TransformCoord(&childscreen, &childworld, &vpmat);//wmatで変換した位置に対して　vp変換
-//			srcbone->SetChildWorld(childworld);
-//			srcbone->SetChildScreen(childscreen);
-//		}
-//
-//		if (srcbone->GetChild(false)) {
-//			UpdateModelWMFootRigReq(srcbone->GetChild(false), newwm, befwm);
-//		}
-//		if (srcbone->GetBrother(false)) {
-//			UpdateModelWMFootRigReq(srcbone->GetBrother(false), newwm, befwm);
-//		}
-//	}
-//}
-
 
 int CModel::CopyLimitedWorldToWorldOne(CBone* srcbone, int srcmotid, double srcframe)
 {
@@ -3847,14 +3812,28 @@ int CModel::SetMotionFrame(double srcframe)
 
 	//m_curmotinfo->befframe = m_curmotinfo->curframe;
 	SetRenderSlotFrame(m_curmotinfo->curframe);
-	m_curmotinfo->curframe = fmax(0.0, fmin((m_curmotinfo->frameleng - 1.0), srcframe));
+	double minframe;
+	if (g_previewFlag == 0) {
+		minframe = 0.0;
+	}
+	else {
+		minframe = 1.0;
+	}
+	m_curmotinfo->curframe = fmax(minframe, fmin((m_curmotinfo->frameleng - 1.0), srcframe));
 	return 0;
 }
 int CModel::SetMotionFrame(int srcmotid, double srcframe)
 {
 	MOTINFO* curmi = GetMotInfoPtr(srcmotid);
 	if (curmi) {
-		curmi->curframe = fmax(0.0, fmin((curmi->frameleng - 1.0), srcframe));
+		double minframe;
+		if (g_previewFlag == 0) {
+			minframe = 0.0;
+		}
+		else {
+			minframe = 1.0;
+		}
+		curmi->curframe = fmax(minframe, fmin((curmi->frameleng - 1.0), srcframe));
 		//urmi->befframe = m_curmotinfo->curframe;
 		SetRenderSlotFrame(m_curmotinfo->curframe);
 		m_curmotinfo = curmi;//2025/01/11 m_curmotinfoの更新
@@ -4453,13 +4432,13 @@ int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
 
 }
 
-int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVector3 endglobal, ChaVector3* dsthitpos)
+int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVector3 endglobal, ChaVector3* dsthitpos, bool chkoutofview)
 {
 
 	//*hitfaceindex = -1;
 	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 
-	if (!GetInView(0)) {
+	if (!chkoutofview && !GetInView(0)) {
 		return 0;//2025/12/28 視野外は当たらないことに.
 	}
 
@@ -4526,7 +4505,9 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 			tmphitpos.SetParams(0.0f, 0.0f, 0.0f);
 
 			bool onlychkinview = true;
-			if (curobj->GetInView(0)) {//2025/12/28 視野内だけ計算
+
+			//2026/01/25
+			if (chkoutofview || curobj->GetInView(0)) {//2025/12/28 視野内だけ計算
 				if (!gpuflag) {//### CPU ###
 					colli = curobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, rayleng, excludeinvface, &hitfaceindex, &tmphitpos);
 

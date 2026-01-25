@@ -2335,6 +2335,7 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 			////##################################################
 			////姿勢修正前に　カレントの姿勢をFootRig用の変数にセットする
 			////##################################################
+			ChaMatrix oldwm = srcmodel->GetWorldMat();
 			srcmodel->SetOrg2FootRigMatReq(limitdegflag, pleftfootinfo->GetUpdateBoneForUpdateMatrix(), false);
 			srcmodel->SetOrg2FootRigMatReq(limitdegflag, prightfootinfo->GetUpdateBoneForUpdateMatrix(), false);
 
@@ -2403,6 +2404,18 @@ int CFootRigDlg::Update(bool limitdegflag, CModel* srcmodel)
 			////### どのボーンの上にchildmodelが乗っているかここではわからないので　TopBoneからのUpdateMatrixが必要 ### --> FootRigのOnFrameMove()呼び出しレベルでUpdateMatrix()を呼び出すのでコメントアウト
 			////int refposindex = 0;
 			////srcmodel->UpdateMatrix(limitdegflag, &matWorld, &matView, &matProj, true, refposindex);
+
+			//////2026/01/25
+			//if (pleftfootinfo && pleftfootinfo->GetUpdateBoneForUpdateMatrix()) {
+			//	pleftfootinfo->GetUpdateBoneForUpdateMatrix()->UpdateParentFootRigWMReq(limitdegflag, true,
+			//		srcmodel->GetCurrentMotID(), RoundingTime(srcmodel->GetCurrentFrame()), oldwm, srcmodel->GetWorldMat());
+			//}
+			//if (prightfootinfo && prightfootinfo->GetUpdateBoneForUpdateMatrix()) {
+			//	prightfootinfo->GetUpdateBoneForUpdateMatrix()->UpdateParentFootRigWMReq(limitdegflag, true,
+			//		srcmodel->GetCurrentMotID(), RoundingTime(srcmodel->GetCurrentFrame()), oldwm, srcmodel->GetWorldMat());
+			//}
+
+
 		}
 		else {
 
@@ -2508,7 +2521,7 @@ void CFootRigDlg::FootRig(bool secondcalling,
 			if (!secondcalling) {//### Hop Y per step ###
 				//2024/09/16 上り坂の傾斜を上る際に足が曲がり過ぎないように　毎回ホップする
 				float diffy = curelem.hopyperstep;
-				ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, 0.0f, false);//wmをブレンドしない　保存しない
+				ChaMatrix modelwm3 = ModelShiftY(srcmodel, modelwm, diffy, 0.0f, true);//wmをブレンドしない
 				float diffy2 = modelwm3.data[MATI_42] - modelwm.data[MATI_42];
 				modelwm = modelwm3;
 				hipspos.y += diffy2;
@@ -2782,14 +2795,19 @@ ChaVector3 CFootRigDlg::GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* 
 	return retpos;
 }
 
-ChaVector3 CFootRigDlg::GetGroundPos(CModel* groundmodel, ChaVector3 basepos, bool gpuflag)
+int CFootRigDlg::GetGroundPos(bool retryflag, CModel* groundmodel, ChaVector3 basepos, bool gpuflag, ChaVector3* pgpos)
 {
+	if (!pgpos) {
+		_ASSERT(0);
+		return 0;
+	}
+
 	int hitflag = 0;
-	ChaVector3 retpos;
-	retpos.SetZeroVec3();
+	ChaVector3 gpos;
+	gpos.SetZeroVec3();
 	if (!groundmodel) {
 		_ASSERT(0);
-		return retpos;
+		return 0;
 	}
 
 	ChaVector3 startglobal = basepos + ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
@@ -2797,9 +2815,35 @@ ChaVector3 CFootRigDlg::GetGroundPos(CModel* groundmodel, ChaVector3 basepos, bo
 
 	hitflag = groundmodel->CollisionPolyMesh3_Ray(
 		gpuflag,
-		startglobal, endglobal, &retpos);
+		startglobal, endglobal, &gpos);
+	if (hitflag != 0) {
+		if (pgpos) {
+			*pgpos = gpos;
+		}
+	}
+	else if (retryflag) {
+		int dbgflag1 = 1;
 
-	return retpos;
+		//ステージに接地した直後など　長いRayが必要
+		ChaVector3 startglobal2 = basepos + ChaVector3(0.0f, 2000.0f, 0.0f);//2000.0
+		ChaVector3 endglobal2 = basepos - ChaVector3(0.0f, 2000.0f, 0.0f);//2000.0
+		
+		bool chkoutofview = true;//####### ステージ接地直後は視野外の場合もある
+
+		hitflag = groundmodel->CollisionPolyMesh3_Ray(
+			gpuflag,
+			startglobal2, endglobal2, &gpos, chkoutofview);//chkoutofview
+		if (hitflag != 0) {
+			if (pgpos) {
+				*pgpos = gpos;
+			}
+		}
+		else {
+			int dbgflag2 = 1;
+		}
+
+	}
+	return hitflag;
 }
 
 ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diffy, 
@@ -2826,11 +2870,14 @@ ChaMatrix CFootRigDlg::ModelShiftY(CModel* srcmodel, ChaMatrix befwm, float diff
 	else {
 		modelwm3 = modelwm2;
 	}
-	srcmodel->UpdateModelWMFootRig(this, modelwm3);
-	retmat = modelwm3;
 
 	if (savewmflag) {
-		SetSaveModelWM(srcmodel, retmat);
+		srcmodel->UpdateModelWMFootRig(this, modelwm3);//this
+		retmat = modelwm3;
+	}
+	else {
+		srcmodel->UpdateModelWMFootRig(nullptr, modelwm3);//nullptr
+		retmat = modelwm3;
 	}
 
 	return retmat;
@@ -2969,8 +3016,8 @@ int CFootInfo::CalcPos(int limitdegflag)
 			ChaVector3 jointpos = m_footrigdlg->GetJointPos(limitdegflag, m_toebasejoint->GetParModel(), m_toebasejoint, m_offset1, true);
 			m_toebasepos = jointpos;
 			if (m_groundmodel) {
-				ChaVector3 gpos = m_footrigdlg->GetGroundPos(m_groundmodel, m_toebasepos, m_gpucollision);
-				m_toebaseGpos = gpos;
+				bool retryflag = true;
+				int hitflag = m_footrigdlg->GetGroundPos(retryflag, m_groundmodel, m_toebasepos, m_gpucollision, &m_toebaseGpos);
 			}
 		}
 
@@ -2978,8 +3025,8 @@ int CFootInfo::CalcPos(int limitdegflag)
 			ChaVector3 jointpos = m_footrigdlg->GetJointPos(limitdegflag, m_footjoint->GetParModel(), m_footjoint, m_offset2, false);
 			m_footpos = jointpos;
 			if (m_groundmodel) {
-				ChaVector3 gpos = m_footrigdlg->GetGroundPos(m_groundmodel, m_footpos, m_gpucollision);
-				m_footGpos = gpos;
+				bool retryflag = true;
+				int hitflag = m_footrigdlg->GetGroundPos(retryflag, m_groundmodel, m_footpos, m_gpucollision, &m_footGpos);
 			}
 		}
 	}
@@ -3129,7 +3176,7 @@ int CFootInfo::RigControlFootRigFunc(bool istoebase,
 		//	srcmodel->BlendSaveBoneMotionReq(updatebone, BONEMOTIONBLEND);//プルプル震え防止のための１回前とのブレンド
 		//}
 
-		//srcmodel->UpdateMatrixFootRigReq(istoebase, limitdegflag, m_updatebone, &modelwm, &matView, &matProj);//角度制限あり無し両方に　現状の姿勢を格納
+		//srcmodel->UpdateMatrixFootRigReq(istoebase, limitdegflag, m_updatebone, &modelwm, &matView, &matProj, false);//角度制限あり無し両方に　現状の姿勢を格納
 
 		CalcPos(limitdegflag);
 		//newbonepos = m_footrigdlg->GetJointPos(limitdegflag, srcmodel, footbone, posoffset, istoebase);
@@ -3146,7 +3193,9 @@ int CFootInfo::RigControlFootRigFunc(bool istoebase,
 	}
 
 
-	//srcmodel->UpdateMatrixFootRigReq(istoebase, limitdegflag, m_updatebone, &modelwm, &matView, &matProj);//角度制限あり無し両方に　現状の姿勢を格納
+	//srcmodel->UpdateMatrixFootRigReq(istoebase, limitdegflag, m_updatebone, &modelwm, &matView, &matProj, false);//角度制限あり無し両方に　現状の姿勢を格納
+	//srcmodel->UpdateMatrix(limitdegflag, &modelwm, &matView, &matProj, true, 0);//角度制限あり無し両方に　現状の姿勢を格納
+
 
 	return 0;
 }

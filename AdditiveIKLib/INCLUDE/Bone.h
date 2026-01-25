@@ -1374,6 +1374,7 @@ public: //accesser
 		double roundingframe = RoundingTime(srcframe);
 
 		ChaMatrix saveworldmat = m_footrigmat;
+		//ChaMatrix saveworldmat = GetFootRigMat(limitdegflag, srcmotid, roundingframe);
 		m_footrigmat = srcmat;
 		m_footrigtime = roundingframe;
 

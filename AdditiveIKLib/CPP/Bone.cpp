@@ -810,9 +810,9 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 	}
 
 	//###########################
-	if (GetFootRigUpdated()) {//2024/09/06
-		return 0;
-	}
+	//if (GetFootRigUpdated()) {//2024/09/06
+	//	return 0;
+	//}
 
 
 

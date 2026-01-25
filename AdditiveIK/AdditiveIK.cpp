@@ -712,6 +712,7 @@ void OnDSUpdate();
 //static void OnDSMouseHereApeal();
 static void OnArrowKey();//DS関数でキーボードの矢印キーに対応
 
+static double s_moa_frame = 1.0;
 static int SetNewPoseByMoa_All(CModel* ps5model, double* pnextframe);
 //static int SetNewPoseByMoa_One(CModel* srcmodel, bool dualsenseflag, double* pnextframe);
 static int ChangeMotionWithGUI(CModel* srcmodel, int srcmotid);
@@ -2231,7 +2232,7 @@ static int OnPluginClose();
 //##########################
 LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static HWND Create3DWnd(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd);
-static void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag);
+static void OnUserFrameMove(double fTime, float fElapsedTime, double difftime, int endflag, int loopstartflag);
 static void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fTime);
 
 //################
@@ -3462,6 +3463,10 @@ INT WINAPI wWinMain(
 	s_ik_timer_id = (int)::SetTimer(g_hWnd, s_ik_timer_id, 30, NULL);
 
 
+//######################
+//メインループ (MainLoop)
+//######################
+	bool firstflag = true;
 	int dbgcount = 0;
 	while (DispatchWindowMessage())
 	{
@@ -3478,43 +3483,100 @@ INT WINAPI wWinMain(
 			//float stickRY = g_pad[0]->GetRStickYF();
 
 
-
-
-			//double fTime = 0.0;
-			//float fElapsedTime = 0.0;
+//########
+//Fps計測
+//########
 			if (DXUTGetGlobalTimer()) {
 				s_fTime = DXUTGetGlobalTimer()->GetTime();
 				s_fElapsedTime = DXUTGetGlobalTimer()->GetElapsedTime();
 			}
 			CalcFps(s_fTime);
 
-			
-			////for tmp check
-			//WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-			//int dispfps = (int)(g_avrgfps + 0.5);
-			//swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.1 : No.%d : fps %d", s_appcnt, dispfps);
-			//SetWindowText(g_mainhwnd, strmaintitle);
 			if (g_writeFbxState == WRITEFBX_NONE) {//2024/02/10
 
-				//計算用スロットインデックスの更新
+//############################
+//計算用スロットインデックスの更新
+//############################
 				//2025/12/06 処理の流れがわかりやすいようにここに移動(条件分付きで)
-				if ((InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_retargetbatchflag, 0) == 0)) {
+				if (firstflag || ((InterlockedAdd(&g_bvh2fbxbatchflag, 0) == 0) && (InterlockedAdd(&g_retargetbatchflag, 0) == 0))) {
 					//リターゲットバッチ中にタイミングでエラー(ChaSceneのm_modelindexのCModel*の値が不正)　OnUserFrameMove()の中に入れて バッチ中はスキップ
 					g_chascene->SetUpdateSlot();
 				}
 
 				s_callingUpdateFlag = true;//for debug
 
-				//ビュー更新
-				//ビュー用のスロット(1フレーム前の計算結果)を使用
-				//2026/01/12 終了を待たない
-				//re->Execute()を別スレッド実行して　OnUserFrameMove()と同時進行する
-				OnFrameRender(&renderingEngine, &renderContext, s_fTime);
 
-				//ドキュメント更新
+//###########
+//時間を進める
+//###########
+				double difftime = s_fTime - s_time;
+				double nextframe = 0.0;
+				int endflag = 0;
 				int loopstartflag = 0;
-				OnUserFrameMove(s_fTime, s_fElapsedTime, &loopstartflag);
+				OnFrameProcessTime(difftime, &nextframe, &endflag, &loopstartflag);
 
+//####################################################
+//リアルタイムレンダリング
+//(スレッド実行)
+//レンダリング中に姿勢計算をするために【出来るだけ前の方で実行】
+//終了を待たない
+//####################################################
+				if (!firstflag) {
+					//ビュー用のスロット(1フレーム前の計算結果)を使用
+					//2026/01/12 終了を待たない
+					////re->Execute()を別スレッド実行して　OnUserFrameMove()と同時進行する
+					
+					//2026/01/24 2026/01/25 【メモ】
+					//OnFrameRender()全体を別スレッド実行してみたが、
+					//モーション変化時に画面が黒くなるのを防ぐためにSetNewPoseByMOA_All()を先に実行する必要があったのと
+					//FootRig部分が頻繁に0位置基準で表示されるのを防ぐためにfootrigdlg.OnFrameMove()を先に実行する必要があった
+					//SetNewPoseByMOA_Allとfootrigdlg.OnFrameMoveを先に実行した場合、Renderと同時進行できないのでフレームレートはかなり落ちた
+					//よって、2026/01/12の呼び出し方に戻した　Execute()とEndScene()だけをスレッド実行する
+					OnFrameRender(&renderingEngine, &renderContext, s_fTime);
+				}
+
+//#####################################
+//モーション変化
+//MOA2.0 with DualSenseゲームコントローラ
+//#####################################
+				if (GetCurrentModel() && (g_previewMOA != 0)) {
+					s_moa_frame = GetCurrentModel()->GetCurrentFrame();
+					SetNewPoseByMoa_All(GetCurrentModel(), &s_moa_frame);
+				}
+
+//#######################
+//足を曲げて接地(FootRig)
+//#######################
+				if (!firstflag) {
+					s_footrigdlg.OnFrameMove(g_limitdegflag);
+				}
+
+//###############
+//ドキュメント更新
+//###############
+				if (firstflag) {
+					//##########################################################
+					//初回のFrameMove & Continue
+					//スロット(計算用と表示用の２つ)を充填するために呼び出し後continue.
+					//終了を待つ
+					//##########################################################
+					OnUserFrameMove(s_fTime, s_fElapsedTime, difftime, endflag, loopstartflag);
+					g_chascene->WaitForUpdateMatrixModels();
+					firstflag = false;
+					continue;//######!!!!!!!!!!!!!!!!!
+				}
+				else {
+					//##############################
+					//ドキュメント更新
+					//(UpdateMatrix()だけスレッド実行)
+					//終了を待たない
+					//##############################
+					OnUserFrameMove(s_fTime, s_fElapsedTime, difftime, endflag, loopstartflag);
+				}
+
+//#############
+//スレッドの同期
+//#############
 				//2026/01/12
 				if (g_chascene) {
 					//ビュー更新終了を待つ
@@ -3525,9 +3587,13 @@ INT WINAPI wWinMain(
 
 				s_callingUpdateFlag = false;//for debug
 
+
+//起動時に白くなる不具合に対して　応急処置
 				if (g_infownd && (dbgcount < 60)) {
 					g_infownd->UpdateWindow();//起動時に白くなる不具合に対して　応急処置
 				}
+
+				firstflag = false;
 			}
 			dbgcount++;
 		}
@@ -5963,7 +6029,7 @@ void OnDestroyDevice()
 }
 
 
-void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
+void OnUserFrameMove(double fTime, float fElapsedTime, double difftime, int endflag, int loopstartflag)
 {
 
 	static double savetime = 0.0;
@@ -5986,9 +6052,9 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 
 	s_cameraHasChildFlag = g_chascene->ExistCameraChildModel();
 
-	if (ploopstartflag) {
-		*ploopstartflag = 0;
-	}
+	//if (ploopstartflag) {
+	//	*ploopstartflag = 0;
+	//}
 
 
 	if (g_befpreviewMOA != g_previewMOA) {
@@ -6079,31 +6145,31 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 
 		OnFrameMouseButton();
 
-		s_time = fTime;
-		////#replacing comment out#g_Camera->FrameMove(fElapsedTime);
-		double difftime = fTime - savetime;
-		//double difftime = fElapsedTime;
+		//s_time = fTime;
+		//////#replacing comment out#g_Camera->FrameMove(fElapsedTime);
+		//double difftime = fTime - savetime;
+		////double difftime = fElapsedTime;
 
 
-		//2025/12/06 PreviewStop時には時間を進めない
-		if (g_previewFlag == 0) {
-			difftime = 0.0;
-		}
+		////2025/12/06 PreviewStop時には時間を進めない
+		//if (g_previewFlag == 0) {
+		//	difftime = 0.0;
+		//}
 
 
 		//Preview前に　CameraAnimのために　時間を確定する必要がある
 		//時間が確定 --> CameraAnim --> s_matWorld, s_matProj, s_matVP確定 --> Preview時のUpdataMatrix(  s_matVP )
 
-		//##############
-		//Process Time
-		//##############
-		double nextframe = 0.0;
-		int endflag = 0;
-		int loopstartflag = 0;
-		OnFrameProcessTime(difftime, &nextframe, &endflag, &loopstartflag);
-		if (ploopstartflag) {
-			*ploopstartflag = loopstartflag;
-		}
+		////##############
+		////Process Time
+		////##############
+		//double nextframe = 0.0;
+		//int endflag = 0;
+		//int loopstartflag = 0;
+		//OnFrameProcessTime(difftime, &nextframe, &endflag, &loopstartflag);
+		//if (ploopstartflag) {
+		//	*ploopstartflag = loopstartflag;
+		//}
 
 
 		//#############
@@ -6187,19 +6253,26 @@ void OnUserFrameMove(double fTime, float fElapsedTime, int* ploopstartflag)
 		//}
 
 
-		//##########
-		//Preview
-		//##########
+//##########
+//Preview
+//##########
 		if (g_previewFlag) {
 			MOTINFO targetmi = GetEditTargetMotInfo();
 			double previewframe;
-			if (targetmi.motid > 0) {
-				previewframe = targetmi.curframe;
+
+
+			if (GetCurrentModel() && (g_previewMOA != 0)) {
+				previewframe = s_moa_frame;
 			}
 			else {
-				//2024/06/06
-				//カメラグラフ表示中にカメラアニメが存在しない場合　targetmi.motid == 0　その場合にはカレントモーションのカレントフレームを表示
-				previewframe = GetCurrentModel()->GetCurrentFrame();
+				if (targetmi.motid > 0) {
+					previewframe = targetmi.curframe;
+				}
+				else {
+					//2024/06/06
+					//カメラグラフ表示中にカメラアニメが存在しない場合　targetmi.motid == 0　その場合にはカレントモーションのカレントフレームを表示
+					previewframe = GetCurrentModel()->GetCurrentFrame();
+				}
 			}
 
 			if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
@@ -6672,15 +6745,13 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 	//s_fontfortip.End(rc);
 
 
-
 	////レンダリングエンジンを実行
 	//re->Execute(rc, g_chascene);
 	//// レンダリング終了
 	//g_engine->EndFrame(g_chascene);
-	////g_chascene->CopyCSDeform();
+	//////g_chascene->CopyCSDeform();
 	//g_chascene->ClearRenderObjs();//CopyCSDeform()よりも後で呼ぶ
 	////s_dispPickfortip = GetResultOfPickRay();//EndFrame()よりも後で呼ぶ
-
 
 	//2026/01/12 
 	//re->Execute, EndFrame, ClearRenderObjsをスレッドで実行
@@ -25834,6 +25905,12 @@ int OnFrameProcessTime(double difftime, double* pnextframe, int* pendflag, int* 
 		return 0;
 	}
 	
+	s_time = s_fTime;
+	//2025/12/06 PreviewStop時には時間を進めない
+	if (g_previewFlag == 0) {
+		difftime = 0.0;
+	}
+
 	//プレビューしていなくてもセット必要
 	GetCurrentModel()->SetRenderSlotFrame(GetCurrentModel()->GetCurrentFrame());//2024/03/13 変更前に保存　RenderBoneMarkで使用
 
@@ -26059,9 +26136,9 @@ int OnFramePreviewNormal(double nextframe, double difftime, int endflag, int loo
 	//}
 
 
-	if (g_previewMOA != 0) {
-		SetNewPoseByMoa_All(GetCurrentModel(), &nextframe);//呼び出し場所変更　OnFrameProcessTime()かどちらかを呼ぶように.
-	}
+	//if (g_previewMOA != 0) {
+	//	SetNewPoseByMoa_All(GetCurrentModel(), &nextframe);//呼び出し場所変更　OnFrameProcessTime()かどちらかを呼ぶように.
+	//}
 	g_chascene->UpdateMatrixModels(g_limitdegflag, nextframe, loopstartflag);
 
 #ifndef SKIP_EULERGRAPH__
@@ -26114,9 +26191,9 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 	}
 
 
-	if (GetCurrentModel() && (g_previewMOA != 0)) {
-		SetNewPoseByMoa_All(GetCurrentModel(), &nextframe);
-	}
+	//if (GetCurrentModel() && (g_previewMOA != 0)) {
+	//	SetNewPoseByMoa_All(GetCurrentModel(), &nextframe);
+	//}
 
 
 	//安定のために　シミュ開始時の姿勢で　キネマティックしている回数

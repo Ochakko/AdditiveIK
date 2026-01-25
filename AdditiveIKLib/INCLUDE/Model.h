@@ -475,8 +475,8 @@ public:
 	int CalcFillupTarget(int nextmotid, int filluppoint, double motionrate1, bool calcwm);
 
 	void ResetFootRigUpdated();
-	//void UpdateMatrixFootRigReq(bool istoebase, bool limitdegflag, CBone* srcbone,
-	//	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, bool broflag);
+	void UpdateMatrixFootRigReq(bool istoebase, bool limitdegflag, CBone* srcbone,
+		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, bool broflag);
 
 	void UpdateModelWMFootRig(CFootRigDlg* srcfootrigdlg, ChaMatrix newwm);
 	//void UpdateModelWMFootRigReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm);
@@ -846,7 +846,7 @@ public:
 	int CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos);
 
 	//FootRigから地面の高さ取得用
-	int CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVector3 endglobal, ChaVector3* dsthitpos);
+	int CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVector3 endglobal, ChaVector3* dsthitpos, bool chkoutofview=false);
 
 
 /**
