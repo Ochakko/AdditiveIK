@@ -81,6 +81,10 @@ int CFootRigDlg::DestroyObjs()
 		delete m_onlyOnGChk;
 		m_onlyOnGChk = nullptr;
 	}
+	if (m_onlyInViewChk) {
+		delete m_onlyInViewChk;
+		m_onlyInViewChk = nullptr;
+	}
 	if (m_leftfootlabel) {
 		delete m_leftfootlabel;
 		m_leftfootlabel = nullptr;
@@ -323,6 +327,10 @@ int CFootRigDlg::DestroyObjs()
 		delete m_gpusp;
 		m_gpusp = nullptr;
 	}
+	if (m_inviewsp) {
+		delete m_inviewsp;
+		m_inviewsp = nullptr;
+	}
 	if (m_hopyperstepsp) {
 		delete m_hopyperstepsp;
 		m_hopyperstepsp = nullptr;
@@ -424,6 +432,7 @@ void CFootRigDlg::InitParams()
 	m_groundCombo = nullptr;
 	m_gpuChk = nullptr;
 	m_onlyOnGChk = nullptr;
+	m_onlyInViewChk = nullptr;
 	m_leftfootlabel = nullptr;
 	m_leftfootBonelabel = nullptr;
 	m_leftfootBoneCombo = nullptr;
@@ -487,6 +496,7 @@ void CFootRigDlg::InitParams()
 	m_wmblendsp = nullptr;
 	m_maxcountsp = nullptr;
 	m_gpusp = nullptr;
+	m_inviewsp = nullptr;
 
 	m_spacerlabel0 = nullptr;
 	m_spacerlabel1 = nullptr;
@@ -717,6 +727,11 @@ int CFootRigDlg::CreateFootRigWnd()
 		}
 		m_onlyOnGChk = new OWP_CheckBoxA(L"Only on Ground", false, labelheight, false);
 		if (!m_onlyOnGChk) {
+			_ASSERT(0);
+			abort();
+		}
+		m_onlyInViewChk = new OWP_CheckBoxA(L"Only in view", true, labelheight, false);
+		if (!m_onlyInViewChk) {
 			_ASSERT(0);
 			abort();
 		}
@@ -1029,6 +1044,11 @@ int CFootRigDlg::CreateFootRigWnd()
 			_ASSERT(0);
 			abort();
 		}
+		m_inviewsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_inviewsp) {
+			_ASSERT(0);
+			abort();
+		}
 		m_hopyperstepsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
 		if (!m_hopyperstepsp) {
 			_ASSERT(0);
@@ -1097,6 +1117,9 @@ int CFootRigDlg::CreateFootRigWnd()
 		m_dlgWnd->addParts(*m_gpusp);
 		m_gpusp->addParts1(*m_gpuChk);
 		m_gpusp->addParts2(*m_onlyOnGChk);
+		m_dlgWnd->addParts(*m_inviewsp);
+		m_inviewsp->addParts1(*m_onlyInViewChk);
+
 
 		m_dlgWnd->addParts(*m_spacerlabel1);
 		m_dlgWnd->addParts(*m_leftfootlabel);
@@ -1219,6 +1242,16 @@ int CFootRigDlg::CreateFootRigWnd()
 				}
 			}
 		});
+		m_onlyInViewChk->setButtonListener([=, this]() {
+			bool value = m_onlyInViewChk->getValue();
+			if (m_model) {
+				std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
+				itrelem = m_footrigelem.find(m_model);
+				if (itrelem != m_footrigelem.end()) {
+					itrelem->second.calc_only_inview = value;
+				}
+			}
+			});
 
 
 
@@ -1513,6 +1546,10 @@ int CFootRigDlg::ParamsToDlg()
 		if (m_onlyOnGChk) {
 			bool value = curfootrigelem.onlyonground;
 			m_onlyOnGChk->setValue(value, false);
+		}
+		if (m_onlyInViewChk) {
+			bool value = curfootrigelem.calc_only_inview;
+			m_onlyInViewChk->setValue(value, false);
 		}
 
 
@@ -2795,9 +2832,9 @@ ChaVector3 CFootRigDlg::GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* 
 	return retpos;
 }
 
-int CFootRigDlg::GetGroundPos(bool retryflag, CModel* groundmodel, ChaVector3 basepos, bool gpuflag, ChaVector3* pgpos)
+int CFootRigDlg::GetGroundPos(CFootInfo* srcfootinfo, CModel* groundmodel, ChaVector3 basepos, bool gpuflag, ChaVector3* pgpos)
 {
-	if (!pgpos) {
+	if (!srcfootinfo || !groundmodel || !pgpos) {
 		_ASSERT(0);
 		return 0;
 	}
@@ -2805,29 +2842,20 @@ int CFootRigDlg::GetGroundPos(bool retryflag, CModel* groundmodel, ChaVector3 ba
 	int hitflag = 0;
 	ChaVector3 gpos;
 	gpos.SetZeroVec3();
-	if (!groundmodel) {
-		_ASSERT(0);
-		return 0;
-	}
 
-	ChaVector3 startglobal = basepos + ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
-	ChaVector3 endglobal = basepos - ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
 
-	hitflag = groundmodel->CollisionPolyMesh3_Ray(
-		gpuflag,
-		startglobal, endglobal, &gpos);
-	if (hitflag != 0) {
-		if (pgpos) {
-			*pgpos = gpos;
-		}
-	}
-	else if (retryflag) {
+	if (srcfootinfo->GetFirstPosOnGround()) {
+		//#################
+		//初回のフットリグ計算
+		//#################
+
+		srcfootinfo->SetFirstPosOnGround(false);
 		int dbgflag1 = 1;
 
 		//ステージに接地した直後など　長いRayが必要
 		ChaVector3 startglobal2 = basepos + ChaVector3(0.0f, 2000.0f, 0.0f);//2000.0
 		ChaVector3 endglobal2 = basepos - ChaVector3(0.0f, 2000.0f, 0.0f);//2000.0
-		
+
 		bool chkoutofview = true;//####### ステージ接地直後は視野外の場合もある
 
 		hitflag = groundmodel->CollisionPolyMesh3_Ray(
@@ -2841,8 +2869,26 @@ int CFootRigDlg::GetGroundPos(bool retryflag, CModel* groundmodel, ChaVector3 ba
 		else {
 			int dbgflag2 = 1;
 		}
-
 	}
+	else {
+		//########################
+		//2回目以降は設定の通りに実行
+		//########################
+
+		ChaVector3 startglobal = basepos + ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
+		ChaVector3 endglobal = basepos - ChaVector3(0.0f, FOOTRIGPICKHEIGHT, 0.0f);
+
+		hitflag = groundmodel->CollisionPolyMesh3_Ray(
+			gpuflag,
+			startglobal, endglobal, &gpos, !srcfootinfo->GetCalcOnlyInView());
+		if (hitflag != 0) {
+			if (pgpos) {
+				*pgpos = gpos;
+				srcfootinfo->SetFirstPosOnGround(false);
+			}
+		}
+	}
+
 	return hitflag;
 }
 
@@ -3006,6 +3052,7 @@ void CFootInfo::SetFootInfo(int footrigLR, FOOTRIGELEM srcelem) {
 	m_groundmodel = srcelem.groundmodel;
 	m_gpucollision = srcelem.gpucollision;
 	m_onlyonground = srcelem.onlyonground;
+	m_calc_only_inview = srcelem.calc_only_inview;
 };
 
 
@@ -3016,8 +3063,7 @@ int CFootInfo::CalcPos(int limitdegflag)
 			ChaVector3 jointpos = m_footrigdlg->GetJointPos(limitdegflag, m_toebasejoint->GetParModel(), m_toebasejoint, m_offset1, true);
 			m_toebasepos = jointpos;
 			if (m_groundmodel) {
-				bool retryflag = true;
-				int hitflag = m_footrigdlg->GetGroundPos(retryflag, m_groundmodel, m_toebasepos, m_gpucollision, &m_toebaseGpos);
+				int hitflag = m_footrigdlg->GetGroundPos(this, m_groundmodel, m_toebasepos, m_gpucollision, &m_toebaseGpos);
 			}
 		}
 
@@ -3025,8 +3071,7 @@ int CFootInfo::CalcPos(int limitdegflag)
 			ChaVector3 jointpos = m_footrigdlg->GetJointPos(limitdegflag, m_footjoint->GetParModel(), m_footjoint, m_offset2, false);
 			m_footpos = jointpos;
 			if (m_groundmodel) {
-				bool retryflag = true;
-				int hitflag = m_footrigdlg->GetGroundPos(retryflag, m_groundmodel, m_footpos, m_gpucollision, &m_footGpos);
+				int hitflag = m_footrigdlg->GetGroundPos(this, m_groundmodel, m_footpos, m_gpucollision, &m_footGpos);
 			}
 		}
 	}

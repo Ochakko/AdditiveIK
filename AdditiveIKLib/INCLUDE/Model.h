@@ -846,7 +846,7 @@ public:
 	int CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, int* hitfaceindex, ChaVector3* dsthitpos);
 
 	//FootRigから地面の高さ取得用
-	int CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVector3 endglobal, ChaVector3* dsthitpos, bool chkoutofview=false);
+	int CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVector3 endglobal, ChaVector3* dsthitpos, bool calc_outofview);
 
 
 /**

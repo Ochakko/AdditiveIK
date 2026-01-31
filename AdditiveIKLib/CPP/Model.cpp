@@ -4432,13 +4432,13 @@ int CModel::CollisionPolyMesh3_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj, 
 
 }
 
-int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVector3 endglobal, ChaVector3* dsthitpos, bool chkoutofview)
+int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVector3 endglobal, ChaVector3* dsthitpos, bool calc_outofview)
 {
 
 	//*hitfaceindex = -1;
 	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
 
-	if (!chkoutofview && !GetInView(0)) {
+	if (!calc_outofview && !GetInView(0)) {
 		return 0;//2025/12/28 視野外は当たらないことに.
 	}
 
@@ -4471,7 +4471,6 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 	unordered_map<int, CMQOObject*>::iterator itr;
 	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 		CMQOObject* curobj = itr->second;
-		//if (curobj && !curobj->IsND()) {
 		if (curobj && !curobj->IsND()) {
 
 			//2025/09/23
@@ -4507,7 +4506,7 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 			bool onlychkinview = true;
 
 			//2026/01/25
-			if (chkoutofview || curobj->GetInView(0)) {//2025/12/28 視野内だけ計算
+			if (calc_outofview || curobj->GetInView(0)) {//2025/12/28 視野内だけ計算
 				if (!gpuflag) {//### CPU ###
 					colli = curobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, rayleng, excludeinvface, &hitfaceindex, &tmphitpos);
 

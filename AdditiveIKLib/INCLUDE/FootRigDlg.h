@@ -74,7 +74,7 @@ public:
 
 
 	ChaVector3 GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* srcbone, ChaVector3 srcoffset, bool istoebase);
-	int GetGroundPos(bool retryflag, CModel* groundmodel, ChaVector3 basepos, bool gpuflag, ChaVector3* pgpos);
+	int GetGroundPos(CFootInfo* srcfootinfo, CModel* groundmodel, ChaVector3 basepos, bool gpuflag, ChaVector3* pgpos);
 
 
 private:
@@ -124,6 +124,7 @@ private:
 	OrgWinGUI::OWP_ComboBoxA* m_groundCombo;
 	OrgWinGUI::OWP_CheckBoxA* m_gpuChk;//2024/09/15
 	OrgWinGUI::OWP_CheckBoxA* m_onlyOnGChk;//2025/09/27
+	OrgWinGUI::OWP_CheckBoxA* m_onlyInViewChk;//2026/02/01
 
 
 	OrgWinGUI::OWP_Label* m_leftfootlabel;
@@ -190,6 +191,7 @@ private:
 	OrgWinGUI::OWP_Separator* m_rigstepsp;
 	OrgWinGUI::OWP_Separator* m_maxcountsp;//2024/09/08
 	OrgWinGUI::OWP_Separator* m_gpusp;//2024/09/16
+	OrgWinGUI::OWP_Separator* m_inviewsp;//2026/02/01
 	OrgWinGUI::OWP_Separator* m_hopyperstepsp;//2024/09/16
 	OrgWinGUI::OWP_Separator* m_wmblendsp;//2024/10/06
 
@@ -241,6 +243,9 @@ public:
 		m_groundmodel = nullptr;
 		m_gpucollision = false;
 		m_onlyonground = false;
+		m_calc_only_inview = true;
+
+		m_first_posonground = true;//2026/02/01
 	};
 	void DestroyObjs() { InitParams(); };
 
@@ -278,6 +283,17 @@ public:
 
 public:
 	void SetFootInfo(int footrigLR, FOOTRIGELEM srcelem);
+
+	bool GetFirstPosOnGround() {
+		return m_first_posonground;
+	};
+	void SetFirstPosOnGround(bool srcval) {
+		m_first_posonground = srcval;
+	};
+
+	bool GetCalcOnlyInView() {
+		return m_calc_only_inview;
+	};
 
 	ChaVector3 GetFootOffset1() {
 		return m_offset1;
@@ -489,6 +505,8 @@ private:
 	CModel* m_groundmodel;
 	bool m_gpucollision;
 	bool m_onlyonground;
+	bool m_calc_only_inview;
+	bool m_first_posonground;
 };
 
 

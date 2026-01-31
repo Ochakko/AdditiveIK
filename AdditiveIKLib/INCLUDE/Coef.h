@@ -765,6 +765,7 @@ typedef struct tag_footrigelem
 	float hopyperstep;//2024/09/16 hop Y per step
 	float wmblend;//2024/10/06 blend rate of ModelWorldMat
 	bool onlyonground;//2025/09/27
+	bool calc_only_inview;//2026/02/01
 
 	void Init() {
 		enablefootrig = false;
@@ -790,6 +791,7 @@ typedef struct tag_footrigelem
 		hopyperstep = 100.0f;
 		wmblend = 0.0f;
 		onlyonground = false;
+		calc_only_inview = true;
 	};
 
 	tag_footrigelem()

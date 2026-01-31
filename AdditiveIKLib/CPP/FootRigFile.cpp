@@ -107,7 +107,11 @@ int CFootRigFile::WriteFileInfo()
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0007</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	//2025/09/27 ver1008 <OnlyOnGround>追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0008</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0008</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
+	//2026/02/01 ver1009 <CalcOnlyInView>追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>FootRigFile</kind>\r\n    <version>0009</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+
 
 	return 0;
 }
@@ -197,6 +201,12 @@ int CFootRigFile::WriteFootRigElem(FOOTRIGELEM srcfootrigelem)
 	onlyonground = (srcfootrigelem.onlyonground) ? 1 : 0;
 	CallF(Write2File("    <OnlyOnGround>%d</OnlyOnGround>\r\n",
 		onlyonground), return 1);//2025/09/27 ver1008
+
+	int onlyinview;
+	onlyinview = (srcfootrigelem.calc_only_inview) ? 1 : 0;
+	CallF(Write2File("    <CalcOnlyInView>%d</CalcOnlyInView>\r\n",
+		onlyinview), return 1);//2026/02/01 ver1009
+
 
 	CallF(Write2File("    <HopYPerStep>%.2f</HopYPerStep>\r\n",
 		srcfootrigelem.hopyperstep), return 1);
@@ -376,6 +386,11 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 	int OnlyOnG = 0;
 	getOnlyOnG = Read_Int(xmlbuf, "<OnlyOnGround>", "</OnlyOnGround>", &OnlyOnG);//2025/09/27 ver1008
 
+	int getOnlyInView = 0;
+	int OnlyInView = 0;
+	getOnlyInView = Read_Int(xmlbuf, "<CalcOnlyInView>", "</CalcOnlyInView>", &OnlyInView);//2026/02/01 ver1009
+
+
 	int gethopyperstep = 0;
 	float hopyperstep = 0;
 	gethopyperstep = Read_Float(xmlbuf, "<HopYPerStep>", "</HopYPerStep>", &hopyperstep);//2024/09/16 ver1004
@@ -495,7 +510,16 @@ int CFootRigFile::ReadFootRigElem(CModel* srcmodel, ChaScene* srcchascene, FOOTR
 	if (getOnlyOnG == 0) {//2025/09/27
 		dstfootrigelem->onlyonground = (OnlyOnG == 1) ? true : false;
 	}
+	else {
+		dstfootrigelem->onlyonground = false;//default value : false
+	}
 
+	if (getOnlyInView == 0) {//2026/02/01
+		dstfootrigelem->calc_only_inview = (OnlyInView == 1) ? true : false;
+	}
+	else {
+		dstfootrigelem->calc_only_inview = true;//default value : true
+	}
 
 	return 0;
 }
