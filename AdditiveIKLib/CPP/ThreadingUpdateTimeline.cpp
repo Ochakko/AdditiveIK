@@ -158,6 +158,14 @@ void CThreadingUpdateTimeline::UpdateTimeline(int (*srctimelinecursor)(int mbutt
 		return;
 	}
 
+	////実行終了を待つ
+	//while (InterlockedAdd(&m_start_state, 0) != 0) {
+	//	timeBeginPeriod(1);
+	//	SleepEx(0, TRUE);
+	//	timeEndPeriod(1);
+	//}
+
+
 	EnterCriticalSection(&m_CritSection);
 	m_mbuttonflag = srcmbuttonflag;
 	m_newframe = srcnewframe;

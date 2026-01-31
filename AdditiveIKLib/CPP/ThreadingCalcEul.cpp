@@ -229,6 +229,12 @@ void CThreadingCalcEul::CalcBoneEul(CModel* srcmodel, bool limitdegflag, int src
 		return;
 	}
 
+	//実行終了を待つ
+	while (InterlockedAdd(&m_start_state, 0) != 0) {
+		timeBeginPeriod(1);
+		SleepEx(0, TRUE);
+		timeEndPeriod(1);
+	}
 
 	//####################################################################
 	//## g_limitdegflag == true　の場合にはローカルの計算だけ並列化

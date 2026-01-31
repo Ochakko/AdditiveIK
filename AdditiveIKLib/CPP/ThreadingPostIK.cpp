@@ -276,6 +276,14 @@ void CThreadingPostIK::IKRotateOneFrame(CModel* srcmodel, int srclimitdegflag, i
 		return;
 	}
 
+	//実行終了を待つ
+	while (InterlockedAdd(&m_start_state, 0) != 0) {
+		timeBeginPeriod(1);
+		SleepEx(0, TRUE);
+		timeEndPeriod(1);
+	}
+
+
 	if (!m_framenovec.empty()) {
 		EnterCriticalSection(&m_CritSection);
 

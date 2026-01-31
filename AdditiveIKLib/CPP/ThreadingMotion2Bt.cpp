@@ -219,6 +219,14 @@ int CThreadingMotion2Bt::Motion2Bt(bool srclimitdegflag, double srcnextframe,
 	//	return;
 	//}
 
+	//実行終了を待つ
+	while (InterlockedAdd(&m_start_state, 0) != 0) {
+		timeBeginPeriod(1);
+		SleepEx(0, TRUE);
+		timeEndPeriod(1);
+	}
+
+
 	m_model->SetUnderMotion2Bt(true);//!!!!!!!!
 
 
