@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2026/02/01
-　AdditiveIK 1.0.0.59 RC1(リリース候補1)
+　AdditiveIK 1.0.0.59 release
 　　1.0.0.58からの変更点
 　　　DispAndLimitsダイアログのHighRPMのチェックを外しても動くように.
 　　　　マルチスレッドコード修正
