@@ -135,6 +135,8 @@ public:
 	int UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag, 
 		ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, double srcframe, int refposindex);
 	int WaitUpdateThreads();
+	int UpdateBlendShapeModels();
+	int WaitForUpdateBlendShapeModels();
 	int SetBoneMatrixForShader(int btflag, bool calcslotflag);
 	int RenderModelsThread(bool needwaitfinished, myRenderer::RenderingEngine* Engine, RenderContext* rc);
 	//int RenderModelsThread(bool needwaitfinished, myRenderer::RenderingEngine* Engine, RenderContext* rc, double curtime, 

@@ -50,6 +50,7 @@ class CThreadingFKTra;
 class CThreadingCopyW2LW;
 class CThreadingRetarget;
 class CThreadingInitMp;
+class CThreadingUpdateBlendShape;
 class CNodeOnLoad;
 class CSChkInView;
 class CFootRigDlg;
@@ -481,6 +482,10 @@ public:
 	void UpdateModelWMFootRig(CFootRigDlg* srcfootrigdlg, ChaMatrix newwm);
 	//void UpdateModelWMFootRigReq(CBone* srcbone, ChaMatrix newwm, ChaMatrix befwm);
 
+	void UpdateBlendShapeThreading(int srcmotid, double srcframe);
+	int UpdateBlendShape(int srcmotid, double srcframe);
+
+
 	int ChkInView(int refposindex);
 	//int SwapCurrentMotionPoint();
 	int HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone, 
@@ -494,6 +499,7 @@ public:
 	void ApplyNewLimitsToWMReq(CBone* srcbone, int srcmotid, double srcframe, ChaMatrix befeditparentmat);
 
 	void WaitUpdateMatrixFinished();
+	void WaitUpdateBlendShapeFinished();
 	//void CalcWorldMatAfterThreadReq(CBone* srcbone, int srcmotid, double srcframe, ChaMatrix* wmat, ChaMatrix* vpmat);
 	//void CalcLimitedEulAfterThreadReq(CBone* srcbone, int srcmotid, double srcframe);
 
@@ -1271,7 +1277,9 @@ private:
 	void PostLoadFbxAnimReq(int srcmotid, double animlen, CBone* srcbone, bool skeletonflag);
 	int PreLoadCameraFbxAnim(int srcmotid);
 	void SetHasMotionCurveReq(FbxAnimLayer* mCurrentAnimLayer, CBone* srcbone, int srcmotid);
-
+	int CreateUpdateBlendShape();
+	int DestroyUpdateBlendShape();
+	int SetBlendShapeObject();
 
 	//void MakeBoneReq( CBone* parentbone, CMQOFace* curface, ChaVector3* pointptr, int broflag, int* errcntptr );
 
@@ -1653,6 +1661,19 @@ public: //accesser
 	void SetMqoObject( int srcindex, CMQOObject* srcobj ){
 		m_object[ srcindex ] = srcobj;
 	};
+	int GetBlendShapeObjectSize() {
+		return (int)m_object_blendshape.size();
+	};
+	CMQOObject* GetBlendShapeObject(int srcindex) {
+		if ((srcindex >= 0) && (srcindex < m_object_blendshape.size())) {
+			return m_object_blendshape[srcindex];
+		}
+		else {
+			return nullptr;
+		}
+	};
+
+
 
 	const char* GetBoneName(int srcboneno);
 	const WCHAR* GetWBoneName(int srcboneno);
@@ -3231,6 +3252,11 @@ public: //accesser
 	}
 	//m_Under_UpdateMatrix;
 
+	CThreadingUpdateBlendShape* GetThreadingUpdateBlendShape()
+	{
+		return m_UpdateBlendShape;
+	}
+
 	CThreadingUpdateMatrix* GetThreadingUpdateMatrix()
 	{
 		return m_boneupdatematrix;
@@ -3804,6 +3830,7 @@ private:
 	std::unordered_map<int, CBone*> m_bonelist;//ボーンをボーンIDから検索できるようにしたmap。
 	std::unordered_map<std::string, CBone*> m_bonename;//ボーンを名前から検索できるようにしたmap。
 	std::vector<std::string> m_ikstopname;//2023/07/21 IKStopフラグを設定するジョイントの名前の一部
+	std::vector<CMQOObject*> m_object_blendshape;//m_objectの中のblendshape処理をするCMQOObject*
 
 	CBone* m_topbone;//一番親のボーン。
 	CBtObject* m_topbt;//一番親のbullet剛体オブジェクト。
@@ -3819,6 +3846,7 @@ private:
 	CThreadingCopyW2LW* m_CopyW2LWThreads;
 	CThreadingRetarget* m_RetargetThreads;
 	CThreadingInitMp* m_InitMpThreads;
+	CThreadingUpdateBlendShape* m_UpdateBlendShape;
 	int m_creatednum_boneupdatematrix;//スレッド数の変化に対応。作成済の数。処理用。
 	int m_creatednum_loadfbxanim;//スレッド数の変化に対応。作成済の数。処理用。
 

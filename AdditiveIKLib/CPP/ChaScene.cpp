@@ -45,6 +45,7 @@
 #include <ThreadingMotion2Bt.h>
 #include <ThreadingSetBtMotion.h>
 #include <ThreadingRenderModels.h>
+#include <ThreadingUpdateBlendShape.h>
 
 #include <FootRigDlg.h>
 
@@ -213,7 +214,33 @@ void ChaScene::SetUpdateSlot()
 //	}
 //}
 
+int ChaScene::UpdateBlendShapeModels()
+{
 
+	if (g_changeUpdateThreadsNum) {
+		//アップデート用スレッド数を変更中
+		return 0;
+	}
+
+	if (!m_modelindex.empty()) {
+
+		//bool needwaitflag = false;
+		int modelnum = (int)m_modelindex.size();
+		int modelindex;
+		for (modelindex = 0; modelindex < modelnum; modelindex++) {
+			CModel* curmodel = m_modelindex[modelindex].modelptr;
+			if (curmodel != nullptr) {
+				int srcmotid = curmodel->GetCurrentMotID();
+				double srcframe = curmodel->GetCurrentFrame();
+				if ((srcmotid > 0) && (srcframe >= 0.0)) {
+					curmodel->UpdateBlendShapeThreading(srcmotid, srcframe);
+				}
+			}
+		}
+	}
+
+	return 0;
+}
 
 int ChaScene::UpdateMatrixModels(bool limitdegflag, double srcframe, int loopstartflag)
 {
@@ -1565,6 +1592,53 @@ int ChaScene::RenderRefPos(myRenderer::RenderingEngine* renderingEngine, bool op
 	return 0;
 }
 
+int ChaScene::WaitForUpdateBlendShapeModels()
+{
+	int modelnum = (int)m_modelindex.size();
+
+	//m_totalupdatethreadsnum = 0;
+	//if (!m_modelindex.empty()) {
+	//	int modelindex;
+	//	for (modelindex = 0; modelindex < modelnum; modelindex++) {
+	//		CModel* curmodel = m_modelindex[modelindex].modelptr;
+	//		if (curmodel) {
+	//			m_totalupdatethreadsnum += curmodel->GetThreadingUpdateMatrixNum();
+	//		}
+	//	}
+	//}
+	m_totalupdatethreadsnum = modelnum;
+
+	int donethreadingnum = 0;
+	bool yetflag = true;
+	while (donethreadingnum < m_totalupdatethreadsnum) {
+
+		donethreadingnum = 0;
+
+		int modelindex2;
+		for (modelindex2 = 0; modelindex2 < modelnum; modelindex2++) {
+			CModel* curmodel = m_modelindex[modelindex2].modelptr;
+			if (curmodel != nullptr)
+			{
+				if (curmodel->GetThreadingUpdateBlendShape() != nullptr)
+				{
+					CThreadingUpdateBlendShape* curupdate = curmodel->GetThreadingUpdateBlendShape();
+					if (curupdate->IsFinished()) {
+						donethreadingnum++;
+					}
+				}
+				else {
+					//_ASSERT(0);
+					donethreadingnum++;
+				}
+			}
+			else {
+				donethreadingnum++;
+			}
+		}
+	}
+
+	return 0;
+}
 
 int ChaScene::WaitUpdateThreads()
 {

@@ -343,6 +343,8 @@ void CMQOObject::InitParams()
 
 	m_clustertopbone = nullptr;
 
+	m_firstCopyBlendShape = true;
+
 //	next = 0;
 }
 
@@ -2862,6 +2864,12 @@ int CMQOObject::UpdateMorphBuffer()
 	for (channelindex = 0; channelindex < shapenum; channelindex++) {
 		int error1 = 0;
 		string curname = GetShapeName(channelindex, &error1);
+		
+		//for debug
+		if (strstr(curname.c_str(), "Smile") != nullptr) {
+			int dbgflag1 = 1;
+		}
+		
 		if (error1 == 0) {
 			BLENDSHAPETARGET* curshape = m_shapevert[curname];
 			if (curshape) {
@@ -2879,13 +2887,12 @@ int CMQOObject::UpdateMorphBuffer()
 						*(m_mpoint + vno) += diffpoint;//結果に加算
 					}
 				}
-				if (fabs(curweight - befweight) >= 1e-3) {
+				if (m_firstCopyBlendShape || (fabs(curweight - befweight) >= 0.0010f)) {
 					//2024/05/26
 					//変化したかどうかをチェック
 					//0.0以外から0.0へと変化した場合にも頂点バッファを更新する必要有
 					dirtyflag = true;//!!!!!!!
 				}
-
 			}
 			else {
 				_ASSERT(0);
@@ -2913,6 +2920,8 @@ int CMQOObject::UpdateMorphBuffer()
 			CallF(m_pm3->UpdateMorphBuffer(m_mpoint), return 1);
 			CallF(m_dispobj->CopyDispV(m_pm3), return 1);
 		}
+
+		m_firstCopyBlendShape = false;
 	}
 
 	return 0;

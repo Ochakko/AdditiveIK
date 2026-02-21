@@ -88,6 +88,7 @@
 #include <ThreadingCalcEul.h>
 #include <ThreadingRetarget.h>
 #include <ThreadingInitMp.h>
+#include <ThreadingUpdateBlendShape.h>
 
 #include <NodeOnLoad.h>
 
@@ -604,14 +605,15 @@ int CModel::InitParams()
 	m_bonelist.clear();
 	m_bonename.clear();
 
-	m_boneupdatematrix = 0;
-	m_LoadFbxAnim = 0;
-	m_PostIKThreads = 0;
-	m_CalcEulThreads = 0;
-	m_FKTraThreads = 0;
-	m_CopyW2LWThreads = 0;
-	m_RetargetThreads = 0;
-	m_InitMpThreads = 0;
+	m_boneupdatematrix = nullptr;
+	m_LoadFbxAnim = nullptr;
+	m_PostIKThreads = nullptr;
+	m_CalcEulThreads = nullptr;
+	m_FKTraThreads = nullptr;
+	m_CopyW2LWThreads = nullptr;
+	m_RetargetThreads = nullptr;
+	m_InitMpThreads = nullptr;
+	m_UpdateBlendShape = nullptr;
 	m_creatednum_boneupdatematrix = 0;//スレッド数の変化に対応。作成済の数。処理用。
 	m_creatednum_loadfbxanim = 0;//スレッド数の変化に対応。作成済の数。処理用。
 
@@ -753,6 +755,8 @@ int CModel::DestroyObjs()
 	//スレッドを先に止める
 	WaitUpdateMatrixFinished();
 	DestroyBoneUpdateMatrix();
+	WaitUpdateBlendShapeFinished();
+	DestroyUpdateBlendShape();
 	WaitLoadFbxAnimFinished();
 	DestroyLoadFbxAnim();
 	WaitCalcEulFinished();
@@ -1512,7 +1516,11 @@ _ASSERT(m_bonelist[0]);
 				CreateRigidElem(m_defaultrename, 1, m_defaultimpname, 1);
 			}
 		}
+
 	}
+
+
+	SetBlendShapeObject();
 
 	//*ppimporter = pImporter;
 	//*ppscene = pScene;
@@ -2522,6 +2530,61 @@ void CModel::SetUpdateSlotReq(CBone* srcbone, int srcslot)
 	}
 }
 
+void CModel::UpdateBlendShapeThreading(int srcmotid, double srcframe)
+{
+	if (m_UpdateBlendShape != nullptr) {
+		if (!m_object_blendshape.empty() && GetInMorph() && (IsCameraMotion(srcmotid) == false)) {//2024/06/07 カメラモーションにはモーフ情報は無い前提
+			m_UpdateBlendShape->UpdateBlendShape(this, srcmotid, srcframe);
+			//WaitUpdateBlendShapeFinished();//終了待ち
+		}
+		else {
+			return;
+		}
+	}
+	//else if (!m_object_blendshape.empty()) {
+	//	this->UpdateBlendShape(srcmotid, srcframe);
+	//}
+	else {
+		return;
+	}
+}
+
+int CModel::SetBlendShapeObject()
+{
+	m_object_blendshape.clear();
+
+	unordered_map<int, CMQOObject*>::iterator itrobj;
+	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+		CMQOObject* curobj = itrobj->second;
+		_ASSERT(curobj);
+		if (!(curobj->EmptyShape())) {
+			m_object_blendshape.push_back(curobj);
+		}
+	}
+
+	return 0;
+}
+
+int CModel::UpdateBlendShape(int srcmotid, double srcframe)
+{
+	if (!m_object_blendshape.empty() && GetInMorph() && (IsCameraMotion(srcmotid) == false)) {//2024/06/07 カメラモーションにはモーフ情報は無い前提
+		//2024/05/22 BlendShapeプレートメニューのblendshapeDistスライダーによる指定距離内の場合にモーフ再生
+		vector<CMQOObject*>::iterator itrblendshape;
+		for (itrblendshape = m_object_blendshape.begin(); itrblendshape != m_object_blendshape.end(); itrblendshape++) {
+		//unordered_map<int, CMQOObject*>::iterator itrblendshape;
+		//for (itrblendshape = m_object.begin(); itrblendshape != m_object.end(); itrblendshape++) {
+			CMQOObject* curblendshape = *itrblendshape;
+			//CMQOObject* curblendshape = itrblendshape->second;
+			_ASSERT(curblendshape);
+			if ((curblendshape != nullptr) && !(curblendshape->EmptyShape())) {
+				CallF(curblendshape->UpdateMorphWeight(srcmotid, IntTime(srcframe)), return 1);
+				CallF(curblendshape->UpdateMorphBuffer(), return 1);
+			}
+		}
+	}
+
+	return 0;
+}
 
 int CModel::UpdateMatrix(bool limitdegflag, 
 	ChaMatrix* wmat, ChaMatrix* vmat, ChaMatrix* pmat, 
@@ -2607,20 +2670,21 @@ int CModel::UpdateMatrix(bool limitdegflag,
 		}
 	}
 
+	////2026/02/21 別スレッド別関数で同時実行するように変更
+	//UpdateBlendShape()
+	//if (GetInMorph() && (IsCameraMotion(curmotid) == false)) {//2024/06/07 カメラモーションにはモーフ情報は無い前提
 
-	if (GetInMorph() && (IsCameraMotion(curmotid) == false)) {//2024/06/07 カメラモーションにはモーフ情報は無い前提
-
-		//2024/05/22 BlendShapeプレートメニューのblendshapeDistスライダーによる指定距離内の場合にモーフ再生
-		unordered_map<int, CMQOObject*>::iterator itrobj;
-		for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
-			CMQOObject* curobj = itrobj->second;
-			_ASSERT(curobj);
-			if (!(curobj->EmptyShape())) {
-				CallF(curobj->UpdateMorphWeight(curmotid, IntTime(curframe)), return 1);
-				CallF(curobj->UpdateMorphBuffer(), return 1);
-			}
-		}
-	}
+	//	//2024/05/22 BlendShapeプレートメニューのblendshapeDistスライダーによる指定距離内の場合にモーフ再生
+	//	unordered_map<int, CMQOObject*>::iterator itrobj;
+	//	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+	//		CMQOObject* curobj = itrobj->second;
+	//		_ASSERT(curobj);
+	//		if (!(curobj->EmptyShape())) {
+	//			CallF(curobj->UpdateMorphWeight(curmotid, IntTime(curframe)), return 1);
+	//			CallF(curobj->UpdateMorphBuffer(), return 1);
+	//		}
+	//	}
+	//}
 
 
 
@@ -2966,73 +3030,73 @@ int CModel::HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone,
 
 
 /***
-int CModel::ComputeShapeDeformation(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* curobj, char* takename )
-{
-    int lVertexCount = pMesh->GetControlPointsCount();
-	if( lVertexCount != curobj->m_vertex ){
-		_ASSERT( 0 );
-		return 1;
-	}
-
-	MoveMemory( curobj->m_mpoint, curobj->m_pointbuf, sizeof( ChaVector3 ) * lVertexCount );
-
-	int lBlendShapeDeformerCount = pMesh->GetDeformerCount(FbxDeformer::eBlendShape);
-	for(int lBlendShapeIndex = 0; lBlendShapeIndex<lBlendShapeDeformerCount; ++lBlendShapeIndex)
-	{
-		FbxBlendShape* lBlendShape = (FbxBlendShape*)pMesh->GetDeformer(lBlendShapeIndex, FbxDeformer::eBlendShape);
-		int lBlendShapeChannelCount = lBlendShape->GetBlendShapeChannelCount();
-		for(int lChannelIndex = 0; lChannelIndex<lBlendShapeChannelCount; lChannelIndex++)
-		{
-			FbxBlendShapeChannel* lChannel = lBlendShape->GetBlendShapeChannel(lChannelIndex);
-			if(lChannel)
-			{
-				// Get the percentage of influence of the shape.
-				FbxAnimCurve* lFCurve;
-				double lWeight = 0.0;
-				lFCurve = pMesh->GetShapeChannel(lBlendShapeIndex, lChannelIndex, pAnimLayer);
-				if (lFCurve){
-					lWeight = lFCurve->Evaluate(pTime);
-				}else{
-					continue;
-				}
-
-				if( lWeight == 0.0 ){
-					continue;
-				}
-
-				//Find which shape should we use according to the weight.
-				int lShapeCount = lChannel->GetTargetShapeCount();
-				double* lFullWeights = lChannel->GetTargetShapeFullWeights();
-				for(int lShapeIndex = 0; lShapeIndex<lShapeCount; lShapeIndex++)
-				{
-					FbxShape* lShape = NULL;
-					lShape = lChannel->GetTargetShape(lShapeIndex);//lShapeIndex+1ではない！！！！！！！！！！！！！！！！
-					if(lShape)
-					{		
-						FbxVector4* shapev = lShape->GetControlPoints();
-
-						for (int j = 0; j < lVertexCount; j++)
-						{
-							// Add the influence of the shape vertex to the mesh vertex.
-							ChaVector3 xv;
-							ChaVector3 diffpoint;
-
-							xv.x = (float)shapev[j][0];
-							xv.y = (float)shapev[j][1];
-							xv.z = (float)shapev[j][2];
-
-							diffpoint = (xv - *(curobj->m_pointbuf + j)) * (float)lWeight * 0.01f;
-
-							*(curobj->m_mpoint + j) += diffpoint;
-						}						
-					}
-				}//For each target shape
-			}//If lChannel is valid
-		}//For each blend shape channel
-	}//For each blend shape deformer
-
-	return 0;
-}
+//int CModel::ComputeShapeDeformation(FbxNode* pNode, FbxMesh* pMesh, FbxTime& pTime, FbxAnimLayer * pAnimLayer, CMQOObject* curobj, char* takename )
+//{
+//    int lVertexCount = pMesh->GetControlPointsCount();
+//	if( lVertexCount != curobj->m_vertex ){
+//		_ASSERT( 0 );
+//		return 1;
+//	}
+//
+//	MoveMemory( curobj->m_mpoint, curobj->m_pointbuf, sizeof( ChaVector3 ) * lVertexCount );
+//
+//	int lBlendShapeDeformerCount = pMesh->GetDeformerCount(FbxDeformer::eBlendShape);
+//	for(int lBlendShapeIndex = 0; lBlendShapeIndex<lBlendShapeDeformerCount; ++lBlendShapeIndex)
+//	{
+//		FbxBlendShape* lBlendShape = (FbxBlendShape*)pMesh->GetDeformer(lBlendShapeIndex, FbxDeformer::eBlendShape);
+//		int lBlendShapeChannelCount = lBlendShape->GetBlendShapeChannelCount();
+//		for(int lChannelIndex = 0; lChannelIndex<lBlendShapeChannelCount; lChannelIndex++)
+//		{
+//			FbxBlendShapeChannel* lChannel = lBlendShape->GetBlendShapeChannel(lChannelIndex);
+//			if(lChannel)
+//			{
+//				// Get the percentage of influence of the shape.
+//				FbxAnimCurve* lFCurve;
+//				double lWeight = 0.0;
+//				lFCurve = pMesh->GetShapeChannel(lBlendShapeIndex, lChannelIndex, pAnimLayer);
+//				if (lFCurve){
+//					lWeight = lFCurve->Evaluate(pTime);
+//				}else{
+//					continue;
+//				}
+//
+//				if( lWeight == 0.0 ){
+//					continue;
+//				}
+//
+//				//Find which shape should we use according to the weight.
+//				int lShapeCount = lChannel->GetTargetShapeCount();
+//				double* lFullWeights = lChannel->GetTargetShapeFullWeights();
+//				for(int lShapeIndex = 0; lShapeIndex<lShapeCount; lShapeIndex++)
+//				{
+//					FbxShape* lShape = NULL;
+//					lShape = lChannel->GetTargetShape(lShapeIndex);//lShapeIndex+1ではない！！！！！！！！！！！！！！！！
+//					if(lShape)
+//					{		
+//						FbxVector4* shapev = lShape->GetControlPoints();
+//
+//						for (int j = 0; j < lVertexCount; j++)
+//						{
+//							// Add the influence of the shape vertex to the mesh vertex.
+//							ChaVector3 xv;
+//							ChaVector3 diffpoint;
+//
+//							xv.x = (float)shapev[j][0];
+//							xv.y = (float)shapev[j][1];
+//							xv.z = (float)shapev[j][2];
+//
+//							diffpoint = (xv - *(curobj->m_pointbuf + j)) * (float)lWeight * 0.01f;
+//
+//							*(curobj->m_mpoint + j) += diffpoint;
+//						}						
+//					}
+//				}//For each target shape
+//			}//If lChannel is valid
+//		}//For each blend shape channel
+//	}//For each blend shape deformer
+//
+//	return 0;
+//}
 ***/
 
 
@@ -7304,6 +7368,9 @@ int CModel::CreateFBXAnim( FbxScene* pScene, FbxNode* prootnode, BOOL motioncach
 		//#### 2022/11/01 ################################################
 		//CreateFBXAnimReq(animno, pScene, pPose, prootnode, curmotid, animleng);//2022/10/21 : 最終フレームのモーションフレーム無し問題対応
 
+		if (!m_object_blendshape.empty()) {
+			CreateUpdateBlendShape();
+		}
 
 		int animno;
 		for (animno = 0; animno < lAnimStackCount; animno++) {
@@ -10530,18 +10597,18 @@ int CModel::SetBtMotion(bool limitdegflag, CBone* srcbone, int ragdollflag,
 	}
 
 
-	if (GetInMorph()) {
-		//2024/05/22 BlendShapeプレートメニューのblendshapeDistスライダーによる指定距離内の場合にモーフ再生
-		unordered_map<int, CMQOObject*>::iterator itrobj;
-		for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
-			CMQOObject* curobj = itrobj->second;
-			_ASSERT(curobj);
-			if (!(curobj->EmptyShape())) {
-				CallF(curobj->UpdateMorphWeight(curmotid, IntTime(curframe)), return 1);
-				CallF(curobj->UpdateMorphBuffer(), return 1);
-			}
-		}
-	}
+	//if (GetInMorph()) {
+	//	//2024/05/22 BlendShapeプレートメニューのblendshapeDistスライダーによる指定距離内の場合にモーフ再生
+	//	unordered_map<int, CMQOObject*>::iterator itrobj;
+	//	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+	//		CMQOObject* curobj = itrobj->second;
+	//		_ASSERT(curobj);
+	//		if (!(curobj->EmptyShape())) {
+	//			CallF(curobj->UpdateMorphWeight(curmotid, IntTime(curframe)), return 1);
+	//			CallF(curobj->UpdateMorphBuffer(), return 1);
+	//		}
+	//	}
+	//}
 
 	//if (g_previewFlag == 5){
 	//	if (m_topbt){
@@ -21316,6 +21383,50 @@ bool CModel::ChkBoneHasRig(CBone* srcbone)
 	return false;
 }
 
+int CModel::CreateUpdateBlendShape()
+{
+	DestroyUpdateBlendShape();
+	Sleep(100);
+
+	m_UpdateBlendShape = new CThreadingUpdateBlendShape();
+	if (!m_UpdateBlendShape) {
+		_ASSERT(0);
+		return 1;
+	}
+	DWORD createno = GetModelNo() % 4;
+	m_UpdateBlendShape->CreateThread((DWORD)(1 << createno));
+
+	return 0;
+}
+int CModel::DestroyUpdateBlendShape()
+{
+	if (m_UpdateBlendShape) {
+		delete m_UpdateBlendShape;
+	}
+	m_UpdateBlendShape = nullptr;
+
+	return 0;
+}
+
+void CModel::WaitUpdateBlendShapeFinished()
+{
+	if (m_UpdateBlendShape != nullptr) {
+		bool yetflag = true;
+		while (yetflag == true) {
+			if (m_UpdateBlendShape->IsFinished()) {
+				yetflag = false;
+				return;
+			}
+			else {
+				//__nop();
+				//__nop();
+				//__nop();
+				//__nop();
+			}
+		}
+	}
+}
+
 //####################################
 // Manager func of CThreadingLoadFbx
 //####################################
@@ -21406,7 +21517,7 @@ int CModel::DestroyLoadFbxAnim()
 	if (m_LoadFbxAnim) {
 		delete[] m_LoadFbxAnim;
 	}
-	m_LoadFbxAnim = 0;
+	m_LoadFbxAnim = nullptr;
 
 	return 0;
 }
@@ -21535,7 +21646,7 @@ int CModel::DestroyBoneUpdateMatrix()
 	if (m_boneupdatematrix) {
 		delete[] m_boneupdatematrix;
 	}
-	m_boneupdatematrix = 0;
+	m_boneupdatematrix = nullptr;
 	m_creatednum_boneupdatematrix = 0;
 
 	return 0;
@@ -21675,7 +21786,7 @@ int CModel::DestroyCalcEulThreads()
 	if (m_CalcEulThreads) {
 		delete[] m_CalcEulThreads;
 	}
-	m_CalcEulThreads = 0;
+	m_CalcEulThreads = nullptr;
 
 	return 0;
 
@@ -21789,7 +21900,7 @@ int CModel::DestroyPostIKThreads()
 	if (m_PostIKThreads) {
 		delete[] m_PostIKThreads;
 	}
-	m_PostIKThreads = 0;
+	m_PostIKThreads = nullptr;
 
 	return 0;
 }
@@ -21967,7 +22078,7 @@ int CModel::DestroyInitMpThreads()
 	if (m_InitMpThreads) {
 		delete[] m_InitMpThreads;
 	}
-	m_InitMpThreads = 0;
+	m_InitMpThreads = nullptr;
 
 	return 0;
 }
@@ -22106,7 +22217,7 @@ int CModel::DestroyRetargetThreads()
 	if (m_RetargetThreads) {
 		delete[] m_RetargetThreads;
 	}
-	m_RetargetThreads = 0;
+	m_RetargetThreads = nullptr;
 
 	return 0;
 }
@@ -22245,7 +22356,7 @@ int CModel::DestroyFKTraThreads()
 	if (m_FKTraThreads) {
 		delete[] m_FKTraThreads;
 	}
-	m_FKTraThreads = 0;
+	m_FKTraThreads = nullptr;
 
 	return 0;
 }
@@ -22382,7 +22493,7 @@ int CModel::DestroyCopyW2LWThreads()
 	if (m_CopyW2LWThreads) {
 		delete[] m_CopyW2LWThreads;
 	}
-	m_CopyW2LWThreads = 0;
+	m_CopyW2LWThreads = nullptr;
 
 	return 0;
 }

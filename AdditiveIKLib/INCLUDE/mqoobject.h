@@ -636,7 +636,7 @@ private:
 	std::vector<float> m_shapeweightvecBef;//[channelindex]
 	ChaVector3* m_mpoint;
 	ChaVector3* m_localpointbuf;
-
+	bool m_firstCopyBlendShape;
 
 	//fbx GetFBXMesh()
 	int m_normalmappingmode;//0:eByPolygonVertex, 1:eByControlPoint
