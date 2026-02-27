@@ -2,6 +2,12 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2026/02/28
+　DirectX12の新機能で高速化
+　　データ転送高速オプションを使用
+　　こちらでは変更前に50fpsくらいだったシーンが120fpsで表示されています
+　　BlendShapeも速くなりました
+
 2026/02/01
 　AdditiveIK 1.0.0.59 release
 　　1.0.0.58からの変更点

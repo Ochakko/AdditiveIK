@@ -124,6 +124,7 @@ int CDispObj::InitParams()
 	m_vertexBuffer = nullptr;		//頂点バッファ。
 	ZeroMemory(&m_vertexBufferView, sizeof(D3D12_VERTEX_BUFFER_VIEW));	//頂点バッファビュー。
 	m_vertexMap = nullptr;
+	m_vertexSystem = nullptr;
 
 	m_indexBuffer = nullptr;	//インデックスバッファ。
 	ZeroMemory(&m_indexBufferView, sizeof(D3D12_INDEX_BUFFER_VIEW));	//インデックスバッファビュー。
@@ -137,12 +138,16 @@ int CDispObj::DestroyObjs()
 
 	if (m_tmpindexLH) {
 		free(m_tmpindexLH);
-		m_tmpindexLH = 0;
+		m_tmpindexLH = nullptr;
 	}
 
 	if (m_vertexBuffer) {
 		m_vertexBuffer->Unmap(0, nullptr);
 		m_vertexBuffer->Release();
+	}
+	if (m_vertexSystem) {
+		free(m_vertexSystem);
+		m_vertexSystem = nullptr;
 	}
 	if (m_indexBuffer) {
 		m_indexBuffer->Unmap(0, nullptr);
@@ -372,7 +377,7 @@ int CDispObj::SetGPUInteraction(bool srcflag)
 }
 
 
-int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, int srcuvnum)
+int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, int srcuvnum, bool hasBlendShape)
 {
 	DestroyObjs();
 
@@ -381,7 +386,7 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, in
 	m_pdev = pdev;
 	m_pm4 = pm4;
 
-	CallF( CreateVBandIB(pdev), return 1 );
+	CallF( CreateVBandIB(pdev, hasBlendShape), return 1 );
 
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
 		DXGI_FORMAT_R32G32B32A32_FLOAT,//for SV_Target0
@@ -675,7 +680,7 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 //
 //}
 
-int CDispObj::CreateVBandIB(ID3D12Device* pdev)
+int CDispObj::CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape)
 {
 	//HRESULT hr;
 
@@ -735,7 +740,8 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 //###########
 	{
 		//auto d3dDevice = g_graphicsEngine->GetD3DDevice();
-		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+		//auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_GPU_UPLOAD);//2026/02/28
 		auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(vbsize);
 		HRESULT hrvb0 = pdev->CreateCommittedResource(
 			&heapProp,
@@ -756,7 +762,6 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 		m_vertexBufferView.SizeInBytes = vbsize;
 		m_vertexBufferView.StrideInBytes = stride;
 
-
 		//インスタンシングバッファ
 		m_InstancingBuffer.Init((sizeof(INSTANCINGPARAMS) * RIGMULTINDEXMAX), sizeof(INSTANCINGPARAMS));
 
@@ -770,6 +775,14 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 			memcpy(m_vertexMap, pm3v, m_vertexBufferView.SizeInBytes);
 		}
 		else if (m_pm4) {
+			if (hasBlendShape) {
+				m_vertexSystem = (uint8_t*)malloc(pmvleng * (sizeof(BINORMALDISPV) + sizeof(PM3INF)));
+				if (m_vertexSystem == nullptr) {
+					_ASSERT(0);
+					return -1;
+				}
+			}
+
 			DWORD vno;
 			for (vno = 0; vno < (DWORD)pmvleng; vno++) {
 				uint8_t* pdest = m_vertexMap + vno * (sizeof(BINORMALDISPV) + sizeof(PM3INF));
@@ -780,6 +793,12 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev)
 
 				memcpy(pdest, curv, sizeof(BINORMALDISPV));
 				memcpy(pdest + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
+
+				if (hasBlendShape && (m_vertexSystem != nullptr)) {
+					uint8_t* pdestSystem = m_vertexSystem + vno * (sizeof(BINORMALDISPV) + sizeof(PM3INF));
+					memcpy(pdestSystem, curv, sizeof(BINORMALDISPV));
+					memcpy(pdestSystem + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
+				}
 			}
 			//memcpy(pData, pmv, m_vertexBufferView.SizeInBytes);
 
@@ -2288,17 +2307,36 @@ int CDispObj::CopyDispV( CPolyMesh4* pm4 )
 		stride = sizeof(BINORMALDISPV) + sizeof(PM3INF);
 		vbsize = pmvleng * stride;
 
-		if (m_vertexMap && pm4v) {
+
+		//2025/02/28 まずsystemメモリにセット
+		if ((m_vertexSystem != nullptr) && (pm4v != nullptr)) {
 			DWORD vno;
 			for (vno = 0; vno < (DWORD)pmvleng; vno++) {
-				uint8_t* pdest = m_vertexMap + vno * (sizeof(BINORMALDISPV) + sizeof(PM3INF));
+				uint8_t* pdest = m_vertexSystem + vno * (sizeof(BINORMALDISPV) + sizeof(PM3INF));
 
 				BINORMALDISPV* curv = pm4v + vno;
 				//PM3INF* curinf = pmib + vno;
 
-				memcpy(pdest, curv, sizeof(BINORMALDISPV));
+				*((BINORMALDISPV*)pdest) = *curv;
+				//memcpy(pdest, curv, sizeof(BINORMALDISPV));
 				//memcpy(pdest + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
 			}
+		}
+
+		//2025/02/28 ビデオメモリに一括転送
+		if ((m_vertexMap != nullptr) && (m_vertexSystem != nullptr) && (pm4v != nullptr)) {
+			memcpy(m_vertexMap, m_vertexSystem, pmvleng * (sizeof(BINORMALDISPV) + sizeof(PM3INF)));
+
+			//DWORD vno;
+			//for (vno = 0; vno < (DWORD)pmvleng; vno++) {
+			//	uint8_t* pdest = m_vertexMap + vno * (sizeof(BINORMALDISPV) + sizeof(PM3INF));
+			//
+			//	BINORMALDISPV* curv = pm4v + vno;
+			//	//PM3INF* curinf = pmib + vno;
+			//
+			//	memcpy(pdest, curv, sizeof(BINORMALDISPV));
+			//	//memcpy(pdest + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
+			//}
 		}
 	}
 

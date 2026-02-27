@@ -1083,7 +1083,7 @@ int CMQOObject::MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag)
 			_ASSERT(0);
 			return 1;
 		}
-		CallF(m_dispobj->CreateDispObj(pdev, m_pm4, hasbone, GetUVNum()), return 1);
+		CallF(m_dispobj->CreateDispObj(pdev, m_pm4, hasbone, GetUVNum(), !EmptyShape()), return 1);
 
 
 		m_pm4->CalcBound();

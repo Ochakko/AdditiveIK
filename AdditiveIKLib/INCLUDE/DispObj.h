@@ -58,7 +58,7 @@ public:
 	 * @param (int hasbone) IN ボーン変形有の場合は１、無しの場合は０。 * @return 戻り値の説明
 	 * @return 成功したら０。
 	 */
-	int CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, int srcuvnum);
+	int CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, int srcuvnum, bool hasBlendShape);
 
 	/**
 	 * @fn
@@ -198,7 +198,7 @@ private:
 	 * @breaf ３D表示用の頂点バッファとインデックスバッファを作成する。
 	 * @return 成功したら０。
 	 */
-	int CreateVBandIB(ID3D12Device* pdev);
+	int CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape = false);
 
 	/**
 	 * @fn
@@ -227,6 +227,7 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;	//頂点バッファビュー。
 	VertexBuffer  m_InstancingBuffer;		//インスタンシング頂点バッファ。
 	uint8_t* m_vertexMap;
+	uint8_t* m_vertexSystem;
 
 	ID3D12Resource* m_indexBuffer;	//インデックスバッファ。
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;	//インデックスバッファビュー。

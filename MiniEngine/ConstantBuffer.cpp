@@ -66,7 +66,8 @@ void ConstantBuffer::Init(int size, void* srcData)
 	m_allocSize = (size + 256) & 0xFFFFFF00;
 
 	//定数バッファの作成。
-	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	//auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_GPU_UPLOAD);//2026/02/28
 	auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(m_allocSize);
 	HRESULT hrcb0 = device->CreateCommittedResource(
 		&heapProp,

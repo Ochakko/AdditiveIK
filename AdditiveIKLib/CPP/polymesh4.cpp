@@ -771,10 +771,13 @@ int CPolyMesh4::UpdateMorphBuffer( ChaVector3* mpoint )
 		BINORMALDISPV* curv0 = m_dispv + fno * 3;
 		BINORMALDISPV* curv1 = m_dispv + fno * 3 + 1;
 		BINORMALDISPV* curv2 = m_dispv + fno * 3 + 2;
+		ChaVector3* src0 = mpoint + dstindex0;
+		ChaVector3* src1 = mpoint + dstindex1;
+		ChaVector3* src2 = mpoint + dstindex2;
 
-		curv0->pos.SetParams((mpoint + dstindex0)->x, (mpoint + dstindex0)->y, (mpoint + dstindex0)->z, 1.0f);
-		curv1->pos.SetParams((mpoint + dstindex1)->x, (mpoint + dstindex1)->y, (mpoint + dstindex1)->z, 1.0f);
-		curv2->pos.SetParams((mpoint + dstindex2)->x, (mpoint + dstindex2)->y, (mpoint + dstindex2)->z, 1.0f);
+		curv0->pos.SetParams(src0->x, src0->y, src0->z, 1.0f);
+		curv1->pos.SetParams(src1->x, src1->y, src1->z, 1.0f);
+		curv2->pos.SetParams(src2->x, src2->y, src2->z, 1.0f);
 	}
 
 	//int vno;
