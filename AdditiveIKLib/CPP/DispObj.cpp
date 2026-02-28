@@ -2307,36 +2307,52 @@ int CDispObj::CopyDispV( CPolyMesh4* pm4 )
 		stride = sizeof(BINORMALDISPV) + sizeof(PM3INF);
 		vbsize = pmvleng * stride;
 
+		if (m_vertexSystem != nullptr) {
+			//################################################
+			//BlendShape用の頂点メモリがシステムメモリに作成済の場合
+			//################################################
 
-		//2025/02/28 まずsystemメモリにセット
-		if ((m_vertexSystem != nullptr) && (pm4v != nullptr)) {
-			DWORD vno;
-			for (vno = 0; vno < (DWORD)pmvleng; vno++) {
-				uint8_t* pdest = m_vertexSystem + vno * (sizeof(BINORMALDISPV) + sizeof(PM3INF));
+			//2025/02/28 まずsystemメモリにセット
+			if ((m_vertexSystem != nullptr) && (pm4v != nullptr)) {
+				DWORD vno;
+				for (vno = 0; vno < (DWORD)pmvleng; vno++) {
+					uint8_t* pdest = m_vertexSystem + vno * (sizeof(BINORMALDISPV) + sizeof(PM3INF));
 
-				BINORMALDISPV* curv = pm4v + vno;
-				//PM3INF* curinf = pmib + vno;
+					BINORMALDISPV* curv = pm4v + vno;
+					//PM3INF* curinf = pmib + vno;
 
-				*((BINORMALDISPV*)pdest) = *curv;
-				//memcpy(pdest, curv, sizeof(BINORMALDISPV));
-				//memcpy(pdest + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
+					*((BINORMALDISPV*)pdest) = *curv;
+					//memcpy(pdest, curv, sizeof(BINORMALDISPV));
+					//memcpy(pdest + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
+				}
+			}
+			//2025/02/28 ビデオメモリに一括転送
+			if ((m_vertexMap != nullptr) && (pm4v != nullptr)) {
+				memcpy(m_vertexMap, m_vertexSystem, pmvleng * (sizeof(BINORMALDISPV) + sizeof(PM3INF)));
 			}
 		}
+		else {
 
-		//2025/02/28 ビデオメモリに一括転送
-		if ((m_vertexMap != nullptr) && (m_vertexSystem != nullptr) && (pm4v != nullptr)) {
-			memcpy(m_vertexMap, m_vertexSystem, pmvleng * (sizeof(BINORMALDISPV) + sizeof(PM3INF)));
+			//#####################################################
+			//BlendShape用の頂点メモリがシステムメモリに作成済では無い場合
+			//#####################################################
+			
+			int dbgflag1 = 1;
 
-			//DWORD vno;
-			//for (vno = 0; vno < (DWORD)pmvleng; vno++) {
-			//	uint8_t* pdest = m_vertexMap + vno * (sizeof(BINORMALDISPV) + sizeof(PM3INF));
-			//
-			//	BINORMALDISPV* curv = pm4v + vno;
-			//	//PM3INF* curinf = pmib + vno;
-			//
-			//	memcpy(pdest, curv, sizeof(BINORMALDISPV));
-			//	//memcpy(pdest + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
-			//}
+			if ((m_vertexMap != nullptr) && (pm4v != nullptr)) {
+
+				DWORD vno;
+				for (vno = 0; vno < (DWORD)pmvleng; vno++) {
+					uint8_t* pdest = m_vertexMap + vno * (sizeof(BINORMALDISPV) + sizeof(PM3INF));
+				
+					BINORMALDISPV* curv = pm4v + vno;
+					//PM3INF* curinf = pmib + vno;
+				
+					memcpy(pdest, curv, sizeof(BINORMALDISPV));
+					//memcpy(pdest + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
+				}
+			}
+
 		}
 	}
 
