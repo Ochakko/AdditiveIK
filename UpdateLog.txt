@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2026/02/28
-　AdditiveIK 1.0.0.60 RC1(リリース候補1)
+　AdditiveIK 1.0.0.60 release
 　　1.0.0.59からの変更点
 　　　DirectX12の新機能で高速化
 　　　　DirectX12 Ultimateで対応したらしい新しい転送フラグを使用
