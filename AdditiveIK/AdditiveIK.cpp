@@ -6702,7 +6702,8 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 		}
 
 		if ((UnderDragOperation_R() == false) && (UnderDragOperation_L() == false) &&
-			((fTime - savetooltiptime) >= 0.032)) {
+			//((fTime - savetooltiptime) >= 0.032)) {
+			((fTime - savetooltiptime) >= 0.0020)) {
 			//マウスがUtDialogのコントロールの上を通るとSetCaptureが生じるのでIK中は非表示にする
 			DispToolTip();
 			savetooltiptime = fTime;
@@ -8912,6 +8913,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			g_previewFlag = 0;
 			GetCurrentModel()->ApplyPhysIkRec(g_limitdegflag, g_wallscrapingikflag);
 		}
+
+		s_pickinfo.buttonflag = 0;//2026/03/06
 	}
 	else if (uMsg == WM_RBUTTONDOWN) {
 
@@ -10392,6 +10395,8 @@ int OpenFile()
 			newmodel = OpenFBXFile(false, true, 0, 1, ikstopname, s_grassflag);
 			if (newmodel) {
 				result = 0;
+				newmodel->RemakeHSVToonTexture(nullptr);//2026/03/06
+				PostOpenChaFile();
 			}
 			else {
 				result = 1;
@@ -11213,7 +11218,6 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	}
 
 	//::MessageBox(g_mainhwnd, L"check 6", L"check!!!", MB_OK);
-
 
 	GetCurrentModel()->SetMotionSpeed(g_dspeed);
 
@@ -35865,7 +35869,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.60 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.61 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -39380,7 +39384,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.60 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.61 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {
