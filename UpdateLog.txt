@@ -2,7 +2,7 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2026/03/07
-　AdditiveIK 1.0.0.61 RC2(リリース候補2)
+　AdditiveIK 1.0.0.61 release
 　　1.0.0.60からの変更点
 　　　不具合修正
 　　　　描画速度が速い場合にピック機能が呼ばれない場合があったのを修正
