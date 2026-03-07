@@ -2477,7 +2477,7 @@ static int OnFrameCloseFlag();
 static int OnFrameTimeLineWnd();
 static int OnFrameMouseButton();
 static int OnFrameToolWnd();
-static int OnFrameStartPreview(double curtime, double* psavetime);
+static int OnFrameStartPreview(double curtime);
 static int OnFrameBatchThread();
 //static int OnFrame();
 static int OnFrameUpdateGround();
@@ -3505,6 +3505,12 @@ INT WINAPI wWinMain(
 
 				s_callingUpdateFlag = true;//for debug
 
+
+//#################################
+//g_previewFlagのセットをする
+//OnFrameProcessTime()よりも前で実行
+//#################################
+				OnFrameStartPreview(s_fTime);
 
 //###########
 //時間を進める
@@ -6041,7 +6047,7 @@ void OnDestroyDevice()
 void OnUserFrameMove(double fTime, float fElapsedTime, double difftime, int endflag, int loopstartflag)
 {
 
-	static double savetime = 0.0;
+	//static double savetime = 0.0;
 	static double savetooltiptime = 0.0;
 	static int capcnt = 0;
 
@@ -6134,8 +6140,9 @@ void OnUserFrameMove(double fTime, float fElapsedTime, double difftime, int endf
 			OnDSUpdate();
 		}
 
-
-		OnFrameStartPreview(fTime, &savetime);
+		//MainLoopのOnFrameProcessTime()よりも前に移動
+		//g_previewFlagのセットをする
+		//OnFrameStartPreview(fTime, &savetime);
 
 
 		OnFrameUtCheckBox();
@@ -6323,7 +6330,7 @@ void OnUserFrameMove(double fTime, float fElapsedTime, double difftime, int endf
 
 
 		//s_difftime = difftime;
-		savetime = fTime;
+		//savetime = fTime;
 
 
 		OnFrameCloseFlag();
@@ -6701,9 +6708,15 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 			OnRenderSprite(re, rc);
 		}
 
-		if ((UnderDragOperation_R() == false) && (UnderDragOperation_L() == false) &&
+		if ((UnderDragOperation_R() == false) && 
+			
+			//s_pickinfo.buttonflagはIK後処理用にすぐにはリセットされない　カメラ操作後にもbuttonflagが残る
+			//GetUnderIKRot()のフラグをみることにする
+			//(UnderDragOperation_L() == false) &&
+			(GetCurrentModel() && !GetCurrentModel()->GetUnderIKRot()) &&
+
 			//((fTime - savetooltiptime) >= 0.032)) {
-			((fTime - savetooltiptime) >= 0.0020)) {
+			((fTime - savetooltiptime) >= 0.0010)) {
 			//マウスがUtDialogのコントロールの上を通るとSetCaptureが生じるのでIK中は非表示にする
 			DispToolTip();
 			savetooltiptime = fTime;
@@ -8914,7 +8927,10 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			GetCurrentModel()->ApplyPhysIkRec(g_limitdegflag, g_wallscrapingikflag);
 		}
 
-		s_pickinfo.buttonflag = 0;//2026/03/06
+		//IK後処理があるので　ここではbuttonflagはリセットしない
+		//プレビュー範囲の繰り返し再生にも関係するので　ここではリセットしない
+		//s_pickinfo.buttonflag = 0;
+
 	}
 	else if (uMsg == WM_RBUTTONDOWN) {
 
@@ -18905,7 +18921,7 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 
 		g_previewFlag = 0;//!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-		s_previewrange = s_editrange;
+		s_previewrange.CopyFrom(s_editrange);
 		//double rangestart;
 		if (s_previewrange.IsSameStartAndEnd()) {
 			//rangestart = 1.0;
@@ -18993,7 +19009,7 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 					//curmodel->GetMotionFrame(&curframe);
 				}
 				else {
-					s_previewrange = s_editrange;
+					s_previewrange.CopyFrom(s_editrange);
 					//double rangestart;
 					if (s_previewrange.IsSameStartAndEnd()) {
 						//rangestart = 1.0;
@@ -23928,7 +23944,7 @@ int RollBackEditRange(int prevrangeFlag, int nextrangeFlag)
 	}
 
 	if (findindex >= 0) {
-		s_editrange = *(s_editrangehistory + findindex);
+		s_editrange.CopyFrom(*(s_editrangehistory + findindex));
 		s_editrangehistoryno = findindex;
 	}
 
@@ -25930,7 +25946,7 @@ int OnFrameProcessTime(double difftime, double* pnextframe, int* pendflag, int* 
 	if (g_previewFlag != 0) {
 		if (s_savepreviewFlag == 0) {
 			//preview start frame
-			s_previewrange = s_editrange;
+			s_previewrange.CopyFrom(s_editrange);
 			double rangestart;
 			if (s_previewrange.IsSameStartAndEnd()) {
 				rangestart = 1.0;
@@ -25973,7 +25989,7 @@ int OnFrameProcessCameraTime(double difftime, double* pnextframe, int* pendflag,
 	if (g_previewFlag != 0) {
 		if (s_savepreviewFlag == 0) {
 			//preview start frame
-			s_previewrange = s_editrange;
+			s_previewrange.CopyFrom(s_editrange);
 			double rangestart;
 			if (s_previewrange.IsSameStartAndEnd()) {
 				rangestart = 1.0;
@@ -26128,7 +26144,7 @@ int OnFramePreviewNormal(double nextframe, double difftime, int endflag, int loo
 	//if (g_previewFlag != 0) {
 	//	if (s_savepreviewFlag == 0) {
 	//		//preview start frame
-	//		s_previewrange = s_editrange;
+	//		s_previewrange.CopyFrom(s_editrange);
 	//		double rangestart;
 	//		if (s_previewrange.IsSameStartAndEnd()) {
 	//			rangestart = 1.0;
@@ -26347,7 +26363,7 @@ int StopBtRec()
 //
 //	//BOOL isstartframe = FALSE;
 //	//double rangestart = 1.0;
-//	//s_previewrange = s_editrange;
+//	//s_previewrange.CopyFrom(s_editrange);
 //	//if (s_previewrange.IsSameStartAndEnd()) {
 //	//	rangestart = 1.0;
 //	//}
@@ -29126,7 +29142,7 @@ int OnFrameBatchThread()
 	return 0;
 }
 
-int OnFrameStartPreview(double curtime, double* psavetime)
+int OnFrameStartPreview(double curtime)
 {
 
 	//normal preview start
@@ -29142,7 +29158,7 @@ int OnFrameStartPreview(double curtime, double* psavetime)
 		g_previewFlag = 1;//!!!!!!
 		InterlockedExchange(&g_calclimitedwmflag, (LONG)0);
 		//}
-		*psavetime = curtime;
+		//*psavetime = curtime;
 	}
 	if (s_calclimitedwmState == 1) {
 		s_calclimitedwmState = 2;
@@ -29162,7 +29178,7 @@ int OnFrameStartPreview(double curtime, double* psavetime)
 		g_previewFlag = -1;//!!!!!
 		InterlockedExchange(&g_calclimitedwmflag, (LONG)0);
 		//}
-		*psavetime = curtime;
+		//*psavetime = curtime;
 	}
 	if (s_calclimitedwmState == 11) {
 		s_calclimitedwmState = 22;
@@ -29174,7 +29190,7 @@ int OnFrameStartPreview(double curtime, double* psavetime)
 	if (s_calclimitedwmState == 107) {
 		s_calclimitedwmState = 0;
 		StartBt(GetCurrentModel(), TRUE, 0, 1);
-		*psavetime = curtime;
+		//*psavetime = curtime;
 	}
 	if ((s_calclimitedwmState >= 103) && (s_calclimitedwmState <= 106)) {
 		s_calclimitedwmState++;
@@ -29194,13 +29210,13 @@ int OnFrameStartPreview(double curtime, double* psavetime)
 	if (s_calclimitedwmState == 101) {
 		s_calclimitedwmState = 102;
 		//CalcLimitedWorldMat();//2022/08/12 リアルタイム計算に変更
-		*psavetime = curtime;
+		//*psavetime = curtime;
 	}
 	if (s_calclimitedwmState == 1001) {
 		s_calclimitedwmState = 102;
 		//CalcLimitedWorldMat();//2022/08/12 リアルタイム計算に変更
 		g_btsimurecflag = true;//rec flag
-		*psavetime = curtime;
+		//*psavetime = curtime;
 	}
 
 	return 0;

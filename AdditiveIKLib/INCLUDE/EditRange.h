@@ -111,6 +111,21 @@ public:
 	//	s_applyrate = srcrate; 
 	//};
 
+	void CopyFrom(CEditRange srcrange) {
+		m_setflag = srcrange.m_setflag;
+		m_setcnt = srcrange.m_setcnt;
+		
+		m_ki.clear();
+		std::list<KeyInfo>::iterator itrsrcki;
+		for (itrsrcki = srcrange.m_ki.begin(); itrsrcki != srcrange.m_ki.end(); itrsrcki++) {
+			m_ki.push_back(*itrsrcki);
+		}
+		m_keynum = srcrange.m_keynum;
+		m_startframe = srcrange.m_startframe;
+		m_endframe = srcrange.m_endframe;
+		m_applyframe = srcrange.m_applyframe;//姿勢適用フレーム。
+	};
+
 private:
 
 /**
@@ -130,7 +145,7 @@ private:
 	int DestroyObjs();
 
 
-private:
+protected:
 	int m_setflag;
 	int m_setcnt;
 	std::list<KeyInfo> m_ki;//編集範囲のキーの情報

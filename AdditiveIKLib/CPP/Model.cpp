@@ -4863,11 +4863,11 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 		curmotinfo = GetCurMotInfo();
 		//loopflag = curmotinfo.loopflag;
 	}
-	loopflag = curmotinfo.loopflag;
-
-	if(curmotinfo.motid <= 0){
+	if (curmotinfo.motid <= 0) {
 		return 0;
 	}
+
+
 
 
 	double curspeed, curframe;
@@ -4890,6 +4890,13 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 
 	rangestart = fmax(1.0, rangestart);
 
+	if ((g_previewFlag > 0) && (rangestart != rangeend)) {
+		//範囲付のプレビューはループ再生させる
+		loopflag = 1;
+	}
+	else {
+		loopflag = curmotinfo.loopflag;
+	}
 
 	if( previewflag >= 0 ){
 		if (onefps == 0) {
