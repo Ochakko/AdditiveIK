@@ -1,6 +1,13 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/03/08
+　AdditiveIK 1.0.0.62 RC1(リリース候補1)
+　　1.0.0.61からの変更点
+　　　不具合修正
+　　　　1.0.0.61での修正により、MOA2.0再生時にWalkLoopが前に進み続けない不具合が生じたので修正
+　　　　カメラ回転ボタン右ドラッグが効かなくなっていたのを修正
+
 2026/03/07
 　AdditiveIK 1.0.0.61 release
 　　1.0.0.60からの変更点

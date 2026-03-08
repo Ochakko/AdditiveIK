@@ -1847,6 +1847,7 @@ static WCHAR s_Gconame[MAX_PATH] = { 0L };
 static bool s_cancelLButtonDown = false;
 static bool s_cancelRButtonDown = false;
 static bool s_LButtonDown = false;
+static bool s_RButtonDown = false;
 
 static int s_camtargetflag = 0;
 static int s_camtargetOnceflag = 0;
@@ -3849,6 +3850,7 @@ void InitApp()
 	s_cancelLButtonDown = false;
 	s_cancelRButtonDown = false;
 	s_LButtonDown = false;
+	s_RButtonDown = false;
 
 	s_callingUpdateFlag = false;
 	s_camdistOnFPS = 1.0f;
@@ -8927,10 +8929,16 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			GetCurrentModel()->ApplyPhysIkRec(g_limitdegflag, g_wallscrapingikflag);
 		}
 
-		//IK後処理があるので　ここではbuttonflagはリセットしない
-		//プレビュー範囲の繰り返し再生にも関係するので　ここではリセットしない
+		//2026/03/08
+		//IK後処理がbuttonflagを使用するのでIKに関わる部分はリセットしない
+		//ここではカメラ処理だけをリセットする
 		//s_pickinfo.buttonflag = 0;
-
+		if ((s_pickinfo.buttonflag == PICK_CAMROT) ||
+			(s_pickinfo.buttonflag == PICK_CAMMOVE) ||
+			(s_pickinfo.buttonflag == PICK_CAMDIST)) {
+	
+			s_pickinfo.buttonflag = 0;
+		}
 	}
 	else if (uMsg == WM_RBUTTONDOWN) {
 
@@ -8938,6 +8946,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			s_cancelRButtonDown = true;
 			return 0;
 		}
+		s_RButtonDown = true;
 
 		//s_cameraeditkind = CAMERAANIMEDIT_NONE;//コメントアウト：グラフ表示を保持するために初期化しない
 
@@ -9042,6 +9051,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		GetCursorPos(&ptCursor);
 		::ScreenToClient(s_3dwnd, &ptCursor);
 
+		s_RButtonDown = true;
+
 		//カメラの回転を　右ダブルクリックした場合は　カメラのupvecを初期化する
 		if (PickSpCam(ptCursor) == PICK_CAMROT) {
 			if (g_edittarget != EDITTARGET_CAMERA) {
@@ -9065,6 +9076,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			s_cancelRButtonDown = false;
 			return 0;
 		}
+
+		s_RButtonDown = false;
 
 		ReleaseCapture();
 		
@@ -15690,7 +15703,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.61\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.62\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -35885,7 +35898,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.61 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.62 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -36252,7 +36265,7 @@ int OnMouseMoveFunc()
 
 
 
-	if (((s_LButtonDown == false) && (s_ikdoneflag == false)) ||
+	if (((s_LButtonDown == false) && (s_RButtonDown == false) && (s_ikdoneflag == false)) ||
 		(g_tb_XPlus || g_tb_XMinus || g_tb_YPlus || g_tb_YMinus || g_tb_ZPlus || g_tb_ZMinus)) {
 		return 0;
 	}
@@ -36913,13 +36926,12 @@ int OnMouseMoveFunc()
 				PrepairUndo();//３Dウインドウでの編集後状態保存を想定		
 			}
 		}
+
 		s_pickinfo.buttonflag = 0;
 		s_ikcnt = 0;
 		s_onragdollik = 0;
-
 		s_ikdoneflag = false;
 	}
-
 
 	s_doingflag = false;
 
@@ -39400,7 +39412,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.61 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.62 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {
