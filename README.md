@@ -282,6 +282,17 @@ Smooth平滑化<br>
 　　1T SSD<br>
 <br>
 <br>
+# 設定(ビデオカード)<br>
+　　Windowsとビデオカードドライバをアップデートしたら画面が真っ暗の件<br>
+　　NVIDIAコントロールパネルの設定で解決<br>
+ 　　こちらで試した設定は以下(最適かどうかは環境によると思います。必須と印をつけた項目を記述のように変えたら絵が出ました。)<br>
+　　　(必須)アンチエイリアシング-FXAA オフ<br>
+　　　(必須)スレッドした最適化　オン<br>
+　　　優先的に使用するリフレッシュレート(TVデバイス名)　利用可能な最高値<br>
+　　　垂直同期　オフ<br>
+　　　最大フレームレート　120FPS<br>
+<br>
+<br>
 # Description
 [Description at OchakoLAB](https://ochakkolab.jp/LABMenu/AdditiveIK.html "Desc-1")<br><br>
 [Technical Specs 2024/08/18](https://ochakkolab.jp/diary_win.html#AdditiveIK_2024_08_18 "Desc-2")<br>
