@@ -1,6 +1,11 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/03/21
+　さらに高速化
+　　インデックスバッファとテクスチャについても転送フラグを調整.
+　　以前と比べると重かったシーンが爆速.
+　　GPU使用率は以前の半分以下に.
 
 2026/03/15
 　ReadMeに設定について記述追加

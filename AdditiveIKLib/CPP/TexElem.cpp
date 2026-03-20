@@ -196,11 +196,12 @@ int CTexElem::CreateTexData(ID3D12Device* pdev, CGltfLoader* srcloader)
 
 		//WriteToSubresourceで転送する用のヒープ設定
 		D3D12_HEAP_PROPERTIES texHeapProp = {};
-		texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//特殊な設定なのでdefaultでもuploadでもなく
-		texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//ライトバックで
-		texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//転送がL0つまりCPU側から直で
-		texHeapProp.CreationNodeMask = 0;//単一アダプタのため0
-		texHeapProp.VisibleNodeMask = 0;//単一アダプタのため0
+		//texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//特殊な設定なのでdefaultでもuploadでもなく
+		//texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//ライトバックで
+		//texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//転送がL0つまりCPU側から直で
+		//texHeapProp.CreationNodeMask = 0;//単一アダプタのため0
+		//texHeapProp.VisibleNodeMask = 0;//単一アダプタのため0
+		texHeapProp.Type = D3D12_HEAP_TYPE_GPU_UPLOAD;//2026/03/21 ピクセルを読み込まないで書き込むだけならこれで良いみたい
 
 		D3D12_RESOURCE_DESC resDesc = {};
 		resDesc.Format = mipChain->GetMetadata().format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット
@@ -344,11 +345,12 @@ int CTexElem::CreateTexData(ID3D12Device* pdev, CGltfLoader* srcloader)
 
 		//WriteToSubresourceで転送する用のヒープ設定
 		D3D12_HEAP_PROPERTIES texHeapProp = {};
-		texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//特殊な設定なのでdefaultでもuploadでもなく
-		texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//ライトバックで
-		texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//転送がL0つまりCPU側から直で
-		texHeapProp.CreationNodeMask = 0;//単一アダプタのため0
-		texHeapProp.VisibleNodeMask = 0;//単一アダプタのため0
+		//texHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//特殊な設定なのでdefaultでもuploadでもなく
+		//texHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//ライトバックで
+		//texHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//転送がL0つまりCPU側から直で
+		//texHeapProp.CreationNodeMask = 0;//単一アダプタのため0
+		//texHeapProp.VisibleNodeMask = 0;//単一アダプタのため0
+		texHeapProp.Type = D3D12_HEAP_TYPE_GPU_UPLOAD;//2026/03/21 ピクセルを読み込まないで書き込むだけならこれで良いみたい
 
 		D3D12_RESOURCE_DESC resDesc = {};
 		resDesc.Format = mipChain->GetMetadata().format;//DXGI_FORMAT_R8G8B8A8_UNORM;//RGBAフォーマット

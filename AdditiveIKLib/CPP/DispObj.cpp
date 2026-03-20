@@ -821,7 +821,8 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape)
 		if (m_pm3 || m_pm4) {
 			//auto d3dDevice = g_graphicsEngine->GetD3DDevice();
 			DWORD ibsize = pmfleng * 3 * sizeof(int);
-			auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+			//auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+			auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_GPU_UPLOAD);
 			auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(ibsize);
 			HRESULT hrib0 = pdev->CreateCommittedResource(
 				&heapProp,
