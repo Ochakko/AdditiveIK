@@ -285,7 +285,8 @@ LinearAllocatorPage* LinearAllocator::FindPageForAlloc(
 
 LinearAllocatorPage* LinearAllocator::GetNewPage()
 {
-    const CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+    //const CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+    const CD3DX12_HEAP_PROPERTIES uploadHeapProperties(D3D12_HEAP_TYPE_GPU_UPLOAD);
     const CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(m_increment);
 
     // Allocate the upload heap

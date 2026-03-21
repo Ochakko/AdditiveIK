@@ -361,7 +361,8 @@ public:
             subresourceIndexStart,
             numSubresources);
 
-        const CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
+        //const CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
+        const CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_GPU_UPLOAD);
         auto const resDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadSize);
 
         // Create a temporary buffer

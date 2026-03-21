@@ -30,7 +30,8 @@ void RWStructuredBuffer::Init(int sizeOfElement, int numElement, void* initData)
 	prop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
 	prop.CreationNodeMask = 1;
 	prop.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-	prop.Type = D3D12_HEAP_TYPE_CUSTOM;
+	prop.Type = D3D12_HEAP_TYPE_CUSTOM;//RWなので読み込みアクセスの可能性有(コンピュートシェーダで使用).　よってD3D12_HEAP_TYPE_GPU_UPLOADにはしない.
+
 	prop.VisibleNodeMask = 1;
 
 	//for (auto& buffer : m_buffersOnGPU) {

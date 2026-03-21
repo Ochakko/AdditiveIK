@@ -30,7 +30,8 @@ void IndexBuffer::Init(int size, int stride)
 		m_sizeInBytes = size;
 	}
 	auto d3dDevice = g_graphicsEngine->GetD3DDevice();
-	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	//auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_GPU_UPLOAD);
 	auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(m_sizeInBytes);
 	HRESULT hrib2 = d3dDevice->CreateCommittedResource(
 		&heapProp,
