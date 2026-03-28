@@ -5885,6 +5885,25 @@ double ChaCalcFunc::ccfChaVector3LengthDbl(ChaVector3* v)
 
 }
 
+double ChaCalcFunc::ccfChaVector3LengthDbl_2D(ChaVector3* v)
+{
+	if (!v) {
+		return 0.0f;
+	}
+
+	double leng;
+	double mag;
+	mag = (double)v->x * (double)v->x +(double)v->z * (double)v->z;
+	if (mag != 0.0) {
+		leng = sqrt(mag);
+	}
+	else {
+		leng = 0.0;
+	}
+	return leng;
+
+}
+
 double ChaCalcFunc::ccfChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2)
 {
 	if (!psrc1 || !psrc2) {
@@ -5895,7 +5914,6 @@ double ChaCalcFunc::ccfChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector
 
 	return retval;
 }
-
 
 
 //double ChaCalcFunc::ccfChaVector3LengthDbl(ChaVector3* v)

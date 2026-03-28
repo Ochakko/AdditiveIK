@@ -69,6 +69,9 @@ private:
 	OrgWinGUI::OWP_Label* m_threadsLabel;
 	OrgWinGUI::OWP_Slider* m_threadsSlider;
 	OrgWinGUI::OWP_CheckBoxA* m_highRpmChk;
+	OrgWinGUI::OWP_Separator* m_cameraheightsp;
+	OrgWinGUI::OWP_CheckBoxA* m_cameraheightChk;
+	OrgWinGUI::OWP_Slider* m_cameraheightSlider;
 	OrgWinGUI::OWP_Separator* m_bonemarksp;
 	OrgWinGUI::OWP_CheckBoxA* m_bonemarkChk;
 	OrgWinGUI::OWP_Slider* m_bonemarkSlider;
@@ -90,6 +93,9 @@ private:
 	OrgWinGUI::OWP_Separator* m_uvsetsp;
 	OrgWinGUI::OWP_Label* m_uvsetLabel;
 	OrgWinGUI::OWP_ComboBoxA* m_uvsetCombo;
+	OrgWinGUI::OWP_Separator* m_cameragmodelsp;
+	OrgWinGUI::OWP_Label* m_cameragmodelLabel;
+	OrgWinGUI::OWP_ComboBoxA* m_cameragmodelCombo;
 	OrgWinGUI::OWP_Separator* m_dispsp1;
 	OrgWinGUI::OWP_CheckBoxA* m_x180Chk;
 	OrgWinGUI::OWP_CheckBoxA* m_rottraChk;
@@ -108,6 +114,7 @@ private:
 	OrgWinGUI::OWP_Label* m_dispspacerLabel002;
 	OrgWinGUI::OWP_Label* m_dispspacerLabel003;
 	OrgWinGUI::OWP_Label* m_dispspacerLabel004;
+	OrgWinGUI::OWP_Label* m_dispspacerLabel005;
 
 	OrgWinGUI::OWP_Label* m_ikrateLabel;
 	OrgWinGUI::OWP_EditBox* m_ikrateEdit;

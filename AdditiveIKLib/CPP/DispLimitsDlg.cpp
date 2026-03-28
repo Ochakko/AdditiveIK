@@ -3,6 +3,7 @@
 #include <DispLimitsDlg.h>
 #include "../../AdditiveIK/SetDlgPos.h"
 
+#include <ChaScene.h>
 #include <Model.h>
 #include <Bone.h>
 #include <RigidElem.h>
@@ -22,7 +23,8 @@ using namespace OrgWinGUI;
 
 
 extern HWND g_mainhwnd;//アプリケーションウインドウハンドル
-
+extern CModel* g_cameragmodel;
+extern ChaScene* g_chascene;
 
 /////////////////////////////////////////////////////////////////////////////
 // CDispLimitsDlg
@@ -72,6 +74,18 @@ int CDispLimitsDlg::DestroyObjs()
 	if (m_highRpmChk) {
 		delete m_highRpmChk;
 		m_highRpmChk = nullptr;
+	}
+	if (m_cameraheightsp) {
+		delete m_cameraheightsp;
+		m_cameraheightsp = nullptr;
+	}
+	if (m_cameraheightChk) {
+		delete m_cameraheightChk;
+		m_cameraheightChk = nullptr;
+	}
+	if (m_cameraheightSlider) {
+		delete m_cameraheightSlider;
+		m_cameraheightSlider = nullptr;
 	}
 	if (m_bonemarksp) {
 		delete m_bonemarksp;
@@ -144,6 +158,18 @@ int CDispLimitsDlg::DestroyObjs()
 	if (m_axiskindCombo) {
 		delete m_axiskindCombo;
 		m_axiskindCombo = nullptr;
+	}
+	if (m_cameragmodelsp) {
+		delete m_cameragmodelsp;
+		m_cameragmodelsp = nullptr;
+	}
+	if (m_cameragmodelLabel) {
+		delete m_cameragmodelLabel;
+		m_cameragmodelLabel = nullptr;
+	}
+	if (m_cameragmodelCombo) {
+		delete m_cameragmodelCombo;
+		m_cameragmodelCombo = nullptr;
 	}
 	if (m_uvsetsp) {
 		delete m_uvsetsp;
@@ -229,6 +255,10 @@ int CDispLimitsDlg::DestroyObjs()
 		delete m_dispspacerLabel004;
 		m_dispspacerLabel004 = nullptr;
 	}
+	if (m_dispspacerLabel005) {
+		delete m_dispspacerLabel005;
+		m_dispspacerLabel005 = nullptr;
+	}
 
 	if (m_ikrateLabel) {
 		delete m_ikrateLabel;
@@ -295,6 +325,9 @@ void CDispLimitsDlg::InitParams()
 	m_threadsLabel = nullptr;
 	m_threadsSlider = nullptr;
 	m_highRpmChk = nullptr;
+	m_cameraheightsp = nullptr;
+	m_cameraheightChk = nullptr;
+	m_cameraheightSlider = nullptr;
 	m_bonemarksp = nullptr;
 	m_bonemarkChk = nullptr;
 	m_bonemarkSlider = nullptr;
@@ -313,6 +346,9 @@ void CDispLimitsDlg::InitParams()
 	m_axiskindsp = nullptr;
 	m_axiskindLabel = nullptr;
 	m_axiskindCombo = nullptr;
+	m_cameragmodelsp = nullptr;
+	m_cameragmodelLabel = nullptr;
+	m_cameragmodelCombo = nullptr;
 	m_uvsetsp = nullptr;
 	m_uvsetLabel = nullptr;
 	m_uvsetCombo = nullptr;
@@ -334,6 +370,7 @@ void CDispLimitsDlg::InitParams()
 	m_dispspacerLabel002 = nullptr;
 	m_dispspacerLabel003 = nullptr;
 	m_dispspacerLabel004 = nullptr;
+	m_dispspacerLabel005 = nullptr;
 
 	m_ikrateLabel = nullptr;
 	m_ikrateEdit = nullptr;
@@ -733,7 +770,70 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			abort();
 		}
 
+		m_dispspacerLabel005 = new OWP_Label(L"     ", 32);
+		if (!m_dispspacerLabel005) {
+			_ASSERT(0);
+			abort();
+		}
+		m_cameraheightsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_cameraheightsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_cameraheightChk = new OWP_CheckBoxA(L"cameraheight", (g_cameraheightflag != 0), labelheight, false);
+		if (!m_cameraheightChk) {
+			_ASSERT(0);
+			abort();
+		}
+		m_cameraheightSlider = new OWP_Slider((double)g_cameraheight, 800.0, 50.0, labelheight);
+		if (!m_cameraheightSlider) {
+			_ASSERT(0);
+			abort();
+		}
+		m_cameragmodelsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_cameragmodelsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_cameragmodelLabel = new OWP_Label(L"Camera G Model", labelheight);
+		if (!m_cameragmodelLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_cameragmodelCombo = new OWP_ComboBoxA(L"CameraGModel", labelheight);//g_cameragmodel:cameragmodel0, cameragmodel1
+		if (!m_cameragmodelCombo) {
+			_ASSERT(0);
+			abort();
+		}
+		if (m_cameragmodelCombo) {
+			m_cameragmodelCombo->ResetCombo();
+			m_cameragmodelCombo->addString("   ");//先頭項目は未設定
 
+			int findselected = -1;
+			int modelnum = g_chascene->GetModelNum();
+			int modelindex;
+			for (modelindex = 0; modelindex < modelnum; modelindex++) {
+				MODELELEM curmodelelem = g_chascene->GetModelElem(modelindex);
+				if (curmodelelem.modelptr) {
+					WCHAR gname[MAX_PATH] = { 0L };
+					wcscpy_s(gname, MAX_PATH, curmodelelem.modelptr->GetFileName());
+					char mbgname[MAX_PATH] = { 0 };
+					WideCharToMultiByte(CP_ACP, 0, gname, -1, mbgname, MAX_PATH, NULL, NULL);
+					m_cameragmodelCombo->addString(mbgname);
+
+					if (g_cameragmodel && (g_cameragmodel == curmodelelem.modelptr)) {
+						findselected = modelindex;
+					}
+				}
+				else {
+					m_cameragmodelCombo->addString("invalid name");
+				}
+			}
+
+			if (findselected >= 0) {
+				m_cameragmodelCombo->setSelectedCombo(findselected + 1);
+			}
+		}
 
 		m_dlgWnd->addParts(*m_lightssp);
 		m_lightssp->addParts1(*m_lightsChk);
@@ -792,6 +892,14 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 		m_dispsp8->addParts1(*m_posconsttimesLabel);
 		m_dispsp8->addParts2(*m_posconsttimesEdit);
 
+		m_dlgWnd->addParts(*m_dispspacerLabel005);//
+		m_dlgWnd->addParts(*m_cameraheightsp);
+		m_cameraheightsp->addParts1(*m_cameraheightChk);
+		m_cameraheightsp->addParts2(*m_cameraheightSlider);
+		m_dlgWnd->addParts(*m_cameragmodelsp);
+		m_cameragmodelsp->addParts1(*m_cameragmodelLabel);
+		m_cameragmodelsp->addParts2(*m_cameragmodelCombo);
+
 
 		//###########
 		//CheckBox
@@ -808,6 +916,15 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 		m_highRpmChk->setButtonListener([=, this]() {
 			bool value = m_highRpmChk->getValue();
 			g_HighRpmMode = value;
+			});
+		m_cameraheightChk->setButtonListener([=, this]() {
+			bool value = m_cameraheightChk->getValue();
+			if (value) {
+				g_cameraheightflag = 1;
+			}
+			else {
+				g_cameraheightflag = 0;
+			}
 			});
 		m_bonemarkChk->setButtonListener([=, this]() {
 			bool value = m_bonemarkChk->getValue();
@@ -871,6 +988,10 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			double value = m_lightsSlider->getValue();
 			g_fLightScale = (float)value;
 			});
+		m_cameraheightSlider->setCursorListener([=, this]() {
+			double value = m_cameraheightSlider->getValue();
+			g_cameraheight = (float)value;
+			});
 		m_bonemarkSlider->setCursorListener([=, this]() {
 			double value = m_bonemarkSlider->getValue();
 			g_bonemark_bright = (float)value;
@@ -933,7 +1054,19 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			g_uvset = comboid;
 			});
 
+		m_cameragmodelCombo->setButtonListener([=, this]() {
+			int comboid = m_cameragmodelCombo->trackPopUpMenu();
+			if ((comboid >= 1) && g_chascene) {
+				MODELELEM gmodelelem = g_chascene->GetModelElem(comboid - 1);
+				if (gmodelelem.modelptr) {
+					g_cameragmodel = gmodelelem.modelptr;
+				}
+			}
 
+			if (m_dlgWnd) {
+				m_dlgWnd->callRewrite();
+			}
+			});
 		//###########
 		//EditBox
 		//###########
@@ -1022,6 +1155,9 @@ int CDispLimitsDlg::ParamsToDlg()
 		}
 		if (m_threadsSlider) {
 			m_threadsSlider->setValue((double)g_UpdateMatrixThreads, false);
+		}
+		if (m_cameraheightSlider) {
+			m_cameraheightSlider->setValue((double)g_cameraheight, false);
 		}
 		if (m_bonemarkSlider) {
 			m_bonemarkSlider->setValue((double)g_bonemark_bright, false);

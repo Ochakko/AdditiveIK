@@ -964,6 +964,7 @@ ChaMatrix ChaMatrixTranspose(ChaMatrix srcmat);
 
 int CalcTangentAndBinormal(int srcuvnum, BINORMALDISPV* vert_0, BINORMALDISPV* vert_1, BINORMALDISPV* vert_2);
 double ChaVector3LengthDbl(ChaVector3* psrc);
+double ChaVector3LengthDbl_2D(ChaVector3* psrc);
 double ChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
 
 
@@ -1060,6 +1061,7 @@ extern ChaMatrix ChaMatrixTranspose(ChaMatrix srcmat);
 
 extern int CalcTangentAndBinormal(int srcuvnum, BINORMALDISPV* vert_0, BINORMALDISPV* vert_1, BINORMALDISPV* vert_2);
 extern double ChaVector3LengthDbl(ChaVector3* psrc);
+extern double ChaVector3LengthDbl_2D(ChaVector3* psrc);
 extern double ChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
 
 //extern float ChaVector3LengthDbl(ChaVector3* psrc);

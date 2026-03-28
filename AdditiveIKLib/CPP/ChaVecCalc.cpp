@@ -4562,6 +4562,11 @@ double ChaVector3LengthDbl(ChaVector3* v)
 	ChaCalcFunc chacalcfunc;
 	return chacalcfunc.ccfChaVector3LengthDbl(v);
 }
+double ChaVector3LengthDbl_2D(ChaVector3* v)
+{
+	ChaCalcFunc chacalcfunc;
+	return chacalcfunc.ccfChaVector3LengthDbl_2D(v);
+}
 
 double ChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2)
 {

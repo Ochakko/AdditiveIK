@@ -171,7 +171,7 @@
 
 using namespace std;
 
-
+CModel* g_cameragmodel = nullptr;
 
 
 #define WINDOWS_CLASS_NAME TEXT("OchakkoLab.AdditiveIK.Window")
@@ -3839,6 +3839,8 @@ void InitApp()
 	g_chascene = nullptr;
 	//g_shadertype = -1;//マテリアル毎に設定することに
 
+	g_cameragmodel = nullptr;
+
 	InitializeCriticalSection(&s_CritSection_LTimeline);
 	InitializeCriticalSection(&g_CritSection_GetGP);
 	InitializeCriticalSection(&g_CritSection_FbxSdk);
@@ -3912,6 +3914,9 @@ void InitApp()
 
 	s_SpriteButtonDown = false;
 	s_SpriteButtonDownUndoRedo = false;
+
+	g_cameraheightflag = 0;
+	g_cameraheight = 200.0;
 
 	{
 		g_camEye.SetParams(0.0f, 0.0f, 0.0f);
@@ -8755,7 +8760,13 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		////#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));//!!!!!!!!!!
 		//////#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));//!!!!!!!!!!
 		ChaVector3 diffv = g_camEye - g_camtargetpos;
-		float newcamdist = (float)ChaVector3LengthDbl(&diffv);
+		float newcamdist;
+		if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
+			newcamdist = (float)ChaVector3LengthDbl_2D(&diffv);
+		}
+		else {
+			newcamdist = (float)ChaVector3LengthDbl(&diffv);
+		}
 		ChangeCameraDist(newcamdist, true, false);
 
 		//if (GetCurrentModel() && (s_pickinfo.pickobjno >= 0) && (g_previewFlag == 5)){
@@ -9064,7 +9075,14 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				g_befcamEye = g_camEye;
 				ChaVector3 diffv;
 				diffv = g_camEye - g_camtargetpos;
-				g_camdist = (float)ChaVector3LengthDbl(&diffv);
+				if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
+					g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
+				}
+				else {
+					g_camdist = (float)ChaVector3LengthDbl(&diffv);
+				}
+
+
 			}
 			else {
 				OnCameraAnimMouseMove(CAMERAANIMEDIT_TWISTRESET, PICK_Z, 0.0f);
@@ -18844,7 +18862,12 @@ int SetCamera6Angle()
 	if (setflag) {
 		ChaVector3 diffv;
 		diffv = g_camEye - g_camtargetpos;
-		g_camdist = (float)ChaVector3LengthDbl(&diffv);
+		if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
+			g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
+		}
+		else {
+			g_camdist = (float)ChaVector3LengthDbl(&diffv);
+		}
 		SetCamera3DFromEyePos();
 	}
 
@@ -26110,7 +26133,12 @@ int OnFramePreviewCamera(double srcnextframe)
 		//#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
 	}
 	ChaVector3 cameradiff = g_camtargetpos - g_camEye;
-	g_camdist = (float)ChaVector3LengthDbl(&cameradiff);
+	if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
+		g_camdist = (float)ChaVector3LengthDbl_2D(&cameradiff);
+	}
+	else {
+		g_camdist = (float)ChaVector3LengthDbl(&cameradiff);
+	}
 
 
 	//###################################
@@ -27444,7 +27472,14 @@ int OnFrameToolWnd()
 						0, g_cameraInheritMode);//g_camdist
 
 					ChaVector3 diffvec = g_camtargetpos - g_camEye;
-					float newcamdist = (float)ChaVector3LengthDbl(&diffvec);
+					float newcamdist;
+					if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
+						newcamdist = (float)ChaVector3LengthDbl_2D(&diffvec);
+					}
+					else {
+						newcamdist = (float)ChaVector3LengthDbl(&diffvec);
+					}
+
 					ChangeCameraDist(newcamdist, false, false);
 				}
 
@@ -34802,7 +34837,13 @@ void AutoCameraTarget()
 				//MoveEyePosチェックしていない場合　かつ　FPS以外の場合　カメラ距離を変える
 				ChaVector3 diffv;
 				diffv = g_camEye - g_camtargetpos;
-				float newcamdist = (float)ChaVector3LengthDbl(&diffv);
+				float newcamdist;
+				if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
+					newcamdist = (float)ChaVector3LengthDbl_2D(&diffv);
+				}
+				else {
+					newcamdist = (float)ChaVector3LengthDbl(&diffv);
+				}
 				ChangeCameraDist(newcamdist, false, false);//2024/03/08
 			}
 
@@ -35898,7 +35939,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.63 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.64 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -39412,7 +39453,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.63 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.64 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {
@@ -44452,7 +44493,12 @@ int UpdateCameraPosAndTarget()
 
 	ChaVector3 diffv;
 	diffv = g_camEye - g_camtargetpos;
-	g_camdist = (float)ChaVector3LengthDbl(&diffv);
+	if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
+		g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
+	}
+	else {
+		g_camdist = (float)ChaVector3LengthDbl(&diffv);
+	}
 	if (g_camdist >= 1e-4) {
 		//return 0;//2024/07/29 後にも処理がある　return文をコメントアウト
 	}
@@ -44634,15 +44680,44 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider,
 
 		if (g_camdist >= 1.0f) {
 			ChaVector3 camvec = g_camEye - g_camtargetpos;
-			ChaVector3Normalize(&camvec, &camvec);
 
 			if (moveeyeposflag == true) {//2024/02/26
-				ChaVector3 newcampos = g_camtargetpos + camvec * g_camdist;
+				ChaVector3 newcampos;// = g_camtargetpos + camvec * g_camdist;
+				if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && moveeyeposflag) {
+					camvec.y = 0.0f;
+					ChaVector3Normalize(&camvec, &camvec);
+
+					newcampos.x = g_camtargetpos.x + camvec.x * g_camdist;
+					newcampos.y = g_camEye.y;
+					newcampos.z = g_camtargetpos.z + camvec.z * g_camdist;
+
+					ChaVector3 startglobal = newcampos + ChaVector3(0.0f, 800.0, 0.0f);
+					ChaVector3 endglobal = newcampos - ChaVector3(0.0f, 800.0, 0.0f);
+
+					ChaVector3 gpos = newcampos;
+					int hitflag = g_cameragmodel->CollisionPolyMesh3_Ray(
+						false,
+						startglobal, endglobal, &gpos, true);
+					if (hitflag != 0) {
+						newcampos = gpos;
+						newcampos.y += g_cameraheight;
+					}
+				}
+				else {
+					ChaVector3Normalize(&camvec, &camvec);
+					newcampos = g_camtargetpos + camvec * g_camdist;
+				}
 
 				if (!secondcall && !s_camtargetOnceflag && s_camtargetflag) {
 					//2025/10/04 カメラ酔い防止策　カメラの位置は徐々に変える
 					float newcamX = g_camEye.x + (newcampos.x - g_camEye.x) * 0.10f;
-					float newcamY = g_camEye.y + (g_camtargetpos.y - g_camEye.y) * 0.010f;
+					float newcamY;
+					if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && moveeyeposflag) {
+						newcamY = g_camEye.y + (newcampos.y - g_camEye.y) * 0.010f;
+					}
+					else {
+						newcamY = g_camEye.y + (g_camtargetpos.y - g_camEye.y) * 0.50f;// *0.010f;
+					}
 					float newcamZ = g_camEye.z + (newcampos.z - g_camEye.z) * 0.10f;
 					newcampos.x = newcamX;
 					newcampos.y = newcamY;
@@ -44664,6 +44739,7 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider,
 				g_camEye = newcampos;
 			}
 			else {
+				ChaVector3Normalize(&camvec, &camvec);
 				g_befcamtargetpos = g_camtargetpos;
 				g_camtargetpos = g_camEye - camvec * g_camdist;
 			}
@@ -44679,7 +44755,7 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider,
 			//カメラ位置がターゲットに近づきすぎた場合　止めないで　ターゲット位置を視線方向に延長するように
 
 			ChaVector3 camvec2 = g_camtargetpos - g_camEye;
-			ChaVector3Normalize(&camvec2, &camvec2);
+			//ChaVector3Normalize(&camvec2, &camvec2);
 
 			float savedist3 = (float)fmin(s_maxcamdist, (savecamdist * 3.0f));//2024/06/04
 
@@ -44687,10 +44763,18 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider,
 			g_befcamtargetpos = g_camtargetpos;
 
 			if (moveeyeposflag == true) {//2024/02/26
+				if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && moveeyeposflag) {
+					camvec2.y = 0.0f;
+					ChaVector3Normalize(&camvec2, &camvec2);
+				}
+				else {
+					ChaVector3Normalize(&camvec2, &camvec2);
+				}
 				g_camtargetpos = g_camEye + camvec2 * savedist3;
 				g_camEye = g_camtargetpos - camvec2 * savedist3;
 			}
 			else {
+				ChaVector3Normalize(&camvec2, &camvec2);
 				g_camEye = g_camtargetpos + camvec2 * savedist3;
 				g_camtargetpos = g_camEye - camvec2 * savedist3;
 			}
@@ -47740,7 +47824,13 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 			}
 
 			ChaVector3 diffvec = g_camtargetpos - g_camEye;
-			float newcamdist = (float)ChaVector3LengthDbl(&diffvec);
+			float newcamdist;
+			//if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
+			//	newcamdist = (float)ChaVector3LengthDbl_2D(&diffvec);
+			//}
+			//else {
+				newcamdist = (float)ChaVector3LengthDbl(&diffvec);
+			//}
 			ChangeCameraDist(newcamdist, false, false);
 
 			UpdateEditedEuler();//twist時には右ドラッグなのでLBUTTONUPメッセージでのUpdateEditedEuler()が呼ばれない.ここで呼ぶことに.
@@ -48237,7 +48327,12 @@ int CameraForEditMove(ChaVector3 cammv)
 
 			ChaVector3 diffv;
 			diffv = g_camtargetpos - g_camEye;
-			g_camdist = (float)ChaVector3LengthDbl(&diffv);
+			if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
+				g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
+			}
+			else {
+				g_camdist = (float)ChaVector3LengthDbl(&diffv);
+			}
 		}
 	}
 	else {
@@ -48271,7 +48366,12 @@ int CameraForEditTwist(float deltax)
 			g_befcamEye = g_camEye;
 			ChaVector3 diffv;
 			diffv = g_camEye - g_camtargetpos;
-			g_camdist = (float)ChaVector3LengthDbl(&diffv);
+			if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
+				g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
+			}
+			else {
+				g_camdist = (float)ChaVector3LengthDbl(&diffv);
+			}
 
 			SetCamera3DFromEyePos();
 		}
@@ -48347,7 +48447,12 @@ int CameraForEditRotate(float rotxz, float roty)
 
 				ChaVector3 diffv;
 				diffv = neweye - g_camtargetpos;
-				g_camdist = (float)ChaVector3LengthDbl(&diffv);
+				if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
+					g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
+				}
+				else {
+					g_camdist = (float)ChaVector3LengthDbl(&diffv);
+				}
 
 			}
 			else {

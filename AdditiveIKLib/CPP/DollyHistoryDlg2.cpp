@@ -20,6 +20,7 @@ using namespace OrgWinGUI;
 
 
 extern HWND g_mainhwnd;//アプリケーションウインドウハンドル
+extern CModel* g_cameragmodel;
 
 
 CDollyHistoryOWPElem::CDollyHistoryOWPElem()
@@ -1271,6 +1272,14 @@ int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
 	ChaVector3 diffv;
 	diffv = g_camEye - g_camtargetpos;
 	g_camdist = (float)ChaVector3LengthDbl(&diffv);
+	if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr)) {//&& s_moveeyepos) {
+		g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
+	}
+	else {
+		g_camdist = (float)ChaVector3LengthDbl(&diffv);
+	}
+
+
 	if (g_camdist <= 1e-4) {
 		//#########
 		//rollback

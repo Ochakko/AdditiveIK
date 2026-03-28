@@ -1,7 +1,21 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
-
+2026/03/29
+　カメラの地面からの高さを設定可能に.
+　　準備：
+　　　操作するモデルをモデルパネルで選んでから
+　　　右ペインのAlwaysLockとMoveEyePosにチェックを入れる
+　　設定：
+　　　DispAndLimitsプレートメニューで設定
+　　　　1,cameraheightスライダーで地面からの高さを設定
+　　　　2,cameragmodelで地面モデルを選択
+　　　　3,cameraheightチェックボックスにチェック
+　　　SonyDualSenseで操作するモデルをモデルパネルで選んでMOAプレートメニューでPlayまたはPlayBtボタン
+　　　使ってみた感じでは、操作モデルが下り坂を進む場合に効果有
+　　　MOA2.0の設定はMOAのドキュメントをみてください
+　　　
+　　　
 2026/03/21
 　AdditiveIK 1.0.0.63 release
 　　1.0.0.62からの変更点

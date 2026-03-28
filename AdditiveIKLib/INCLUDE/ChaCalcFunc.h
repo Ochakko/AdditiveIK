@@ -154,6 +154,7 @@ public:
 	BOOL ccfIsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul);
 	ChaMatrix ccfChaMatrixTranspose(ChaMatrix srcmat);
 	double ccfChaVector3LengthDbl(ChaVector3* psrc);
+	double ccfChaVector3LengthDbl_2D(ChaVector3* psrc);
 	double ccfChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
 	//float ccfChaVector3LengthDbl(ChaVector3* psrc);
 	void ccfChaVector3Normalize(ChaVector3* pdst, const ChaVector3* psrc);
