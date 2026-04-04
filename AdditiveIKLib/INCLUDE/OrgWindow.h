@@ -8525,7 +8525,7 @@ void s_dummyfunc()
 	class OWP_EulerGraph : public OrgWindowParts {
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_EulerGraph(const std::basic_string<TCHAR> &_name = _T(""), const double &_maxTime = 1.0, const double &_timeSize = 8.0) : OrgWindowParts() {
+		OWP_EulerGraph(const int srcgraphsizeY, const std::basic_string<TCHAR> &_name = _T(""), const double &_maxTime = 1.0, const double &_timeSize = 8.0) : OrgWindowParts() {
 
 			TIME_ERROR_WIDTH = 0.0001;
 
@@ -8595,12 +8595,13 @@ void s_dummyfunc()
 			dispscale = 1.0;
 			dispoffset = 0.0;
 
-			if (g_4kresolution) {
-				GRAPH_SIZE_Y = 170 * 2;
-			}
-			else {
-				GRAPH_SIZE_Y = 170;
-			}
+			//if (g_4kresolution) {
+			//	GRAPH_SIZE_Y = 170 * 2;
+			//}
+			//else {
+			//	GRAPH_SIZE_Y = 170;
+			//}
+			GRAPH_SIZE_Y = srcgraphsizeY;
 
 			eultip.SetParams(0.0f, 0.0f, 0.0f);
 			inBlendShapeMode = false;

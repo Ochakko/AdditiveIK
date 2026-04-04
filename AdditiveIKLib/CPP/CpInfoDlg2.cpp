@@ -261,6 +261,11 @@ int CCpInfoDlg2::SetCpInfo(CPMOTINFO* srcpcpinfo)
 
 int CCpInfoDlg2::DestroyOWPWnd()
 {
+	if (m_dlgwnd) {
+		m_dlgwnd->setVisible(false);
+		m_dlgwnd->setListenMouse(false);
+	}
+
 	if (m_dlgspall) {
 		delete m_dlgspall;
 		m_dlgspall = nullptr;
@@ -350,6 +355,7 @@ int CCpInfoDlg2::CreateOWPWnd(POINT setpoint)
 	//}
 
 	if (m_dlgwnd) {
+		m_dlgwnd->setListenMouse(true);
 
 		////モーダル化
 		//SetWindowLong(m_dlgwnd->getHWnd(), GWL_EXSTYLE, WS_EX_DLGMODALFRAME);

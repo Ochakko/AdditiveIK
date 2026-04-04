@@ -75,18 +75,18 @@ int CDispLimitsDlg::DestroyObjs()
 		delete m_highRpmChk;
 		m_highRpmChk = nullptr;
 	}
-	if (m_cameraheightsp) {
-		delete m_cameraheightsp;
-		m_cameraheightsp = nullptr;
-	}
-	if (m_cameraheightChk) {
-		delete m_cameraheightChk;
-		m_cameraheightChk = nullptr;
-	}
-	if (m_cameraheightSlider) {
-		delete m_cameraheightSlider;
-		m_cameraheightSlider = nullptr;
-	}
+	//if (m_cameraheightsp) {
+	//	delete m_cameraheightsp;
+	//	m_cameraheightsp = nullptr;
+	//}
+	//if (m_cameraheightChk) {
+	//	delete m_cameraheightChk;
+	//	m_cameraheightChk = nullptr;
+	//}
+	//if (m_cameraheightSlider) {
+	//	delete m_cameraheightSlider;
+	//	m_cameraheightSlider = nullptr;
+	//}
 	if (m_bonemarksp) {
 		delete m_bonemarksp;
 		m_bonemarksp = nullptr;
@@ -159,18 +159,18 @@ int CDispLimitsDlg::DestroyObjs()
 		delete m_axiskindCombo;
 		m_axiskindCombo = nullptr;
 	}
-	if (m_cameragmodelsp) {
-		delete m_cameragmodelsp;
-		m_cameragmodelsp = nullptr;
-	}
-	if (m_cameragmodelLabel) {
-		delete m_cameragmodelLabel;
-		m_cameragmodelLabel = nullptr;
-	}
-	if (m_cameragmodelCombo) {
-		delete m_cameragmodelCombo;
-		m_cameragmodelCombo = nullptr;
-	}
+	//if (m_cameragmodelsp) {
+	//	delete m_cameragmodelsp;
+	//	m_cameragmodelsp = nullptr;
+	//}
+	//if (m_cameragmodelLabel) {
+	//	delete m_cameragmodelLabel;
+	//	m_cameragmodelLabel = nullptr;
+	//}
+	//if (m_cameragmodelCombo) {
+	//	delete m_cameragmodelCombo;
+	//	m_cameragmodelCombo = nullptr;
+	//}
 	if (m_uvsetsp) {
 		delete m_uvsetsp;
 		m_uvsetsp = nullptr;
@@ -325,9 +325,9 @@ void CDispLimitsDlg::InitParams()
 	m_threadsLabel = nullptr;
 	m_threadsSlider = nullptr;
 	m_highRpmChk = nullptr;
-	m_cameraheightsp = nullptr;
-	m_cameraheightChk = nullptr;
-	m_cameraheightSlider = nullptr;
+	//m_cameraheightsp = nullptr;
+	//m_cameraheightChk = nullptr;
+	//m_cameraheightSlider = nullptr;
 	m_bonemarksp = nullptr;
 	m_bonemarkChk = nullptr;
 	m_bonemarkSlider = nullptr;
@@ -346,9 +346,9 @@ void CDispLimitsDlg::InitParams()
 	m_axiskindsp = nullptr;
 	m_axiskindLabel = nullptr;
 	m_axiskindCombo = nullptr;
-	m_cameragmodelsp = nullptr;
-	m_cameragmodelLabel = nullptr;
-	m_cameragmodelCombo = nullptr;
+	//m_cameragmodelsp = nullptr;
+	//m_cameragmodelLabel = nullptr;
+	//m_cameragmodelCombo = nullptr;
 	m_uvsetsp = nullptr;
 	m_uvsetLabel = nullptr;
 	m_uvsetCombo = nullptr;
@@ -426,9 +426,11 @@ void CDispLimitsDlg::SetVisible(bool srcflag)
 
 int CDispLimitsDlg::CreateDispLimitsWnd()
 {
-	if (m_dlgWnd) {
-		return 0;
-	}
+	//if (m_dlgWnd) {
+	//	return 0;
+	//}
+
+	DestroyObjs();
 
 	m_dlgWnd = new OrgWindow(
 		0,
@@ -453,6 +455,8 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 	}
 
 	if (m_dlgWnd) {
+		m_dlgWnd->setListenMouse(true);
+
 		double rate1 = 0.350;
 		double rate50 = 0.50;
 
@@ -775,65 +779,65 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_cameraheightsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
-		if (!m_cameraheightsp) {
-			_ASSERT(0);
-			abort();
-		}
-		m_cameraheightChk = new OWP_CheckBoxA(L"cameraheight", (g_cameraheightflag != 0), labelheight, false);
-		if (!m_cameraheightChk) {
-			_ASSERT(0);
-			abort();
-		}
-		m_cameraheightSlider = new OWP_Slider((double)g_cameraheight, 800.0, 50.0, labelheight);
-		if (!m_cameraheightSlider) {
-			_ASSERT(0);
-			abort();
-		}
-		m_cameragmodelsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
-		if (!m_cameragmodelsp) {
-			_ASSERT(0);
-			abort();
-		}
-		m_cameragmodelLabel = new OWP_Label(L"Camera G Model", labelheight);
-		if (!m_cameragmodelLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		m_cameragmodelCombo = new OWP_ComboBoxA(L"CameraGModel", labelheight);//g_cameragmodel:cameragmodel0, cameragmodel1
-		if (!m_cameragmodelCombo) {
-			_ASSERT(0);
-			abort();
-		}
-		if (m_cameragmodelCombo) {
-			m_cameragmodelCombo->ResetCombo();
-			m_cameragmodelCombo->addString("   ");//先頭項目は未設定
+		//m_cameraheightsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		//if (!m_cameraheightsp) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_cameraheightChk = new OWP_CheckBoxA(L"cameraheight", (g_cameraheightflag != 0), labelheight, false);
+		//if (!m_cameraheightChk) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_cameraheightSlider = new OWP_Slider((double)g_cameraheight, 800.0, 50.0, labelheight);
+		//if (!m_cameraheightSlider) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_cameragmodelsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		//if (!m_cameragmodelsp) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_cameragmodelLabel = new OWP_Label(L"Camera G Model", labelheight);
+		//if (!m_cameragmodelLabel) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_cameragmodelCombo = new OWP_ComboBoxA(L"CameraGModel", labelheight);//g_cameragmodel:cameragmodel0, cameragmodel1
+		//if (!m_cameragmodelCombo) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//if (m_cameragmodelCombo) {
+		//	m_cameragmodelCombo->ResetCombo();
+		//	m_cameragmodelCombo->addString("   ");//先頭項目は未設定
 
-			int findselected = -1;
-			int modelnum = g_chascene->GetModelNum();
-			int modelindex;
-			for (modelindex = 0; modelindex < modelnum; modelindex++) {
-				MODELELEM curmodelelem = g_chascene->GetModelElem(modelindex);
-				if (curmodelelem.modelptr) {
-					WCHAR gname[MAX_PATH] = { 0L };
-					wcscpy_s(gname, MAX_PATH, curmodelelem.modelptr->GetFileName());
-					char mbgname[MAX_PATH] = { 0 };
-					WideCharToMultiByte(CP_ACP, 0, gname, -1, mbgname, MAX_PATH, NULL, NULL);
-					m_cameragmodelCombo->addString(mbgname);
+		//	int findselected = -1;
+		//	int modelnum = g_chascene->GetModelNum();
+		//	int modelindex;
+		//	for (modelindex = 0; modelindex < modelnum; modelindex++) {
+		//		MODELELEM curmodelelem = g_chascene->GetModelElem(modelindex);
+		//		if (curmodelelem.modelptr) {
+		//			WCHAR gname[MAX_PATH] = { 0L };
+		//			wcscpy_s(gname, MAX_PATH, curmodelelem.modelptr->GetFileName());
+		//			char mbgname[MAX_PATH] = { 0 };
+		//			WideCharToMultiByte(CP_ACP, 0, gname, -1, mbgname, MAX_PATH, NULL, NULL);
+		//			m_cameragmodelCombo->addString(mbgname);
 
-					if (g_cameragmodel && (g_cameragmodel == curmodelelem.modelptr)) {
-						findselected = modelindex;
-					}
-				}
-				else {
-					m_cameragmodelCombo->addString("invalid name");
-				}
-			}
+		//			if (g_cameragmodel && (g_cameragmodel == curmodelelem.modelptr)) {
+		//				findselected = modelindex;
+		//			}
+		//		}
+		//		else {
+		//			m_cameragmodelCombo->addString("invalid name");
+		//		}
+		//	}
 
-			if (findselected >= 0) {
-				m_cameragmodelCombo->setSelectedCombo(findselected + 1);
-			}
-		}
+		//	if (findselected >= 0) {
+		//		m_cameragmodelCombo->setSelectedCombo(findselected + 1);
+		//	}
+		//}
 
 		m_dlgWnd->addParts(*m_lightssp);
 		m_lightssp->addParts1(*m_lightsChk);
@@ -892,13 +896,13 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 		m_dispsp8->addParts1(*m_posconsttimesLabel);
 		m_dispsp8->addParts2(*m_posconsttimesEdit);
 
-		m_dlgWnd->addParts(*m_dispspacerLabel005);//
-		m_dlgWnd->addParts(*m_cameraheightsp);
-		m_cameraheightsp->addParts1(*m_cameraheightChk);
-		m_cameraheightsp->addParts2(*m_cameraheightSlider);
-		m_dlgWnd->addParts(*m_cameragmodelsp);
-		m_cameragmodelsp->addParts1(*m_cameragmodelLabel);
-		m_cameragmodelsp->addParts2(*m_cameragmodelCombo);
+		//m_dlgWnd->addParts(*m_dispspacerLabel005);//
+		//m_dlgWnd->addParts(*m_cameraheightsp);
+		//m_cameraheightsp->addParts1(*m_cameraheightChk);
+		//m_cameraheightsp->addParts2(*m_cameraheightSlider);
+		//m_dlgWnd->addParts(*m_cameragmodelsp);
+		//m_cameragmodelsp->addParts1(*m_cameragmodelLabel);
+		//m_cameragmodelsp->addParts2(*m_cameragmodelCombo);
 
 
 		//###########
@@ -917,15 +921,15 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			bool value = m_highRpmChk->getValue();
 			g_HighRpmMode = value;
 			});
-		m_cameraheightChk->setButtonListener([=, this]() {
-			bool value = m_cameraheightChk->getValue();
-			if (value) {
-				g_cameraheightflag = 1;
-			}
-			else {
-				g_cameraheightflag = 0;
-			}
-			});
+		//m_cameraheightChk->setButtonListener([=, this]() {
+		//	bool value = m_cameraheightChk->getValue();
+		//	if (value) {
+		//		g_cameraheightflag = 1;
+		//	}
+		//	else {
+		//		g_cameraheightflag = 0;
+		//	}
+		//	});
 		m_bonemarkChk->setButtonListener([=, this]() {
 			bool value = m_bonemarkChk->getValue();
 			if (value) {
@@ -988,10 +992,10 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			double value = m_lightsSlider->getValue();
 			g_fLightScale = (float)value;
 			});
-		m_cameraheightSlider->setCursorListener([=, this]() {
-			double value = m_cameraheightSlider->getValue();
-			g_cameraheight = (float)value;
-			});
+		//m_cameraheightSlider->setCursorListener([=, this]() {
+		//	double value = m_cameraheightSlider->getValue();
+		//	g_cameraheight = (float)value;
+		//	});
 		m_bonemarkSlider->setCursorListener([=, this]() {
 			double value = m_bonemarkSlider->getValue();
 			g_bonemark_bright = (float)value;
@@ -1054,19 +1058,20 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			g_uvset = comboid;
 			});
 
-		m_cameragmodelCombo->setButtonListener([=, this]() {
-			int comboid = m_cameragmodelCombo->trackPopUpMenu();
-			if ((comboid >= 1) && g_chascene) {
-				MODELELEM gmodelelem = g_chascene->GetModelElem(comboid - 1);
-				if (gmodelelem.modelptr) {
-					g_cameragmodel = gmodelelem.modelptr;
-				}
-			}
+		//m_cameragmodelCombo->setButtonListener([=, this]() {
+		//	int comboid = m_cameragmodelCombo->trackPopUpMenu();
+		//	if ((comboid >= 1) && g_chascene) {
+		//		MODELELEM gmodelelem = g_chascene->GetModelElem(comboid - 1);
+		//		if (gmodelelem.modelptr) {
+		//			g_cameragmodel = gmodelelem.modelptr;
+		//		}
+		//	}
 
-			if (m_dlgWnd) {
-				m_dlgWnd->callRewrite();
-			}
-			});
+		//	if (m_dlgWnd) {
+		//		m_dlgWnd->callRewrite();
+		//	}
+		//	});
+		
 		//###########
 		//EditBox
 		//###########
@@ -1127,11 +1132,13 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			}
 		});
 
+		//１クリック目問題対応
+		m_dlgWnd->refreshPosAndSize();
+
 		m_dlgWnd->setSize(WindowSize(m_sizex, m_sizey));
 		m_dlgWnd->setPos(WindowPos(m_posx, m_posy));
 
-		//１クリック目問題対応
-		m_dlgWnd->refreshPosAndSize();
+
 
 		m_dlgWnd->callRewrite();
 	}
@@ -1156,9 +1163,9 @@ int CDispLimitsDlg::ParamsToDlg()
 		if (m_threadsSlider) {
 			m_threadsSlider->setValue((double)g_UpdateMatrixThreads, false);
 		}
-		if (m_cameraheightSlider) {
-			m_cameraheightSlider->setValue((double)g_cameraheight, false);
-		}
+		//if (m_cameraheightSlider) {
+		//	m_cameraheightSlider->setValue((double)g_cameraheight, false);
+		//}
 		if (m_bonemarkSlider) {
 			m_bonemarkSlider->setValue((double)g_bonemark_bright, false);
 		}

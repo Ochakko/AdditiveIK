@@ -235,6 +235,8 @@ int CImpulseDlg::CreateImpulseWnd()
 		true);					//サイズ変更の可否
 
 	if (m_dlgWnd) {
+		m_dlgWnd->setListenMouse(true);
+
 		m_impgroupcheck = new OWP_CheckBoxA(L"SetToAllRigidSMeansToSetSameGroup", 0, 15, false);
 		if (!m_impgroupcheck) {
 			_ASSERT(0);

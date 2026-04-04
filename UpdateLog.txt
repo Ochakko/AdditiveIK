@@ -1,6 +1,11 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/04/04
+　カメラの地面からの高さ設定GUIを常に操作可能な場所に移動
+　　右ペイン上部にカメラ高さのGUIを配置
+　　ウインドウサイズ、グラフサイズのリファクタリングでサイズぴったりに.
+　　
 2026/03/29
 　カメラの地面からの高さを設定可能に.
 　　準備：
@@ -14,7 +19,6 @@ https://github.com/Ochakko/AdditiveIK
 　　　SonyDualSenseで操作するモデルをモデルパネルで選んでMOAプレートメニューでPlayまたはPlayBtボタン
 　　　使ってみた感じでは、操作モデルが下り坂を進む場合に効果有
 　　　MOA2.0の設定はMOAのドキュメントをみてください
-　　　
 　　　
 2026/03/21
 　AdditiveIK 1.0.0.63 release

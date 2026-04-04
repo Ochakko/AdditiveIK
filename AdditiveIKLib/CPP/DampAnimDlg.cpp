@@ -215,6 +215,7 @@ int CDampAnimDlg::CreateDampAnimWnd()
 		true);					//サイズ変更の可否
 
 	if (m_dlgWnd) {
+		m_dlgWnd->setListenMouse(true);
 
 		m_dmpgroupcheck = new OWP_CheckBoxA(L"SetToAllRigidsMeansToSetToSameGroup", 0, 15, false);
 		if (!m_dmpgroupcheck) {

@@ -623,6 +623,8 @@ int CLimitEulDlg::CreateLimitEulWnd()
 	}
 
 	if (m_dlgWnd) {
+		m_dlgWnd->setListenMouse(true);
+
 		double rate1 = 0.350;
 		double rate50 = 0.50;
 

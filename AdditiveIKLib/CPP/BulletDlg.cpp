@@ -248,6 +248,8 @@ int CBulletDlg::CreateBulletWnd()
 	}
 
 	if (m_dlgWnd) {
+		m_dlgWnd->setListenMouse(true);
+
 		m_bulletcalccntLabel = new OWP_Label(L"BulletPhysics Calclation Count", labelheight);
 		if (!m_bulletcalccntLabel) {
 			_ASSERT(0);

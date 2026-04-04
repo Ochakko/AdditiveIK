@@ -246,6 +246,8 @@ int CLaterTransparentDlg::CreateLaterTransparentWnd()
 	}
 
 	if (m_dlgWnd) {
+		m_dlgWnd->setListenMouse(true);
+
 		double rate50 = 0.50;
 		int initlinenum = 10;
 

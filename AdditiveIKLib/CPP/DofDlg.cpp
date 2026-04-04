@@ -256,6 +256,8 @@ int CDofDlg::CreateDofWnd()
 	}
 
 	if (m_dlgWnd) {
+		m_dlgWnd->setListenMouse(true);
+
 		double rate50 = 0.50;
 
 		m_dofLabel = new OWP_Label(L"被写界深度 Depth of Field(DOF)", labelheight);

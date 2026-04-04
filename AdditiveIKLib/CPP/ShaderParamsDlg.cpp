@@ -970,6 +970,8 @@ int CShaderParamsDlg::CreateShaderParamsWnd()
 	}
 
 	if (m_dlgWnd) {
+		m_dlgWnd->setListenMouse(true);
+
 		bool limitradionamelen = true;
 		double separaterate = 0.26;
 		double separateratelit = 0.35;

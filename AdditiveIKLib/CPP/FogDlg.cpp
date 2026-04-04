@@ -345,6 +345,8 @@ int CFogDlg::CreateFogWnd()
 	}
 
 	if (m_dlgWnd) {
+		m_dlgWnd->setListenMouse(true);
+
 		double rate50 = 0.50;
 
 		m_fogslotCombo = new OWP_ComboBoxA(L"FogSlot", labelheight);

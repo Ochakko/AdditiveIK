@@ -679,6 +679,8 @@ int CDollyHistoryDlg2::CreateOWPWnd()
 	}
 
 	if (m_dlgwnd) {
+		m_dlgwnd->setListenMouse(true);
+
 		double rate50 = 0.50;
 
 		m_dlgspheader = new OWP_Separator(m_dlgwnd, true, 0.995, false);

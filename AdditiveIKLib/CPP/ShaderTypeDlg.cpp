@@ -222,6 +222,8 @@ int CShaderTypeDlg::CreateShaderTypeWnd()
 
 
 	if (m_dlgWnd) {
+		m_dlgWnd->setListenMouse(true);
+
 		int linedatasize;
 		linedatasize = (int)((double)(materialnum + 1) * 1.2);
 

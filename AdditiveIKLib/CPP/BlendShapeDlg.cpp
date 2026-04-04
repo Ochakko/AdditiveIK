@@ -243,6 +243,8 @@ int CBlendShapeDlg::CreateBlendShapeWnd()
 
 	if (m_dlgWnd) {
 
+		m_dlgWnd->setListenMouse(true);
+
 		m_dlgWnd->setSizeMin(WindowSize(150, 150));		// 最小サイズを設定
 
 		/*

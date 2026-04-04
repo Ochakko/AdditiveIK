@@ -895,6 +895,8 @@ int CRigidParamsDlg::CreateRigidWnd()
 	}
 
 	if (m_rigidWnd) {
+		m_rigidWnd->setListenMouse(true);
+
 		bool limitradionamelen = false;
 
 		m_rigidSc = new OWP_ScrollWnd(L"RigidScroll", true, labelheight);

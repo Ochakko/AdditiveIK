@@ -638,6 +638,8 @@ int CCopyHistoryDlg2::CreateOWPWnd(CModel* srcmodel)
 	}
 
 	if (m_dlgwnd) {
+		m_dlgwnd->setListenMouse(true);
+
 		double rate50 = 0.50;
 
 		m_dlgspcombo = new OWP_Separator(m_dlgwnd, true, 0.995, false);

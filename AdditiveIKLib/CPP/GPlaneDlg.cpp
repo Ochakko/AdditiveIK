@@ -236,6 +236,8 @@ int CGPlaneDlg::CreateGPlaneWnd()
 		true);					//サイズ変更の可否
 
 	if (m_dlgWnd) {
+		m_dlgWnd->setListenMouse(true);
+
 		m_ghSlider = new OWP_Slider(-1.5, 5.0, -15.0);
 		if (!m_ghSlider) {
 			_ASSERT(0);

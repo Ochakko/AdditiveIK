@@ -1147,7 +1147,9 @@ static HMENU	s_cursubmenu = 0;
 
 
 //#define TOPSLIDERSWNDH		32
-#define TOPSLIDERSWNDH		40
+#define TOPSLIDERSWNDH		(40 + 16)
+//#define SIDESLIDERWNDH		47
+#define SIDESLIDERWNDH		52
 
 static int s_totalwndwidth = (1216 + 450);
 static int s_totalwndheight = 950;
@@ -1176,11 +1178,12 @@ static int s_camerawindowwidth = 400;
 static int s_camerawindowheight = 300;
 
 static int s_infowinwidth = s_mainwidth;
-static int s_infowinheight = s_2ndposy - s_mainheight - TOPSLIDERSWNDH;
+static int s_infowinheight = s_2ndposy - s_mainheight - TOPSLIDERSWNDH;// -SIDESLIDERWNDH;
 
 static int s_sidemenuwidth = 450;
 //static int s_sidemenuheight = TOPSLIDERSWNDH;
-static int s_sidemenuheight = TOPSLIDERSWNDH + 16;
+//static int s_sidemenuheight = TOPSLIDERSWNDH + 16;
+static int s_sidemenuheight = SIDESLIDERWNDH;
 
 static int s_sidewidth = s_sidemenuwidth;
 static int s_sideheight = s_totalwndheight - TOPSLIDERSWNDH - s_sidemenuheight - 28;
@@ -1291,6 +1294,13 @@ static OWP_Slider* s_sidemenu_camdistSlider = 0;
 static bool s_camdistsliderflag = false;
 static float s_camdistsliderval = g_camdist;
 
+//カメラの地面からの高さ制御用　(AlwaysLockチェックとMoveCamEyeチェックと併用する)
+static OrgWinGUI::OWP_Separator* s_cameraheightsp = 0;
+static OrgWinGUI::OWP_CheckBoxA* s_cameraheightChk = 0;
+static OrgWinGUI::OWP_Slider* s_cameraheightSlider = 0;
+static OrgWinGUI::OWP_Separator* s_cameragmodelsp = 0;
+static OrgWinGUI::OWP_Label* s_cameragmodelLabel = 0;
+static OrgWinGUI::OWP_ComboBoxA* s_cameragmodelCombo = 0;
 
 static OrgWindow* s_topSlidersWnd = 0;
 static OWP_Separator* s_topSlidersSeparator1 = 0;
@@ -2222,6 +2232,7 @@ int OnCreateDevice();
 LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static void InitApp();
 static int CheckResolution();
+static int SetRightPainDlgsPosAndSize();
 static HWND CreateMainWindow();
 static void InitRootSignature(RootSignature& rs);
 static void OnDestroyDevice();
@@ -2443,6 +2454,7 @@ static bool IsClickedSpriteButton();
 static int CreateTimelineWnd();
 static int CreateLongTimelineWnd();
 static int CreateSideMenuWnd();
+static void DestroySideMenuSliderWnd();
 static int Params2SideMenuWnd();
 static int CreateTopSlidersWnd();
 static int Params2TopSlidersWnd();
@@ -3208,6 +3220,7 @@ INT WINAPI wWinMain(
 		OnDestroyDevice();//2024/03/08
 		return 0;
 	}
+	SetRightPainDlgsPosAndSize();
 
 	if (g_4kresolution) {
 		s_dispmodel = true;//!!!!!!!!!!!!!!!!! modelpanelのdispflag
@@ -3370,14 +3383,15 @@ INT WINAPI wWinMain(
 	LoadFogParamsFile();
 	LoadDofParamsFile();
 
+	CreateTopSlidersWnd();
+	CreateSideMenuWnd();
+
 	CreatePlaceFolderWnd();
 	CreateTimelineWnd();
 	CreateToolWnd();
 	CreateLongTimelineWnd();
 	CreateLayerWnd();
 	CreateInfoWnd();
-	CreateSideMenuWnd();
-	CreateTopSlidersWnd();
 
 	//CreateLaterTransparentWnd();//s_modelが設定されてから作成する
 
@@ -3644,11 +3658,21 @@ int CheckResolution()
 	*/
 
 
-	int cXborder = GetSystemMetrics(SM_CXBORDER);
-	int cYborder = GetSystemMetrics(SM_CYBORDER);
-	int cXFrame = GetSystemMetrics(SM_CXDLGFRAME);
-	int cYFrame = GetSystemMetrics(SM_CYDLGFRAME);
+	int cXborder = GetSystemMetrics(SM_CXBORDER);//1
+	int cYborder = GetSystemMetrics(SM_CYBORDER);//1
+	int cXFrame = GetSystemMetrics(SM_CXDLGFRAME);//3
+	int cYFrame = GetSystemMetrics(SM_CYDLGFRAME);//3
+	int cYCaption = GetSystemMetrics(SM_CYCAPTION);//23
+	int cYEdge = GetSystemMetrics(SM_CYEDGE);//2
+	int cYMenu = GetSystemMetrics(SM_CYMENU);//20
 
+	int cyCalcCaption = cYCaption + cYborder * 2;
+	int cyCalcMenu = cYMenu + cYEdge;
+	//int cyCalcEdge = (cYEdge + cYFrame + cYborder);//10
+	int cyCalcEdge = (cYEdge + cYFrame);//8
+	int cxCalcEdge = cyCalcEdge;
+	int cyCalcFrame = (cYFrame + cYborder);//5
+	int cxCalcFrame = cyCalcFrame;
 
 	if ((s_appcnt == 0) && (s_launchbyc4 == 0)) {
 
@@ -3681,38 +3705,30 @@ int CheckResolution()
 					s_spsidemargin = 60.0f;
 
 					s_totalwndwidth = (1216 + 450) * 2;
-					s_totalwndheight = (950 - TOPSLIDERSWNDH) * 2 + 8;
+					s_totalwndheight = (950 - TOPSLIDERSWNDH) * 2 + cyCalcEdge * 2;
 					s_2ndposy = 600 * 2;
 
 
-					//s_timelinewidth = 400 * 2;
-					//s_timelinewidth = s_toolwidth;
 					s_timelinewidth = 600;
 					s_timelineheight = s_2ndposy - TOPSLIDERSWNDH;
 
 					s_toolwidth = 400;
-					s_toolheight = s_totalwndheight - s_2ndposy - (TOPSLIDERSWNDH + 18) * 2 + TOPSLIDERSWNDH + 8 + 8;
+					s_toolheight = s_totalwndheight - TOPSLIDERSWNDH - s_timelineheight - cYCaption - cYMenu - cyCalcFrame * 4 - cYborder * 2;
 
-					s_sidemenuwidth = 600;
-					s_sidemenuheight = TOPSLIDERSWNDH + 16;
+					s_sidemenuwidth = 600 - cxCalcFrame * 2;
+					s_sidemenuheight = TOPSLIDERSWNDH + SIDESLIDERWNDH;// -cYborder * 2;// -cyCalcFrame * 2;
+
+					s_mainwidth = s_totalwndwidth - s_timelinewidth - s_modelwindowwidth - (s_sidemenuwidth + cxCalcFrame * 2) - cxCalcFrame * 2;// -cXborder * 6;
+					s_mainheight = (520 * 2 - TOPSLIDERSWNDH) - cyCalcFrame * 2;
+
 					s_sidewidth = s_sidemenuwidth;
-					s_sideheight = s_totalwndheight - s_sidemenuheight - 28 * 2 - 4;
+					s_sideheight = s_totalwndheight - (TOPSLIDERSWNDH + SIDESLIDERWNDH + cyCalcFrame * 2) - cYCaption - cYMenu - cyCalcFrame * 2;
 
-					//s_mainwidth = 800 * 2 + 340 + 450 - 64 + 60 - s_modelwindowwidth;
-					//s_mainwidth = s_totalwndwidth - s_timelinewidth - s_modelwindowwidth - s_sidewidth - cXFrame * 2 - cXborder * 8;
-					s_mainwidth = s_totalwndwidth - s_timelinewidth - s_modelwindowwidth - s_sidewidth - 16;
-					s_mainheight = (520 * 2 - TOPSLIDERSWNDH);
-					
-					//s_bufwidth = (800 * 2);
-					//s_bufwidth = 800 * 2 + 340 + 450 - 64 + 60 - s_modelwindowwidth;
 					s_bufwidth = s_mainwidth;
 					s_bufheight = s_mainheight;
 
 
-					//s_longtimelinewidth = 970 * 2;
-					//s_longtimelinewidth = s_mainwidth + s_modelwindowwidth;
-					s_longtimelinewidth = s_totalwndwidth - s_toolwidth - s_sidewidth - 16;
-					//s_longtimelineheight = (s_totalwndheight - s_2ndposy - TOPSLIDERSWNDH - 18) * 2;
+					s_longtimelinewidth = s_totalwndwidth - s_toolwidth - (s_sidemenuwidth + cxCalcFrame * 2) - cxCalcFrame * 2;
 					s_longtimelineheight = s_toolheight;
 
 					s_infowinwidth = s_mainwidth;
@@ -3724,7 +3740,6 @@ int CheckResolution()
 					s_motionwindowheight = s_mainheight - s_modelwindowheight - s_camerawindowheight + s_infowinheight;
 
 
-					//s_guibarX0 = s_mainwidth / 2 - 180 - 2 * 180 - 30;
 					s_guibarX0 = s_mainwidth / 2 - 130 * 2;
 
 					g_4kresolution = true;
@@ -3758,75 +3773,77 @@ int CheckResolution()
 		s_camerawindowwidth = s_modelwindowwidth;
 
 		s_modelwindowheight = 460;
-		//s_motionwindowheight = 700;
 		s_motionwindowheight = 400;
 		s_camerawindowheight = 300;
 
-
 		s_toolwidth = 230;
-		//s_toolheight = 290;
-		s_toolheight = s_totalwndheight - s_2ndposy - TOPSLIDERSWNDH - 28 + 8;
-
-		s_mainwidth = 800 - 64;
-		s_mainheight = (520 - TOPSLIDERSWNDH);
-
-		s_bufwidth = 800 - 64;
-		s_bufheight = (520 - TOPSLIDERSWNDH);
-
+		s_toolheight = s_totalwndheight - TOPSLIDERSWNDH - s_timelineheight - cYCaption - cYMenu - cyCalcFrame * 4 - cYborder * 2 + 1;
 
 		s_timelinewidth = 400;
 		s_timelineheight = s_2ndposy - TOPSLIDERSWNDH;
 
-		s_longtimelinewidth = 970 - 64;
-		s_longtimelineheight = s_toolheight;
+		s_sidemenuwidth = 450 + 64 - cxCalcFrame * 2;
+		s_sidemenuheight = TOPSLIDERSWNDH + SIDESLIDERWNDH;// -cYborder * 2;// -cyCalcFrame * 2;
 
+		s_sidewidth = s_sidemenuwidth;
+		s_sideheight = s_totalwndheight - (TOPSLIDERSWNDH + SIDESLIDERWNDH + cyCalcFrame * 2) - cYCaption - cYMenu - cyCalcFrame * 2;
+
+		//s_mainwidth = 800 - 64;
+		//s_mainheight = (520 - TOPSLIDERSWNDH);
+		s_mainwidth = s_totalwndwidth - s_timelinewidth - (s_sidemenuwidth + cxCalcFrame * 2) - cxCalcFrame * 2;// -cXborder * 6;
+		s_mainheight = (520 - TOPSLIDERSWNDH) - cyCalcFrame * 2;
+
+		s_bufwidth = s_mainwidth;
+		s_bufheight = s_mainheight;
+
+		s_longtimelinewidth = s_totalwndwidth - s_toolwidth - (s_sidemenuwidth + cxCalcFrame * 2) - cxCalcFrame * 2;
+		s_longtimelineheight = s_toolheight;
 
 		s_infowinwidth = s_mainwidth;
 		s_infowinheight = (s_2ndposy - s_mainheight - TOPSLIDERSWNDH);
 
-		s_sidemenuwidth = 450 + 64 - 4 + 4;
-		s_sidemenuheight = TOPSLIDERSWNDH + 16;
-
-		s_sidewidth = s_sidemenuwidth;
-		s_sideheight = s_totalwndheight - TOPSLIDERSWNDH - s_sidemenuheight - 28 + 8;
 
 		s_guibarX0 = 120;
 
 	}
+	return 0;
+}
 
-
-	{
-		int windowposx;
-		if (g_4kresolution) {
-			windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-		}
-		else {
-			windowposx = s_timelinewidth + s_mainwidth;
-		}
-		s_copyhistorydlg2.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_dollyhistorydlg2.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_rigidparamsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_displimitsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_bulletdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_projloddlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_blendshapedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_lightsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_dispgroupdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_footrigdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_latertransparentdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_shadertypedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_shaderparamsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_skyparamsdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_retargetdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_limiteuldlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_shadowdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_impulsedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_gplanedlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_dampanimdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_thresholddlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_fogdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
-		s_dofdlg.SetPosAndSize(windowposx, s_sidemenuheight, s_sidewidth, s_sideheight);
+int SetRightPainDlgsPosAndSize()
+{
+	int windowposx;
+	if (g_4kresolution) {
+		windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
 	}
+	else {
+		windowposx = s_timelinewidth + s_mainwidth;
+	}
+
+	int windowposy = TOPSLIDERSWNDH + SIDESLIDERWNDH;
+
+	s_copyhistorydlg2.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_dollyhistorydlg2.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_rigidparamsdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_displimitsdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_bulletdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_projloddlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_blendshapedlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_lightsdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_dispgroupdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_footrigdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_latertransparentdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_shadertypedlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_shaderparamsdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_skyparamsdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_retargetdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_limiteuldlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_shadowdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_impulsedlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_gplanedlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_dampanimdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_thresholddlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_fogdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_dofdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
 
 	return 0;
 }
@@ -5010,6 +5027,13 @@ void InitApp()
 	s_camdistsliderflag = false;
 	s_camdistsliderval = g_camdist;
 
+	s_cameraheightsp = 0;
+	s_cameraheightChk = 0;
+	s_cameraheightSlider = 0;
+	s_cameragmodelsp = 0;
+	s_cameragmodelLabel = 0;
+	s_cameragmodelCombo = 0;
+
 	s_topSlidersWnd = 0;
 	s_topSlidersSeparator1 = 0;
 	s_topSlidersSeparator2 = 0;
@@ -5885,46 +5909,7 @@ void OnDestroyDevice()
 		}
 	}
 
-
-
-	if (s_sidemenusp1) {
-		delete s_sidemenusp1;
-		s_sidemenusp1 = 0;
-	}
-	if (s_sidemenusp2) {
-		delete s_sidemenusp2;
-		s_sidemenusp2 = 0;
-	}
-	if (s_sidemenusp3) {
-		delete s_sidemenusp3;
-		s_sidemenusp3 = 0;
-	}
-	if (s_sidemenu_sellock) {
-		delete s_sidemenu_sellock;
-		s_sidemenu_sellock = 0;
-	}
-	if (s_sidemenu_sellockOnce) {
-		delete s_sidemenu_sellockOnce;
-		s_sidemenu_sellockOnce = 0;
-	}
-	if (s_sidemenu_targetdisp) {
-		delete s_sidemenu_targetdisp;
-		s_sidemenu_targetdisp = 0;
-	}
-	if (s_sidemenu_moveeyepos) {
-		delete s_sidemenu_moveeyepos;
-		s_sidemenu_moveeyepos = 0;
-	}
-	if (s_sidemenu_camdistSlider) {
-		delete s_sidemenu_camdistSlider;
-		s_sidemenu_camdistSlider = 0;
-	}
-
-
-	if (s_sidemenuWnd) {
-		delete s_sidemenuWnd;
-		s_sidemenuWnd = 0;
-	}
+	DestroySideMenuSliderWnd();
 
 	if (s_topSlidersWnd) {
 		delete s_topSlidersWnd;
@@ -10443,7 +10428,6 @@ int OpenFile()
 			if (newmodel) {
 				result = 0;
 				newmodel->RemakeHSVToonTexture(nullptr);//2026/03/06
-				PostOpenChaFile();
 			}
 			else {
 				result = 1;
@@ -10461,6 +10445,7 @@ int OpenFile()
 			newmodel = OpenMQOFile();
 			if (newmodel) {
 				result = 0;
+				newmodel->RemakeHSVToonTexture(nullptr);//2026/03/06
 			}
 			else {
 				result = 1;
@@ -10531,6 +10516,7 @@ int OpenFile()
 				newmodel = OpenFBXFile(false, true, 0, 1, ikstopname, s_grassflag);
 				if (newmodel) {
 					result = 0;
+					newmodel->RemakeHSVToonTexture(nullptr);//2026/03/06
 				}
 				else {
 					result = 1;
@@ -10553,6 +10539,7 @@ int OpenFile()
 				newmodel = OpenMQOFile();
 				if (newmodel) {
 					result = 0;
+					newmodel->RemakeHSVToonTexture(nullptr);//2026/03/06
 				}
 				else {
 					result = 1;
@@ -10585,6 +10572,8 @@ int OpenFile()
 					delete[] tmpsavepath;
 				return 1;
 			}
+
+			PostOpenChaFile();//cmpcha == 0のときはOpenChaFile()内から呼ばれる
 		}
 	}
 
@@ -11643,7 +11632,8 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 						delete s_owpEulerGraph;
 						s_owpEulerGraph = 0;
 					}
-					s_owpEulerGraph = new OWP_EulerGraph(L"EulerGraph");
+					int graphsize = s_longtimelineheight / 2;
+					s_owpEulerGraph = new OWP_EulerGraph(graphsize, L"EulerGraph");
 					if (s_owpEulerGraph) {
 						//s_LtimelineWnd->addParts(*s_owpEulerGraph);
 						s_LTSeparator->addParts2(*s_owpEulerGraph);
@@ -19595,6 +19585,7 @@ int PostOpenChaFile()
 	s_bulletdlg.CreateBulletWnd();//作成済でない場合に作成
 	s_bulletdlg.ParamsToDlg();
 
+	CreateSideMenuWnd();
 
 	if (g_chascene && 
 		((g_boneaxis < BONEAXIS_CURRENT) || (g_boneaxis > BONEAXIS_BINDPOSE))) {//g_boneaxisがchafileで設定されなかった場合
@@ -30369,6 +30360,10 @@ int Params2SideMenuWnd()//2024/06/06
 		s_sidemenu_camdistSlider->setValue((double)g_camdist, false);
 	}
 
+	if (s_cameraheightSlider) {
+		s_cameraheightSlider->setValue((double)g_cameraheight, false);
+	}
+
 	return 0;
 }
 
@@ -30395,7 +30390,6 @@ int Params2TopSlidersWnd()
 
 int CreateTopSlidersWnd()
 {
-
 	WCHAR sliderinfo[2048] = { 0L };
 	int windowposx;
 	if (g_4kresolution) {
@@ -30405,7 +30399,6 @@ int CreateTopSlidersWnd()
 		wcscpy_s(sliderinfo, 2048, L"Slider1 : EditRate,                                                                                               \
        Slier2 : Speed,                                                                                                    \
                                                                   Slider3 : BrushRepeats");
-
 	}
 	else {
 		windowposx = s_timelinewidth + s_mainwidth;
@@ -30643,165 +30636,348 @@ int CreateTopSlidersWnd()
 
 }
 
-int CreateSideMenuWnd()
+void DestroySideMenuSliderWnd()
 {
-	s_sidemenuWnd = new OrgWindow(
-		0,
-		//_T("SideMenuWindow"),		//ウィンドウクラス名
-		_T("CameraTargetWindow"),		//ウィンドウクラス名
-		GetModuleHandle(NULL),	//インスタンスハンドル
-								//WindowPos(100, 200),		//位置
-		WindowPos(0, 0),
-		//WindowSize(450,880),		//サイズ
-		//WindowSize(450,680),		//サイズ
-		//WindowSize(450, 760),		//サイズ
-		WindowSize(s_sidemenuwidth, s_sidemenuheight),		//サイズ
-		//_T("SideMenu"),	//タイトル
-		_T("CameraTarget"),	//タイトル
-		g_mainhwnd,	//親ウィンドウハンドル
-		true,					//表示・非表示状態
-		//70, 50, 70,				//カラー
-		0, 0, 0,				//カラー
-		true, true);					//サイズ変更の可否
+	if (s_sidemenuWnd) {
+		s_sidemenuWnd->setVisible(false);
+		s_sidemenuWnd->setListenMouse(false);
+	}
+
+	if (s_sidemenu_sellock) {
+		delete s_sidemenu_sellock;
+		s_sidemenu_sellock = 0;
+	}
+	if (s_sidemenu_sellockOnce) {
+		delete s_sidemenu_sellockOnce;
+		s_sidemenu_sellockOnce = 0;
+	}
+	if (s_sidemenu_targetdisp) {
+		delete s_sidemenu_targetdisp;
+		s_sidemenu_targetdisp = 0;
+	}
+	if (s_sidemenu_moveeyepos) {
+		delete s_sidemenu_moveeyepos;
+		s_sidemenu_moveeyepos = 0;
+	}
+	if (s_sidemenu_camdistSlider) {
+		delete s_sidemenu_camdistSlider;
+		s_sidemenu_camdistSlider = 0;
+	}
+
+
+	if (s_cameragmodelLabel) {
+		delete s_cameragmodelLabel;
+		s_cameragmodelLabel = 0;
+	}
+	if (s_cameraheightChk) {
+		delete s_cameraheightChk;
+		s_cameraheightChk = 0;
+	}
+	if (s_cameraheightSlider) {
+		delete s_cameraheightSlider;
+		s_cameraheightSlider = 0;
+	}
+	if (s_cameragmodelCombo) {
+		delete s_cameragmodelCombo;
+		s_cameragmodelCombo = 0;
+	}
+
+
+	if (s_sidemenusp1) {
+		delete s_sidemenusp1;
+		s_sidemenusp1 = 0;
+	}
+	if (s_sidemenusp2) {
+		delete s_sidemenusp2;
+		s_sidemenusp2 = 0;
+	}
+	if (s_sidemenusp3) {
+		delete s_sidemenusp3;
+		s_sidemenusp3 = 0;
+	}
+
+	if (s_cameraheightsp) {
+		delete s_cameraheightsp;
+		s_cameraheightsp = 0;
+	}
+	if (s_cameragmodelsp) {
+		delete s_cameragmodelsp;
+		s_cameragmodelsp = 0;
+	}
 
 	if (s_sidemenuWnd) {
+		delete s_sidemenuWnd;
+		s_sidemenuWnd = 0;
+	}
+}
 
+int CreateSideMenuWnd()
+{
+	DestroySideMenuSliderWnd();
 
-		s_sidemenusp1 = new OWP_Separator(s_sidemenuWnd, true, 0.5f, true);
-		if (!s_sidemenusp1) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_sidemenusp2 = new OWP_Separator(s_sidemenuWnd, true, 0.5f, true);
-		if (!s_sidemenusp2) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_sidemenusp3 = new OWP_Separator(s_sidemenuWnd, true, 0.5f, true);
-		if (!s_sidemenusp3) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_sidemenu_sellock = new OWP_CheckBoxA(L"AlwaysLock", s_camtargetflag, 15, false);
-		if (!s_sidemenu_sellock) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_sidemenu_sellockOnce = new OWP_Button(L"OnceLock", 15);
-		if (!s_sidemenu_sellockOnce) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_sidemenu_targetdisp = new OWP_CheckBoxA(L"DispTarget", s_camtargetdisp, 15, false);
-		if (!s_sidemenu_targetdisp) {
-			_ASSERT(0);
-			return 1;
-		}
-		s_sidemenu_moveeyepos = new OWP_CheckBoxA(L"MoveEyePos", s_moveeyepos, 15, false);
-		if (!s_sidemenu_moveeyepos) {
-			_ASSERT(0);
-			return 1;
-		}
-		g_camdist = (float)fmin(g_camdist, s_maxcamdist);
-		g_camdist = (float)fmax(g_camdist, 1.0);
-		//s_sidemenu_camdistSlider = new OWP_Slider(g_camdist, 1000.0, 1.0);
-		s_sidemenu_camdistSlider = new OWP_Slider(g_camdist, (double)s_maxcamdist, 1.0);//2024/06/03 maxを5000から20000に変更
-		if (!s_sidemenu_camdistSlider) {
-			_ASSERT(0);
-			return 1;
-		}
-		//s_sidemenu_sellock->setSize(WindowSize((int)(s_sidemenuwidth * 0.25f), (int)s_sidemenuheight));
-		//s_sidemenu_targetdisp->setSize(WindowSize((int)(s_sidemenuwidth * 0.25f), (int)s_sidemenuheight));
-		//s_sidemenu_camdistSlider->setSize(WindowSize((int)(s_sidemenuwidth * 0.5f), (int)s_sidemenuheight));
+	//if (!s_sidemenuWnd) {
+		s_sidemenuWnd = new OrgWindow(
+			0,
+			//_T("SideMenuWindow"),		//ウィンドウクラス名
+			_T("CameraTargetWindow1"),		//ウィンドウクラス名
+			GetModuleHandle(NULL),	//インスタンスハンドル
+			//WindowPos(100, 200),		//位置
+			WindowPos(0, 0),
+			//WindowSize(450,880),		//サイズ
+			//WindowSize(450,680),		//サイズ
+			//WindowSize(450, 760),		//サイズ
+			//WindowSize(s_sidemenuwidth, s_sidemenuheight),		//サイズ
+			WindowSize(s_sidemenuwidth, s_sidemenuheight),		//サイズ
+			//_T("SideMenu"),	//タイトル
+			_T("CameraTargetWindow1"),	//タイトル
+			g_mainhwnd,	//親ウィンドウハンドル
+			true,					//表示・非表示状態
+			//70, 50, 70,				//カラー
+			0, 0, 0,				//カラー
+			true, true);					//サイズ変更の可否
 
-		//s_sidemenuWnd->addParts(*s_sidemenusp1);
-		//s_sidemenusp1->addParts1(*s_sidemenusp2);
-		//s_sidemenusp1->addParts2(*s_sidemenu_camdistSlider);
-		//s_sidemenusp2->addParts1(*s_sidemenu_sellock);
-		//s_sidemenusp2->addParts2(*s_sidemenu_targetdisp);
-		//s_sidemenusp2->addParts2(*s_sidemenu_moveeyepos);//２段目 targetdispの下
+		if (s_sidemenuWnd != nullptr) {
+			s_sidemenuWnd->setListenMouse(true);
+			s_sidemenuWnd->setVisible(true);
 
-		s_sidemenuWnd->addParts(*s_sidemenusp1);
-		s_sidemenusp1->addParts1(*s_sidemenusp2);
-		s_sidemenusp1->addParts2(*s_sidemenusp3);
-		s_sidemenusp2->addParts1(*s_sidemenu_sellockOnce);
-		s_sidemenusp2->addParts2(*s_sidemenu_sellock);
-		s_sidemenusp3->addParts1(*s_sidemenu_moveeyepos);
-		s_sidemenusp3->addParts2(*s_sidemenu_targetdisp);
-		s_sidemenuWnd->addParts(*s_sidemenu_camdistSlider);//２段目の全幅をスライダーに割り当て
-
-
-		s_sidemenuWnd->setCloseListener([]() {
-			if (GetCurrentModel()) {
-				s_ScloseFlag = true;
+			s_sidemenuWnd->setBlackTheme();
+			s_sidemenusp1 = new OWP_Separator(s_sidemenuWnd, true, 0.5f, true);
+			if (!s_sidemenusp1) {
+				_ASSERT(0);
+				return 1;
 			}
-			});
+			s_sidemenusp2 = new OWP_Separator(s_sidemenuWnd, true, 0.5f, true);
+			if (!s_sidemenusp2) {
+				_ASSERT(0);
+				return 1;
+			}
+			s_sidemenusp3 = new OWP_Separator(s_sidemenuWnd, true, 0.5f, true);
+			if (!s_sidemenusp3) {
+				_ASSERT(0);
+				return 1;
+			}
+			s_sidemenu_sellock = new OWP_CheckBoxA(L"AlwaysLock", s_camtargetflag, 15, false);
+			if (!s_sidemenu_sellock) {
+				_ASSERT(0);
+				return 1;
+			}
+			s_sidemenu_sellockOnce = new OWP_Button(L"OnceLock", 15);
+			if (!s_sidemenu_sellockOnce) {
+				_ASSERT(0);
+				return 1;
+			}
+			s_sidemenu_targetdisp = new OWP_CheckBoxA(L"DispTarget", s_camtargetdisp, 15, false);
+			if (!s_sidemenu_targetdisp) {
+				_ASSERT(0);
+				return 1;
+			}
+			s_sidemenu_moveeyepos = new OWP_CheckBoxA(L"MoveEyePos", s_moveeyepos, 15, false);
+			if (!s_sidemenu_moveeyepos) {
+				_ASSERT(0);
+				return 1;
+			}
+			g_camdist = (float)fmin(g_camdist, s_maxcamdist);
+			g_camdist = (float)fmax(g_camdist, 1.0);
+			//s_sidemenu_camdistSlider = new OWP_Slider(g_camdist, 1000.0, 1.0);
+			s_sidemenu_camdistSlider = new OWP_Slider(g_camdist, (double)s_maxcamdist, 1.0);//2024/06/03 maxを5000から20000に変更
+			if (!s_sidemenu_camdistSlider) {
+				_ASSERT(0);
+				return 1;
+			}
 
-		if (s_sidemenu_sellock) {
-			s_sidemenu_sellock->setButtonListener([]() {
-				OnCameraTargetAlways();
-			});
-		}
-		if (s_sidemenu_sellockOnce) {
-			s_sidemenu_sellockOnce->setButtonListener([]() {
-				OnCameraTargetOnce();
-			});
-		}
-		if (s_sidemenu_targetdisp) {
-			s_sidemenu_targetdisp->setButtonListener([]() {
-				OnCameraTargetManipulator();
-			});
-		}
-		if (s_sidemenu_moveeyepos) {
-			s_sidemenu_moveeyepos->setButtonListener([]() {
-				bool value = s_sidemenu_moveeyepos->getValue();
+
+			double rate1 = 0.350;
+			double rate50 = 0.50;
+			int labelheight = 20;
+			s_cameraheightsp = new OWP_Separator(s_sidemenuWnd, true, rate1, true);
+			if (!s_cameraheightsp) {
+				_ASSERT(0);
+				abort();
+			}
+			s_cameraheightChk = new OWP_CheckBoxA(L"cameraheight", (g_cameraheightflag != 0), labelheight, false);
+			if (!s_cameraheightChk) {
+				_ASSERT(0);
+				abort();
+			}
+			s_cameraheightSlider = new OWP_Slider((double)g_cameraheight, 800.0, 50.0);//, labelheight);
+			if (!s_cameraheightSlider) {
+				_ASSERT(0);
+				abort();
+			}
+			s_cameragmodelsp = new OWP_Separator(s_sidemenuWnd, true, rate1, true);
+			if (!s_cameragmodelsp) {
+				_ASSERT(0);
+				abort();
+			}
+			s_cameragmodelLabel = new OWP_Label(L"Camera G Model", 25);
+			if (!s_cameragmodelLabel) {
+				_ASSERT(0);
+				abort();
+			}
+			s_cameragmodelCombo = new OWP_ComboBoxA(L"CameraGModel", 25);//g_cameragmodel:cameragmodel0, cameragmodel1
+			if (!s_cameragmodelCombo) {
+				_ASSERT(0);
+				abort();
+			}
+			if (s_cameragmodelCombo && g_chascene) {
+				s_cameragmodelCombo->ResetCombo();
+				s_cameragmodelCombo->addString("   ");//先頭項目は未設定
+
+				int findselected = -1;
+				int modelnum = g_chascene->GetModelNum();
+				int modelindex;
+				for (modelindex = 0; modelindex < modelnum; modelindex++) {
+					MODELELEM curmodelelem = g_chascene->GetModelElem(modelindex);
+					if (curmodelelem.modelptr != nullptr) {
+						WCHAR gname[MAX_PATH] = { 0L };
+						wcscpy_s(gname, MAX_PATH, curmodelelem.modelptr->GetFileName());
+						char mbgname[MAX_PATH] = { 0 };
+						WideCharToMultiByte(CP_ACP, 0, gname, -1, mbgname, MAX_PATH, NULL, NULL);
+						s_cameragmodelCombo->addString(mbgname);
+
+						if ((g_cameragmodel != nullptr) && (g_cameragmodel == curmodelelem.modelptr)) {
+							findselected = modelindex;
+						}
+					}
+					else {
+						s_cameragmodelCombo->addString("invalid name");
+					}
+				}
+
+				if (findselected >= 0) {
+					s_cameragmodelCombo->setSelectedCombo(findselected + 1);
+				}
+			}
+
+
+			//s_sidemenu_sellock->setSize(WindowSize((int)(s_sidemenuwidth * 0.25f), (int)s_sidemenuheight));
+			//s_sidemenu_targetdisp->setSize(WindowSize((int)(s_sidemenuwidth * 0.25f), (int)s_sidemenuheight));
+			//s_sidemenu_camdistSlider->setSize(WindowSize((int)(s_sidemenuwidth * 0.5f), (int)s_sidemenuheight));
+
+			//s_sidemenuWnd->addParts(*s_sidemenusp1);
+			//s_sidemenusp1->addParts1(*s_sidemenusp2);
+			//s_sidemenusp1->addParts2(*s_sidemenu_camdistSlider);
+			//s_sidemenusp2->addParts1(*s_sidemenu_sellock);
+			//s_sidemenusp2->addParts2(*s_sidemenu_targetdisp);
+			//s_sidemenusp2->addParts2(*s_sidemenu_moveeyepos);//２段目 targetdispの下
+
+			s_sidemenuWnd->addParts(*s_sidemenusp1);
+			s_sidemenusp1->addParts1(*s_sidemenusp2);
+			s_sidemenusp1->addParts2(*s_sidemenusp3);
+			s_sidemenusp2->addParts1(*s_sidemenu_sellockOnce);
+			s_sidemenusp2->addParts2(*s_sidemenu_sellock);
+			s_sidemenusp3->addParts1(*s_sidemenu_moveeyepos);
+			s_sidemenusp3->addParts2(*s_sidemenu_targetdisp);
+			s_sidemenuWnd->addParts(*s_sidemenu_camdistSlider);//２段目の全幅をスライダーに割り当て
+
+			s_sidemenuWnd->addParts(*s_cameraheightsp);
+			s_cameraheightsp->addParts1(*s_cameraheightChk);
+			s_cameraheightsp->addParts2(*s_cameraheightSlider);
+			s_sidemenuWnd->addParts(*s_cameragmodelsp);
+			s_cameragmodelsp->addParts1(*s_cameragmodelLabel);
+			s_cameragmodelsp->addParts2(*s_cameragmodelCombo);
+
+
+			s_sidemenuWnd->setCloseListener([]() {
+				if (GetCurrentModel()) {
+					s_ScloseFlag = true;
+				}
+				});
+
+			if (s_sidemenu_sellock) {
+				s_sidemenu_sellock->setButtonListener([]() {
+					OnCameraTargetAlways();
+					});
+			}
+			if (s_sidemenu_sellockOnce) {
+				s_sidemenu_sellockOnce->setButtonListener([]() {
+					OnCameraTargetOnce();
+					});
+			}
+			if (s_sidemenu_targetdisp) {
+				s_sidemenu_targetdisp->setButtonListener([]() {
+					OnCameraTargetManipulator();
+					});
+			}
+			if (s_sidemenu_moveeyepos) {
+				s_sidemenu_moveeyepos->setButtonListener([]() {
+					bool value = s_sidemenu_moveeyepos->getValue();
+					if (value) {
+						s_moveeyepos = true;
+					}
+					else {
+						s_moveeyepos = false;
+					}
+					});
+			}
+
+			if (s_sidemenu_camdistSlider) {
+				s_sidemenu_camdistSlider->setCursorListener([]() {
+					s_camdistsliderval = (float)s_sidemenu_camdistSlider->getValue();
+					s_camdistsliderflag = true;
+					});
+			}
+
+
+			s_cameraheightChk->setButtonListener([]() {
+				bool value = s_cameraheightChk->getValue();
 				if (value) {
-					s_moveeyepos = true;
+					g_cameraheightflag = 1;
 				}
 				else {
-					s_moveeyepos = false;
+					g_cameraheightflag = 0;
 				}
-			});
-		}
+				});
+			s_cameraheightSlider->setCursorListener([]() {
+				double value = s_cameraheightSlider->getValue();
+				g_cameraheight = (float)value;
+				});
+			s_cameragmodelCombo->setButtonListener([]() {
+				int comboid = s_cameragmodelCombo->trackPopUpMenu();
+				if ((comboid >= 1) && (g_chascene != nullptr)) {
+					MODELELEM gmodelelem = g_chascene->GetModelElem(comboid - 1);
+					if (gmodelelem.modelptr) {
+						g_cameragmodel = gmodelelem.modelptr;
+						//if (s_sidemenuWnd) {
+						//	s_sidemenuWnd->callRewrite();
+						//}
+					}
+				}
+				});
 
-		if (s_sidemenu_camdistSlider) {
-			s_sidemenu_camdistSlider->setCursorListener([]() {
-				s_camdistsliderval = (float)s_sidemenu_camdistSlider->getValue();
-				s_camdistsliderflag = true;
-			});
-		}
+			int windowposx;
+			if (g_4kresolution) {
+				windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
+			}
+			else {
+				windowposx = s_timelinewidth + s_mainwidth;
+			}
+			s_sidemenuWnd->setSize(WindowSize(s_sidemenuwidth, s_sidemenuheight));
+			s_sidemenuWnd->setPos(WindowPos(windowposx, 0));
+
+			//450, 32
+			s_rcsidemenuwnd.top = 0;
+			s_rcsidemenuwnd.left = 0;
+			//s_rcsidemenuwnd.bottom = s_sidemenuheight;
+			//s_rcsidemenuwnd.right = s_sidemenuwidth;
+			s_rcsidemenuwnd.bottom = s_sideheight;
+			s_rcsidemenuwnd.right = s_sidewidth;
+
+			//１クリック目問題対応
+			s_sidemenuWnd->refreshPosAndSize();//2022/09/20
 
 
-		int windowposx;
-		if (g_4kresolution) {
-			//windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
-			windowposx = s_timelinewidth + s_mainwidth + s_modelwindowwidth;
+			s_sidemenuWnd->callRewrite();						//再描画
+
 		}
 		else {
-			//windowposx = s_timelinewidth + s_mainwidth;
-			windowposx = s_timelinewidth + s_mainwidth;
+			_ASSERT(0);
+			return 1;
 		}
+	//}
+	//else {
 
-		s_sidemenuWnd->setPos(WindowPos(windowposx, 0));
-
-		//450, 32
-		s_rcsidemenuwnd.top = 0;
-		s_rcsidemenuwnd.left = 0;
-		s_rcsidemenuwnd.bottom = s_sidemenuheight;
-		s_rcsidemenuwnd.right = s_sidemenuwidth;
-
-		//１クリック目問題対応
-		s_sidemenuWnd->refreshPosAndSize();//2022/09/20
-
-
-		s_sidemenuWnd->callRewrite();						//再描画
-
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
-
+	//}
 	
 
 	return 0;
@@ -30816,13 +30992,14 @@ int CreatePlaceFolderWnd()
 	else {
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
+	int windowposy = TOPSLIDERSWNDH + SIDESLIDERWNDH;
 
 
 	s_placefolderWnd = new OrgWindow(
 		0,
 		_T("PlaceFolderWindow"),		//ウィンドウクラス名
 		GetModuleHandle(NULL),	//インスタンスハンドル
-		WindowPos(windowposx, s_sidemenuheight),
+		WindowPos(windowposx, windowposy),
 		WindowSize(s_sidewidth, s_sideheight),		//サイズ
 		_T("PlaceFolderWindow"),	//タイトル
 		g_mainhwnd,	//親ウィンドウハンドル
@@ -31097,7 +31274,7 @@ int CreatePlaceFolderWnd()
 
 
 		s_placefolderWnd->setSize(WindowSize(s_sidewidth, s_sideheight));
-		s_placefolderWnd->setPos(WindowPos(windowposx, s_sidemenuheight));
+		s_placefolderWnd->setPos(WindowPos(windowposx, windowposy));
 
 		//１クリック目問題対応
 		s_placefolderWnd->refreshPosAndSize();//2022/09/20
@@ -33515,12 +33692,14 @@ int DispCustomRigDlg(int rigno)
 	else {
 		windowposx = s_timelinewidth + s_mainwidth;
 	}
+	int windowposy = TOPSLIDERSWNDH + SIDESLIDERWNDH;
+
 
 	SetWindowPos(
 		s_customrigdlg,
 		HWND_TOP,
 		windowposx,
-		s_sidemenuheight,
+		windowposy,
 		s_sidewidth,
 		s_sideheight,
 		SWP_SHOWWINDOW
@@ -36191,6 +36370,7 @@ CInfoWindow* CreateInfoWnd()
 	//s_rcinfownd.right = s_infowinwidth;
 	//s_rcinfownd.left = 400;
 	s_rcinfownd.top = s_mainheight + TOPSLIDERSWNDH;
+	//s_rcinfownd.top = s_mainheight + TOPSLIDERSWNDH + SIDESLIDERWNDH;
 	s_rcinfownd.bottom = s_rcinfownd.top + s_infowinheight + 2 * cyframe;
 	s_rcinfownd.right = s_infowinwidth;
 	s_rcinfownd.left = 400;
@@ -36218,16 +36398,18 @@ CInfoWindow* CreateInfoWnd()
 
 		if (g_4kresolution) {
 			ret = newinfownd->CreateInfoWindow(g_mainhwnd,
-				//s_timelinewidth + s_modelwindowwidth, s_mainheight + 3 * cyframe + TOPSLIDERSWNDH,
+				////s_timelinewidth + s_modelwindowwidth, s_mainheight + 3 * cyframe + TOPSLIDERSWNDH,
 				s_timelinewidth + s_modelwindowwidth, s_mainheight + TOPSLIDERSWNDH,
+				//s_timelinewidth + s_modelwindowwidth, s_mainheight + TOPSLIDERSWNDH + SIDESLIDERWNDH,
 				s_infowinwidth, s_infowinheight + 2 * cyframe);
 
 			s_rcinfownd.left = s_timelinewidth;
 		}
 		else {
 			ret = newinfownd->CreateInfoWindow(g_mainhwnd,
-				//s_timelinewidth, s_mainheight + 3 * cyframe + TOPSLIDERSWNDH,
+				////s_timelinewidth, s_mainheight + 3 * cyframe + TOPSLIDERSWNDH,
 				s_timelinewidth, s_mainheight + TOPSLIDERSWNDH,
+				//s_timelinewidth, s_mainheight + TOPSLIDERSWNDH + SIDESLIDERWNDH,
 				s_infowinwidth, s_infowinheight + 2 * cyframe);
 
 			s_rcinfownd.left = s_timelinewidth;
@@ -37386,7 +37568,9 @@ void ShowLimitEulerWnd(bool srcflag)
 void ShowThresholdWnd(bool srcflag)
 {
 	s_thresholddlg.SetVisible(srcflag);
-
+	if (srcflag) {
+		s_thresholddlg.ListenMouse(true);
+	}
 	s_spretargetsw[SPRETARGETSW_THRESHOLD].state = srcflag;
 }
 
@@ -37400,6 +37584,10 @@ void ShowFootRigWnd(bool srcflag)
 void ShowMOAWnd(bool srcflag)
 {
 	s_motchangedlg.SetVisible(srcflag);
+	//if (srcflag) {
+	//	s_motchangedlg.ListenMouse(true);
+	//}
+
 
 	if (srcflag) {
 		int windowposx;
@@ -37409,9 +37597,12 @@ void ShowMOAWnd(bool srcflag)
 		else {
 			windowposx = s_timelinewidth + s_mainwidth;
 		}
+		int windowposy = TOPSLIDERSWNDH + SIDESLIDERWNDH;
+
+
 		s_motchangedlg.SetWindowPos(HWND_TOP,
 			windowposx,
-			s_sidemenuheight,
+			windowposy,
 			s_sidewidth,
 			s_sideheight,
 			SWP_SHOWWINDOW
@@ -37425,6 +37616,9 @@ void ShowMOAWnd(bool srcflag)
 void ShowGUIDlgDispParams(bool srcflag)
 {
 	s_displimitsdlg.SetVisible(srcflag);
+	if (srcflag) {
+		s_displimitsdlg.ListenMouse(true);
+	}
 
 	s_spguisw[SPGUISW_DISP_AND_LIMITS].state = srcflag;
 }
@@ -37433,12 +37627,18 @@ void ShowGUIDlgBullet(bool srcflag)
 {
 
 	s_bulletdlg.SetVisible(srcflag);
+	if (srcflag) {
+		s_bulletdlg.ListenMouse(true);
+	}
 
 	s_spguisw[SPGUISW_BULLETPHYSICS].state = srcflag;
 }
 void ShowGUIDlgLOD(bool srcflag)
 {
 	s_projloddlg.SetVisible(srcflag);
+	if (srcflag) {
+		s_projloddlg.ListenMouse(true);
+	}
 
 	s_spguisw[SPGUISW_PROJ_AND_LOD].state = srcflag;
 }
@@ -37452,6 +37652,8 @@ void ShowGUIDlgBlendShape(bool srcflag)
 			s_blendshapedlg.SetModel(GetCurrentModel());
 			s_blendshapedlg.SetVisible(srcflag);
 		}
+		s_blendshapedlg.ListenMouse(true);
+
 
 		refreshEulerGraph();
 
@@ -37505,6 +37707,9 @@ void ShowGUIDlgBlendShape(bool srcflag)
 void ShowLightsWnd(bool srcflag)
 {
 	s_lightsdlg.SetVisible(srcflag);
+	if (srcflag) {
+		s_lightsdlg.ListenMouse(true);
+	}
 
 	s_spdispsw[SPDISPSW_LIGHTS].state = srcflag;
 }
@@ -37512,6 +37717,9 @@ void ShowLightsWnd(bool srcflag)
 void ShowLaterTransparentWnd(bool srcflag)
 {
 	s_latertransparentdlg.SetVisible(srcflag);
+	if (srcflag) {
+		s_latertransparentdlg.ListenMouse(true);
+	}
 
 	s_spdispsw[SPDISPSW_LATERTRANSPARENT].state = srcflag;
 }
@@ -37520,6 +37728,9 @@ void ShowLaterTransparentWnd(bool srcflag)
 void ShowDispGroupWnd(bool srcflag)
 {
 	s_dispgroupdlg.SetVisible(srcflag);
+	if (srcflag) {
+		s_dispgroupdlg.ListenMouse(true);
+	}
 
 	s_spdispsw[SPDISPSW_DISPGROUP].state = srcflag;
 }
@@ -37535,6 +37746,9 @@ void ShowRigidWnd(bool srcflag)
 
 			s_rigidparamsdlg.SetModel(GetCurrentModel(), s_curboneno, s_reindexmap, s_rgdindexmap);
 			s_rigidparamsdlg.SetVisible(srcflag);
+			if (srcflag) {
+				s_rigidparamsdlg.ListenMouse(true);
+			}
 
 			s_sprigidsw[SPRIGIDSW_RIGIDPARAMS].state = srcflag;
 		}
@@ -37549,6 +37763,9 @@ void ShowShaderTypeWnd(bool srcflag)
 	ShowShaderTypeParamsDlg(false);
 
 	s_shadertypedlg.SetVisible(srcflag);
+	if (srcflag) {
+		s_shadertypedlg.ListenMouse(true);
+	}
 
 	s_spdispsw[SPDISPSW_SHADERTYPE].state = srcflag;
 
@@ -37567,6 +37784,9 @@ void ShowShaderTypeWnd(bool srcflag)
 void ShowShadowParamsWnd(bool srcflag)
 {
 	s_shadowdlg.SetVisible(srcflag);
+	if (srcflag) {
+		s_shadowdlg.ListenMouse(true);
+	}
 
 	s_spdispsw[SPDISPSW_SHADOWPARAMS].state = srcflag;
 }
@@ -44339,6 +44559,10 @@ int ShowShaderTypeParamsDlg(bool srcflag)
 
 			s_shaderparamsdlg.SetVisible(srcflag);
 		}
+		if (srcflag) {
+			s_shaderparamsdlg.ListenMouse(true);
+		}
+
 	}
 	else {
 		////s_st_paramsWnd->setListenMouse(false);
@@ -44372,6 +44596,9 @@ void ShowSkyWnd(bool srcflag)
 			//m_skyst_paramsWnd->setVisible(false);
 			s_skyparamsdlg.SetVisible(false);
 		}
+		if (srcflag) {
+			s_skyparamsdlg.ListenMouse(true);
+		}
 	}
 	else {
 		////m_skyst_paramsWnd->setListenMouse(false);
@@ -44385,6 +44612,9 @@ void ShowSkyWnd(bool srcflag)
 void ShowFogWnd(bool srcflag)
 {
 	s_fogdlg.SetVisible(srcflag);
+	if (srcflag) {
+		s_fogdlg.ListenMouse(true);
+	}
 
 	s_speffectsw[SPEFFECTSW_FOG].state = srcflag;
 }
@@ -44392,7 +44622,9 @@ void ShowFogWnd(bool srcflag)
 void ShowDofWnd(bool srcflag)
 {
 	s_dofdlg.SetVisible(srcflag);
-
+	if (srcflag) {
+		s_dofdlg.ListenMouse(true);
+	}
 	s_speffectsw[SPEFFECTSW_DOF].state = srcflag;
 }
 

@@ -402,6 +402,8 @@ int CProjLodDlg::CreateProjLodWnd()
 	}
 
 	if (m_dlgWnd) {
+		m_dlgWnd->setListenMouse(true);
+
 		double ratesllabel = 0.3;
 		double rate50 = 0.5;
 
