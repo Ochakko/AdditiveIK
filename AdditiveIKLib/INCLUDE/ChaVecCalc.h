@@ -967,6 +967,7 @@ double ChaVector3LengthDbl(ChaVector3* psrc);
 double ChaVector3LengthDbl_2D(ChaVector3* psrc);
 double ChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
 
+void ChaVector2Normalize(ChaVector2* pdst, const ChaVector2* psrc);
 
 //float ChaVector3LengthDbl(ChaVector3* psrc);
 void ChaVector3Normalize(ChaVector3* pdst, const ChaVector3* psrc);
@@ -1063,6 +1064,8 @@ extern int CalcTangentAndBinormal(int srcuvnum, BINORMALDISPV* vert_0, BINORMALD
 extern double ChaVector3LengthDbl(ChaVector3* psrc);
 extern double ChaVector3LengthDbl_2D(ChaVector3* psrc);
 extern double ChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
+
+extern void ChaVector2Normalize(ChaVector2* pdst, const ChaVector2* psrc);
 
 //extern float ChaVector3LengthDbl(ChaVector3* psrc);
 extern void ChaVector3Normalize(ChaVector3* pdst, const ChaVector3* psrc);

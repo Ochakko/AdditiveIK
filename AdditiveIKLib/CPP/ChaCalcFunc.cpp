@@ -5935,6 +5935,34 @@ double ChaCalcFunc::ccfChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector
 //
 //}
 
+void ChaCalcFunc::ccfChaVector2Normalize(ChaVector2* pdst, const ChaVector2* psrc) {
+	if (!pdst || !psrc) {
+		return;
+	}
+
+	ChaVector2 src = *psrc;
+	double mag = (double)src.x * (double)src.x + (double)src.y * (double)src.y;
+	if (mag != 0.0) {
+		double divval = ::sqrt(mag);
+		if (divval != 0.0) {
+			double tmpx = src.x / divval;
+			double tmpy = src.y / divval;
+			pdst->x = (float)tmpx;
+			pdst->y = (float)tmpy;
+		}
+		else {
+			pdst->x = src.x;
+			pdst->y = src.y;
+		}
+	}
+	else {
+		//*pdst.SetParams(0.0f, 0.0f);
+		pdst->x = src.x;
+		pdst->y = src.y;
+	}
+}
+
+
 void ChaCalcFunc::ccfChaVector3Normalize(ChaVector3* pdst, const ChaVector3* psrc) {
 	if (!pdst || !psrc) {
 		return;

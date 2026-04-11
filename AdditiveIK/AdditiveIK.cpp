@@ -1290,6 +1290,8 @@ static OWP_CheckBoxA* s_sidemenu_sellock = 0;
 static OWP_Button* s_sidemenu_sellockOnce = 0;
 static OWP_CheckBoxA* s_sidemenu_targetdisp = 0;
 static OWP_CheckBoxA* s_sidemenu_moveeyepos = 0;
+static OrgWinGUI::OWP_Separator* s_camdistsp = 0;
+static OrgWinGUI::OWP_Label* s_camdistLabel = 0;
 static OWP_Slider* s_sidemenu_camdistSlider = 0;
 static bool s_camdistsliderflag = false;
 static float s_camdistsliderval = g_camdist;
@@ -1992,7 +1994,7 @@ static CBone* GetEditTargetOpeBone(int* pmotid, int* pframeleng);
 static void CalcTotalBound();
 static int SetCameraModel();
 static void SetCamera3DFromEyePos();
-static int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider, bool secondcall = false);
+static int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider);
 static void SetCameraPostureToModel();
 
 //--------------------------------------------------------------------------------------
@@ -5023,6 +5025,8 @@ void InitApp()
 	s_sidemenu_sellockOnce = 0;
 	s_sidemenu_targetdisp = 0;
 	s_sidemenu_moveeyepos = 0;
+	s_camdistsp = 0;
+	s_camdistLabel = 0;
 	s_sidemenu_camdistSlider = 0;
 	s_camdistsliderflag = false;
 	s_camdistsliderval = g_camdist;
@@ -15711,7 +15715,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.63\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.64\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -26103,6 +26107,13 @@ int OnFramePreviewCamera(double srcnextframe)
 				&g_camEye, &g_camtargetpos, &g_cameraupdir, 0, g_cameraInheritMode);//g_camdist
 			s_cameraframe = nextcameraframe;
 
+			ChaVector3 cameradiff = g_camtargetpos - g_camEye;
+			if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
+				g_camdist = (float)ChaVector3LengthDbl_2D(&cameradiff);
+			}
+			else {
+				g_camdist = (float)ChaVector3LengthDbl(&cameradiff);
+			}
 		}
 		else {
 			//######################################
@@ -26122,13 +26133,6 @@ int OnFramePreviewCamera(double srcnextframe)
 		//GUIによるカメラ操作可能に
 		//######################################
 		//#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-	}
-	ChaVector3 cameradiff = g_camtargetpos - g_camEye;
-	if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
-		g_camdist = (float)ChaVector3LengthDbl_2D(&cameradiff);
-	}
-	else {
-		g_camdist = (float)ChaVector3LengthDbl(&cameradiff);
 	}
 
 
@@ -30659,6 +30663,14 @@ void DestroySideMenuSliderWnd()
 		delete s_sidemenu_moveeyepos;
 		s_sidemenu_moveeyepos = 0;
 	}
+	if (s_camdistsp) {
+		delete s_camdistsp;
+		s_camdistsp = 0;
+	}
+	if (s_camdistLabel) {
+		delete s_camdistLabel;
+		s_camdistLabel = 0;
+	}
 	if (s_sidemenu_camdistSlider) {
 		delete s_sidemenu_camdistSlider;
 		s_sidemenu_camdistSlider = 0;
@@ -30776,6 +30788,22 @@ int CreateSideMenuWnd()
 				_ASSERT(0);
 				return 1;
 			}
+
+
+			double rate1 = 0.180;
+			double rate50 = 0.50;
+			int labelheight = 20;
+
+			s_camdistsp = new OWP_Separator(s_sidemenuWnd, true, rate1, true);
+			if (!s_camdistsp) {
+				_ASSERT(0);
+				abort();
+			}
+			s_camdistLabel = new OWP_Label(L"CamDist", labelheight);
+			if (!s_camdistLabel) {
+				_ASSERT(0);
+				abort();
+			}
 			g_camdist = (float)fmin(g_camdist, s_maxcamdist);
 			g_camdist = (float)fmax(g_camdist, 1.0);
 			//s_sidemenu_camdistSlider = new OWP_Slider(g_camdist, 1000.0, 1.0);
@@ -30786,15 +30814,12 @@ int CreateSideMenuWnd()
 			}
 
 
-			double rate1 = 0.350;
-			double rate50 = 0.50;
-			int labelheight = 20;
 			s_cameraheightsp = new OWP_Separator(s_sidemenuWnd, true, rate1, true);
 			if (!s_cameraheightsp) {
 				_ASSERT(0);
 				abort();
 			}
-			s_cameraheightChk = new OWP_CheckBoxA(L"cameraheight", (g_cameraheightflag != 0), labelheight, false);
+			s_cameraheightChk = new OWP_CheckBoxA(L"CamHeight", (g_cameraheightflag != 0), labelheight, false);
 			if (!s_cameraheightChk) {
 				_ASSERT(0);
 				abort();
@@ -30809,7 +30834,7 @@ int CreateSideMenuWnd()
 				_ASSERT(0);
 				abort();
 			}
-			s_cameragmodelLabel = new OWP_Label(L"Camera G Model", 25);
+			s_cameragmodelLabel = new OWP_Label(L"CamGround", labelheight);
 			if (!s_cameragmodelLabel) {
 				_ASSERT(0);
 				abort();
@@ -30868,7 +30893,10 @@ int CreateSideMenuWnd()
 			s_sidemenusp2->addParts2(*s_sidemenu_sellock);
 			s_sidemenusp3->addParts1(*s_sidemenu_moveeyepos);
 			s_sidemenusp3->addParts2(*s_sidemenu_targetdisp);
-			s_sidemenuWnd->addParts(*s_sidemenu_camdistSlider);//２段目の全幅をスライダーに割り当て
+
+			s_sidemenuWnd->addParts(*s_camdistsp);
+			s_camdistsp->addParts1(*s_camdistLabel);
+			s_camdistsp->addParts2(*s_sidemenu_camdistSlider);
 
 			s_sidemenuWnd->addParts(*s_cameraheightsp);
 			s_cameraheightsp->addParts1(*s_cameraheightChk);
@@ -36806,7 +36834,7 @@ int OnMouseMoveFunc()
 					OutputToInfoWnd(INFOCOLOR_WARNING, L"### Click red frog and change graph mode! ###");
 				}
 				else if (g_edittarget == EDITTARGET_BONE) {
-					if (ChkEnableIK() && (g_previewFlag == 0)) {
+					if ((std::fabs(deltax) >= 1e-2) && ChkEnableIK() && (g_previewFlag == 0)) {
 						s_editmotionflag = IKOperateJointAxisDelta(s_pickinfo.buttonflag, deltax);
 					}
 				}
@@ -36826,7 +36854,9 @@ int OnMouseMoveFunc()
 						s_cameraeditkind = CAMERAANIMEDIT_ROT;
 						break;
 					}
-					OnCameraAnimMouseMove(s_cameraeditkind, s_pickinfo.buttonflag, deltax);
+					if (std::fabs(deltax) >= 1e-2) {
+						OnCameraAnimMouseMove(s_cameraeditkind, s_pickinfo.buttonflag, deltax);
+					}
 				}
 				s_befdeltax = deltax;
 
@@ -44723,21 +44753,21 @@ int UpdateCameraPosAndTarget()
 	//#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
 	//#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
 
-	ChaVector3 diffv;
-	diffv = g_camEye - g_camtargetpos;
-	if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
-		g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
-	}
-	else {
-		g_camdist = (float)ChaVector3LengthDbl(&diffv);
-	}
-	if (g_camdist >= 1e-4) {
-		//return 0;//2024/07/29 後にも処理がある　return文をコメントアウト
-	}
-	else {
-		_ASSERT(0);
-		return 1;
-	}
+	//ChaVector3 diffv;
+	//diffv = g_camEye - g_camtargetpos;
+	//if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
+	//	g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
+	//}
+	//else {
+	//	g_camdist = (float)ChaVector3LengthDbl(&diffv);
+	//}
+	//if (g_camdist >= 1e-4) {
+	//	//return 0;//2024/07/29 後にも処理がある　return文をコメントアウト
+	//}
+	//else {
+	//	_ASSERT(0);
+	//	return 1;
+	//}
 
 	SetCamera3DFromEyePos();
 
@@ -44894,7 +44924,7 @@ void InitRootSignature(RootSignature& rs)
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP);
 }
 
-int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider, bool secondcall)
+int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider)
 {
 	float savecamdist = g_camdist;
 
@@ -44911,28 +44941,49 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider,
 		//OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
 
 		if (g_camdist >= 1.0f) {
+			ChaVector3 newcampos;// = g_camtargetpos + camvec * g_camdist;
+
 			ChaVector3 camvec = g_camEye - g_camtargetpos;
+			ChaVector3Normalize(&camvec, &camvec);
+
+			ChaVector2 camvecXZ;
+			camvecXZ.x = g_camEye.x - g_camtargetpos.x;
+			camvecXZ.y = g_camEye.z - g_camtargetpos.z;
+			ChaVector2Normalize(&camvecXZ, &camvecXZ);
 
 			if (moveeyeposflag == true) {//2024/02/26
-				ChaVector3 newcampos;// = g_camtargetpos + camvec * g_camdist;
+
+				if (!s_camtargetOnceflag && s_camtargetflag) {
+					float tempcamposx = g_camtargetpos.x + camvecXZ.x * g_camdist;
+					float tempcamposy = g_camEye.y;
+					float tempcamposz = g_camtargetpos.z + camvecXZ.y * g_camdist;
+
+					//2025/10/04 カメラ酔い防止策　カメラの位置は徐々に変える
+					newcampos.x = g_camEye.x + (tempcamposx - g_camEye.x) * 0.0030f;
+					newcampos.y = g_camEye.y + (tempcamposy - g_camEye.y) * 0.0030f;// *0.010f;
+					newcampos.z = g_camEye.z + (tempcamposz - g_camEye.z) * 0.0030f;
+				}
+				else {
+					newcampos = g_camtargetpos + camvec * g_camdist;
+				}
+
 				if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && moveeyeposflag) {
 					camvec.y = 0.0f;
-					ChaVector3Normalize(&camvec, &camvec);
-
-					newcampos.x = g_camtargetpos.x + camvec.x * g_camdist;
-					newcampos.y = g_camEye.y;
-					newcampos.z = g_camtargetpos.z + camvec.z * g_camdist;
-
-					ChaVector3 startglobal = newcampos + ChaVector3(0.0f, 800.0, 0.0f);
-					ChaVector3 endglobal = newcampos - ChaVector3(0.0f, 800.0, 0.0f);
+					
+					ChaVector3 startglobal = newcampos + ChaVector3(0.0f, (g_cameraheight + 1.0f), 0.0f);
+					ChaVector3 endglobal = newcampos - ChaVector3(0.0f, (g_cameraheight + 1.0f), 0.0f);
 
 					ChaVector3 gpos = newcampos;
 					int hitflag = g_cameragmodel->CollisionPolyMesh3_Ray(
 						false,
 						startglobal, endglobal, &gpos, true);
 					if (hitflag != 0) {
-						newcampos = gpos;
-						newcampos.y += g_cameraheight;
+						//newcampos = gpos;
+						//newcampos.y += g_cameraheight;
+
+						newcampos.x = gpos.x;
+						newcampos.y = g_camEye.y + (gpos.y + g_cameraheight - g_camEye.y) * 0.0030f;//徐々に変化するように
+						newcampos.z = gpos.z;
 					}
 				}
 				else {
@@ -44940,38 +44991,15 @@ int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider,
 					newcampos = g_camtargetpos + camvec * g_camdist;
 				}
 
-				if (!secondcall && !s_camtargetOnceflag && s_camtargetflag) {
-					//2025/10/04 カメラ酔い防止策　カメラの位置は徐々に変える
-					float newcamX = g_camEye.x + (newcampos.x - g_camEye.x) * 0.10f;
-					float newcamY;
-					if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && moveeyeposflag) {
-						newcamY = g_camEye.y + (newcampos.y - g_camEye.y) * 0.010f;
-					}
-					else {
-						newcamY = g_camEye.y + (g_camtargetpos.y - g_camEye.y) * 0.50f;// *0.010f;
-					}
-					float newcamZ = g_camEye.z + (newcampos.z - g_camEye.z) * 0.10f;
-					newcampos.x = newcamX;
-					newcampos.y = newcamY;
-					newcampos.z = newcamZ;
+				//ChaVector3 diffvec = newcampos - g_camtargetpos;
+				//g_camdist = (float)ChaVector3LengthDbl_2D(&diffvec);
 
-					g_camEye = newcampos;
-
-					//distを保つために　eyeposを変えてから　呼び直す
-					bool secondcallflag = true;
-					return ChangeCameraDist(g_camdist, moveeyeposflag, calledbyslider, secondcallflag);
-				}
-				else {
-					//Onceフラグがオンの場合には　一回で所定位置に
-					//newcampos = newcampos;
-				}
 
 				g_befcamEye = g_camEye;
 				//g_camEye = g_camtargetpos + camvec * g_camdist;
 				g_camEye = newcampos;
 			}
 			else {
-				ChaVector3Normalize(&camvec, &camvec);
 				g_befcamtargetpos = g_camtargetpos;
 				g_camtargetpos = g_camEye - camvec * g_camdist;
 			}
@@ -48026,6 +48054,8 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 			//CameraDist操作専用の関数作成
 			s_editcameraflag = s_cameramodel->CameraDistDelta(&s_editrange, deltax, s_camtargetflag);
 			g_camdist += deltax;
+			g_camdist = std::fmax(1.0f, g_camdist);
+			g_camdist = std::fmin(s_maxcamdist, g_camdist);
 
 			//OutputToInfoWnd(INFOCOLOR_INFO, L"deltax %f, g_camdist %f", deltax, g_camdist);
 			doneflag = true;

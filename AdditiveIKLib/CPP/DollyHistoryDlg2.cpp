@@ -1273,7 +1273,7 @@ int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
 
 	ChaVector3 diffv;
 	diffv = g_camEye - g_camtargetpos;
-	g_camdist = (float)ChaVector3LengthDbl(&diffv);
+	//g_camdist = (float)ChaVector3LengthDbl(&diffv);
 	if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr)) {//&& s_moveeyepos) {
 		g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
 	}

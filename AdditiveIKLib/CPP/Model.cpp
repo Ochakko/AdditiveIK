@@ -17007,6 +17007,7 @@ int CModel::CameraDistDelta(CEditRange* erptr, float delta, bool lock2joint) {
 		double deltacamdist = (double)delta * changerate;
 
 		float newcamdist = fmin(maxcamdist, (float)(savecamdist + deltacamdist));
+		newcamdist = fmax(1.0f, newcamdist);
 		deltacamdist = newcamdist - savecamdist;
 
 		ChaVector3 tmpcamEye, tmpcamtarget, tmpcamupdir;

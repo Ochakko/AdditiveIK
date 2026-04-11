@@ -157,6 +157,7 @@ public:
 	double ccfChaVector3LengthDbl_2D(ChaVector3* psrc);
 	double ccfChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
 	//float ccfChaVector3LengthDbl(ChaVector3* psrc);
+	void ccfChaVector2Normalize(ChaVector2* pdst, const ChaVector2* psrc);
 	void ccfChaVector3Normalize(ChaVector3* pdst, const ChaVector3* psrc);
 	float ccfChaVector3Dot(const ChaVector3* psrc1, const ChaVector3* psrc2);
 	void ccfChaVector3Cross(ChaVector3* pdst, const ChaVector3* psrc1, const ChaVector3* psrc2);
