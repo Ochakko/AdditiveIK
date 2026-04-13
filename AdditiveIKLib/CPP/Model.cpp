@@ -1979,6 +1979,7 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 			if ((count5 % OBJBOUNDING_BLOCKNUM) == 0) {
 				if (count5 != 0) {
 					m_bound_per5.push_back(mb5);
+					mb5.Init();
 				}
 				//mb5.Init();
 				//if (addmb5.IsValid()) {
@@ -4536,12 +4537,18 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 		CMQOObject* curobj = itr->second;
 		if (curobj && !curobj->IsND()) {
-
 			//2025/09/23
 			if ((mb5num >= 1) && ((count5 % OBJBOUNDING_BLOCKNUM) == 0)) {
 				MODELBOUND mb5 = m_bound_per5[count5 / OBJBOUNDING_BLOCKNUM];
 
-				int sphcollision = curobj->CollisionLocal_Ray_BB_Sph(mb5, startlocal, dirlocal, rayleng);
+				int sphcollision;
+				if (curobj->GetDispFlag()) {
+					sphcollision = curobj->CollisionLocal_Ray_BB_Sph(mb5, startlocal, dirlocal, rayleng);
+				}
+				else {
+					//非表示オブジェクトの場合は　衝突しない
+					sphcollision = 0;
+				}
 				if (sphcollision == 0) {
 				//int collision = curobj->CollisionLocal_Ray_BB(mb5, startlocal, dirlocal, rayleng);
 				//if (collision == 0) {
@@ -4570,7 +4577,7 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 			bool onlychkinview = true;
 
 			//2026/01/25
-			if (calc_outofview || curobj->GetInView(0)) {//2025/12/28 視野内だけ計算
+			if ((calc_outofview || curobj->GetInView(0)) && curobj->GetDispFlag()) {//2025/12/28 視野内だけ計算
 				if (!gpuflag) {//### CPU ###
 					colli = curobj->CollisionLocal_Ray_Pm3(startlocal, dirlocal, rayleng, excludeinvface, &hitfaceindex, &tmphitpos);
 
