@@ -1,6 +1,14 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/04/18
+　当たり判定修正 その２
+　　バウンダリーブロック処理の修正
+　　
+　ModelWorldMatコマンドの修正
+　　ピックモード優先順位修正　PickBoneよりも優先的に.
+　　ピックしたモデルとカレントモデルが同じ場合には動かさないように.
+　　
 2026/04/14
 　当たり判定修正
 

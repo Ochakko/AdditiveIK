@@ -1915,16 +1915,18 @@ int CModel::RenderTest(bool withalpha, ChaScene* srcchascene, int lightflag, Cha
 
 int CModel::GetModelBound( MODELBOUND* dstb )
 {
-	MODELBOUND mb;
-	MODELBOUND addmb;
+
+	MODELBOUND mb;//モデル全体のバウンダリー
+	MODELBOUND addmb;//ループごとのカレントメッシュのバウンダリー(初回以外)
+	MODELBOUND mb5;//ループOBJBOUNDING_BLOCKNUM回ごとの メッシュOBJBOUNDING_BLOCKNUM個分のバウンダリー
+	MODELBOUND addmb5;//ループごとの追加バウンダリー
 	mb.Init();
 	addmb.Init();
-
-	m_bound_per5.clear();
-	MODELBOUND mb5;
-	MODELBOUND addmb5;
 	mb5.Init();
 	addmb5.Init();
+
+	m_bound_per5.clear();//メッシュ OBJBOUNDING_BLOCKNUM個分のバウンダリーのVector
+
 
 	int count5 = 0;
 	int calcflag = 0;
@@ -1975,42 +1977,33 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 				calcflag++;
 			}
 
-			//mqoobject５個単位のバウンダリーを作成
-			if ((count5 % OBJBOUNDING_BLOCKNUM) == 0) {
-				if (count5 != 0) {
-					m_bound_per5.push_back(mb5);
-					mb5.Init();
-				}
-				//mb5.Init();
-				//if (addmb5.IsValid()) {
-					//AddModelBound(&mb5, &addmb);
-					mb5 = addmb5;
-				//}
+			//mqoobject OBJBOUNDING_BLOCKNUM個単位の バウンダリーを作成
+			if (mb5.IsValid()) {
+				AddModelBound(&mb5, &addmb5);
 			}
 			else {
-				if (addmb.IsValid()) {
-					AddModelBound(&mb5, &addmb5);
-				}
+				mb5.Init();
+				mb5 = addmb5;
+			}
+			if ((count5 % OBJBOUNDING_BLOCKNUM) == 0) {
+				//count5 == 0でmb5を登録　それ以降はOBJBOUNDING_BLOCKNUM個のメッシュごとにmb5を登録
+				m_bound_per5.push_back(mb5);
 			}
 			count5++;
 		}
 	}
-	//if (((count5 - 1) == 0) || (((count5 - 1) % 5) != 0)) {
+	//ループトータル回数がOBJBOUNDING_BLOCKNUMの倍数ではない場合　最後のmb5を OBJBOUNDING_BLOCKNUM個分バウンダリーのVectorに追加
+	if (((count5 - 1) == 0) || (((count5 - 1) % OBJBOUNDING_BLOCKNUM) != 0)) {
 		m_bound_per5.push_back(mb5);
-	//}
-
-
-	if (GetTopBone() && (calcflag == 0)) {//メッシュが無いときだけボーンのバウンダリを使用
-		if (calcflag == 0) {
-			mb = CalcBoneBound();
-		}
-		else {
-			addmb = CalcBoneBound();
-			AddModelBound(&mb, &addmb);
-		}
-		calcflag++;
 	}
 
+	//メッシュが無いときだけボーンのバウンダリを使用
+	if (GetTopBone() && (calcflag == 0)) {
+		mb = CalcBoneBound();//視野内判定用
+
+		//メッシュ用のバウンダリーはemptyにする
+		m_bound_per5.clear();
+	}
 
 	*dstb = mb;
 	m_bound = mb;
@@ -4557,10 +4550,14 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 					for (skipcount = 0; skipcount < OBJBOUNDING_BLOCKNUM; skipcount++) {
 						if (itr != m_object.end()) {
 							itr++;
-							count5++;
+							CMQOObject* curobj2 = itr->second;
+							if (curobj2 && !curobj2->IsND()) {
+								count5++;
+							}
 						}
 						else {
-							count5++;
+							//count5++;
+							break;
 						}
 					}
 					continue;

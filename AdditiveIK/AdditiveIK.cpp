@@ -8539,6 +8539,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			//s_curboneno = -1;//Sprite Menuより後で。Rigid作成に選択済s_curbonenoが必要。
 
+
+			//PickAndPut時にはPickBoneなどはしない　PickAndPut時にPickBoneすると　PickAndPut処理が動かなくなる
 			if (GetCurrentModel()) {
 				int spakind = 0;
 				//int pickrigflag = 0;
@@ -8592,6 +8594,22 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					}
 					
 				}
+
+
+				//2024/02/04 カメラ操作などのためのpickよりも後で
+				//2026/04/18 PickBoneよりは前で処理
+				if ((pickflag == false) && s_dispmodelworldmat && s_pickmodelworldmat) {
+					pickflag = PickAndPut();
+				}
+				else {
+					if ((pickflag == false) && s_spdispsw[SPDISPSW_DISPGROUP].state) {
+						pickflag = PickAndSelectMeshOfDispGroupDlg();
+					}
+					if ((pickflag == false) && s_spdispsw[SPDISPSW_SHADERTYPE].state) {
+						pickflag = PickAndSelectMaterialOfShaderTypeDlg();
+					}
+				}
+
 
 				if ((pickflag == false) && (s_oprigflag == 0)) {
 					if (g_shiftkey == false) {
@@ -8688,19 +8706,6 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 						g_fpsforce30 = true;
 
 						pickflag = true;
-					}
-				}
-
-				//2024/02/04 カメラ操作などのためのpickよりも後で
-				if ((pickflag == false) && s_dispmodelworldmat && s_pickmodelworldmat) {
-					pickflag = PickAndPut();
-				}
-				else {
-					if ((pickflag == false) && s_spdispsw[SPDISPSW_DISPGROUP].state) {
-						pickflag = PickAndSelectMeshOfDispGroupDlg();
-					}
-					if ((pickflag == false) && s_spdispsw[SPDISPSW_SHADERTYPE].state) {
-						pickflag = PickAndSelectMaterialOfShaderTypeDlg();
 					}
 				}
 			}
@@ -43219,8 +43224,14 @@ bool PickAndPut()
 		return false;
 	}
 
+	if (s_pickmodel == GetCurrentModel()) {
+		//移動対象モデルと　ピックしたモデルが同じ場合には　動かさない
+		return true;//モードが変わらないように　pickflagはtrueにセットする
+	}
+
 	if (s_dispmodelworldmat && s_pickmodelworldmat) {
-		if (s_pickmodel && s_pickmqoobj) {// &&
+		if (s_pickmodel && s_pickmqoobj && GetCurrentModel()) {			
+			// &&
 			//((s_pickmodel != s_befselectmodel) || (s_pickmqoobj != s_befselectmqoobj))) {
 
 			s_befselectmodel = s_pickmodel;
