@@ -2,7 +2,7 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2026/04/18
-　当たり判定修正 その２
+　当たり判定修正 その３
 　　バウンダリーブロック処理の修正
 　　
 　ModelWorldMatコマンドの修正
