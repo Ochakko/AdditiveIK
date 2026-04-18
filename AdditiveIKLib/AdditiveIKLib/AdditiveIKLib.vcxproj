@@ -185,6 +185,7 @@
     <ClCompile Include="..\CPP\BVHFile.cpp" />
     <ClCompile Include="..\CPP\CameraFbx.cpp" />
     <ClCompile Include="..\CPP\ChaCalcFunc.cpp" />
+    <ClCompile Include="..\CPP\ChaCamera.cpp" />
     <ClCompile Include="..\CPP\ChaFile.cpp" />
     <ClCompile Include="..\CPP\ChaScene.cpp" />
     <ClCompile Include="..\CPP\ChaVecCalc.cpp" />
@@ -611,6 +612,7 @@
     <ClInclude Include="..\INCLUDE\BVHFile.h" />
     <ClInclude Include="..\INCLUDE\CameraFbx.h" />
     <ClInclude Include="..\INCLUDE\ChaCalcFunc.h" />
+    <ClInclude Include="..\INCLUDE\ChaCamera.h" />
     <ClInclude Include="..\INCLUDE\ChaFile.h" />
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
     <ClInclude Include="..\INCLUDE\ChaVecCalc.h" />

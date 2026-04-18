@@ -12,6 +12,7 @@
 
 #include <GlobalVar.h>
 
+#include <ChaCamera.h>
 #include <mqomaterial.h>
 
 #include <TexBank.h>
@@ -45,7 +46,7 @@ static int s_alloccount = 0;
 extern ChaVector4 g_lightdirforshader[LIGHTNUMMAX];
 extern ChaVector4 g_lightdiffuseforshader[LIGHTNUMMAX];
 extern IShaderResource* g_shadowmapforshader;
-
+extern ChaCamera g_chacamera;
 
 
 CMQOMaterial::CMQOMaterial() : 
@@ -3513,7 +3514,7 @@ void CMQOMaterial::SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBuff
 	//ChaVector3 camtarget.SetParams(g_camera3D->GetTarget());
 	//m_cbLights.directionalLight[0].direction.SetParams((camtarget - cameye), 0.0f);//この向きで合っている
 	//pcbLights->eyePos.SetParams(ChaVector3(g_camera3D->GetPosition()), 0.0f);
-	pcbLights->eyePos.SetParams(g_camEye, 1.0f);
+	pcbLights->eyePos.SetParams(g_chacamera.GetCamEye(), 1.0f);
 	pcbLights->specPow.SetParams(5.0f, 5.0f, 5.0f, 0.0f);
 	pcbLights->toonlightdir = g_lightdirforall[toonlightindex];//2024/02/15
 

@@ -17,6 +17,7 @@
 #include <Model.h>
 #include <MQOObject.h>
 #include <MQOMaterial.h>
+#include <ChaCamera.h>
 
 #include "..\\BTMANAGER\\BPWorld.h"
 #include <ImpFile.h>
@@ -49,7 +50,7 @@ using namespace std;
 extern HWND g_mainhwnd;//アプリケーションウインドウハンドル AdditiveIK.cpp
 extern float g_tmpmqomult;
 extern WCHAR g_tmpmqopath[MULTIPATH];
-
+extern ChaCamera g_chacamera;
 
 CChaFile::CChaFile()
 {
@@ -161,9 +162,9 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CallF(Write2File("  <RigidMarkDisp>%d</RigidMarkDisp>\r\n", g_rigidmarkflag), return 1);
 	CallF(Write2File("  <SelectModel>%d</SelectModel>\r\n", g_curmodelmenuindex), return 1);
 
-	CallF(Write2File("  <ProjFov>%.3f</ProjFov>\r\n", g_fovy * 180.0f / (float)PI), return 1);
-	CallF(Write2File("  <ProjNear>%.3f</ProjNear>\r\n", g_projnear), return 1);
-	CallF(Write2File("  <ProjFar>%.3f</ProjFar>\r\n", g_projfar), return 1);
+	CallF(Write2File("  <ProjFov>%.3f</ProjFov>\r\n", g_chacamera.GetFovY() * 180.0f / (float)PI), return 1);
+	CallF(Write2File("  <ProjNear>%.3f</ProjNear>\r\n", g_chacamera.GetProjNear()), return 1);
+	CallF(Write2File("  <ProjFar>%.3f</ProjFar>\r\n", g_chacamera.GetProjFar()), return 1);
 
 	CallF(Write2File("  <PickDistRate>%.2f</PickDistRate>\r\n", g_pickdistrate), return 1);
 	CallF(Write2File("  <EditRate>%.3f</EditRate>\r\n", g_physicsmvrate), return 1);
@@ -183,7 +184,7 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 		srccameraonload->upvec.x,
 		srccameraonload->upvec.y,
 		srccameraonload->upvec.z), return 1);
-	CallF(Write2File("  <CameraDist>%.3f</CameraDist>\r\n", g_camdist), return 1);
+	CallF(Write2File("  <CameraDist>%.3f</CameraDist>\r\n", g_chacamera.GetCamDist()), return 1);
 
 	CallF(Write2File("  <AKScale>%.3f</AKScale>\r\n", g_akscale), return 1);
 	CallF(Write2File("  <BtVScaleOnLimitEul>%.3f</BtVScaleOnLimitEul>\r\n", g_physicalVeloScale), return 1);
@@ -814,7 +815,7 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	}
 
 	bool getfov = false;
-	float tempfovy = 45.0f * (float)PI / 180.0f;
+	float tempfovy = 45.0f;
 	result = Read_Float(&m_xmliobuf, "<ProjFov>", "</ProjFov>", &tempfovy);
 	if (result == 0) {
 		//g_fovy = tempfovy * (float)PI / 180.0f;
@@ -894,7 +895,7 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 		getcameraupvec = true;//ReadCharaより後でセット
 	}
 	bool getcameradist = false;
-	float tempcameradist = (float)g_camdist;
+	float tempcameradist = (float)g_chacamera.GetCamDist();
 	result = Read_Float(&m_xmliobuf, "<CameraDist>", "</CameraDist>", &tempcameradist);
 	if (result == 0) {
 		getcameradist = true;//ReadCharaより後でセット
@@ -975,13 +976,13 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 
 	//ReadCharaより後でセット
 	if (getfov) {
-		g_fovy = tempfovy * (float)PI / 180.0f;
+		g_chacamera.SetFovY(tempfovy * (float)(PI / 180.0));
 	}
 	if (getnear) {
-		g_projnear = tempnear;
+		g_chacamera.SetProjNear(tempnear);
 	}
 	if (getfar) {
-		g_projfar = tempfar;
+		g_chacamera.SetProjFar(tempfar);
 	}
 	if (getpickdist) {
 		g_pickdistrate = (double)temppickdist;
@@ -1014,7 +1015,7 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	}
 
 	if (getcameradist) {
-		g_camdist = tempcameradist;
+		g_chacamera.SetCamDist(tempcameradist);
 	}
 
 

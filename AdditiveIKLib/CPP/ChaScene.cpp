@@ -60,7 +60,7 @@
 
 #include <DispObj.h>
 #include <MySprite.h>
-
+#include <ChaCamera.h>
 #include <MotionPoint.h>
 //#include <quaternion.h>
 //#include <ChaVecCalc.h>//TheadingCalcEul.hでChaCalcFunc.hからChaVecCalc.hはインクルート
@@ -117,6 +117,7 @@ using namespace std;
 
 //extern
 //extern TResourceBank<CMQOMaterial> g_materialbank;
+extern ChaCamera g_chacamera;
 
 
 ChaScene::ChaScene()
@@ -486,7 +487,7 @@ bool ChaScene::PickPolyMesh(int pickkind,
 				ChaVector3 curhitpos;
 				curhitpos.SetParams(0.0f, 0.0f, 0.0f);
 
-				if (pickobj.GetPickOpeFlag(g_projfar, g_pickdistrate) && curmodel && curobj) {
+				if (pickobj.GetPickOpeFlag(g_chacamera.GetProjFar(), g_pickdistrate) && curmodel && curobj) {
 					UIPICKINFO pickinfo = *tmppickinfo;
 					int hitfaceindex = -1;
 					int colli = 0;

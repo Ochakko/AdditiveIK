@@ -9,6 +9,7 @@
 #include <OrgWindow.h>
 #include <GlobalVar.h>
 
+#include <ChaCamera.h>
 
 #define DBGH
 #include <dbg.h>
@@ -21,6 +22,7 @@ using namespace OrgWinGUI;
 
 extern HWND g_mainhwnd;//アプリケーションウインドウハンドル
 extern CModel* g_cameragmodel;
+extern ChaCamera g_chacamera;
 
 
 CDollyHistoryOWPElem::CDollyHistoryOWPElem()
@@ -1016,14 +1018,14 @@ int CDollyHistoryDlg2::SetDollyElem2Camera(DOLLYELEM2 srcelem, bool pasteflag)
 
 		EditParamsToDlg();
 
-		ChaVector3 savepos = g_camEye;
-		ChaVector3 savetarget = g_camtargetpos;
-		ChaVector3 saveupvec = g_cameraupdir;
-		float savedist = g_camdist;
+		ChaVector3 savepos = g_chacamera.GetCamEye();
+		ChaVector3 savetarget = g_chacamera.GetCamTargetPos();
+		ChaVector3 saveupvec = g_chacamera.GetCamUpDir();
+		float savedist = g_chacamera.GetCamDist();
 
-		g_camEye = srcelem.elem1.camerapos;
-		g_camtargetpos = srcelem.elem1.cameratarget;
-		g_cameraupdir = srcelem.upvec;
+		g_chacamera.SetCamEye(srcelem.elem1.camerapos);
+		g_chacamera.SetCamTargetPos(srcelem.elem1.cameratarget);
+		g_chacamera.SetCamUpDir(srcelem.upvec);
 
 		int result;
 		if (m_UpdateFunc != nullptr) {
@@ -1039,10 +1041,10 @@ int CDollyHistoryDlg2::SetDollyElem2Camera(DOLLYELEM2 srcelem, bool pasteflag)
 			}
 			else {
 				//エラーのため　巻き戻し
-				g_camEye = savepos;
-				g_camtargetpos = savetarget;
-				g_cameraupdir = saveupvec;
-				g_camdist = savedist;
+				g_chacamera.SetCamEye(savepos);
+				g_chacamera.SetCamTargetPos(savetarget);
+				g_chacamera.SetCamUpDir(saveupvec);
+				g_chacamera.SetCamDist(savedist);
 
 				::MessageBox(g_mainhwnd, L"パラメータ不正のため適用できませんでした。", L"入力エラー", MB_OK);
 				return 1;
@@ -1175,9 +1177,10 @@ DOLLYELEM2 CDollyHistoryDlg2::GetCheckedElem()
 
 int CDollyHistoryDlg2::OnGetDolly()
 {
-	m_camerapos = g_camEye;
-	m_targetpos = g_camtargetpos;
-	m_upvec = g_cameraupdir;
+	m_camerapos = g_chacamera.GetCamEye();
+	m_targetpos = g_chacamera.GetCamTargetPos();
+	m_upvec = g_chacamera.GetCamUpDir();
+
 	ZeroMemory(m_comment, sizeof(WCHAR) * HISTORYCOMMENTLEN);
 
 	EditParamsToDlg();
@@ -1189,19 +1192,23 @@ int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
 	WCHAR strpos[256] = { 0L };
 	float posvalue = 0.0f;
 
-	ChaVector3 savecameye = g_camEye;
-	ChaVector3 savetarget = g_camtargetpos;
-	ChaVector3 saveupvec = g_cameraupdir;
-	float savedist = g_camdist;
+	ChaVector3 savepos = g_chacamera.GetCamEye();
+	ChaVector3 savetarget = g_chacamera.GetCamTargetPos();
+	ChaVector3 saveupvec = g_chacamera.GetCamUpDir();
+	float savedist = g_chacamera.GetCamDist();
 
-	g_befcamtargetpos = g_camtargetpos;
+	g_chacamera.SetBefCamTargetPos(savetarget);
+
+	ChaVector3 newcameye = savepos;
+	ChaVector3 newcamtarget = savetarget;
 
 	if (m_posxEdit) {
 		ZeroMemory(strpos, sizeof(WCHAR) * 256);
 		m_posxEdit->getName(strpos, 256);
 		posvalue = (float)_wtof(strpos);
 		if ((posvalue >= -FLT_MAX) && (posvalue <= FLT_MAX)) {
-			g_camEye.x = posvalue;
+			newcameye.x = posvalue;
+			g_chacamera.SetCamEye(newcameye);
 		}
 	}
 	if (m_posyEdit) {
@@ -1209,7 +1216,8 @@ int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
 		m_posyEdit->getName(strpos, 256);
 		posvalue = (float)_wtof(strpos);
 		if ((posvalue >= -FLT_MAX) && (posvalue <= FLT_MAX)) {
-			g_camEye.y = posvalue;
+			newcameye.y = posvalue;
+			g_chacamera.SetCamEye(newcameye);
 		}
 	}
 	if (m_poszEdit) {
@@ -1217,7 +1225,8 @@ int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
 		m_poszEdit->getName(strpos, 256);
 		posvalue = (float)_wtof(strpos);
 		if ((posvalue >= -FLT_MAX) && (posvalue <= FLT_MAX)) {
-			g_camEye.z = posvalue;
+			newcameye.z = posvalue;
+			g_chacamera.SetCamEye(newcameye);
 		}
 	}
 
@@ -1227,7 +1236,8 @@ int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
 		m_tarxEdit->getName(strpos, 256);
 		posvalue = (float)_wtof(strpos);
 		if ((posvalue >= -FLT_MAX) && (posvalue <= FLT_MAX)) {
-			g_camtargetpos.x = posvalue;
+			newcamtarget.x = posvalue;
+			g_chacamera.SetCamTargetPos(newcamtarget);
 		}
 	}
 	if (m_taryEdit) {
@@ -1235,7 +1245,8 @@ int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
 		m_taryEdit->getName(strpos, 256);
 		posvalue = (float)_wtof(strpos);
 		if ((posvalue >= -FLT_MAX) && (posvalue <= FLT_MAX)) {
-			g_camtargetpos.y = posvalue;
+			newcamtarget.y = posvalue;
+			g_chacamera.SetCamTargetPos(newcamtarget);
 		}
 	}
 	if (m_tarzEdit) {
@@ -1243,7 +1254,8 @@ int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
 		m_tarzEdit->getName(strpos, 256);
 		posvalue = (float)_wtof(strpos);
 		if ((posvalue >= -FLT_MAX) && (posvalue <= FLT_MAX)) {
-			g_camtargetpos.z = posvalue;
+			newcamtarget.z = posvalue;
+			g_chacamera.SetCamTargetPos(newcamtarget);
 		}
 	}
 
@@ -1260,7 +1272,7 @@ int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
 		}
 	}
 
-	g_cameraupdir = m_upvec;
+	g_chacamera.SetCamUpDir(m_upvec);
 	//#########################################################################
 	//m_upvecはエディットボックス編集しない
 	//LoadDollyHistory_ver2()で読み込まれる
@@ -1268,29 +1280,20 @@ int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
 	//#########################################################################
 
 
-	m_camerapos = g_camEye;
-	m_targetpos = g_camtargetpos;
+	m_camerapos = g_chacamera.GetCamEye();
+	m_targetpos = g_chacamera.GetCamTargetPos();
 
-	ChaVector3 diffv;
-	diffv = g_camEye - g_camtargetpos;
-	//g_camdist = (float)ChaVector3LengthDbl(&diffv);
-	if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr)) {//&& s_moveeyepos) {
-		g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
-	}
-	else {
-		g_camdist = (float)ChaVector3LengthDbl(&diffv);
-	}
+	g_chacamera.UpdateCameraDist();
 
-
-	if (g_camdist <= 1e-4) {
+	if (g_chacamera.GetCamDist() <= 1e-4) {
 		//#########
 		//rollback
 		//#########
 
-		g_camEye = savecameye;
-		g_camtargetpos = savetarget;
-		g_cameraupdir = saveupvec;
-		g_camdist = savedist;
+		g_chacamera.SetCamEye(savepos);
+		g_chacamera.SetCamTargetPos(savetarget);
+		g_chacamera.SetCamUpDir(saveupvec);
+		g_chacamera.SetCamDist(savedist);
 	}
 	else {
 		//####################
@@ -1311,10 +1314,10 @@ int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
 			}
 			else {
 				//エラーのため　巻き戻し
-				g_camEye = savecameye;
-				g_camtargetpos = savetarget;
-				g_cameraupdir = saveupvec;
-				g_camdist = savedist;
+				g_chacamera.SetCamEye(savepos);
+				g_chacamera.SetCamTargetPos(savetarget);
+				g_chacamera.SetCamUpDir(saveupvec);
+				g_chacamera.SetCamDist(savedist);
 
 				::MessageBox(g_mainhwnd, L"パラメータ不正のため適用できませんでした。", L"入力エラー", MB_OK);
 				return 1;

@@ -345,6 +345,9 @@
     <ClCompile Include="..\CPP\ThreadingUpdateBlendShape.cpp">
       <Filter>Threading</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\ChaCamera.cpp">
+      <Filter>ChaCamera</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1609,6 +1612,9 @@
     <ClInclude Include="..\INCLUDE\ThreadingUpdateBlendShape.h">
       <Filter>Threading</Filter>
     </ClInclude>
+    <ClInclude Include="..\INCLUDE\ChaCamera.h">
+      <Filter>ChaCamera</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\BTSRC\BulletInverseDynamics\premake4.lua">
@@ -1698,6 +1704,9 @@
     </Filter>
     <Filter Include="MotionAccelerator">
       <UniqueIdentifier>{65bf669e-782f-4ac1-b5e3-51628de31044}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ChaCamera">
+      <UniqueIdentifier>{ee2237de-9daf-4e0f-bb8d-543a78685605}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

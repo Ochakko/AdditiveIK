@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "RenderingEngine.h"
 
+#include <ChaCamera.h>
 #include <mqoobject.h>
 #include <DispObj.h>
 #include <GlobalVar.h>
@@ -13,7 +14,7 @@
 
 extern bool g_4kresolution;//AdditiveIk.cpp
 extern IShaderResource* g_shadowmapforshader;
-
+extern ChaCamera g_chacamera;
 
 namespace myRenderer
 {
@@ -475,7 +476,7 @@ namespace myRenderer
         for (renderindex = 0; renderindex < rendernum; renderindex++) {
             RENDEROBJ currenderobj = srcchascene->GetForwardRenderObj(renderindex);
 
-            if (currenderobj.GetPickOpeFlag(g_projfar, g_pickdistrate) && currenderobj.pmodel && currenderobj.mqoobj) {
+            if (currenderobj.GetPickOpeFlag(g_chacamera.GetProjFar(), g_pickdistrate) && currenderobj.pmodel && currenderobj.mqoobj) {
                 if (currenderobj.mqoobj->GetDispObj()) {
                     if (currenderobj.mqoobj->GetPm3()) {
                         

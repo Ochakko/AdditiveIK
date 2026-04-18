@@ -52,6 +52,7 @@
 #include <Collision.h>
 #include <EngName.h>
 
+#include <ChaCamera.h>
 #include <RigidElem.h>
 #include <ChaScene.h>
 #include <CSChkInView.h>
@@ -133,7 +134,7 @@ extern int g_bef_dsaxisMOverTh[MB3D_DSAXISNUM];
 extern int g_dspushedOK;
 extern int g_dspushedL3;
 extern int g_dspushedR3;
-
+extern ChaCamera g_chacamera;
 
 static bool s_workingChkinView = false;
 
@@ -442,8 +443,8 @@ extern int g_applyendflag;
 extern int g_bonemarkflag;
 extern float g_physicsmvrate;
 
-extern ChaVector3 g_camEye;
-extern ChaVector3 g_camtargetpos;
+extern ChaVector3 g_chacamera.GetCamEye();
+extern ChaVector3 g_chacamera.GetCamTargetPos();
 
 //extern bool g_wmatDirectSetFlag;
 */
@@ -1998,7 +1999,7 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 		}
 	}
 	//ループトータル回数がOBJBOUNDING_BLOCKNUMの倍数ではない場合　最後のmb5を OBJBOUNDING_BLOCKNUM個分バウンダリーのVectorに追加
-	if (((count5 - 1) == 0) || (((count5 - 1) % OBJBOUNDING_BLOCKNUM) != 0)) {
+	if ((totalcount != 0) && ((count5 - 1) % OBJBOUNDING_BLOCKNUM) != 0) {
 		m_bound_per5.push_back(mb5);
 	}
 
@@ -4433,7 +4434,7 @@ int CModel::CollisionPolyMesh_Mouse(UIPICKINFO* pickinfo, CMQOObject* pickobj,
 	ChaVector3 startlocal, dirlocal;
 	CalcMouseLocalRay(pickinfo, &startlocal, &dirlocal, &rayleng);
 
-	rayleng = g_projfar * g_pickdistrate;
+	rayleng = g_chacamera.GetProjFar() * g_pickdistrate;
 
 	bool excludeinvface = true;
 	int colli = 0;
@@ -4712,7 +4713,7 @@ int CModel::CalcMouseLocalRay( UIPICKINFO* pickinfo, ChaVector3* startptr, ChaVe
 	*dirptr = dirlocal;
 
 	//*rayleng = leng;
-	*rayleng = g_projfar * g_pickdistrate;//2025/10/19
+	*rayleng = g_chacamera.GetProjFar() * g_pickdistrate;//2025/10/19
 
 	return 0;
 }
@@ -8872,9 +8873,9 @@ int CModel::RenderBoneMark(bool limitdegflag, InstancedSprite* bcircleptr,
 					ChaVector3 firstpos = boneptr->GetJointFPos();
 
 					ChaVector3TransformCoord(&wpos, &firstpos, &bcmat);
-					ChaVector3 cam2mark = wpos - g_camEye;
+					ChaVector3 cam2mark = wpos - g_chacamera.GetCamEye();
 					ChaVector3Normalize(&cam2mark, &cam2mark);
-					ChaVector3 camdir = g_camtargetpos - g_camEye;
+					ChaVector3 camdir = g_chacamera.GetCamTargetPos() - g_chacamera.GetCamEye();
 					ChaVector3Normalize(&camdir, &camdir);
 					double dot1 = ChaVector3Dot(&cam2mark, &camdir);
 					if (dot1 < 0.0f) {
@@ -9161,9 +9162,9 @@ void CModel::RenderBoneCircleReq(RenderContext* pRenderContext, CBtObject* srcbt
 				ChaVector3 wpos, scpos;
 				ChaVector3TransformCoord(&wpos, &firstpos, &btmat);
 
-				ChaVector3 cam2mark = wpos - g_camEye;
+				ChaVector3 cam2mark = wpos - g_chacamera.GetCamEye();
 				ChaVector3Normalize(&cam2mark, &cam2mark);
-				ChaVector3 camdir = g_camtargetpos - g_camEye;
+				ChaVector3 camdir = g_chacamera.GetCamTargetPos() - g_chacamera.GetCamEye();
 				ChaVector3Normalize(&camdir, &camdir);
 				double dot1 = ChaVector3Dot(&cam2mark, &camdir);
 				if (dot1 < 0.0f) {
@@ -12942,10 +12943,15 @@ int CModel::CalcAxisAndRotForIKRotate(int limitdegflag,
 	ChaMatrix invmodelwm;
 	invmodelwm = ChaMatrixInv(GetWorldMat());
 	ChaVector3 modelcamtarget, modelcameye;
-	ChaVector3TransformCoord(&modelcamtarget, &g_camtargetpos, &invmodelwm);
-	ChaVector3TransformCoord(&modelcameye, &g_camEye, &invmodelwm);
+	ChaVector3 cameye = g_chacamera.GetCamEye();
+	ChaVector3 camtargetpos = g_chacamera.GetCamTargetPos();
+	ChaVector3TransformCoord(&modelcamtarget, &camtargetpos, &invmodelwm);
+	ChaVector3TransformCoord(&modelcameye, &cameye, &invmodelwm);
+	g_chacamera.SetCamTargetPos(camtargetpos);
+	g_chacamera.SetCamEye(cameye);
 
-	//ChaVector3 ikaxis = g_camtargetpos - g_camEye;
+
+	//ChaVector3 ikaxis = g_chacamera.GetCamTargetPos() - g_chacamera.GetCamEye();
 	ChaVector3 ikaxis = modelcamtarget - modelcameye;
 	ChaVector3Normalize(&ikaxis, &ikaxis);
 
@@ -13015,7 +13021,7 @@ int CModel::CalcAxisAndRotForIKRotateVert(int limitdegflag,
 	}
 	int curmotid = GetCurrentMotID();
 
-	ChaVector3 ikaxis = g_camtargetpos - g_camEye;
+	ChaVector3 ikaxis = g_chacamera.GetCamTargetPos() - g_chacamera.GetCamEye();
 	ChaVector3Normalize(&ikaxis, &ikaxis);
 
 	ChaVector3 parworld, chilworld;
@@ -13887,7 +13893,7 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 //	}
 //
 //
-//	ChaVector3 ikaxis = g_camtargetpos - g_camEye;
+//	ChaVector3 ikaxis = g_chacamera.GetCamTargetPos() - g_chacamera.GetCamEye();
 //	ChaVector3Normalize(&ikaxis, &ikaxis);
 //
 //	int keynum;
@@ -14896,7 +14902,7 @@ int CModel::IKRotate(bool limitdegflag, int wallscrapingikflag, CEditRange* erpt
 //	}
 //
 //
-//	ChaVector3 ikaxis = g_camtargetpos - g_camEye;
+//	ChaVector3 ikaxis = g_chacamera.GetCamTargetPos() - g_chacamera.GetCamEye();
 //	ChaVector3Normalize(&ikaxis, &ikaxis);
 //
 //	int keynum;
@@ -16844,10 +16850,10 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 			////ChaMatrix befrot, aftrot;
 			////befrot.SetIdentity();
 			////aftrot.SetIdentity();
-			//////befrot.SetTranslation(-g_camtargetpos);
-			//////aftrot.SetTranslation(g_camtargetpos);
-			////befrot.SetTranslation(-g_camEye);
-			////aftrot.SetTranslation(g_camEye);
+			//////befrot.SetTranslation(-g_chacamera.GetCamTargetPos());
+			//////aftrot.SetTranslation(g_chacamera.GetCamTargetPos());
+			////befrot.SetTranslation(-g_chacamera.GetCamEye());
+			////aftrot.SetTranslation(g_chacamera.GetCamEye());
 			//ChaMatrix rotmat = qForRot.MakeRotMatX();
 			////ChaMatrix addrot = befrot * rotmat * aftrot;//2024/07/31 回転中心をセットする方法から　回転してから元のtranslationを復元する方法に変更
 
@@ -16913,10 +16919,10 @@ int CModel::CameraAnimDiffRotMatView(CEditRange* erptr, ChaMatrix befmatView, Ch
 		//ChaMatrix befrot, aftrot;
 		//befrot.SetIdentity();
 		//aftrot.SetIdentity();
-		////befrot.SetTranslation(-g_camtargetpos);
-		////aftrot.SetTranslation(g_camtargetpos);
-		//befrot.SetTranslation(-g_camEye);
-		//aftrot.SetTranslation(g_camEye);
+		////befrot.SetTranslation(-g_chacamera.GetCamTargetPos());
+		////aftrot.SetTranslation(g_chacamera.GetCamTargetPos());
+		//befrot.SetTranslation(-g_chacamera.GetCamEye());
+		//aftrot.SetTranslation(g_chacamera.GetCamEye());
 		ChaMatrix rotmat = rotq0.MakeRotMatX();
 		//ChaMatrix addrot = befrot * rotmat * aftrot;//2024/07/31 回転中心をセットする方法から　回転してから元のtranslationを復元する方法に変更
 
@@ -17007,8 +17013,8 @@ int CModel::CameraDistDelta(CEditRange* erptr, float delta, bool lock2joint) {
 
 
 	float maxcamdist = 20000.0f;
-	float savecamdist = g_camdist;
-	ChaVector3 savetargetpos = g_camtargetpos;
+	float savecamdist = g_chacamera.GetCamDist();
+	ChaVector3 savetargetpos = g_chacamera.GetCamTargetPos();
 
 	double curframe;
 	for (curframe = startframe; curframe <= endframe; curframe+=1.0) {
@@ -17023,8 +17029,8 @@ int CModel::CameraDistDelta(CEditRange* erptr, float delta, bool lock2joint) {
 
 		ChaVector3 tmpcamEye, tmpcamtarget, tmpcamupdir;
 		GetCameraAnimParams(cameramotid, RoundingTime(curframe), newcamdist,
-			&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_cameraInheritMode);//newcamdist
-
+			&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_chacamera.GetCameraInheritMode());//newcamdist
+		
 		if (lock2joint) {
 			tmpcamtarget = savetargetpos;
 		}
@@ -17073,7 +17079,7 @@ int CModel::CameraTwistDelta(CEditRange* erptr, float delta) {
 	double startframe, endframe, applyframe;
 	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
 
-	ChaVector3 savetargetpos = g_camtargetpos;
+	ChaVector3 savetargetpos = g_chacamera.GetCamTargetPos();
 
 	double curframe;
 	for (curframe = startframe; curframe <= endframe; curframe += 1.0) {
@@ -17083,8 +17089,8 @@ int CModel::CameraTwistDelta(CEditRange* erptr, float delta) {
 		double deltatwist = (double)delta * changerate;
 
 		ChaVector3 tmpcamEye, tmpcamtarget, tmpcamupdir;
-		GetCameraAnimParams(cameramotid, RoundingTime(curframe), g_camdist,
-			&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_cameraInheritMode);//g_camdist
+		GetCameraAnimParams(cameramotid, RoundingTime(curframe), g_chacamera.GetCamDist(),
+			&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_chacamera.GetCameraInheritMode());//g_chacamera.GetCamDist()
 
 		ChaVector3 twistaxis;
 		CQuaternion twistq;
@@ -17140,19 +17146,19 @@ int CModel::CameraTwistReset(CEditRange* erptr) {
 	double startframe, endframe, applyframe;
 	erptr->GetRange(&keynum, &startframe, &endframe, &applyframe);
 
-	ChaVector3 savetargetpos = g_camtargetpos;
+	ChaVector3 savetargetpos = g_chacamera.GetCamTargetPos();
 
-	g_cameraupdir.SetParams(0.0f, 1.0f, 0.0f);//!!!!!!!!!!!!!!!
+	g_chacamera.SetCamUpDir(ChaVector3(0.0f, 1.0f, 0.0f));//!!!!!!!!!!!!!!!
 
 	double curframe;
 	for (curframe = startframe; curframe <= endframe; curframe += 1.0) {
 
 		ChaVector3 tmpcamEye, tmpcamtarget, tmpcamupdir;
-		GetCameraAnimParams(cameramotid, RoundingTime(curframe), g_camdist,
-			&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_cameraInheritMode);//g_camdist
+		GetCameraAnimParams(cameramotid, RoundingTime(curframe), g_chacamera.GetCamDist(),
+			&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_chacamera.GetCameraInheritMode());//g_chacamera.GetCamDist()
 
 		ChaMatrix newmatView;
-		newmatView.MakeLookAt(tmpcamEye, tmpcamtarget, g_cameraupdir);//!!!!! g_cameraupdirはループの外で(0,1,0)にセット
+		newmatView.MakeLookAt(tmpcamEye, tmpcamtarget, g_chacamera.GetCamUpDir());//!!!!! g_cameraupdirはループの外で(0,1,0)にセット
 
 		CameraAnimPaste(curframe, newmatView);
 	}
@@ -17200,8 +17206,8 @@ int CModel::CameraAnimPaste(double curframe, ChaMatrix newmatView)
 
 			//変更前のmatviewを求める
 			ChaVector3 tmpcamEye, tmpcamtarget, tmpcamupdir;
-			GetCameraAnimParams(cameramotid, curframe, g_camdist,
-				&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_cameraInheritMode);//g_camdist
+			GetCameraAnimParams(cameramotid, curframe, g_chacamera.GetCamDist(),
+				&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_chacamera.GetCameraInheritMode());//g_chacamera.GetCamDist()
 			ChaMatrix befmatView;
 			befmatView.MakeLookAt(tmpcamEye, tmpcamtarget, tmpcamupdir);
 
@@ -17318,8 +17324,8 @@ int CModel::CameraAnimLock2Joint(CEditRange* erptr, CModel* srclockmodel, int sr
 
 				//変更前のカメラ行列を取得
 				ChaVector3 tmpcamEye, tmpcamtarget, tmpcamupdir;
-				GetCameraAnimParams(cameramotid, curframe, g_camdist,
-					&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_cameraInheritMode);//g_camdist
+				GetCameraAnimParams(cameramotid, curframe, g_chacamera.GetCamDist(),
+					&tmpcamEye, &tmpcamtarget, &tmpcamupdir, 0, g_chacamera.GetCameraInheritMode());//g_chacamera.GetCamDist()
 				ChaMatrix befmatView;
 				befmatView.MakeLookAt(tmpcamEye, tmpcamtarget, tmpcamupdir);
 
@@ -17462,8 +17468,8 @@ int CModel::CameraRotateAxisDelta(
 			ChaMatrix befrot, aftrot;
 			befrot.SetIdentity();
 			aftrot.SetIdentity();
-			befrot.SetTranslation(-g_camtargetpos);
-			aftrot.SetTranslation(g_camtargetpos);
+			befrot.SetTranslation(-g_chacamera.GetCamTargetPos());
+			aftrot.SetTranslation(g_chacamera.GetCamTargetPos());
 			//ChaMatrix rotmat = qForRot.MakeRotMatX();
 			//ChaMatrix addrot = befrot * rotmat * aftrot;
 
@@ -17564,8 +17570,8 @@ int CModel::CameraRotateAxisDelta(
 		ChaMatrix befrot, aftrot;
 		befrot.SetIdentity();
 		aftrot.SetIdentity();
-		befrot.SetTranslation(-g_camtargetpos);
-		aftrot.SetTranslation(g_camtargetpos);
+		befrot.SetTranslation(-g_chacamera.GetCamTargetPos());
+		aftrot.SetTranslation(g_chacamera.GetCamTargetPos());
 		//ChaMatrix rotmat = multrotq.MakeRotMatX();
 		//ChaMatrix addrot = befrot * rotmat * aftrot;
 
@@ -23283,6 +23289,7 @@ int CModel::GetCameraProjParams(int cameramotid, float* pprojnear, float* pprojf
 	*pprojnear = (float)curcn->nearZ;
 	*pprojfar = (float)curcn->farZ;
 	*pfovy = (float)curcn->fovY;
+	//*pfovy = (float)curcn->fovY_Degree;
 	*pcampos = curcn->position;
 	*pcamdir = curcn->dirvec;
 	*pcamupvec = curcn->upvec;
@@ -23510,7 +23517,7 @@ int CModel::ChkInView(int refposindex)
 	Matrix mWorld;		//ワールド行列。
 	float camEye[4];
 	float camDir[4];
-	float params1[4];//[0]:BACKPOSCOEF, [1]:g_fovy, [2]:g_projfar, [3]:g_projnear
+	float params1[4];//[0]:BACKPOSCOEF, [1]:g_chacamera.GetFovY(), [2]:g_chacamera.GetProjFar(), [3]:g_chacamera.GetProjNear()
 	float lodrate2L[4];
 	float lodrate3L[4];
 	float shadowPos[4];
@@ -23526,16 +23533,16 @@ int CModel::ChkInView(int refposindex)
 		CSConstantBufferChkInView cb;
 		cb.Init();
 		cb.mWorld = chkMatWorld.TKMatrix();
-		cb.camEye[0] = g_camEye.x;
-		cb.camEye[1] = g_camEye.y;
-		cb.camEye[2] = g_camEye.z;
+		cb.camEye[0] = g_chacamera.GetCamEye().x;
+		cb.camEye[1] = g_chacamera.GetCamEye().y;
+		cb.camEye[2] = g_chacamera.GetCamEye().z;
 		cb.camEye[3] = 1.0f;
-		ChaVector3 camdir = g_camtargetpos - g_camEye;
+		ChaVector3 camdir = g_chacamera.GetCamTargetPos() - g_chacamera.GetCamEye();
 		ChaVector3Normalize(&camdir, &camdir);
 		cb.params1[0] = CHKINVIEW_BACKPOSCOEF;
-		cb.params1[1] = (float)cos(g_fovy * 0.85f);
-		cb.params1[2] = g_projfar;
-		cb.params1[3] = g_projnear;
+		cb.params1[1] = (float)cos(g_chacamera.GetFovY() * 0.85f);
+		cb.params1[2] = g_chacamera.GetProjFar();
+		cb.params1[3] = g_chacamera.GetProjNear();
 		//cb.lodrate2L[0] = g_lodrate2L[0];
 		//cb.lodrate2L[1] = g_lodrate2L[1];
 		//cb.lodrate2L[2] = 1.0f;
@@ -23554,29 +23561,29 @@ int CModel::ChkInView(int refposindex)
 		//2024/04/25 シェーダーでif文を実行すると重いので　あらかじめ配列に計算結果を入れておく
 		//##########################################################################
 		cb.lodmindist[0][0] = 0.0f;                      //lod無し　mindist
-		cb.lodmaxdist[0][0] = g_projfar;                 //lod無し　maxdist
+		cb.lodmaxdist[0][0] = g_chacamera.GetProjFar();                 //lod無し　maxdist
 			
 		cb.lodmindist[1][0] = 0.0f;                      //num:2levels lod:1 mindist
-		cb.lodmaxdist[1][0] = g_lodrate2L[0] * g_projfar;//num:2levels lod:1 maxdist
-		cb.lodmindist[1][1] = g_lodrate2L[0] * g_projfar;//num:2levels lod:2 mindist
-		cb.lodmaxdist[1][1] = g_lodrate2L[1] * g_projfar;//num:2levels lod:2 maxdist
+		cb.lodmaxdist[1][0] = g_lodrate2L[0] * g_chacamera.GetProjFar();//num:2levels lod:1 maxdist
+		cb.lodmindist[1][1] = g_lodrate2L[0] * g_chacamera.GetProjFar();//num:2levels lod:2 mindist
+		cb.lodmaxdist[1][1] = g_lodrate2L[1] * g_chacamera.GetProjFar();//num:2levels lod:2 maxdist
 
 		cb.lodmindist[2][0] = 0.0f;                      //num:3levels lod1 mindist
-		cb.lodmaxdist[2][0] = g_lodrate3L[0] * g_projfar;//num:3levels lod1 maxdist
-		cb.lodmindist[2][1] = g_lodrate3L[0] * g_projfar;//num:3levels lod:2 mindist
-		cb.lodmaxdist[2][1] = g_lodrate3L[1] * g_projfar;//num:3levels lod:2 maxdist
-		cb.lodmindist[2][2] = g_lodrate3L[1] * g_projfar;//num:3levels lod:3 mindist
-		cb.lodmaxdist[2][2] = g_lodrate3L[2] * g_projfar;//num:3levels lod:3 maxdist
+		cb.lodmaxdist[2][0] = g_lodrate3L[0] * g_chacamera.GetProjFar();//num:3levels lod1 maxdist
+		cb.lodmindist[2][1] = g_lodrate3L[0] * g_chacamera.GetProjFar();//num:3levels lod:2 mindist
+		cb.lodmaxdist[2][1] = g_lodrate3L[1] * g_chacamera.GetProjFar();//num:3levels lod:2 maxdist
+		cb.lodmindist[2][2] = g_lodrate3L[1] * g_chacamera.GetProjFar();//num:3levels lod:3 mindist
+		cb.lodmaxdist[2][2] = g_lodrate3L[2] * g_chacamera.GetProjFar();//num:3levels lod:3 maxdist
 
 		cb.lodmindist[3][0] = 0.0f;                      //num:4levels lod1 mindist
-		cb.lodmaxdist[3][0] = g_lodrate4L[0] * g_projfar;//num:4levels lod1 maxdist
-		cb.lodmaxdist[3][0] = g_lodrate4L[0] * g_projfar;//num:4levels lod1 maxdist
-		cb.lodmindist[3][1] = g_lodrate4L[0] * g_projfar;//num:4levels lod:2 mindist
-		cb.lodmaxdist[3][1] = g_lodrate4L[1] * g_projfar;//num:4levels lod:2 maxdist
-		cb.lodmindist[3][2] = g_lodrate4L[1] * g_projfar;//num:4levels lod:3 mindist
-		cb.lodmaxdist[3][2] = g_lodrate4L[2] * g_projfar;//num:4levels lod:3 maxdist
-		cb.lodmindist[3][3] = g_lodrate4L[2] * g_projfar;//num:4levels lod:3 mindist
-		cb.lodmaxdist[3][3] = g_lodrate4L[3] * g_projfar;//num:4levels lod:3 maxdist
+		cb.lodmaxdist[3][0] = g_lodrate4L[0] * g_chacamera.GetProjFar();//num:4levels lod1 maxdist
+		cb.lodmaxdist[3][0] = g_lodrate4L[0] * g_chacamera.GetProjFar();//num:4levels lod1 maxdist
+		cb.lodmindist[3][1] = g_lodrate4L[0] * g_chacamera.GetProjFar();//num:4levels lod:2 mindist
+		cb.lodmaxdist[3][1] = g_lodrate4L[1] * g_chacamera.GetProjFar();//num:4levels lod:2 maxdist
+		cb.lodmindist[3][2] = g_lodrate4L[1] * g_chacamera.GetProjFar();//num:4levels lod:3 mindist
+		cb.lodmaxdist[3][2] = g_lodrate4L[2] * g_chacamera.GetProjFar();//num:4levels lod:3 maxdist
+		cb.lodmindist[3][3] = g_lodrate4L[2] * g_chacamera.GetProjFar();//num:4levels lod:3 mindist
+		cb.lodmaxdist[3][3] = g_lodrate4L[3] * g_chacamera.GetProjFar();//num:4levels lod:3 maxdist
 
 
 		ChaVector3 lightpos;
@@ -23584,7 +23591,7 @@ int CModel::ChkInView(int refposindex)
 			lightpos.SetParams(g_cameraShadow->GetPosition());
 		}
 		else {
-			lightpos = g_camEye;
+			lightpos = g_chacamera.GetCamEye();
 		}
 		cb.shadowPos[0] = lightpos.x;
 		cb.shadowPos[1] = lightpos.y;
@@ -23620,9 +23627,9 @@ int CModel::ChkInView(int refposindex)
 		if (inviewnum != 0) {
 			SetInView(true, refposindex);//メッシュ１つでも視野内にある場合には　モデルとして視野内のマークをする
 
-			ChaVector3 cam2model = ChaMatrixTraVec(m_matWorld) - g_camEye;
+			ChaVector3 cam2model = ChaMatrixTraVec(m_matWorld) - g_chacamera.GetCamEye();
 			double distcam2model = ChaVector3LengthDbl(&cam2model);
-			double distthreshold = g_projfar * g_blendshapedist;
+			double distthreshold = g_chacamera.GetProjFar() * g_blendshapedist;
 			if (distcam2model <= distthreshold) {
 				SetInMorph(true);
 			}

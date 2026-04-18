@@ -93,7 +93,6 @@ bool g_pasteTranslation = true;
 int g_jumpgravity = 65;
 
 int g_uvset = 0;
-float g_cameraheight = 200.0f;
 float g_bonemark_bright = 1.0f;
 float g_rigidmark_alpha = 0.75f;
 float g_rigmark_alpha = 0.75f;
@@ -223,18 +222,6 @@ bool g_underRetargetFlag = false;
 float g_impscale = 1.0f;
 float g_initmass = 1.0f;
 
-ChaVector3 g_camEye = ChaVector3(0.0f, 0.0f, 0.0f);
-ChaVector3 g_camtargetpos = ChaVector3(0.0f, 0.0f, 0.0f);
-ChaVector3 g_befcamEye = ChaVector3(0.0f, 0.0f, 0.0f);
-ChaVector3 g_befcamtargetpos = ChaVector3(0.0f, 0.0f, 0.0f);
-ChaVector3 g_cameraupdir = ChaVector3(0.0f, 1.0f, 0.0f);
-float g_camdist = 50.0f;
-float g_initcamdist = 50.0f;
-float g_fovy = (float)(PI / 4.0);
-float g_projnear = 0.01f;
-float g_projfar = g_initcamdist * 100.0f;
-
-
 float g_l_kval[3] = { 1.0f, powf(10.0f, 2.61f), 2000.0f };//
 float g_a_kval[3] = { 0.1f, powf(10.0f, 0.3f), 70.0f };
 //float g_a_kval[3] = { 0.0f, 0.5f, 1.0f };//2023/01/18
@@ -262,14 +249,10 @@ int g_defaultFillUpMOA = 4;//短いモーションを考慮して短め
 int g_currentFillUpMOA = 4;//短いモーションを考慮して短め
 int g_endmotionMargin = 1;//0にするとMOAでモーションの終わりを検知出来ないこと有
 bool g_moa_Freeze_for_a_moment = false;//モーション変化時にタメを作る
-int g_cameraanimmode = 0;//0: OFF, 1:ON, 2:ON and RootMotionOption ON
-int g_cameraInheritMode = CAMERA_INHERIT_ALL;
-
 
 int g_applyendflag = 0;
 int g_slerpoffflag = 0;
 int g_absikflag = 0;
-int g_cameraheightflag = 1;
 int g_bonemarkflag = 1;
 int g_rigidmarkflag = 1;
 int g_pseudolocalflag = 1;
@@ -419,7 +402,6 @@ extern bool g_pasteTranslation;
 extern int g_jumpgravity;
 
 extern int g_uvset;
-extern float g_cameraheight;
 extern float g_bonemark_bright;
 extern float g_rigidmark_alpha;
 extern float g_rigmark_alpha;
@@ -531,18 +513,6 @@ extern bool g_underRetargetFlag;
 extern float g_impscale;
 extern float g_initmass;
 
-extern ChaVector3 g_camEye;
-extern ChaVector3 g_camtargetpos;
-extern ChaVector3 g_befcamEye;
-extern ChaVector3 g_befcamtargetpos;
-extern ChaVector3 g_cameraupdir;
-extern float g_camdist;
-extern float g_initcamdist;
-extern float g_fovy;
-extern float g_projnear;
-extern float g_projfar;
-
-
 extern float g_l_kval[3];//
 extern float g_a_kval[3];//
 extern float g_initcuslk;
@@ -567,13 +537,10 @@ extern int g_defaultFillUpMOA;
 extern int g_currentFillUpMOA;
 extern int g_endmotionMargin;
 extern bool g_moa_Freeze_for_a_moment;//モーション変化時にタメを作る
-extern int g_cameraanimmode;//0: OFF, 1:ON, 2:ON and RootMotionOption ON
-extern int g_cameraInheritMode;
 
 extern int g_applyendflag;
 extern int g_slerpoffflag;
 extern int g_absikflag;
-extern int g_cameraheightflag;
 extern int g_bonemarkflag;
 extern int g_rigidmarkflag;
 extern int g_pseudolocalflag;

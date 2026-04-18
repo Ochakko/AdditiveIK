@@ -14,6 +14,7 @@
 #define DBGH
 #include <dbg.h>
 
+#include <ChaCamera.h>
 #include <Model.h>
 #include <MotionPoint.h>
 #include <Bone.h>
@@ -31,6 +32,7 @@ using namespace std;
 
 //extern bool g_underIKRot;
 //extern bool g_edgesmp;
+extern ChaCamera g_chacamera;
 
 CMotFilter::CMotFilter()
 {
@@ -357,7 +359,7 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 					ChaMatrix nodemat;
 					nodemat.SetIdentity();
 					//nodemat.SetTranslation(g_camEye);
-					nodemat.SetTranslation(g_camtargetpos);
+					nodemat.SetTranslation(g_chacamera.GetCamTargetPos());
 
 					//localmat = ChaMatrixInv(nodemat) * localmat;//!!!!!!!!!!
 
@@ -593,7 +595,7 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 
 						ChaMatrix nodemat;
 						nodemat.SetIdentity();
-						nodemat.SetTranslation(g_camtargetpos);
+						nodemat.SetTranslation(g_chacamera.GetCamTargetPos());
 
 						ChaMatrix smat, rmat, tmat, tanimmat;
 						GetSRTandTraAnim(beflocalmat, nodemat, &smat, &rmat, &tmat, &tanimmat);
@@ -622,10 +624,10 @@ int CMotFilter::FilterFunc(bool edgesmp, bool limitdegflag,
 						ChaMatrix befrot, aftrot;
 						befrot.SetIdentity();
 						//befrot.SetTranslation(-g_camEye);
-						befrot.SetTranslation(-g_camtargetpos);
+						befrot.SetTranslation(-g_chacamera.GetCamTargetPos());
 						aftrot.SetIdentity();
 						//aftrot.SetTranslation(g_camEye);
-						aftrot.SetTranslation(g_camtargetpos);
+						aftrot.SetTranslation(g_chacamera.GetCamTargetPos());
 
 						ChaMatrix transmat;
 						transmat = befrot * diffrotmat * aftrot;

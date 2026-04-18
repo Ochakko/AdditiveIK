@@ -3,6 +3,7 @@
 #include <ProjLodDlg.h>
 #include "../../AdditiveIK/SetDlgPos.h"
 
+#include <ChaCamera.h>
 #include <Model.h>
 #include <Bone.h>
 #include <RigidElem.h>
@@ -22,6 +23,7 @@ using namespace OrgWinGUI;
 
 
 extern HWND g_mainhwnd;//アプリケーションウインドウハンドル
+extern ChaCamera g_chacamera;
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -422,7 +424,7 @@ int CProjLodDlg::CreateProjLodWnd()
 			_ASSERT(0);
 			abort();
 		}
-		int fovvalue = (int)(g_fovy * 180.0f / (float)PI + 0.0001f);
+		int fovvalue = (int)(g_chacamera.GetFovY() * 180.0f / (float)PI + 0.0001f);
 		m_lodprojfovSlider = new OWP_Slider((double)fovvalue, 180.0, 10.0, labelheight);
 		if (!m_lodprojfovSlider) {
 			_ASSERT(0);
@@ -449,7 +451,7 @@ int CProjLodDlg::CreateProjLodWnd()
 			abort();
 		}
 		WCHAR strnear[256] = { 0L };
-		swprintf_s(strnear, 256, L"%.2f", g_projnear);
+		swprintf_s(strnear, 256, L"%.2f", g_chacamera.GetProjNear());
 		m_lodnearEdit = new OWP_EditBox(true, strnear, labelheight, EDIT_BUFLEN_NUM);
 		if (!m_lodnearEdit) {
 			_ASSERT(0);
@@ -461,7 +463,7 @@ int CProjLodDlg::CreateProjLodWnd()
 			abort();
 		}
 		WCHAR strfar[256] = { 0L };
-		swprintf_s(strfar, 256, L"%.1f", g_projfar);
+		swprintf_s(strfar, 256, L"%.1f", g_chacamera.GetProjFar());
 		m_lodfarEdit = new OWP_EditBox(true, strfar, labelheight, EDIT_BUFLEN_NUM);
 		if (!m_lodfarEdit) {
 			_ASSERT(0);
@@ -725,7 +727,7 @@ int CProjLodDlg::CreateProjLodWnd()
 		//##########
 		m_lodprojfovSlider->setCursorListener([=, this]() {
 			double value = m_lodprojfovSlider->getValue();
-			g_fovy = (float)(value * PI / 180.0);			
+			g_chacamera.SetFovY((float)(value * PI / 180.0));			
 			//SetCamera3DFromEyePos();//2023/12/30
 			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
 				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
@@ -733,7 +735,7 @@ int CProjLodDlg::CreateProjLodWnd()
 		});
 		m_lodprojfovSlider->setLUpListener([=, this]() {
 			double value = m_lodprojfovSlider->getValue();
-			g_fovy = (float)(value * PI / 180.0);
+			g_chacamera.SetFovY((float)(value * PI / 180.0));
 			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
 				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
 			}
@@ -891,7 +893,7 @@ int CProjLodDlg::CreateProjLodWnd()
 			}
 			float tempeditvalue = (float)_wtof(strnear);
 			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-				g_projnear = tempeditvalue;
+				g_chacamera.SetProjNear(tempeditvalue);
 				if (g_mainhwnd && IsWindow(g_mainhwnd)) {
 					PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
 				}
@@ -901,7 +903,7 @@ int CProjLodDlg::CreateProjLodWnd()
 				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : near", L"Invalid Value", MB_OK);
 				//}
 				WCHAR strnotchange[256] = { 0L };
-				swprintf_s(strnotchange, 256, L"%f", g_projnear);
+				swprintf_s(strnotchange, 256, L"%f", g_chacamera.GetProjNear());
 				m_lodnearEdit->setName(strnotchange);
 			}
 		});
@@ -913,7 +915,7 @@ int CProjLodDlg::CreateProjLodWnd()
 			}
 			float tempeditvalue = (float)_wtof(strfar);
 			if ((tempeditvalue >= 0.000010f) && (tempeditvalue <= 500000.0f)) {
-				g_projfar = tempeditvalue;
+				g_chacamera.SetProjFar(tempeditvalue);
 				if (g_mainhwnd && IsWindow(g_mainhwnd)) {
 					PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_PROJLODDLG), (LPARAM)0);
 				}
@@ -923,7 +925,7 @@ int CProjLodDlg::CreateProjLodWnd()
 				//	::MessageBox(m_dlgWnd->getHWnd(), L"invalid editbox value : far", L"Invalid Value", MB_OK);
 				//}
 				WCHAR strnotchange[256] = { 0L };
-				swprintf_s(strnotchange, 256, L"%f", g_projfar);
+				swprintf_s(strnotchange, 256, L"%f", g_chacamera.GetProjFar());
 				m_lodfarEdit->setName(strnotchange);
 			}
 		});
@@ -954,7 +956,7 @@ int CProjLodDlg::ParamsToDlg()
 		//Slider
 		//#######
 		if (m_lodprojfovSlider) {
-			double value = (double)g_fovy * 180.0 / PI;
+			double value = (double)g_chacamera.GetFovY() * 180.0 / PI;
 			m_lodprojfovSlider->setValue(value, false);
 		}
 		if (m_lodpickdistSlider) {
@@ -995,12 +997,12 @@ int CProjLodDlg::ParamsToDlg()
 		//EditBox
 		//#####
 		WCHAR strdlg[256] = { 0L };
-		swprintf_s(strdlg, 256, L"%.2f", g_projnear);
+		swprintf_s(strdlg, 256, L"%.2f", g_chacamera.GetProjNear());
 		if (m_lodnearEdit) {
 			m_lodnearEdit->setNameString(strdlg);
 		}
 
-		swprintf_s(strdlg, 256, L"%.1f", g_projfar);
+		swprintf_s(strdlg, 256, L"%.1f", g_chacamera.GetProjFar());
 		if (m_lodfarEdit) {
 			m_lodfarEdit->setNameString(strdlg);
 		}

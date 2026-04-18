@@ -38,6 +38,7 @@
 #include <ChaCalcFunc.h>
 
 #include <mqomaterial.h>
+#include <ChaCamera.h>
 
 #include <ChaFile.h>
 #include <RetargetFile.h>
@@ -170,9 +171,6 @@
 #include "..\DS4HidInputLib\DSInput_dll.h"
 
 using namespace std;
-
-CModel* g_cameragmodel = nullptr;
-
 
 #define WINDOWS_CLASS_NAME TEXT("OchakkoLab.AdditiveIK.Window")
 
@@ -312,6 +310,7 @@ enum {
 	SPMENU_HELP,
 	SPMENU_MAX
 };
+
 
 static bool s_callingUpdateFlag = false;
 static float s_camdistOnFPS = 1.0f;
@@ -567,6 +566,7 @@ ChaScene* g_chascene = nullptr;
 IShaderResource* g_shadowmapforshader = nullptr;
 CColDlg g_coldlg;
 int g_ikkind = IKKIND_ROTATE;
+ChaCamera g_chacamera;
 
 
 //staic
@@ -1023,28 +1023,9 @@ static CCpInfoDlg2 s_cpinfodlg2;
 static CPMOTINFO s_cpinfo;
 static MOTINFO s_cpmotinfo;
 
-static bool s_camtargetdisp = false;//カメラターゲット位置にマニピュレータを表示するかどうかのフラグ
-static bool s_moveeyepos = false;//s_sidemenu_camdistSlider動作の種類　true:eyeposが動く、false:targetposが動く
-//float g_initcamdist = 10.0f;
-//static float g_projnear = 0.01f;
-//float g_initcamdist = 50.0f;
-//static float g_projnear = 0.001f;
-//static float g_projnear = 1.0f;
-//static ChaVector3 g_cameraupdir.SetParams(0.0f, 1.0f, 0.0f);
-static double s_cameraframe = 0.0;
-//static float g_camdist = g_initcamdist;
-//static float g_projnear = 0.01f;
-//static float g_projfar = g_initcamdist * 100.0f;
-static float s_fAspectRatio = 1.0f;
-//static float g_fovy = (float)(PI / 4.0);
-//static float s_cammvstep = 100.0f;
-//static float s_cammvstep = 500.0f;
-static float s_cammvstep = 1000.0f;//2025/11/30
 static int s_editmotionflag = -1;
 static int s_editcameraflag = -1;//2024/06/16
 static int s_tkeyflag = 0;
-//static float s_maxcamdist = 5000.0f;
-static float s_maxcamdist = 20000.0f;
 
 
 static WCHAR s_strcurrent[256] = L"MoveToCurrentFrame";
@@ -1192,8 +1173,6 @@ static int s_guibarX0 = 120;
 
 static ID3D12Device* s_pdev = 0;
 
-//static CModel* s_model = NULL;//2024/12/30 ChaScene::SetCurrentModel(), GetCurrentModel()で扱うように変更
-static CModel* s_cameramodel = NULL;
 static CModel* s_select = NULL;
 static CModel* s_select_posture = NULL;
 static CModel* s_bmark = NULL;
@@ -1294,7 +1273,7 @@ static OrgWinGUI::OWP_Separator* s_camdistsp = 0;
 static OrgWinGUI::OWP_Label* s_camdistLabel = 0;
 static OWP_Slider* s_sidemenu_camdistSlider = 0;
 static bool s_camdistsliderflag = false;
-static float s_camdistsliderval = g_camdist;
+static float s_camdistsliderval;
 
 //カメラの地面からの高さ制御用　(AlwaysLockチェックとMoveCamEyeチェックと併用する)
 static OrgWinGUI::OWP_Separator* s_cameraheightsp = 0;
@@ -1861,9 +1840,6 @@ static bool s_cancelRButtonDown = false;
 static bool s_LButtonDown = false;
 static bool s_RButtonDown = false;
 
-static int s_camtargetflag = 0;
-static int s_camtargetOnceflag = 0;
-static bool s_twistcameraFlag = false;
 static bool s_rbuttonSelectFlag = false;
 //CDXUTCheckBox* s_CamTargetCheckBox = 0;
 ////CDXUTCheckBox* s_LightCheckBox = 0;
@@ -3456,14 +3432,14 @@ INT WINAPI wWinMain(
 		s_matSkyProj.SetIdentity();
 		g_camera3D->SetNear(100.0f);
 		g_camera3D->SetFar(500000.0f);
-		g_camera3D->SetViewAngle(g_fovy);//2023/12/30
+		g_camera3D->SetViewAngle(g_chacamera.GetFovY());//2023/12/30
 		Vector3 cameye;
-		cameye.Set(g_camEye.x, g_camEye.y, g_camEye.z);
+		cameye.Set(g_chacamera.GetCamEye().x, g_chacamera.GetCamEye().y, g_chacamera.GetCamEye().z);
 		g_camera3D->SetPosition(cameye);
 		Vector3 target;
-		target.Set(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
+		target.Set(g_chacamera.GetCamTargetPos().x, g_chacamera.GetCamTargetPos().y, g_chacamera.GetCamTargetPos().z);
 		g_camera3D->SetTarget(target);
-		g_camera3D->SetUp(Vector3(g_cameraupdir.x, g_cameraupdir.y, g_cameraupdir.z));
+		g_camera3D->SetUp(Vector3(g_chacamera.GetCamUpDir().x, g_chacamera.GetCamUpDir().y, g_chacamera.GetCamUpDir().z));
 		g_camera3D->SetWidth((float)g_graphicsEngine->GetFrameBufferWidth());//2023/11/20
 		g_camera3D->SetHeight((float)g_graphicsEngine->GetFrameBufferHeight());//2023/11/20
 		g_camera3D->Update();
@@ -3858,8 +3834,6 @@ void InitApp()
 	g_chascene = nullptr;
 	//g_shadertype = -1;//マテリアル毎に設定することに
 
-	g_cameragmodel = nullptr;
-
 	InitializeCriticalSection(&s_CritSection_LTimeline);
 	InitializeCriticalSection(&g_CritSection_GetGP);
 	InitializeCriticalSection(&g_CritSection_FbxSdk);
@@ -3867,6 +3841,8 @@ void InitApp()
 	srand(28347);//2025/01/12 適当にキーをガチャガチャ押して入力しただけで未調整
 
 	InitCommonControls();
+
+	g_chacamera.InitParams();
 
 	s_cancelLButtonDown = false;
 	s_cancelRButtonDown = false;
@@ -3934,23 +3910,7 @@ void InitApp()
 	s_SpriteButtonDown = false;
 	s_SpriteButtonDownUndoRedo = false;
 
-	g_cameraheightflag = 0;
-	g_cameraheight = 200.0;
-
-	{
-		g_camEye.SetParams(0.0f, 0.0f, 0.0f);
-		g_camtargetpos.SetParams(0.0f, 0.0f, 0.0f);
-		g_befcamEye.SetParams(0.0f, 0.0f, 0.0f);
-		g_befcamtargetpos.SetParams(0.0f, 0.0f, 0.0f);
-		g_cameraupdir.SetParams(0.0f, 1.0f, 0.0f);
-		g_camdist = 50.0f;
-		g_initcamdist = 50.0f;
-		g_fovy = (float)(PI / 4.0);
-		g_projnear = 0.01f;
-		g_projfar = g_initcamdist * 100.0f;
-	
-		g_vCenter.SetParams(0.0f, 0.0f, 0.0f);
-	}
+	g_vCenter.SetParams(0.0f, 0.0f, 0.0f);
 
 	g_mouseherealpha = 1.0f;
 
@@ -3997,9 +3957,6 @@ void InitApp()
 	s_matView.SetIdentity();
 	s_befLockMatView.SetIdentity();
 	s_matSkyProj.SetIdentity();
-
-	//s_maxcamdist = 5000.0f;
-	s_maxcamdist = 20000.0f;//2024/06/04
 
 	g_pasteScale = true;
 	g_pasteRotation = true;
@@ -4385,38 +4342,12 @@ void InitApp()
 	g_endmotionMargin = 0;//0にするとMOAでモーションの終わりを検知出来ないこと有
 	g_moa_Freeze_for_a_moment = false;//モーション変化時にタメを作る
 	s_savepreviewFlag = 0;
-	g_cameraanimmode = 0;//0: OFF, 1:ON
-	s_savecameraanimmode = 0;
-	g_cameraInheritMode = CAMERA_INHERIT_ALL;
-	s_saveCameraInheritMode = g_cameraInheritMode;
-
-	s_camtargetflag = 0;
-	s_camtargetOnceflag = 0;
-
-	{
-		s_camtargetdisp = false;
-		s_moveeyepos = false;
-		s_twistcameraFlag = false;
-		s_rbuttonSelectFlag = false;
-		s_cameraframe = 0.0;
-		g_cameraupdir.SetParams(0.0f, 1.0f, 0.0f);
-
-		g_initcamdist = 50.0f;
-		g_camdist = g_initcamdist;
-		g_projnear = 0.01f;
-		g_projfar = g_initcamdist * 100.0f;
-		s_fAspectRatio = 1.0f;
-		g_fovy = (float)(PI / 4.0);
-		//s_cammvstep = 100.0f;
-		s_cammvstep = 500.0f;
-	}
 
 	{
 		//s_model = NULL;
 		g_curmodelmenuindex = -1;
 		g_curmodelmenuindex_load = -1;
 
-		s_cameramodel = NULL;//2023/05/23
 		s_select = NULL;
 		s_select_posture = NULL;
 		s_bmark = NULL;
@@ -5029,7 +4960,7 @@ void InitApp()
 	s_camdistLabel = 0;
 	s_sidemenu_camdistSlider = 0;
 	s_camdistsliderflag = false;
-	s_camdistsliderval = g_camdist;
+	s_camdistsliderval = g_chacamera.GetCamDist();
 
 	s_cameraheightsp = 0;
 	s_cameraheightChk = 0;
@@ -6196,9 +6127,7 @@ void OnUserFrameMove(double fTime, float fElapsedTime, double difftime, int endf
 			if ((s_editrange.GetStartFrame() != s_editrange.GetEndFrame()) && (curmotframe == s_editrange.GetStartFrame())) 
 			{
 				cameranextframe = curmotframe;
-				if (s_cameramodel) {
-					s_cameramodel->SetCameraMotionFrame(s_cameramodel->GetCameraMotionId(), cameranextframe);
-				}
+				g_chacamera.UpdateCameraAnimFrame(cameranextframe);
 			}
 			else {
 				//#####################################################
@@ -6222,48 +6151,9 @@ void OnUserFrameMove(double fTime, float fElapsedTime, double difftime, int endf
 
 		SetCamera3DFromEyePos();
 
-		//if (g_previewFlag != 0) {
-		//	WCHAR dbgline[1024] = { 0 };
-		//	swprintf_s(dbgline, 1024, L"difftime %f, nextframe %.3f, caemranextframe %.3f\n",
-		//		difftime, nextframe, cameranextframe);
-		//	OutputDebugString(dbgline);
-		//}
-
-
-		////###################
-		////Set Updated Params
-		////###################
-		////FLOAT fObjectRadius;
-		////if (g_chascene) {
-		////	g_vCenter = g_chascene->GetTotalModelBound().center;
-		////	fObjectRadius = g_chascene->GetTotalModelBound().r;
-		////}
-		////else {
-		////	_ASSERT(0);
-		////	g_vCenter.SetParams(0.0f, 0.0f, 0.0f);
-		////	fObjectRadius = 10.0f;
-		////}
-		////if (fObjectRadius < 0.1f) {
-		////	fObjectRadius = 10.0f;
-		////}
-		//////#replacing comment out#g_Camera->SetProjParams(g_fovy, s_fAspectRatio, g_projnear, g_projfar);
-		//////#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-		//////#replacing comment out#g_Camera->SetRadius(fObjectRadius * 3.0f, fObjectRadius * 0.5f, fObjectRadius * 6.0f);
-		//s_matWorld = ChaMatrix(//#replacing comment out#g_Camera->GetWorldMatrix());
-		//s_matView = ChaMatrix(//#replacing comment out#g_Camera->GetViewMatrix());
-		//s_matProj = ChaMatrix(//#replacing comment out#g_Camera->GetProjMatrix());
 		s_matWorld.SetTranslationZero();
 		////s_matW = s_matWorld;
 		s_matVP = s_matView * s_matProj;
-
-
-
-		//int modelno;
-		//int modelnum = (int)s_modelindex.size();
-		//for (modelno = 0; modelno < modelnum; modelno++) {
-		//	s_modelindex[modelno].modelptr->SetWorldMatFromCamera(s_matWorld);
-		//}
-
 
 //##########
 //Preview
@@ -6686,7 +6576,7 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 
 			OnRenderBoneMark(re, rc);
 
-			//if ((s_dispselect || s_camtargetdisp) && s_select) {//2025/07/13 SelectMark非表示時にもIK軸の計算をするためにOnRenderSelect()を実行する
+			//if ((s_dispselect || g_chacamera.GetCamTargetDisp()) && s_select) {//2025/07/13 SelectMark非表示時にもIK軸の計算をするためにOnRenderSelect()を実行する
 				OnRenderSelect(re, rc);
 			//}
 
@@ -6846,14 +6736,14 @@ void PrepairUndo_BlendShape(CBlendShapeElem srcblendshapeelem)
 	UNDOCAMERA undocamera;
 	undocamera.Init();
 	undocamera.spcameramode = s_spcameramode.state;
-	undocamera.camtargetflag = s_camtargetflag;
-	undocamera.camtargetdisp = s_camtargetdisp;
-	undocamera.moveeyepos = s_moveeyepos;
-	undocamera.camEyePos = g_camEye;
-	undocamera.camtargetpos = g_camtargetpos;
-	undocamera.camUpVec = g_cameraupdir;
-	undocamera.camdist = g_camdist;
-	undocamera.cameramodel = s_cameramodel;
+	undocamera.camtargetflag = g_chacamera.GetCamTargetFlag();
+	undocamera.camtargetdisp = g_chacamera.GetCamTargetDisp();
+	undocamera.moveeyepos = g_chacamera.GetCamMoveEyePos();
+	undocamera.camEyePos = g_chacamera.GetCamEye();
+	undocamera.camtargetpos = g_chacamera.GetCamTargetPos();
+	undocamera.camUpVec = g_chacamera.GetCamUpDir();
+	undocamera.camdist = g_chacamera.GetCamDist();
+	undocamera.cameramodel = g_chacamera.GetCameraAnimModel();
 
 	if (GetCurrentModel()) {
 		int result = GetCurrentModel()->SaveUndoBlendShapeMotion(
@@ -6922,14 +6812,14 @@ void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel)
 	UNDOCAMERA undocamera;
 	undocamera.Init();
 	undocamera.spcameramode = s_spcameramode.state;
-	undocamera.camtargetflag = s_camtargetflag;
-	undocamera.camtargetdisp = s_camtargetdisp;
-	undocamera.moveeyepos = s_moveeyepos;
-	undocamera.camEyePos = g_camEye;
-	undocamera.camtargetpos = g_camtargetpos;
-	undocamera.camUpVec = g_cameraupdir;
-	undocamera.camdist = g_camdist;
-	undocamera.cameramodel = s_cameramodel;//2024/06/24
+	undocamera.camtargetflag = g_chacamera.GetCamTargetFlag();
+	undocamera.camtargetdisp = g_chacamera.GetCamTargetDisp();
+	undocamera.moveeyepos = g_chacamera.GetCamMoveEyePos();
+	undocamera.camEyePos = g_chacamera.GetCamEye();
+	undocamera.camtargetpos = g_chacamera.GetCamTargetPos();
+	undocamera.camUpVec = g_chacamera.GetCamUpDir();
+	undocamera.camdist = g_chacamera.GetCamDist();
+	undocamera.cameramodel = g_chacamera.GetCameraAnimModel();//2024/06/24
 
 	//2024/07/02
 	CBlendShapeElem blendshapeelem;
@@ -6998,14 +6888,14 @@ void PrepairUndo()
 			UNDOCAMERA undocamera;
 			undocamera.Init();
 			undocamera.spcameramode = s_spcameramode.state;
-			undocamera.camtargetflag = s_camtargetflag;
-			undocamera.camtargetdisp = s_camtargetdisp;
-			undocamera.moveeyepos = s_moveeyepos;
-			undocamera.camEyePos = g_camEye;
-			undocamera.camtargetpos = g_camtargetpos;
-			undocamera.camUpVec = g_cameraupdir;
-			undocamera.camdist = g_camdist;
-			undocamera.cameramodel = s_cameramodel;//2024/06/24
+			undocamera.camtargetflag = g_chacamera.GetCamTargetFlag();
+			undocamera.camtargetdisp = g_chacamera.GetCamTargetDisp();
+			undocamera.moveeyepos = g_chacamera.GetCamMoveEyePos();
+			undocamera.camEyePos = g_chacamera.GetCamEye();
+			undocamera.camtargetpos = g_chacamera.GetCamTargetPos();
+			undocamera.camUpVec = g_chacamera.GetCamUpDir();
+			undocamera.camdist = g_chacamera.GetCamDist();
+			undocamera.cameramodel = g_chacamera.GetCameraAnimModel();//2024/06/24
 
 
 			//2024/07/02
@@ -7311,7 +7201,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					curmi = GetCurrentModel()->GetCurMotInfo();
 				}
 				else if (s_initmpcameraFlag) {
-					srcmodel = s_cameramodel;
+					srcmodel = g_chacamera.GetCameraAnimModel();
 					curmi = GetCameraMotInfo();
 				}
 				else {
@@ -8722,7 +8612,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			if (curbone) {
 				s_saveboneno = s_curboneno;
 
-				if (s_camtargetflag && (s_camtargetOnceflag == 0)) {//2024/07/29 s_camtargetOnceflagが１のときはOnFrameToolWndで処理
+				if (g_chacamera.GetCamTargetFlag() && (g_chacamera.GetCamTargetOnceFlag() == 0)) {//2024/07/29 g_chacamera.GetCamTargetOnceFlag()が１のときはOnFrameToolWndで処理
 					AutoCameraTarget();
 				}
 
@@ -8750,18 +8640,10 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			s_curboneno = s_saveboneno;
 		}
 
-
-		////#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));//!!!!!!!!!!
-		//////#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));//!!!!!!!!!!
-		ChaVector3 diffv = g_camEye - g_camtargetpos;
-		float newcamdist;
-		if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
-			newcamdist = (float)ChaVector3LengthDbl_2D(&diffv);
-		}
-		else {
-			newcamdist = (float)ChaVector3LengthDbl(&diffv);
-		}
-		ChangeCameraDist(newcamdist, true, false);
+		//g_chacamera.UpdateCameraDist();
+		float newcamdist = (float)g_chacamera.CalcCameraDist();
+		ChangeCameraDist(newcamdist, g_chacamera.GetCamMoveEyePos(), false);
+		
 
 		//if (GetCurrentModel() && (s_pickinfo.pickobjno >= 0) && (g_previewFlag == 5)){
 		if (GetCurrentModel() && (g_previewFlag == 5)) {
@@ -8910,8 +8792,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		else {
 			if ((s_undoFlag == false) && (s_redoFlag == false)) {
 				//if (((g_ikkind == 0) || (g_ikkind == 1) || (g_ikkind == 2)) && (s_editcameraflag >= 0)) {//2024/06/16 ドリー編集も対象に
-				//if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editmotionflag >= 0)) {//2024/08/05 s_cameraeditkind : OnCameraAnimMouseMove()呼び出し時のopekind
-				if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editcameraflag >= 0)) {//2024/08/14 editCAMERAflag
+				//if (g_chacamera.GetCameraAnimModel() && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editmotionflag >= 0)) {//2024/08/05 s_cameraeditkind : OnCameraAnimMouseMove()呼び出し時のopekind
+				if (g_chacamera.GetCameraAnimModel() && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editcameraflag >= 0)) {//2024/08/14 editCAMERAflag
 					s_ikdoneflag = true;
 				}
 			}
@@ -8985,8 +8867,8 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		if (doneflag == false) {
 			//カメラの回転を右ドラッグした場合は　OnMouseMoveFunc()にて　カメラのupvecをツイストする
 			if (PickSpCam(ptCursor) == PICK_CAMROT) {
-				if (s_twistcameraFlag == false) {
-					s_twistcameraFlag = true;
+				if (g_chacamera.GetCamTwistFlag() == false) {
+					g_chacamera.SetCamTwistFlag(true);
 				}
 				doneflag = true;
 			}
@@ -9061,22 +8943,11 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		//カメラの回転を　右ダブルクリックした場合は　カメラのupvecを初期化する
 		if (PickSpCam(ptCursor) == PICK_CAMROT) {
 			if (g_edittarget != EDITTARGET_CAMERA) {
-				g_cameraupdir.SetParams(0.0f, 1.0f, 0.0f);
 
-				//////#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-				////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-				////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-				g_befcamEye = g_camEye;
-				ChaVector3 diffv;
-				diffv = g_camEye - g_camtargetpos;
-				if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
-					g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
-				}
-				else {
-					g_camdist = (float)ChaVector3LengthDbl(&diffv);
-				}
-
-
+				g_chacamera.SetCamUpDir(ChaVector3(0.0f, 1.0f, 0.0f));
+				//g_chacamera.UpdateCameraDist();
+				float newcamdist = (float)g_chacamera.CalcCameraDist();
+				ChangeCameraDist(newcamdist, g_chacamera.GetCamMoveEyePos(), false);
 			}
 			else {
 				OnCameraAnimMouseMove(CAMERAANIMEDIT_TWISTRESET, PICK_Z, 0.0f);
@@ -9094,7 +8965,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		ReleaseCapture();
 		
 		s_pickinfo.buttonflag = 0;
-		s_twistcameraFlag = false;
+		g_chacamera.SetCamTwistFlag(false);
 		s_rbuttonSelectFlag = false;
 	}
 	else if (uMsg == WM_MBUTTONUP) {
@@ -9154,18 +9025,18 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	}else if( uMsg == WM_MOUSEWHEEL ){
 		//if( (g_keybuf[VK_CONTROL] & 0x80) == 0 ){
 		//	float mdelta = (float)GET_WHEEL_DELTA_WPARAM(wParam);
-		//	//deltadist = mdelta * g_camdist * 0.00010f;
-		//	deltadist = mdelta * g_camdist * 0.0010f;
+		//	//deltadist = mdelta * g_chacamera.GetCamDist() * 0.00010f;
+		//	deltadist = mdelta * g_chacamera.GetCamDist() * 0.0010f;
 		//
-		//	g_camdist += deltadist;
-		//	if( g_camdist < 0.0001f ){
-		//		g_camdist = 0.0001f;
+		//	g_chacamera.GetCamDist() += deltadist;
+		//	if( g_chacamera.GetCamDist() < 0.0001f ){
+		//		g_chacamera.GetCamDist() = 0.0001f;
 		//	}
 		//
-		//	ChaVector3 camvec = g_camEye - g_camtargetpos;
+		//	ChaVector3 camvec = g_camEye - g_chacamera.GetCamTargetPos();
 		//	ChaVector3Normalize( &camvec, &camvec );
-		//	g_camEye = g_camtargetpos + g_camdist * camvec;
-		//	ChaMatrixLookAtRH( &s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec );
+		//	g_camEye = g_chacamera.GetCamTargetPos() + g_chacamera.GetCamDist() * camvec;
+		//	ChaMatrixLookAtRH( &s_matView, &g_camEye, &g_chacamera.GetCamTargetPos(), &s_camUpVec );
 		//}
 	}else{
 		//#replacing comment out#g_Camera->HandleMessages( hWnd, uMsg, wParam, lParam );
@@ -10726,31 +10597,28 @@ CModel* OpenMQOFile()
 
 int SetCameraModel()
 {
-	CModel* savecameramodel = s_cameramodel;
+	CModel* savecameramodel = g_chacamera.GetCameraAnimModel();
+	g_chacamera.SetCameraAnimModel(nullptr);
 
-	s_cameramodel = 0;
-
-	if (g_chascene) {
-		s_cameramodel = g_chascene->GetTheLastCameraModel();
+	if (g_chascene != nullptr) {
+		g_chacamera.SetCameraAnimModel(g_chascene->GetTheLastCameraModel());
 	}
 
-
-
 	//カメラモデルが無い場合には　スプライトスイッチもオフにしておく
-	if (!s_cameramodel && (g_cameraanimmode == 1)) {
+	if ((g_chacamera.GetCameraAnimModel() == nullptr) && (g_chacamera.GetCameraAnimMode() == 1)) {
 		ChangeCameraMode(1);//forcemode 反転をセット:0 強制オフ時:1 強制オン時:2
 	}
 
 
 	//モデル読み込み中　かつ　カメラモデルがある場合　カメラアニメスイッチを強制オン
-	if (s_nowloading && s_cameramodel && (g_cameraanimmode == 0)) {
+	if (s_nowloading && (g_chacamera.GetCameraAnimModel() != nullptr) && (g_chacamera.GetCameraAnimMode() == 0)) {
 		ChangeCameraMode(2);
 	}
 
 
 	//2024/06/23
 	//新しくファイルを追加読込してカメラモデルが変わった場合　カメラパネル作成し直し
-	if (savecameramodel != s_cameramodel) {
+	if (savecameramodel != g_chacamera.GetCameraAnimModel()) {
 		DispCameraPanel();
 	}
 
@@ -10801,7 +10669,7 @@ void CalcTotalBound()
 		fObjectRadius = 10.0f;
 	}
 
-	s_cammvstep = (float)fmax(0.01f, fmin(500.0f, fObjectRadius));//2023/05/19
+	g_chacamera.SetCamMvStep((float)fmax(0.01f, fmin(500.0f, fObjectRadius)));//2023/05/19
 
 	//DbgOut(L"fbx : totalmb : r %f, center (%f, %f, %f)\r\n",
 	//	s_totalmb.r, s_totalmb.center.x, s_totalmb.center.y, s_totalmb.center.z);
@@ -10810,22 +10678,26 @@ void CalcTotalBound()
 	//	g_LightControl[i].SetRadius(fObjectRadius);
 
 
-	g_projnear = (float)fmax(0.01f, fmin(10.0f, fObjectRadius * 0.01f));
-	g_initcamdist = (float)fmax(0.1f, fmin(s_maxcamdist, fObjectRadius * 3.0f));
-	g_projfar = g_initcamdist * 100.0f;
+	float projnear = (float)fmax(0.01f, fmin(10.0f, fObjectRadius * 0.01f));
+	float initcamdist = (float)fmax(0.1f, fmin(g_chacamera.GetMaxCamDist(), fObjectRadius * 3.0f));
+	float projfar = g_chacamera.GetInitCamDist() * 100.0f;
 	//s_fAspectRatio = 1.0f;//ここでは更新しない
-	g_fovy = (float)(PI / 4);
-	g_camtargetpos = g_vCenter;
+	float fovy = (float)(PI / 4);
+	g_chacamera.SetProjFar(projfar);
+	g_chacamera.SetInitCamDist(initcamdist);
+	g_chacamera.SetProjFar(projfar);
+	g_chacamera.SetFovY(fovy);
+	g_chacamera.SetCamTargetPos(g_vCenter);
+
 	ChaVector3 dirz;
 	dirz.SetParams(0.0f, 0.0f, 1.0);
-	g_camEye = g_vCenter + dirz * g_initcamdist;
+	ChaVector3 camEye = g_vCenter + dirz * g_chacamera.GetInitCamDist();
+	g_chacamera.SetCamEye(camEye);
 	//ChangeCameraMode(1);//forcemode 反転をセット:0 強制オフ時:1 強制オン時:2.  この関数の上の方のSetCameraModel()で制御するので　ここはコメントアウト
 
-
-	g_camdist = g_initcamdist;
-
-	g_befcamEye = g_camEye;
-	g_befcamtargetpos = g_camtargetpos;
+	g_chacamera.SetInitCamDist(initcamdist);
+	g_chacamera.SetBefCamEye(g_chacamera.GetCamEye());
+	g_chacamera.SetBefCamTargetPos(g_chacamera.GetCamTargetPos());
 
 	SetCamera3DFromEyePos();
 }
@@ -10857,8 +10729,8 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	//	return 0;
 	//}
 
-	g_camtargetpos.SetParams(0.0f, 0.0f, 0.0f);
-	g_befcamtargetpos = g_camtargetpos;
+	g_chacamera.SetCamTargetPos(ChaVector3(0.0f, 0.0f, 0.0f));
+	g_chacamera.SetBefCamTargetPos(g_chacamera.GetCamTargetPos());
 
 
 	static int modelcnt = 0;
@@ -11277,8 +11149,8 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 
 	CBone* hipsbone = GetCurrentModel()->GetHipsBone();
 	if (hipsbone) {
-		g_befcamtargetpos = g_camtargetpos;
-		g_camtargetpos = hipsbone->GetChildWorld();
+		g_chacamera.SetBefCamTargetPos(g_chacamera.GetCamTargetPos());
+		g_chacamera.SetCamTargetPos(hipsbone->GetChildWorld());
 		s_curboneno = hipsbone->GetBoneNo();
 	}
 
@@ -11706,7 +11578,7 @@ int UpdateEditedEuler()
 			s_owpEulerGraph->SetCurrentModel(GetCurrentModel());
 		}
 		else {
-			s_owpEulerGraph->SetCurrentModel(s_cameramodel);
+			s_owpEulerGraph->SetCurrentModel(g_chacamera.GetCameraAnimModel());
 		}
 	}
 
@@ -11997,7 +11869,7 @@ int refreshEulerGraph()
 			s_owpEulerGraph->SetCurrentModel(GetCurrentModel());
 		}
 		else {
-			s_owpEulerGraph->SetCurrentModel(s_cameramodel);
+			s_owpEulerGraph->SetCurrentModel(g_chacamera.GetCameraAnimModel());
 		}		
 	}
 
@@ -12963,7 +12835,7 @@ int OnRgdMorphMenu(int selindex)
 
 int OnCameraMenu(bool dorefreshflag, int selindex, int saveundoflag)
 {
-	if (!s_cameramodel) {
+	if (g_chacamera.GetCameraAnimModel() == nullptr) {
 		return 0;
 	}
 
@@ -13009,7 +12881,7 @@ int OnCameraMenu(bool dorefreshflag, int selindex, int saveundoflag)
 	//}
 
 
-	MOTINFO camerami = s_cameramodel->GetCameraMotInfoByCameraIndex(selindex);
+	MOTINFO camerami = g_chacamera.GetCameraAnimModel()->GetCameraMotInfoByCameraIndex(selindex);
 	if (camerami.motid <= 0) {
 		//s_curmotid = -1;
 		SetMainWindowTitle();
@@ -13022,76 +12894,26 @@ int OnCameraMenu(bool dorefreshflag, int selindex, int saveundoflag)
 
 
 	int cameramotid = camerami.motid;
-	s_cameramodel->SetCameraMotionId(cameramotid);
+	g_chacamera.GetCameraAnimModel()->SetCameraMotionId(cameramotid);
 
 
-	if (s_cameramodel->IsCameraLoaded()) {
+	if (g_chacamera.GetCameraAnimModel()->IsCameraLoaded()) {
 		//fbxにカメラが在る場合
-		ChaVector3 camdir;
-		camdir.SetParams(0.0f, 0.0f, 1.0f);
-		s_cameramodel->GetCameraProjParams(cameramotid, &g_projnear, &g_projfar, &g_fovy, &g_camEye, &camdir, &g_cameraupdir);
-
-		g_initcamdist = (float)fmax(0.1f, fmin(s_maxcamdist, g_projfar));
-		g_camtargetpos = g_camEye + camdir * g_initcamdist;
+		g_chacamera.OnCameraMenu(cameramotid);
 
 		ChangeCameraMode(2);//forcemode 反転をセット:0 強制オフ時:1 強制オン時:2
-
-		g_camdist = g_initcamdist;
-
-		g_befcamEye = g_camEye;
-		g_befcamtargetpos = g_camtargetpos;
-
-		////#replacing comment out#g_Camera->SetProjParams(g_fovy, s_fAspectRatio, g_projnear, g_projfar);
-		////#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-		//////#replacing comment out#g_Camera->SetRadius(fObjectRadius * 3.0f, fObjectRadius * 0.5f, fObjectRadius * 6.0f);
-
-		////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-		////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-
 		SetCamera3DFromEyePos();
 	}
 
-
-	//if (saveundoflag == 1) {
-	//	//if( GetCurrentModel() ){
-	//	//	GetCurrentModel()->SaveUndoMotion(s_curboneno, s_curbaseno, &s_editrange, (double)g_applyrate);
-	//	//}
-	//	if (GetCurrentModel()) {
-	//		PrepairUndo();
-	//	}
-	//}
-	//else {
-	//	if (GetCurrentModel() && s_owpLTimeline && s_owpEulerGraph) {
-	//		//double curframe = GetCurrentModel()->GetCurMotInfo()->curframe;
-	//		double curframe = 1.0;
-	//		s_owpLTimeline->setCurrentTime(curframe, true);
-	//		s_owpEulerGraph->setCurrentTime(curframe, false);
-	//	}
-	//}
-
-	//if (s_owpLTimeline) {
-	//	s_owpLTimeline->selectClear();
-	//}
-
-
-	//DispModelPanel();
-	//refreshModelPanel();
-	//DispMotionPanel();
 	DispCameraPanel();
 
 	SetMainWindowTitle();
-
-
-	//InitTimelineSelection();
-
 
 	if (oldcursor) {
 		SetCursor(oldcursor);
 	}
 
-
 	s_underselectcamera = false;
-
 
 	s_LrefreshEditTarget = 1;//refresh EditTarget, EulerGraph on CameraMode
 
@@ -14013,7 +13835,7 @@ int OnDelAllModel()
 	g_chascene->DelAllModel();
 
 	//SetCameraModel();
-	s_cameramodel = 0;//2023/06/02
+	g_chacamera.SetCameraAnimModel(nullptr);//2023/06/02
 
 	s_curboneno = -1;
 	SetCurrentModel(nullptr);
@@ -14140,7 +13962,7 @@ float CalcSelectScale()
 	//	lineleng = sqrt(lineleng);
 	//	//s_selectscale = 0.0020f / lineleng;
 	//	//s_selectscale = (modelr * 0.015f * 0.75f) / (lineleng * 100.0f);
-	//	s_selectscale = (float)((modelr * 0.40) / lineleng);// *(g_camdist / g_initcamdist);
+	//	s_selectscale = (float)((modelr * 0.40) / lineleng);// *(g_chacamera.GetCamDist() / g_initcamdist);
 	//	if (s_oprigflag == 1) {
 	//		s_selectscale *= 0.25f;
 	//		//s_selectscale *= 0.50f;
@@ -14168,7 +13990,7 @@ int RenderSelectMark(myRenderer::RenderingEngine* re, RenderContext* pRenderCont
 		return 0;
 	}
 
-	if (s_camtargetdisp == false) {
+	if (g_chacamera.GetCamTargetDisp() == false) {
 		if (s_curboneno < 0) {
 			return 0;
 		}
@@ -14260,7 +14082,7 @@ int RenderSelectMark(myRenderer::RenderingEngine* re, RenderContext* pRenderCont
 		ChaMatrixScaling(&scalemat, s_selectscale * adjustmult, s_selectscale * adjustmult, s_selectscale * adjustmult);
 
 		s_selm = scalemat;
-		s_selm.SetTranslation(g_camtargetpos);
+		s_selm.SetTranslation(g_chacamera.GetCamTargetPos());
 		s_selectmat = s_selm;
 		s_selectmat_posture = s_selm;
 
@@ -14334,7 +14156,7 @@ CFrameCopyDlg* GetCurrentFrameCopyDlg(bool cameraflag)
 
 	CModel* srcmodel;
 	if (cameraflag) {
-		srcmodel = s_cameramodel;
+		srcmodel = g_chacamera.GetCameraAnimModel();
 	}
 	else {
 		srcmodel = GetCurrentModel();
@@ -14623,7 +14445,7 @@ int CalcTargetPos(ChaVector3* dstpos)
 	ChaVector3 sb, se, n;
 	sb = s_pickinfo.objworld - start3d;
 	se = end3d - start3d;
-	n = g_camtargetpos - g_camEye;
+	n = g_chacamera.GetCamTargetPos() - g_chacamera.GetCamEye();
 
 	float t;
 	t = ChaVector3Dot(&sb, &n) / ChaVector3Dot(&se, &n);
@@ -15720,7 +15542,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.64\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.65\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -17509,8 +17331,8 @@ int CreateCameraPanel()
 	//	return 0;
 	//}
 	int cameranum;
-	if (s_cameramodel) {
-		cameranum = s_cameramodel->GetCameraMotInfoSize();
+	if (g_chacamera.GetCameraAnimModel()) {
+		cameranum = g_chacamera.GetCameraAnimModel()->GetCameraMotInfoSize();
 	}
 	else {
 		cameranum = 0;
@@ -17574,13 +17396,13 @@ int CreateCameraPanel()
 
 
 
-		if (s_cameramodel) {
+		if (g_chacamera.GetCameraAnimModel()) {
 			int cameracnt = 0;
 			int minum;
 			int miindex;
-			minum = s_cameramodel->GetMotInfoSize();
+			minum = g_chacamera.GetCameraAnimModel()->GetMotInfoSize();
 			for (miindex = 0; miindex < minum; miindex++) {
-				MOTINFO curmi = s_cameramodel->GetMotInfoByIndex(miindex);
+				MOTINFO curmi = g_chacamera.GetCameraAnimModel()->GetMotInfoByIndex(miindex);
 				if (curmi.cameramotion) {//!!!!!
 					WCHAR wmotname[MAX_PATH] = { 0L };
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmi.motname, 256, wmotname, MAX_PATH);
@@ -17636,7 +17458,7 @@ int CreateCameraPanel()
 
 
 			for (miindex = 0; miindex < minum; miindex++) {
-				MOTINFO curmi = s_cameramodel->GetMotInfoByIndex(miindex);
+				MOTINFO curmi = g_chacamera.GetCameraAnimModel()->GetMotInfoByIndex(miindex);
 				if (curmi.cameramotion) {
 					OWP_Button* owpButton = new OWP_Button(L"delete", 20);
 					if (owpButton) {
@@ -17653,18 +17475,18 @@ int CreateCameraPanel()
 
 			s_camerapanel.modelindex = g_curmodelmenuindex;
 			//s_camerapanel.radiobutton->setSelectIndex(0);
-			if (s_cameramodel) {
+			if (g_chacamera.GetCameraAnimModel()) {
 				if (s_camerapanel.radiobutton) {
-					int cameramotid = s_cameramodel->GetCameraMotionId();
+					int cameramotid = g_chacamera.GetCameraAnimModel()->GetCameraMotionId();
 					if (cameramotid > 0) {
-						int cameramotindex = s_cameramodel->MotionID2CameraIndex(cameramotid);
+						int cameramotindex = g_chacamera.GetCameraAnimModel()->MotionID2CameraIndex(cameramotid);
 						if (cameramotindex >= 0) {
-							s_cameramenuindexmap[s_cameramodel] = cameramotindex;
+							s_cameramenuindexmap[g_chacamera.GetCameraAnimModel()] = cameramotindex;
 							s_camerapanel.radiobutton->setSelectIndex(cameramotindex, false);//!!!!
 						}
 					}
 				}
-				//s_camerapanel.scroll->inView(s_motmenuindexmap[s_cameramodel]);
+				//s_camerapanel.scroll->inView(s_motmenuindexmap[g_chacamera.GetCameraAnimModel()]);
 				if (s_camerapanel.scroll) {
 					s_camerapanel.scroll->setShowPosLine(s_savecamerapanelshowposline);
 				}
@@ -17677,7 +17499,7 @@ int CreateCameraPanel()
 		}
 		else {
 			//_ASSERT(0);
-			return 0;//s_cameramodel == NULL : 0 return
+			return 0;//g_chacamera.GetCameraAnimModel() == NULL : 0 return
 		}
 
 
@@ -17685,25 +17507,25 @@ int CreateCameraPanel()
 			s_camerapanel.panel->setVisible(false);//作成中非表示
 
 			s_camerapanel.panel->setCloseListener([]() {
-				if (s_cameramodel) {
+				if (g_chacamera.GetCameraAnimModel() != nullptr) {
 					s_closecameraFlag = true;
 				}
 				});
 
 		}
 
-		if (s_cameramodel) {
+		if (g_chacamera.GetCameraAnimModel() != nullptr) {
 			int delmenuindex = 0;
-			for (delmenuindex = 0; delmenuindex < s_cameramodel->GetCameraMotInfoSize(); delmenuindex++) {
+			for (delmenuindex = 0; delmenuindex < g_chacamera.GetCameraAnimModel()->GetCameraMotInfoSize(); delmenuindex++) {
 				if (s_camerapanel.delbutton[delmenuindex]) {
 					s_camerapanel.delbutton[delmenuindex]->setButtonListener([delmenuindex]() {
 						if ((s_underdelmodel == false) && (s_opedelmodelcnt < 0) && //Model削除と同時は禁止
-							!s_underdelmotion && s_cameramodel && (s_cameramodel->GetCameraMotInfoSize() >= 2)) {//全部消すときはメインメニューから
+							!s_underdelmotion && g_chacamera.GetCameraAnimModel() && (g_chacamera.GetCameraAnimModel()->GetCameraMotInfoSize() >= 2)) {//全部消すときはメインメニューから
 
-							MOTINFO camerami = s_cameramodel->GetCameraMotInfoByCameraIndex(delmenuindex);
+							MOTINFO camerami = g_chacamera.GetCameraAnimModel()->GetCameraMotInfoByCameraIndex(delmenuindex);
 							if (camerami.motid > 0) {
 								int delmotid = camerami.motid;
-								int deleteindex = s_cameramodel->MotionID2Index(delmotid);
+								int deleteindex = g_chacamera.GetCameraAnimModel()->MotionID2Index(delmotid);
 								if (deleteindex >= 0) {
 									s_opedelmotioncnt = deleteindex;
 									s_underdelmotion = true;
@@ -17725,9 +17547,9 @@ int CreateCameraPanel()
 
 		if (s_camerapanel.radiobutton) {
 			s_camerapanel.radiobutton->setSelectListener([]() {
-				if (s_cameramodel) {
+				if (g_chacamera.GetCameraAnimModel() != nullptr) {
 					int curindex = s_camerapanel.radiobutton->getSelectIndex();
-					if ((s_opeselectcameracnt < 0) && !s_underselectcamera && (curindex >= 0) && (curindex < s_cameramodel->GetCameraMotInfoSize())) {
+					if ((s_opeselectcameracnt < 0) && !s_underselectcamera && (curindex >= 0) && (curindex < g_chacamera.GetCameraAnimModel()->GetCameraMotInfoSize())) {
 						s_opeselectcameracnt = curindex;
 						s_underselectcamera = true;
 						//int cameraindex = curindex;
@@ -18752,121 +18574,34 @@ int RetargetMotion()
 
 int SetCamera6Angle()
 {
-
-	ChaVector3 weye, wdiff;
-	weye = g_camEye;
-	wdiff = g_camtargetpos - weye;
-	float camdist = (float)ChaVector3LengthDbl(&wdiff);
-
-	ChaVector3 neweye;
-	float delta = 0.10f;
-
 	bool setflag = false;
 
 	if (g_keybuf[VK_F1] & 0x80) {
-		neweye.x = g_camtargetpos.x;
-		neweye.y = g_camtargetpos.y;
-		neweye.z = g_camtargetpos.z - camdist;
-
-		////#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-		////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-		////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-
-		g_befcamEye = g_camEye;
-		g_camEye = neweye;
-		//!!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-		//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-
+		g_chacamera.SetCamera6Angle(1);
 		setflag = true;
 	}
 	else if (g_keybuf[VK_F2] & 0x80) {
-		neweye.x = g_camtargetpos.x;
-		neweye.y = g_camtargetpos.y;
-		neweye.z = g_camtargetpos.z + camdist;
-
-		////#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-		////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-		////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-
-		g_befcamEye = g_camEye;
-		g_camEye = neweye;
-		//!!!!!!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-		//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-
+		g_chacamera.SetCamera6Angle(2);
 		setflag = true;
 	}
 	else if (g_keybuf[VK_F3] & 0x80) {
-		neweye.x = g_camtargetpos.x - camdist;
-		neweye.y = g_camtargetpos.y;
-		neweye.z = g_camtargetpos.z;
-
-		////#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-		////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-		////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-
-		g_befcamEye = g_camEye;
-		g_camEye = neweye;
-		//!!!!!!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-		//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-
+		g_chacamera.SetCamera6Angle(3);
 		setflag = true;
 	}
 	else if (g_keybuf[VK_F4] & 0x80) {
-		neweye.x = g_camtargetpos.x + camdist;
-		neweye.y = g_camtargetpos.y;
-		neweye.z = g_camtargetpos.z;
-
-		////#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-		////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-		////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-
-		g_befcamEye = g_camEye;
-		g_camEye = neweye;
-		//!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-		//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+		g_chacamera.SetCamera6Angle(4);
+		setflag = true;
 	}
 	else if (g_keybuf[VK_F5] & 0x80) {
-		neweye.x = g_camtargetpos.x;
-		neweye.y = g_camtargetpos.y + camdist;
-		neweye.z = g_camtargetpos.z + delta;
-
-		////#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-		////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-		////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-
-		g_befcamEye = g_camEye;
-		g_camEye = neweye;
-		//!!!!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-		//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-
+		g_chacamera.SetCamera6Angle(5);
 		setflag = true;
 	}
 	else if (g_keybuf[VK_F6] & 0x80) {
-		neweye.x = g_camtargetpos.x;
-		neweye.y = g_camtargetpos.y - camdist;
-		neweye.z = g_camtargetpos.z - delta;
-
-		////#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-		////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-		////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-
-		g_befcamEye = g_camEye;
-		g_camEye = neweye;
-		//!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-		//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-
+		g_chacamera.SetCamera6Angle(6);
 		setflag = true;
 	}
 
 	if (setflag) {
-		ChaVector3 diffv;
-		diffv = g_camEye - g_camtargetpos;
-		if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
-			g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
-		}
-		else {
-			g_camdist = (float)ChaVector3LengthDbl(&diffv);
-		}
 		SetCamera3DFromEyePos();
 	}
 
@@ -19343,10 +19078,10 @@ int SaveProject()
 	g_chascene->GetModelIndex(writemodelindex);
 	DOLLYELEM2 cameraonload;
 	cameraonload.Init();
-	cameraonload.elem1.camerapos = g_camEye;
-	cameraonload.elem1.cameratarget = g_camtargetpos;
+	cameraonload.elem1.camerapos = g_chacamera.GetCamEye();
+	cameraonload.elem1.cameratarget = g_chacamera.GetCamTargetPos();
 	cameraonload.elem1.validflag = true;
-	cameraonload.upvec = g_cameraupdir;
+	cameraonload.upvec = g_chacamera.GetCamUpDir();
 	cameraonload.noupvecflag = false;
 	CChaFile chafile;
 	int result = chafile.WriteChaFile(g_bakelimiteulonsave, s_bpWorld, s_projectdir, s_projectname,
@@ -19588,7 +19323,7 @@ int PostOpenChaFile()
 		s_owpSpeedSlider->setValue(g_dspeed, false);
 	}
 	
-	ChangeCameraDist(g_camdist , s_moveeyepos, false);
+	ChangeCameraDist(g_chacamera.GetCamDist() , g_chacamera.GetCamMoveEyePos(), false);
 
 
 	s_bulletdlg.CreateBulletWnd();//作成済でない場合に作成
@@ -19727,9 +19462,9 @@ int OpenChaFile()
 	}
 
 	if (cameraonload.elem1.validflag) {
-		g_camEye = cameraonload.elem1.camerapos;
-		g_camtargetpos = cameraonload.elem1.cameratarget;
-		g_cameraupdir = cameraonload.upvec;
+		g_chacamera.SetCamEye(cameraonload.elem1.camerapos);
+		g_chacamera.SetCamTargetPos(cameraonload.elem1.cameratarget);
+		g_chacamera.SetCamUpDir(cameraonload.upvec);
 	}
 
 	//OnAddMotion(GetCurrentModel()->GetCurMotInfo()->motid);
@@ -21432,7 +21167,7 @@ int PickSpAxis(POINT srcpos)
 	}
 
 	//カメラアニメの編集時にSpAxisをドラッグするので0リターンをコメントアウト
-	//if (s_camtargetdisp) {
+	//if (g_chacamera.GetCamTargetDisp()) {
 	//	//カメラターゲット位置にマニピュレータ表示時にはpickしない
 	//	return 0;
 	//}
@@ -22872,7 +22607,7 @@ int SetSelectState()
 	}
 
 
-	if (s_camtargetdisp == false) {
+	if (g_chacamera.GetCamTargetDisp() == false) {
 		if (g_ikkind == IKKIND_ROTATE) {
 			s_select->SetDispFlag("ringX", 1);
 			s_select->SetDispFlag("ringY", 1);
@@ -23633,10 +23368,10 @@ int SetLTimelineMark(int curboneno)
 		}
 	}
 	else if (g_edittarget == EDITTARGET_CAMERA) {
-		if (s_cameramodel) {
-			int cameramotid = s_cameramodel->GetCameraMotionId();
+		if (g_chacamera.GetCameraAnimModel() != nullptr) {
+			int cameramotid = g_chacamera.GetCameraAnimModel()->GetCameraMotionId();
 			if (cameramotid > 0) {
-				CAMERANODE* cnptr = s_cameramodel->GetCAMERANODE(cameramotid);
+				CAMERANODE* cnptr = g_chacamera.GetCameraAnimModel()->GetCAMERANODE(cameramotid);
 				if (cnptr && cnptr->pbone && cnptr->pbone->GetParent(false)) {
 					WCHAR markname[256] = { 0L };
 					if (g_limitdegflag == true) {
@@ -24377,11 +24112,11 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 
 		case IDC_TOCAMERAPOS:
 		{
-			swprintf_s(strval, 256, L"%.3f", g_camEye.x);
+			swprintf_s(strval, 256, L"%.3f", g_chacamera.GetCamEye().x);
 			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONX, strval);
-			swprintf_s(strval, 256, L"%.3f", g_camEye.y);
+			swprintf_s(strval, 256, L"%.3f", g_chacamera.GetCamEye().y);
 			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONY, strval);
-			swprintf_s(strval, 256, L"%.3f", g_camEye.z);
+			swprintf_s(strval, 256, L"%.3f", g_chacamera.GetCamEye().z);
 			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONZ, strval);
 
 			SetModelWorldMat();
@@ -24389,11 +24124,11 @@ LRESULT CALLBACK ModelWorldMatDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM 
 			break;
 		case IDC_TOCAMERATARGET:
 		{
-			swprintf_s(strval, 256, L"%.3f", g_camtargetpos.x);
+			swprintf_s(strval, 256, L"%.3f", g_chacamera.GetCamTargetPos().x);
 			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONX, strval);
-			swprintf_s(strval, 256, L"%.3f", g_camtargetpos.y);
+			swprintf_s(strval, 256, L"%.3f", g_chacamera.GetCamTargetPos().y);
 			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONY, strval);
-			swprintf_s(strval, 256, L"%.3f", g_camtargetpos.z);
+			swprintf_s(strval, 256, L"%.3f", g_chacamera.GetCamTargetPos().z);
 			SetDlgItemTextW(hDlgWnd, IDC_EDIT_POSITIONZ, strval);
 
 			SetModelWorldMat();
@@ -25172,12 +24907,12 @@ int ChangeLimitDegFlag(bool srcflag, bool setcheckflag, bool updateeulflag)
 
 int ChangeCameraMode(int forcemode)
 {
-	s_savecameraanimmode = g_cameraanimmode;
+	s_savecameraanimmode = g_chacamera.GetCameraAnimMode();
 
 	if (g_edittarget == EDITTARGET_CAMERA) {
 		//カメラグラフモードオンの場合には　カメラエディットオン＋カメラ再生オン
 		//よってカメラ再生オン
-		g_cameraanimmode = 1;
+		g_chacamera.SetCameraAnimMode(1);
 		s_spcameramode.state = true;
 	}
 	else {
@@ -25187,9 +24922,9 @@ int ChangeCameraMode(int forcemode)
 
 			if (s_spcameramode.state == false) {
 				//現在のスイッチがオフの場合
-				if (s_cameramodel) {
+				if (g_chacamera.GetCameraAnimModel() != nullptr) {
 					//カメラモデルが存在する場合　オンにする
-					g_cameraanimmode = 1;
+					g_chacamera.SetCameraAnimMode(1);
 					s_spcameramode.state = true;
 				}
 				else {
@@ -25199,18 +24934,18 @@ int ChangeCameraMode(int forcemode)
 			}
 			else {
 				//現在のスイッチがオンかつオプションもオンの場合　オフにする
-				g_cameraanimmode = 0;
+				g_chacamera.SetCameraAnimMode(0);
 				s_spcameramode.state = false;
 			}
 		}
 		else if (forcemode == 1) {
 			//強制　オフ
-			g_cameraanimmode = 0;
+			g_chacamera.SetCameraAnimMode(0);
 			s_spcameramode.state = false;
 		}
 		else if (forcemode == 2) {
 			//強制　オン
-			g_cameraanimmode = 1;
+			g_chacamera.SetCameraAnimMode(1);
 			s_spcameramode.state = true;
 		}
 		else {
@@ -25225,13 +24960,13 @@ int ChangeCameraMode(int forcemode)
 
 int ChangeCameraInherit()
 {
-	s_saveCameraInheritMode = g_cameraInheritMode;
+	s_saveCameraInheritMode = g_chacamera.GetCameraInheritMode();
 
 	switch (s_spcamerainherit.mode) {
 	case CAMERA_INHERIT_ALL:
-		if (s_cameramodel) {
+		if (g_chacamera.GetCameraAnimModel() != nullptr) {
 			//カメラモデルが存在する場合　次モード
-			g_cameraInheritMode = CAMERA_INHERIT_CANCEL_NULL1;
+			g_chacamera.SetCameraInheritMode(CAMERA_INHERIT_CANCEL_NULL1);
 			s_spcamerainherit.mode = 1;
 		}
 		else {
@@ -25240,9 +24975,9 @@ int ChangeCameraInherit()
 		}
 		break;
 	case CAMERA_INHERIT_CANCEL_NULL1:
-		if (s_cameramodel) {
+		if (g_chacamera.GetCameraAnimModel() != nullptr) {
 			//カメラモデルが存在する場合　次モード
-			g_cameraInheritMode = CAMERA_INHERIT_CANCEL_NULL2;
+			g_chacamera.SetCameraInheritMode(CAMERA_INHERIT_CANCEL_NULL2);
 			s_spcamerainherit.mode = 2;
 		}
 		else {
@@ -25251,9 +24986,9 @@ int ChangeCameraInherit()
 		}
 		break;
 	case CAMERA_INHERIT_CANCEL_NULL2:
-		if (s_cameramodel) {
+		if (g_chacamera.GetCameraAnimModel() != nullptr) {
 			//最初のモードへ
-			g_cameraInheritMode = CAMERA_INHERIT_ALL;
+			g_chacamera.SetCameraInheritMode(CAMERA_INHERIT_ALL);
 			s_spcamerainherit.mode = 0;
 		}
 		else {
@@ -25505,9 +25240,9 @@ int OnFrameKeyboard()
 		//TourBox
 		if ((g_keybuf['T'] & 0x80) && ((g_savekeybuf['T'] & 0x80) == 0)) {//TourBox ノブボタンを押す
 			//Always Lock to Selected Joint.
-			s_camtargetflag = (s_camtargetflag == 0) ? 1 : 0;
+			g_chacamera.SetCamTargetFlag((g_chacamera.GetCamTargetFlag() == 0) ? 1 : 0);
 			if (s_sidemenu_sellock) {
-				s_sidemenu_sellock->setValue(s_camtargetflag, true);
+				s_sidemenu_sellock->setValue(g_chacamera.GetCamTargetFlag(), true);
 			}
 		}
 		//TourBox
@@ -25518,9 +25253,9 @@ int OnFrameKeyboard()
 		//TourBox
 		if ((g_keybuf['G'] & 0x80) && ((g_savekeybuf['G'] & 0x80) == 0)) {//TourBox 右矢印＋ノブボタンを押す
 			//Lock to Manipulator
-			s_camtargetdisp = (s_camtargetdisp == 0) ? 1 : 0;
+			g_chacamera.SetCamTargetDisp((g_chacamera.GetCamTargetDisp() == 0) ? 1 : 0);
 			if (s_sidemenu_targetdisp) {
-				s_sidemenu_targetdisp->setValue(s_camtargetdisp, true);
+				s_sidemenu_targetdisp->setValue(g_chacamera.GetCamTargetDisp(), true);
 			}
 		}
 
@@ -26013,11 +25748,11 @@ int OnFrameProcessCameraTime(double difftime, double* pnextframe, int* pendflag,
 		return 0;
 	}
 
-	if (!s_cameramodel) {//2024/01/31
+	if (g_chacamera.GetCameraAnimModel() == nullptr) {//2024/01/31
 		return 0;
 	}
 	//int cameramotid = GetCurrentModel()->GetCameraMotionId();
-	int cameramotid = s_cameramodel->GetCameraMotionId();//2024/01/31
+	int cameramotid = g_chacamera.GetCameraAnimModel()->GetCameraMotionId();//2024/01/31
 	if (cameramotid <= 0) {
 		return 0;
 	}
@@ -26034,12 +25769,12 @@ int OnFrameProcessCameraTime(double difftime, double* pnextframe, int* pendflag,
 				rangestart = s_previewrange.GetStartFrame();
 			}
 			//GetCurrentModel()->SetMotionFrame(cameramotid, rangestart);
-			s_cameramodel->SetCameraMotionFrame(cameramotid, rangestart);
+			g_chacamera.GetCameraAnimModel()->SetCameraMotionFrame(cameramotid, rangestart);
 			*pnextframe = 0.0;
 		}
 		//GetCurrentModel()->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, cameramotid);//!!! cameramotid !!!
-		s_cameramodel->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, cameramotid);//!!! cameramotid !!!
-		s_cameramodel->SetCameraMotionFrame(cameramotid, *pnextframe);
+		g_chacamera.GetCameraAnimModel()->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, cameramotid);//!!! cameramotid !!!
+		g_chacamera.GetCameraAnimModel()->SetCameraMotionFrame(cameramotid, *pnextframe);
 	}
 	else {
 		if (s_owpLTimeline) {
@@ -26056,8 +25791,8 @@ int OnFrameProcessCameraTime(double difftime, double* pnextframe, int* pendflag,
 	
 	//GetCurrentModel()->SetMotionSpeed(cameramotid, g_dspeed);
 	//GetCurrentModel()->SetMotionFrame(cameramotid, *pnextframe);
-	s_cameramodel->SetMotionSpeed(cameramotid, g_dspeed);
-	//s_cameramodel->SetMotionFrame(cameramotid, *pnextframe);//2025/01/04 comment out
+	g_chacamera.GetCameraAnimModel()->SetMotionSpeed(cameramotid, g_dspeed);
+	//g_chacamera.GetCameraAnimModel()->SetMotionFrame(cameramotid, *pnextframe);//2025/01/04 comment out
 
 	return 0;
 }
@@ -26081,13 +25816,13 @@ int OnFramePreviewCamera(double srcnextframe)
 	g_chascene->SetENullTime(-1, srcnextframe);
 
 
-	if (g_cameraanimmode != 0) {//2023/05/29 2023/06/04
+	if (g_chacamera.GetCameraAnimMode() != 0) {//2023/05/29 2023/06/04
 	 
 		//########################
 		//カメラアニメモード　オン
 		//########################
 
-		if (s_cameramodel) {
+		if (g_chacamera.GetCameraAnimModel() != nullptr) {
 			if (g_previewFlag ||
 				((g_previewFlag == 0) && (s_savepreviewFlag != 0))) {
 				nextcameraframe = srcnextframe;
@@ -26101,31 +25836,16 @@ int OnFramePreviewCamera(double srcnextframe)
 				}
 			}
 
-			//double roundingframe = RoundingTime(nextcameraframe);
-			//s_cameramodel->GetCameraAnimParams(roundingframe, g_camdist, &g_camEye, &g_camtargetpos, &g_cameraupdir, 0, g_cameraInheritMode);//g_camdist
-			////#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-			//s_cameraframe = roundingframe;
-
-
 			//2024/01/31 NotRoundingTime
-			s_cameramodel->GetCameraAnimParams(nextcameraframe, g_camdist,
-				&g_camEye, &g_camtargetpos, &g_cameraupdir, 0, g_cameraInheritMode);//g_camdist
-			s_cameraframe = nextcameraframe;
+			g_chacamera.OnFramePreviewCamera(nextcameraframe);
 
-			ChaVector3 cameradiff = g_camtargetpos - g_camEye;
-			if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
-				g_camdist = (float)ChaVector3LengthDbl_2D(&cameradiff);
-			}
-			else {
-				g_camdist = (float)ChaVector3LengthDbl(&cameradiff);
-			}
 		}
 		else {
 			//######################################
 			//カメラモデルが無い場合
 			//GUIによるカメラ操作可能に
 			//######################################
-			//#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
+			//#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_chacamera.GetCamTargetPos().XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
 		}
 	}
 	else {
@@ -26137,7 +25857,7 @@ int OnFramePreviewCamera(double srcnextframe)
 		//######################################
 		//GUIによるカメラ操作可能に
 		//######################################
-		//#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
+		//#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_chacamera.GetCamTargetPos().XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
 	}
 
 
@@ -26787,7 +26507,7 @@ int OnFrameTimeLineWnd()
 		if (g_edittarget == EDITTARGET_CAMERA) {
 			//カメラグラフモードオンの場合には　カメラエディットオン＋カメラ再生オン
 			//よってカメラ再生オン
-			g_cameraanimmode = 1;
+			g_chacamera.SetCameraAnimMode(1);
 			s_spcameramode.state = true;
 
 			PrepairUndo();//編集前のPrepairUndo
@@ -27425,10 +27145,10 @@ int OnFrameToolWnd()
 	if (s_camdistsliderflag) {
 		s_camdistsliderflag = false;
 
-		s_camdistsliderval = (float)fmin(s_camdistsliderval, s_maxcamdist);
+		s_camdistsliderval = (float)fmin(s_camdistsliderval, g_chacamera.GetMaxCamDist());
 		s_camdistsliderval = (float)fmax(s_camdistsliderval, 0.0);
 
-		ChangeCameraDist(s_camdistsliderval, s_moveeyepos, true);
+		ChangeCameraDist(s_camdistsliderval, g_chacamera.GetCamMoveEyePos(), true);
 	}
 
 
@@ -27441,7 +27161,7 @@ int OnFrameToolWnd()
 		s_plateFlag = false;
 	}
 
-	if (s_camtargetOnceflag) {	
+	if (g_chacamera.GetCamTargetOnceFlag()) {	
 		if (GetCurrentModel() && (s_curboneno >= 0)) {
 
 			int curmotid = GetCurrentModel()->GetCurrentMotID();
@@ -27456,30 +27176,19 @@ int OnFrameToolWnd()
 
 				//2024/08/02
 				//Lock2Joint操作時には　カメラアニメオンまたはカメラグラフモードの場合に　カメラアニメを編集
-				if (s_cameramodel && (s_spcameramode.state || (g_edittarget == EDITTARGET_CAMERA))) {
-					if (s_camtargetflag) {
+				if ((g_chacamera.GetCameraAnimModel() != nullptr) && (s_spcameramode.state || (g_edittarget == EDITTARGET_CAMERA))) {
+					if (g_chacamera.GetCamTargetFlag()) {
 						//always s_editrange全範囲に対してウェイト1.0でLock2Joint処理.ジョイントのモーションにも対応
-						s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, GetCurrentModel(), s_curboneno);
+						s_editcameraflag = g_chacamera.GetCameraAnimModel()->CameraAnimLock2Joint(&s_editrange, GetCurrentModel(), s_curboneno);
 					}
 					else {
 						//once applyframeに対してLock2Joint、applyframe以外はbrushウェイト分だけLock2Joint.applyframe時のジョイント位置を使用
-						s_editcameraflag = s_cameramodel->CameraAnimDiffRotMatView(&s_editrange, s_befLockMatView, s_matView);
+						s_editcameraflag = g_chacamera.GetCameraAnimModel()->CameraAnimDiffRotMatView(&s_editrange, s_befLockMatView, s_matView);
 					}
 
-					s_cameramodel->GetCameraAnimParams(s_cameraframe,
-						g_camdist,
-						&g_camEye, &g_camtargetpos, &g_cameraupdir,
-						0, g_cameraInheritMode);//g_camdist
+					g_chacamera.OnFramePreviewCamera(g_chacamera.GetCameraFrame());
 
-					ChaVector3 diffvec = g_camtargetpos - g_camEye;
-					float newcamdist;
-					if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
-						newcamdist = (float)ChaVector3LengthDbl_2D(&diffvec);
-					}
-					else {
-						newcamdist = (float)ChaVector3LengthDbl(&diffvec);
-					}
-
+					float newcamdist = (float)g_chacamera.CalcCameraDist();
 					ChangeCameraDist(newcamdist, false, false);
 				}
 
@@ -27487,7 +27196,7 @@ int OnFrameToolWnd()
 				PrepairUndo();
 			}
 
-			s_camtargetOnceflag = 0;//AutoCameraTarget()呼び出しよりも後で初期化
+			g_chacamera.SetCamTargetOnceFlag(0);//AutoCameraTarget()呼び出しよりも後で初期化
 
 		}
 	}
@@ -27755,13 +27464,13 @@ int OnFrameToolWnd()
 		s_interpolateFlag = false;
 	}
 	if (s_interpolatecameraFlag) {
-		if (s_cameramodel && s_owpTimeline && s_owpLTimeline) {
+		if ((g_chacamera.GetCameraAnimModel() != nullptr) && s_owpTimeline && s_owpLTimeline) {
 			MOTINFO curmi = GetCameraMotInfo();
 			if (curmi.motid > 0) {
 				//2024/06/24
 				//カメラアニメの場合はメニューを選択する必要が無いので　コンテクストメニューをスキップして　直接処理関数を呼び出す
 				s_interpolateState = 1;//all bone
-				InterpolateMotionFunc(s_cameramodel, &curmi);
+				InterpolateMotionFunc(g_chacamera.GetCameraAnimModel(), &curmi);
 			}
 		}
 		s_interpolatecameraFlag = false;
@@ -27881,10 +27590,10 @@ int OnFrameToolWnd()
 		s_undersymcopyFlag = false;
 	}
 	if (s_copycameraFlag) {
-		if (s_cameramodel && s_owpTimeline && s_owpLTimeline) {
+		if ((g_chacamera.GetCameraAnimModel() != nullptr) && s_owpTimeline && s_owpLTimeline) {
 			MOTINFO curmi = GetCameraMotInfo();
 			if (curmi.motid > 0) {
-				//CopyMotionFunc(s_cameramodel, &curmi);
+				//CopyMotionFunc(g_chacamera.GetCameraAnimModel(), &curmi);
 				DispCpInfoDlg2(GetCurrentModel(), &curmi, 1);
 			}
 		}
@@ -27955,10 +27664,10 @@ int OnFrameToolWnd()
 
 		HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));//長いフレームの保存は数秒時間がかかることがあるので砂時計カーソルにする
 
-		if (s_cameramodel) {
+		if (g_chacamera.GetCameraAnimModel() != nullptr) {
 			MOTINFO curmi = GetCameraMotInfo();
 			if (curmi.motid > 0) {
-				PasteMotionFunc(s_cameramodel, &curmi);
+				PasteMotionFunc(g_chacamera.GetCameraAnimModel(), &curmi);
 			}
 		}
 
@@ -28064,7 +27773,7 @@ int OnFrameToolWnd()
 		s_smoothFlag = false;
 	}
 	if (s_smoothcameraFlag) {//s_spsmooth_cameraボタン用
-		if (s_cameramodel) {
+		if (g_chacamera.GetCameraAnimModel() != nullptr) {
 			MOTINFO curmi = GetCameraMotInfo();
 			if (curmi.motid > 0) {
 				int savefilterState = s_filterState;
@@ -28074,7 +27783,7 @@ int OnFrameToolWnd()
 
 				//ギザギザを平滑化
 				bool copylw2w = true;
-				FilterNoDlg(copylw2w, s_cameramodel, curmi.motid);
+				FilterNoDlg(copylw2w, g_chacamera.GetCameraAnimModel(), curmi.motid);
 
 				//PrepairUndo();//FilterNoDlg内部から呼ぶ
 				s_filterState = savefilterState;
@@ -29306,8 +29015,8 @@ int OnSpriteUndo()
 	int saveedittarget = g_edittarget;
 	int newedittarget = g_edittarget;//ただの初期化　RollBackUndoMotionにて新しい状態へと上書きされる
 	int savecameramotionid;
-	if (s_cameramodel) {
-		savecameramotionid = s_cameramodel->GetCameraMotionId();
+	if (g_chacamera.GetCameraAnimModel() != nullptr) {
+		savecameramotionid = g_chacamera.GetCameraAnimModel()->GetCameraMotionId();
 	}
 	else {
 		savecameramotionid = 0;
@@ -29473,10 +29182,10 @@ int OnSpriteUndo()
 			//	}
 			//}
 
-			if (undocamera.cameramodel && (undocamera.cameramodel == s_cameramodel)) {
-				if (s_cameramodel->ExistCurrentMotion() && 
+			if (undocamera.cameramodel && (undocamera.cameramodel == g_chacamera.GetCameraAnimModel())) {
+				if (g_chacamera.GetCameraAnimModel()->ExistCurrentMotion() &&
 					(undomotid.cameramotid > 0) && 
-					(s_cameramodel->GetCameraMotionId() != undomotid.cameramotid)) {
+					(g_chacamera.GetCameraAnimModel()->GetCameraMotionId() != undomotid.cameramotid)) {
 
 					if (s_camerapanel.radiobutton) {
 						int cameramotindex = GetCurrentModel()->MotionID2CameraIndex(undomotid.cameramotid);
@@ -29486,7 +29195,7 @@ int OnSpriteUndo()
 						}
 					}
 
-					s_cameramodel->SetCameraMotionId(undomotid.cameramotid);
+					g_chacamera.GetCameraAnimModel()->SetCameraMotionId(undomotid.cameramotid);
 				}
 			}
 			else {
@@ -29527,8 +29236,8 @@ int OnSpriteUndo()
 			s_buttonselectend = fmax(0.0, undomotid.endframe);
 			s_buttonselectend = fmin(GetCurrentModel()->GetCurrentMaxFrame(), s_buttonselectend);
 		}
-		else if (s_cameramodel) {
-			MOTINFO camerami = s_cameramodel->GetMotInfo(s_cameramodel->GetCameraMotionId());
+		else if (g_chacamera.GetCameraAnimModel() != nullptr) {
+			MOTINFO camerami = g_chacamera.GetCameraAnimModel()->GetMotInfo(g_chacamera.GetCameraAnimModel()->GetCameraMotionId());
 			if (camerami.motid > 0) {
 				s_buttonselectstart = fmax(0.0, undomotid.startframe);
 				s_buttonselectstart = fmin(camerami.frameleng, s_buttonselectstart);
@@ -29601,16 +29310,16 @@ int OnSpriteUndo()
 			//2023/11/03 hipsを３回転してアンドゥしたときに　編集範囲の境目で　オイラーグラフが連続するために必要
 			GetCurrentModel()->CalcBoneEul(g_limitdegflag, GetCurrentModel()->GetCurrentMotID());
 		}
-		else if (s_cameramodel) {
+		else if (g_chacamera.GetCameraAnimModel() != nullptr) {
 
 			//2024/06/05その後
 			//IsCamera()==trueのボーンに関してもアンドゥ処理をすることによりUpdateCameramatFromENull()は不要になった　コメントアウト
 			//2024/06/05
 			//カメラアニメのアンドゥーはIsNullAndChildIsCamera()==trueのボーンに対して行っている
 			//アンドゥ結果をIsCamera()==trueのボーンに反映するためにUpdateCameraMatFromENull()を呼ぶ
-			//s_cameramodel->UpdateCameraMatFromENull(s_cameramodel->GetCameraMotionId());
+			//g_chacamera.GetCameraAnimModel()->UpdateCameraMatFromENull(g_chacamera.GetCameraAnimModel()->GetCameraMotionId());
 
-			s_cameramodel->CalcBoneEul(false, s_cameramodel->GetCameraMotionId());
+			g_chacamera.GetCameraAnimModel()->CalcBoneEul(false, g_chacamera.GetCameraAnimModel()->GetCameraMotionId());
 		}
 
 		refreshEulerGraph();
@@ -29882,7 +29591,7 @@ int InitPluginMenu()
 bool UnderDragOperation_L()//左ドラッグ中かどうか
 {
 
-	if (s_twistcameraFlag) {
+	if (g_chacamera.GetCamTwistFlag()) {
 		return false;
 	}
 	if (s_rbuttonSelectFlag) {
@@ -29950,7 +29659,7 @@ bool UnderDragOperation_L()//左ドラッグ中かどうか
 
 bool UnderDragOperation_R()
 {
-	if (s_twistcameraFlag == true) {
+	if (g_chacamera.GetCamTwistFlag()) {
 		return true;
 	}
 	if (s_rbuttonSelectFlag == true) {
@@ -30354,23 +30063,23 @@ int CreateLongTimelineWnd()
 int Params2SideMenuWnd()//2024/06/06
 {
 	if (s_sidemenu_sellock) {
-		s_sidemenu_sellock->setValue(s_camtargetflag, false);
+		s_sidemenu_sellock->setValue(g_chacamera.GetCamTargetFlag(), false);
 	}
 
 	if (s_sidemenu_targetdisp) {
-		s_sidemenu_targetdisp->setValue(s_camtargetdisp, false);
+		s_sidemenu_targetdisp->setValue(g_chacamera.GetCamTargetDisp(), false);
 	}
 	
 	if (s_sidemenu_moveeyepos) {
-		s_sidemenu_moveeyepos->setValue(s_moveeyepos, false);
+		s_sidemenu_moveeyepos->setValue(g_chacamera.GetCamMoveEyePos(), false);
 	}
 
 	if (s_sidemenu_camdistSlider) {
-		s_sidemenu_camdistSlider->setValue((double)g_camdist, false);
+		s_sidemenu_camdistSlider->setValue((double)g_chacamera.GetCamDist(), false);
 	}
 
 	if (s_cameraheightSlider) {
-		s_cameraheightSlider->setValue((double)g_cameraheight, false);
+		s_cameraheightSlider->setValue((double)g_chacamera.GetCameraHeight(), false);
 	}
 
 	return 0;
@@ -30773,7 +30482,7 @@ int CreateSideMenuWnd()
 				_ASSERT(0);
 				return 1;
 			}
-			s_sidemenu_sellock = new OWP_CheckBoxA(L"AlwaysLock", s_camtargetflag, 15, false);
+			s_sidemenu_sellock = new OWP_CheckBoxA(L"AlwaysLock", g_chacamera.GetCamTargetFlag(), 15, false);
 			if (!s_sidemenu_sellock) {
 				_ASSERT(0);
 				return 1;
@@ -30783,12 +30492,12 @@ int CreateSideMenuWnd()
 				_ASSERT(0);
 				return 1;
 			}
-			s_sidemenu_targetdisp = new OWP_CheckBoxA(L"DispTarget", s_camtargetdisp, 15, false);
+			s_sidemenu_targetdisp = new OWP_CheckBoxA(L"DispTarget", g_chacamera.GetCamTargetDisp(), 15, false);
 			if (!s_sidemenu_targetdisp) {
 				_ASSERT(0);
 				return 1;
 			}
-			s_sidemenu_moveeyepos = new OWP_CheckBoxA(L"MoveEyePos", s_moveeyepos, 15, false);
+			s_sidemenu_moveeyepos = new OWP_CheckBoxA(L"MoveEyePos", g_chacamera.GetCamMoveEyePos(), 15, false);
 			if (!s_sidemenu_moveeyepos) {
 				_ASSERT(0);
 				return 1;
@@ -30809,10 +30518,11 @@ int CreateSideMenuWnd()
 				_ASSERT(0);
 				abort();
 			}
-			g_camdist = (float)fmin(g_camdist, s_maxcamdist);
-			g_camdist = (float)fmax(g_camdist, 1.0);
-			//s_sidemenu_camdistSlider = new OWP_Slider(g_camdist, 1000.0, 1.0);
-			s_sidemenu_camdistSlider = new OWP_Slider(g_camdist, (double)s_maxcamdist, 1.0);//2024/06/03 maxを5000から20000に変更
+			float newcamdist = (float)fmin(g_chacamera.GetCamDist(), g_chacamera.GetMaxCamDist());
+			newcamdist = (float)fmax(newcamdist, 1.0);
+			g_chacamera.SetCamDist(newcamdist);
+			//s_sidemenu_camdistSlider = new OWP_Slider(g_chacamera.GetCamDist(), 1000.0, 1.0);
+			s_sidemenu_camdistSlider = new OWP_Slider(g_chacamera.GetCamDist(), (double)g_chacamera.GetMaxCamDist(), 1.0);//2024/06/03 maxを5000から20000に変更
 			if (!s_sidemenu_camdistSlider) {
 				_ASSERT(0);
 				return 1;
@@ -30824,12 +30534,12 @@ int CreateSideMenuWnd()
 				_ASSERT(0);
 				abort();
 			}
-			s_cameraheightChk = new OWP_CheckBoxA(L"CamHeight", (g_cameraheightflag != 0), labelheight, false);
+			s_cameraheightChk = new OWP_CheckBoxA(L"CamHeight", (g_chacamera.GetCameraHeightFlag() != 0), labelheight, false);
 			if (!s_cameraheightChk) {
 				_ASSERT(0);
 				abort();
 			}
-			s_cameraheightSlider = new OWP_Slider((double)g_cameraheight, 800.0, 50.0);//, labelheight);
+			s_cameraheightSlider = new OWP_Slider((double)g_chacamera.GetCameraHeight(), 800.0, 50.0);//, labelheight);
 			if (!s_cameraheightSlider) {
 				_ASSERT(0);
 				abort();
@@ -30865,7 +30575,7 @@ int CreateSideMenuWnd()
 						WideCharToMultiByte(CP_ACP, 0, gname, -1, mbgname, MAX_PATH, NULL, NULL);
 						s_cameragmodelCombo->addString(mbgname);
 
-						if ((g_cameragmodel != nullptr) && (g_cameragmodel == curmodelelem.modelptr)) {
+						if ((g_chacamera.GetCameraGModel() != nullptr) && (g_chacamera.GetCameraGModel() == curmodelelem.modelptr)) {
 							findselected = modelindex;
 						}
 					}
@@ -30936,10 +30646,10 @@ int CreateSideMenuWnd()
 				s_sidemenu_moveeyepos->setButtonListener([]() {
 					bool value = s_sidemenu_moveeyepos->getValue();
 					if (value) {
-						s_moveeyepos = true;
+						g_chacamera.SetCamMoveEyePos(true);
 					}
 					else {
-						s_moveeyepos = false;
+						g_chacamera.SetCamMoveEyePos(false);
 					}
 					});
 			}
@@ -30951,26 +30661,25 @@ int CreateSideMenuWnd()
 					});
 			}
 
-
 			s_cameraheightChk->setButtonListener([]() {
 				bool value = s_cameraheightChk->getValue();
 				if (value) {
-					g_cameraheightflag = 1;
+					g_chacamera.SetCameraHeightFlag(1);
 				}
 				else {
-					g_cameraheightflag = 0;
+					g_chacamera.SetCameraHeightFlag(0);
 				}
 				});
 			s_cameraheightSlider->setCursorListener([]() {
 				double value = s_cameraheightSlider->getValue();
-				g_cameraheight = (float)value;
+				g_chacamera.SetCameraHeight((float)value);
 				});
 			s_cameragmodelCombo->setButtonListener([]() {
 				int comboid = s_cameragmodelCombo->trackPopUpMenu();
 				if ((comboid >= 1) && (g_chascene != nullptr)) {
 					MODELELEM gmodelelem = g_chascene->GetModelElem(comboid - 1);
 					if (gmodelelem.modelptr) {
-						g_cameragmodel = gmodelelem.modelptr;
+						g_chacamera.SetCameraGModel(gmodelelem.modelptr);
 						//if (s_sidemenuWnd) {
 						//	s_sidemenuWnd->callRewrite();
 						//}
@@ -32153,11 +31862,11 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 		ChaVector3 vCenter;
 		if (totalmb.IsValid()) {
 			vCenter = totalmb.center;
-			vCenter.x = g_camEye.x;
-			vCenter.z = g_camEye.z;
+			vCenter.x = g_chacamera.GetCamEye().x;
+			vCenter.z = g_chacamera.GetCamEye().z;
 		}
 		else {
-			vCenter.SetParams(g_camEye.x, 0.0f, g_camEye.z);
+			vCenter.SetParams(g_chacamera.GetCamEye().x, 0.0f, g_chacamera.GetCamEye().z);
 		}
 
 		//float fObjectRadius = g_chascene->GetTotalModelBound().r;
@@ -32317,9 +32026,9 @@ int OnRenderSelect(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		return 0;
 	}
 
-	int renderflag = ((s_dispselect || s_camtargetdisp) && (s_select != nullptr)) ? 1 : 0;
+	int renderflag = ((s_dispselect || g_chacamera.GetCamTargetDisp()) && (s_select != nullptr)) ? 1 : 0;
 
-	if (s_camtargetdisp == false) {
+	if (g_chacamera.GetCamTargetDisp() == false) {
 		if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
 			if (s_select && (s_curboneno >= 0) && (g_previewFlag == 0) && (GetCurrentModel() && GetCurrentModel()->GetModelDisp()) && (g_bonemarkflag != 0)) {//underchecking
 				//SetSelectCol();
@@ -32504,9 +32213,9 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 			rendersprite.userint1 = GetCurrentModel()->GetCurrentUndoR();
 			rendersprite.userint2 = GetCurrentModel()->GetCurrentUndoW();
 		//}
-		//else if (s_cameramodel) {
-		//	rendersprite.userint1 = s_cameramodel->GetCurrentUndoR();
-		//	rendersprite.userint2 = s_cameramodel->GetCurrentUndoW();
+		//else if (g_chacamera.GetCameraAnimModel()) {
+		//	rendersprite.userint1 = g_chacamera.GetCameraAnimModel()->GetCurrentUndoR();
+		//	rendersprite.userint2 = g_chacamera.GetCameraAnimModel()->GetCurrentUndoW();
 		//}
 		
 		g_chascene->AddSpriteToForwardRenderPass(rendersprite);
@@ -33006,7 +32715,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 			g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 		}
 		//camerainherit
-		if (g_cameraanimmode != 0) {
+		if (g_chacamera.GetCameraAnimMode() != 0) {
 			myRenderer::RENDERSPRITE rendersprite;
 			rendersprite.Init();
 			rendersprite.psprite = s_spcamerainherit.GetSpriteForRender();
@@ -33040,7 +32749,7 @@ int SetLightDirection()
 	ChaVector3 dirz;
 	dirz.SetParams(0.0f, 0.0f, 1.0f);
 	ChaVector3 lightdir0, nlightdir0;
-	lightdir0 = g_camEye - g_camtargetpos;//2022/10/31
+	lightdir0 = g_chacamera.GetCamEye() - g_chacamera.GetCamTargetPos();//2022/10/31
 	ChaVector3Normalize(&nlightdir0, &lightdir0);
 	//g_LightControl[0].SetLightDirection(nlightdir0.D3DX());
 
@@ -35032,46 +34741,24 @@ int GetSymRootMode()
 
 void AutoCameraTarget()
 {
-	//s_camtargetflag = (int)s_CamTargetCheckBox->GetChecked();
-	if (GetCurrentModel() && (s_curboneno >= 0) && (s_camtargetflag || s_camtargetOnceflag)) {
+	//g_chacamera.GetCamTargetFlag() = (int)s_CamTargetCheckBox->GetChecked();
+	if (GetCurrentModel() && (s_curboneno >= 0) && (g_chacamera.GetCamTargetFlag() || g_chacamera.GetCamTargetOnceFlag())) {
 		CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 		_ASSERT(curbone);
 		if (curbone) {
-			g_befcamtargetpos = g_camtargetpos;
-			g_camtargetpos = curbone->GetChildWorld();
+			g_chacamera.SetBefCamTargetPos(g_chacamera.GetCamTargetPos());
+			g_chacamera.SetCamTargetPos(curbone->GetChildWorld());
 
-			if (s_moveeyepos) {
+			if (g_chacamera.GetCamMoveEyePos()) {
 				//2025/10/04
 				//joint注視中　かつ　MoveEyePosチェック中は　カメラ距離を保ってカメラが動く
-				ChangeCameraDist(g_camdist, s_moveeyepos, false);
+				ChangeCameraDist(g_chacamera.GetCamDist(), g_chacamera.GetCamMoveEyePos(), false);
 			}
 			else {
 				//MoveEyePosチェックしていない場合　かつ　FPS以外の場合　カメラ距離を変える
-				ChaVector3 diffv;
-				diffv = g_camEye - g_camtargetpos;
-				float newcamdist;
-				if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
-					newcamdist = (float)ChaVector3LengthDbl_2D(&diffv);
-				}
-				else {
-					newcamdist = (float)ChaVector3LengthDbl(&diffv);
-				}
+				float newcamdist = (float)g_chacamera.CalcCameraDist();
 				ChangeCameraDist(newcamdist, false, false);//2024/03/08
 			}
-
-			////#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));//!!!!!!!!!!!
-			//////#replacing comment out#g_Camera->SetViewParamsWithUpVec(neweye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));//!!!!!!!!!!!
-			//
-			////!!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-			////ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-			//ChaVector3 diffv;
-			//diffv = g_camEye - g_camtargetpos;
-			//float newcamdist = (float)ChaVector3LengthDbl(&diffv);
-			//ChangeCameraDist(newcamdist, false, false);//2024/03/08
-			//
-			//////#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-			//////#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-
 		}
 		else {
 			s_curboneno = -1;
@@ -35079,7 +34766,7 @@ void AutoCameraTarget()
 	}
 	else {
 		//ChaVector3 diffv;
-		//diffv = g_camEye - g_camtargetpos;
+		//diffv = g_camEye - g_chacamera.GetCamTargetPos();
 		//float newcamdist = (float)ChaVector3LengthDbl(&diffv);
 		//ChangeCameraDist(newcamdist, false, false);
 	}
@@ -36946,8 +36633,8 @@ int OnMouseMoveFunc()
 			s_pickinfo.mousepos = ptCursor;
 
 			ChaVector3 cammv;
-			cammv.x = ((float)s_pickinfo.mousepos.x - (float)s_pickinfo.mousebefpos.x) / (float)s_pickinfo.winx * -s_cammvstep;
-			cammv.y = ((float)s_pickinfo.mousepos.y - (float)s_pickinfo.mousebefpos.y) / (float)s_pickinfo.winy * s_cammvstep;
+			cammv.x = ((float)s_pickinfo.mousepos.x - (float)s_pickinfo.mousebefpos.x) / (float)s_pickinfo.winx * -g_chacamera.GetCamMvStep();
+			cammv.y = ((float)s_pickinfo.mousepos.y - (float)s_pickinfo.mousebefpos.y) / (float)s_pickinfo.winy * g_chacamera.GetCamMvStep();
 			cammv.z = 0.0f;
 			if (g_preciseRotation == true) {
 				cammv *= 0.250f;
@@ -36956,7 +36643,7 @@ int OnMouseMoveFunc()
 
 			CameraForEditMove(cammv);
 		}
-		else if (s_twistcameraFlag) {
+		else if (g_chacamera.GetCamTwistFlag()) {
 			s_pickinfo.mousebefpos = s_pickinfo.mousepos;
 			POINT ptCursor;
 			GetCursorPos(&ptCursor);
@@ -37136,8 +36823,8 @@ int OnMouseMoveFunc()
 		else {
 			//if ((s_undoFlag == false) && (s_redoFlag == false)) {
 			//	//if (((g_ikkind == 0) || (g_ikkind == 1) || (g_ikkind == 2)) && (s_editcameraflag >= 0)) {//2024/06/16 ドリー編集も対象に
-			//	//if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editmotionflag >= 0)) {//2024/08/05 s_cameraeditkind : OnCameraAnimMouseMove()呼び出し時のopekind
-			//	if (s_cameramodel && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editcameraflag >= 0)) {//2024/08/14 editCAMERAflag
+			//	//if (g_chacamera.GetCameraAnimModel() && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editmotionflag >= 0)) {//2024/08/05 s_cameraeditkind : OnCameraAnimMouseMove()呼び出し時のopekind
+			//	if (g_chacamera.GetCameraAnimModel() && (s_cameraeditkind > CAMERAANIMEDIT_NONE) && (editcameraflag >= 0)) {//2024/08/14 editCAMERAflag
 			//		//ikdoneflag = true;
 			//	}
 			//}
@@ -37173,8 +36860,8 @@ int OnMouseMoveFunc()
 					if (g_edittarget != EDITTARGET_CAMERA) {
 						GetCurrentModel()->CalcBoneEul(g_limitdegflag, GetCurrentModel()->GetCurrentMotID());
 					}
-					else if (s_cameramodel) {
-						s_cameramodel->CalcBoneEul(false, s_cameramodel->GetCameraMotionId());
+					else if (g_chacamera.GetCameraAnimModel() != nullptr) {
+						g_chacamera.GetCameraAnimModel()->CalcBoneEul(false, g_chacamera.GetCameraAnimModel()->GetCameraMotionId());
 					}
 				}
 			}
@@ -41439,7 +41126,7 @@ bool LoadCPTFile(CModel* srcmodel)
 	//std::vector<HISTORYELEM> cptfilename;
 	s_cptfilename.clear();
 	GetCPTFileName(s_cptfilename);
-	s_copyhistorydlg2.SetNames(srcmodel, s_cptfilename);//2024/06/23 srcmodelがGetCurrentModel()以外の場合(s_cameramodel)があるのでセットし直す
+	s_copyhistorydlg2.SetNames(srcmodel, s_cptfilename);//2024/06/23 srcmodelがGetCurrentModel()以外の場合(g_chacamera.GetCameraAnimModel())があるのでセットし直す
 
 	if (s_cptfilename.empty()) {
 		_ASSERT(0);
@@ -42029,7 +41716,7 @@ int PickRigBone(UIPICKINFO* ppickinfo, bool forrigtip, int* dstrigno)//default:f
 		//プレビュー中はマウスでは選択しない
 		return -1;
 	}
-	if (s_camtargetdisp) {
+	if (g_chacamera.GetCamTargetDisp()) {
 		//カメラターゲット位置にマニピュレータ表示時にはpickしない
 		return -1;
 	}
@@ -42262,7 +41949,7 @@ int PickManipulator(UIPICKINFO* ppickinfo, bool pickring)
 	if (!s_select) {
 		return -1;
 	}
-	if (s_camtargetdisp) {
+	if (g_chacamera.GetCamTargetDisp()) {
 		//カメラターゲット位置にマニピュレータ表示時にはpickしない
 		return -1;
 	}
@@ -42653,13 +42340,13 @@ CGrassElem* FindGrassElem(CModel* srcmodel)
 void RollbackUndoCamera(UNDOCAMERA srcundocamera)
 {
 	s_spcameramode.state = srcundocamera.spcameramode;
-	s_camtargetflag = srcundocamera.camtargetflag;
-	s_camtargetdisp = srcundocamera.camtargetdisp;
-	s_moveeyepos = srcundocamera.moveeyepos;
-	g_camEye = srcundocamera.camEyePos;
-	g_camtargetpos = srcundocamera.camtargetpos;
-	g_cameraupdir = srcundocamera.camUpVec;
-	g_camdist = srcundocamera.camdist;
+	g_chacamera.SetCamTargetFlag(srcundocamera.camtargetflag);
+	g_chacamera.SetCamTargetDisp(srcundocamera.camtargetdisp);
+	g_chacamera.SetCamMoveEyePos(srcundocamera.moveeyepos);
+	g_chacamera.SetCamEye(srcundocamera.camEyePos);
+	g_chacamera.SetCamTargetPos(srcundocamera.camtargetpos);
+	g_chacamera.SetCamUpDir(srcundocamera.camUpVec);
+	g_chacamera.SetCamDist(srcundocamera.camdist);
 
 	PostOpenChaFile();//変数をGUIに反映　SetCamera3DFromEyePosも内部で呼ぶ
 
@@ -43301,7 +42988,7 @@ int DispToolTip()
 	}
 
 	//2024/02/26 カメラターゲット位置座標表示を最優先で表示
-	if (s_camtargetdisp) {
+	if (g_chacamera.GetCamTargetDisp()) {
 		DispTipSelect();
 		s_dispfontfortip = true;
 	}
@@ -44760,28 +44447,7 @@ int ShowCameraDollyDlg()
 
 int UpdateCameraPosAndTarget()
 {
-	//#replacing comment out#g_Camera->SetViewParamsWithUpVec(g_camEye.XMVECTOR(1.0f), g_camtargetpos.XMVECTOR(1.0f), g_cameraupdir.XMVECTOR(0.0f));
-	//#replacing comment out#s_matView = //#replacing comment out#g_Camera->GetViewMatrix();
-	//#replacing comment out#s_matProj = //#replacing comment out#g_Camera->GetProjMatrix();
-
-	//ChaVector3 diffv;
-	//diffv = g_camEye - g_camtargetpos;
-	//if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
-	//	g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
-	//}
-	//else {
-	//	g_camdist = (float)ChaVector3LengthDbl(&diffv);
-	//}
-	//if (g_camdist >= 1e-4) {
-	//	//return 0;//2024/07/29 後にも処理がある　return文をコメントアウト
-	//}
-	//else {
-	//	_ASSERT(0);
-	//	return 1;
-	//}
-
 	SetCamera3DFromEyePos();
-
 	return 0;
 }
 
@@ -44935,173 +44601,19 @@ void InitRootSignature(RootSignature& rs)
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP);
 }
 
-int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider)
-{
-	float savecamdist = g_camdist;
-
-	//double diffdist = fabs(savecamdist - newcamdist);
-	//if (diffdist < 0.0001) {
-	//	return 0;
-	//}
-
-	{
-		g_camdist = (float)fmin(s_maxcamdist, newcamdist);//2024/06/04 最大値でクランプしてからtargetを再計算する
-		//WCHAR strinfo[256] = { 0L };
-		//swprintf_s(strinfo, L"ChangeCameraDist : newcamdist %f : g_camdist %f",
-		//	newcamdist, g_camdist);
-		//OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
-
-		if (g_camdist >= 1.0f) {
-			ChaVector3 newcampos;// = g_camtargetpos + camvec * g_camdist;
-
-			ChaVector3 camvec = g_camEye - g_camtargetpos;
-			ChaVector3Normalize(&camvec, &camvec);
-
-			ChaVector2 camvecXZ;
-			camvecXZ.x = g_camEye.x - g_camtargetpos.x;
-			camvecXZ.y = g_camEye.z - g_camtargetpos.z;
-			ChaVector2Normalize(&camvecXZ, &camvecXZ);
-
-			if (moveeyeposflag == true) {//2024/02/26
-
-				if (!s_camtargetOnceflag && s_camtargetflag) {
-					float tempcamposx = g_camtargetpos.x + camvecXZ.x * g_camdist;
-					float tempcamposy = g_camEye.y;
-					float tempcamposz = g_camtargetpos.z + camvecXZ.y * g_camdist;
-
-					//2025/10/04 カメラ酔い防止策　カメラの位置は徐々に変える
-					newcampos.x = g_camEye.x + (tempcamposx - g_camEye.x) * 0.0030f;
-					newcampos.y = g_camEye.y + (tempcamposy - g_camEye.y) * 0.0030f;// *0.010f;
-					newcampos.z = g_camEye.z + (tempcamposz - g_camEye.z) * 0.0030f;
-				}
-				else {
-					newcampos = g_camtargetpos + camvec * g_camdist;
-				}
-
-				if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && moveeyeposflag) {
-					camvec.y = 0.0f;
-					
-					ChaVector3 startglobal = newcampos + ChaVector3(0.0f, (g_cameraheight + 1.0f), 0.0f);
-					ChaVector3 endglobal = newcampos - ChaVector3(0.0f, (g_cameraheight + 1.0f), 0.0f);
-
-					ChaVector3 gpos = newcampos;
-					int hitflag = g_cameragmodel->CollisionPolyMesh3_Ray(
-						false,
-						startglobal, endglobal, &gpos, true);
-					if (hitflag != 0) {
-						//newcampos = gpos;
-						//newcampos.y += g_cameraheight;
-
-						newcampos.x = gpos.x;
-						newcampos.y = g_camEye.y + (gpos.y + g_cameraheight - g_camEye.y) * 0.0030f;//徐々に変化するように
-						newcampos.z = gpos.z;
-					}
-				}
-				else {
-					ChaVector3Normalize(&camvec, &camvec);
-					newcampos = g_camtargetpos + camvec * g_camdist;
-				}
-
-				//ChaVector3 diffvec = newcampos - g_camtargetpos;
-				//g_camdist = (float)ChaVector3LengthDbl_2D(&diffvec);
-
-
-				g_befcamEye = g_camEye;
-				//g_camEye = g_camtargetpos + camvec * g_camdist;
-				g_camEye = newcampos;
-			}
-			else {
-				g_befcamtargetpos = g_camtargetpos;
-				g_camtargetpos = g_camEye - camvec * g_camdist;
-			}
-
-			//WCHAR strinfo[256] = { 0L };
-			//swprintf_s(strinfo, L"ChangeCameraDist : dist > 1.0, posturechildofcamera nullptr : camdist %.2f",
-			//	g_camdist);
-			//OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
-		}
-		else {
-
-			//2023/03/23
-			//カメラ位置がターゲットに近づきすぎた場合　止めないで　ターゲット位置を視線方向に延長するように
-
-			ChaVector3 camvec2 = g_camtargetpos - g_camEye;
-			//ChaVector3Normalize(&camvec2, &camvec2);
-
-			float savedist3 = (float)fmin(s_maxcamdist, (savecamdist * 3.0f));//2024/06/04
-
-			g_befcamEye = g_camEye;
-			g_befcamtargetpos = g_camtargetpos;
-
-			if (moveeyeposflag == true) {//2024/02/26
-				if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && moveeyeposflag) {
-					camvec2.y = 0.0f;
-					ChaVector3Normalize(&camvec2, &camvec2);
-				}
-				else {
-					ChaVector3Normalize(&camvec2, &camvec2);
-				}
-				g_camtargetpos = g_camEye + camvec2 * savedist3;
-				g_camEye = g_camtargetpos - camvec2 * savedist3;
-			}
-			else {
-				ChaVector3Normalize(&camvec2, &camvec2);
-				g_camEye = g_camtargetpos + camvec2 * savedist3;
-				g_camtargetpos = g_camEye - camvec2 * savedist3;
-			}
-			g_camdist = savedist3;
-
-			//WCHAR strinfo[256] = { 0L };
-			//swprintf_s(strinfo, L"ChangeCameraDist : dist < 1.0, posturechildofcamera nullptr : camdist %.2f",
-			//	g_camdist);
-			//OutputToInfoWnd(INFOCOLOR_INFO, strinfo);
-		}
-	}
-
-
-	//if (s_cameraHasChildFlag) {
-	//	ChaVector3 camvec = g_camEye - g_camtargetpos;
-	//	ChaVector3Normalize(&camvec, &camvec);
-	//
-	//	g_befcamEye = g_camEye;
-	//	g_befcamtargetpos = g_camtargetpos;
-	//
-	//	if (moveeyeposflag == true) {
-	//		g_camEye = g_camtargetpos + camvec * newcamdist;
-	//		g_camtargetpos = g_camEye - camvec * s_camdistOnFPS;
-	//	}
-	//	else {
-	//		g_camtargetpos = g_camEye + camvec * s_camdistOnFPS;
-	//	}
-	//
-	//	g_camdist = s_camdistOnFPS;
-	//}
-
-
-	//SetCamera3DFromEyePos();
-
-
-	if (s_sidemenuWnd && s_sidemenu_camdistSlider && (calledbyslider == false)) {
-		s_sidemenu_camdistSlider->setValue(g_camdist, false);
-		s_sidemenuWnd->callRewrite();
-	}
-
-
-	return 0;
-}
 
 void SetCamera3DFromEyePos()
 {
-	g_camera3D->SetNear(g_projnear);
-	g_camera3D->SetFar(g_projfar);
-	g_camera3D->SetViewAngle(g_fovy);//2023/12/30
+	g_camera3D->SetNear(g_chacamera.GetProjNear());
+	g_camera3D->SetFar(g_chacamera.GetProjFar());
+	g_camera3D->SetViewAngle(g_chacamera.GetFovY());//2023/12/30
 	Vector3 cameye;
-	cameye.Set(g_camEye.x, g_camEye.y, g_camEye.z);
+	cameye.Set(g_chacamera.GetCamEye().x, g_chacamera.GetCamEye().y, g_chacamera.GetCamEye().z);
 	g_camera3D->SetPosition(cameye);
 	Vector3 target;
-	target.Set(g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
+	target.Set(g_chacamera.GetCamTargetPos().x, g_chacamera.GetCamTargetPos().y, g_chacamera.GetCamTargetPos().z);
 	g_camera3D->SetTarget(target);
-	g_camera3D->SetUp(Vector3(g_cameraupdir.x, g_cameraupdir.y, g_cameraupdir.z));
+	g_camera3D->SetUp(Vector3(g_chacamera.GetCamUpDir().x, g_chacamera.GetCamUpDir().y, g_chacamera.GetCamUpDir().z));
 	g_camera3D->SetWidth((float)g_graphicsEngine->GetFrameBufferWidth());//2023/11/20
 	g_camera3D->SetHeight((float)g_graphicsEngine->GetFrameBufferHeight());//2023/11/20
 	g_camera3D->Update();
@@ -45136,7 +44648,7 @@ void SetCamera3DFromEyePos()
 		ChaVector3 dirforward;
 		dirforward.SetParams(g_camera3D->GetForward());
 		ChaVector3 modelpos = ChaMatrixTraVec(GetCurrentModel()->GetWorldMat());
-		ChaVector3 camdiff = g_camtargetpos - g_camEye;
+		ChaVector3 camdiff = g_chacamera.GetCamTargetPos() - g_chacamera.GetCamEye();
 
 		g_cameraShadow->Update();
 
@@ -45160,20 +44672,20 @@ void SetCamera3DFromEyePos()
 
 
 		ChaVector3 targetshadow;
-		targetshadow = g_camtargetpos;
+		targetshadow = g_chacamera.GetCamTargetPos();
 
 		ChaVector3 lpos;
 		//lpos = g_camEye + ldir * (g_shadowmap_distscale * g_shadowmap_projscale);
-		//lpos = g_camtargetpos - ldir * (ChaVector3LengthDbl(&camdiff) *
+		//lpos = g_chacamera.GetCamTargetPos() - ldir * (ChaVector3LengthDbl(&camdiff) *
 		
 		//2024/02/25 lightindex == 0のときldirはtargetからeyeposへの向き よってshadowcameraposはtarget+ldirxz*scale
-		lpos = g_camtargetpos + ldirxz * (ChaVector3LengthDbl(&camdiff) *
+		lpos = g_chacamera.GetCamTargetPos() + ldirxz * (ChaVector3LengthDbl(&camdiff) *
 			g_shadowmap_distscale[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno]);
 		//lpos.y = targetshadow.y + g_shadowmap_plusup[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
 
 		//2024/02/25
 		//shadowcameraのyはeyeposの上方
-		lpos.y = g_camEye.y + g_shadowmap_plusup[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+		lpos.y = g_chacamera.GetCamEye().y + g_shadowmap_plusup[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
 
 		g_cameraShadow->SetPosition(Vector3(lpos.x, lpos.y, lpos.z));
 		g_cameraShadow->SetTarget(Vector3(targetshadow.x, targetshadow.y, targetshadow.z));
@@ -47759,7 +47271,7 @@ int PickBone(UIPICKINFO* ppickinfo, bool calcfirstdiff)
 		_ASSERT(0);
 		return 0;
 	}
-	//if (s_camtargetdisp) {
+	//if (g_chacamera.GetCamTargetDisp()) {
 	//	//カメラターゲット位置にマニピュレータ表示時にはpickしない
 	//	return 0;
 	//}
@@ -47903,10 +47415,10 @@ bool InBlendShapeMode(CModel** ppmodel, CMQOObject** ppmqoobj, int* pchannelinde
 MOTINFO GetCameraMotInfo()
 {
 	MOTINFO curmi;
-	if (s_cameramodel) {
-		int cameramotid = s_cameramodel->GetCameraMotionId();
+	if (g_chacamera.GetCameraAnimModel() != nullptr) {
+		int cameramotid = g_chacamera.GetCameraAnimModel()->GetCameraMotionId();
 		if (cameramotid > 0) {
-			curmi = s_cameramodel->GetMotInfo(cameramotid);
+			curmi = g_chacamera.GetCameraAnimModel()->GetMotInfo(cameramotid);
 		}
 		else {
 			curmi.Init();
@@ -47925,10 +47437,10 @@ MOTINFO GetEditTargetMotInfo()
 {
 	MOTINFO curmi;
 	if (g_edittarget == EDITTARGET_CAMERA) {
-		if (s_cameramodel) {
-			int cameramotid = s_cameramodel->GetCameraMotionId();
+		if (g_chacamera.GetCameraAnimModel() != nullptr) {
+			int cameramotid = g_chacamera.GetCameraAnimModel()->GetCameraMotionId();
 			if (cameramotid > 0) {
-				curmi = s_cameramodel->GetMotInfo(cameramotid);
+				curmi = g_chacamera.GetCameraAnimModel()->GetMotInfo(cameramotid);
 			}
 			else {
 				curmi.Init();
@@ -47990,12 +47502,12 @@ CBone* GetEditTargetOpeBone(int* pmotid, int* pframeleng)
 		}
 	}
 	else if (g_edittarget == EDITTARGET_CAMERA) {
-		if (s_cameramodel) {
-			graphmotid = s_cameramodel->GetCameraMotionId();
+		if (g_chacamera.GetCameraAnimModel() != nullptr) {
+			graphmotid = g_chacamera.GetCameraAnimModel()->GetCameraMotionId();
 			if (graphmotid > 0) {
-				MOTINFO camerami = s_cameramodel->GetMotInfo(graphmotid);
+				MOTINFO camerami = g_chacamera.GetCameraAnimModel()->GetMotInfo(graphmotid);
 				frameleng = IntTime(camerami.frameleng);
-				CAMERANODE* cnptr = s_cameramodel->GetCAMERANODE(graphmotid);
+				CAMERANODE* cnptr = g_chacamera.GetCameraAnimModel()->GetCAMERANODE(graphmotid);
 				if (cnptr && cnptr->pbone) {
 					opebone = cnptr->pbone->GetParent(false);
 					_ASSERT(opebone->IsNullAndChildIsCamera());
@@ -48028,82 +47540,64 @@ int OnCameraAnimMouseMove(int opekind, int pickxyz, float deltax)
 	int cameramotid = 0;
 	int cameraframeleng = 100;
 	CBone* opebone0 = GetEditTargetOpeBone(&cameramotid, &cameraframeleng);
-	if (s_cameramodel && opebone0) {
+	if ((g_chacamera.GetCameraAnimModel() != nullptr) && opebone0) {
 
 		bool doneflag = false;
 		if (opekind == CAMERAANIMEDIT_ROT) {
-			s_editcameraflag = s_cameramodel->CameraRotateAxisDelta(
+			s_editcameraflag = g_chacamera.GetCameraAnimModel()->CameraRotateAxisDelta(
 				g_limitdegflag,
 				&s_editrange, pickxyz,
 				deltax, s_matView);
 
-			if (s_camtargetflag) {//2024/08/20 AlwasyLockにチェックが入っている場合
+			if (g_chacamera.GetCamTargetFlag()) {//2024/08/20 AlwasyLockにチェックが入っている場合
 				//always s_editrange全範囲に対してウェイト1.0でLock2Joint処理.ジョイントのモーションにも対応
-				s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, GetCurrentModel(), s_curboneno);
+				s_editcameraflag = g_chacamera.GetCameraAnimModel()->CameraAnimLock2Joint(&s_editrange, GetCurrentModel(), s_curboneno);
 			}
 
 			doneflag = true;
 		}
 		else if (opekind == CAMERAANIMEDIT_MV) {
-			s_editcameraflag = s_cameramodel->CameraTranslateAxisDelta(
+			s_editcameraflag = g_chacamera.GetCameraAnimModel()->CameraTranslateAxisDelta(
 				&s_editrange, pickxyz - PICK_X, deltax, s_matView);
 
-			if (s_camtargetflag) {//2024/09/02 AlwasyLockにチェックが入っている場合
+			if (g_chacamera.GetCamTargetFlag()) {//2024/09/02 AlwasyLockにチェックが入っている場合
 				//always s_editrange全範囲に対してウェイト1.0でLock2Joint処理.ジョイントのモーションにも対応
-				s_editcameraflag = s_cameramodel->CameraAnimLock2Joint(&s_editrange, GetCurrentModel(), s_curboneno);
+				s_editcameraflag = g_chacamera.GetCameraAnimModel()->CameraAnimLock2Joint(&s_editrange, GetCurrentModel(), s_curboneno);
 			}
 
 			doneflag = true;
 		}
 		else if (opekind == CAMERAANIMEDIT_DIST) {
-			//s_editcameraflag = s_cameramodel->CameraTranslateAxisDelta(
+			//s_editcameraflag = g_chacamera.GetCameraAnimModel()->CameraTranslateAxisDelta(
 			//	&s_editrange, PICK_Z - PICK_X, deltax, s_matView);
 
 			//2024/07/30
 			//camaradist操作は　カメラが回転していく場合には　回転に応じてカメラ位置を動かす必要がある
 			//よってZ方向の移動ではうまくいかないことが多かった
 			//CameraDist操作専用の関数作成
-			s_editcameraflag = s_cameramodel->CameraDistDelta(&s_editrange, deltax, s_camtargetflag);
-			g_camdist += deltax;
-			g_camdist = std::fmax(1.0f, g_camdist);
-			g_camdist = std::fmin(s_maxcamdist, g_camdist);
+			s_editcameraflag = g_chacamera.GetCameraAnimModel()->CameraDistDelta(&s_editrange, deltax, g_chacamera.GetCamTargetFlag());
+			float newcamdist = g_chacamera.GetCamDist() + deltax;
+			newcamdist = std::fmax(1.0f, newcamdist);
+			newcamdist = std::fmin(g_chacamera.GetMaxCamDist(), newcamdist);
+			g_chacamera.SetCamDist(newcamdist);
 
-			//OutputToInfoWnd(INFOCOLOR_INFO, L"deltax %f, g_camdist %f", deltax, g_camdist);
+			//OutputToInfoWnd(INFOCOLOR_INFO, L"deltax %f, g_chacamera.GetCamDist() %f", deltax, g_chacamera.GetCamDist());
 			doneflag = true;
 		}
 		else if (opekind == CAMERAANIMEDIT_TWIST) {
-			s_editcameraflag = s_cameramodel->CameraTwistDelta(&s_editrange, deltax);
+			s_editcameraflag = g_chacamera.GetCameraAnimModel()->CameraTwistDelta(&s_editrange, deltax);
 
 			doneflag = true;
 		}
 		else if (opekind == CAMERAANIMEDIT_TWISTRESET) {
-			s_editcameraflag = s_cameramodel->CameraTwistReset(&s_editrange);
+			s_editcameraflag = g_chacamera.GetCameraAnimModel()->CameraTwistReset(&s_editrange);
 
 			doneflag = true;
 		}
 
 		if (doneflag) {
-			ChaVector3 tmpcamtarget;
-			s_cameramodel->GetCameraAnimParams(s_cameraframe,
-				g_camdist,
-				&g_camEye, &tmpcamtarget, &g_cameraupdir,
-				0, g_cameraInheritMode);//g_camdist
-
-			if (s_camtargetflag) {
-				//g_camtargetposはそのまま
-			}
-			else {
-				g_camtargetpos = tmpcamtarget;
-			}
-
-			ChaVector3 diffvec = g_camtargetpos - g_camEye;
-			float newcamdist;
-			//if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
-			//	newcamdist = (float)ChaVector3LengthDbl_2D(&diffvec);
-			//}
-			//else {
-				newcamdist = (float)ChaVector3LengthDbl(&diffvec);
-			//}
+			g_chacamera.OnCameraAnimMouseMoveDist();
+			float newcamdist = g_chacamera.GetCamDist();
 			ChangeCameraDist(newcamdist, false, false);
 
 			UpdateEditedEuler();//twist時には右ドラッグなのでLBUTTONUPメッセージでのUpdateEditedEuler()が呼ばれない.ここで呼ぶことに.
@@ -48119,15 +47613,15 @@ int OnCameraAnimPaste()
 
 	//現在のカメラ行列をカメラアニメにペーストする
 
-	if (s_cameramodel) {
+	if (g_chacamera.GetCameraAnimModel() != nullptr) {
 		//2024/08/02
 		//カメラ履歴セレクト時には　カメラアニメスイッチオンまたはカメラグラフモードの場合に　カメラアニメにペースト
 		if (s_spcameramode.state || (g_edittarget == EDITTARGET_CAMERA)) {
-			int cameramotid = s_cameramodel->GetCameraMotionId();
-			MOTINFO camerami = s_cameramodel->GetMotInfo(cameramotid);
+			int cameramotid = g_chacamera.GetCameraAnimModel()->GetCameraMotionId();
+			MOTINFO camerami = g_chacamera.GetCameraAnimModel()->GetMotInfo(cameramotid);
 			if (camerami.motid > 0) {
 				double curframe = RoundingTime(camerami.curframe);
-				s_editcameraflag = s_cameramodel->CameraAnimPaste(curframe, s_matView);
+				s_editcameraflag = g_chacamera.GetCameraAnimModel()->CameraAnimPaste(curframe, s_matView);
 
 
 				UpdateEditedEuler();
@@ -48592,20 +48086,15 @@ int CameraForEditMove(ChaVector3 cammv)
 			ChaVector3Normalize(&camdiry, &camdiry);
 			ChaVector3 movevec = camdirx * cammv.x + camdiry * cammv.y;
 
-			g_befcamEye = g_camEye;
-			g_befcamtargetpos = g_camtargetpos;
+			g_chacamera.SetBefCamEye(g_chacamera.GetCamEye());
+			g_chacamera.SetBefCamTargetPos(g_chacamera.GetCamTargetPos());
 
-			g_camEye = g_camEye + movevec;
-			g_camtargetpos = g_camtargetpos + movevec;
+			g_chacamera.SetCamEye(g_chacamera.GetCamEye() + movevec);
+			g_chacamera.SetCamTargetPos(g_chacamera.GetCamTargetPos() + movevec);
 
-			ChaVector3 diffv;
-			diffv = g_camtargetpos - g_camEye;
-			if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
-				g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
-			}
-			else {
-				g_camdist = (float)ChaVector3LengthDbl(&diffv);
-			}
+			//g_chacamera.UpdateCameraDist();
+			float newcamdist = (float)g_chacamera.CalcCameraDist();
+			ChangeCameraDist(newcamdist, g_chacamera.GetCamMoveEyePos(), false);
 		}
 	}
 	else {
@@ -48628,25 +48117,20 @@ int CameraForEditTwist(float deltax)
 		else {
 			ChaVector3 twistaxis;
 			CQuaternion twistq;
-			twistaxis = g_camtargetpos - g_camEye;
+			twistaxis = g_chacamera.GetCamTargetPos() - g_chacamera.GetCamEye();
 			ChaVector3Normalize(&twistaxis, &twistaxis);
 			twistq.SetAxisAndRot(twistaxis, deltax);
 			ChaVector3 newupvec;
-			twistq.Rotate(&newupvec, g_cameraupdir);
+			twistq.Rotate(&newupvec, g_chacamera.GetCamUpDir());
 			ChaVector3Normalize(&newupvec, &newupvec);
-			g_cameraupdir = newupvec;
+			g_chacamera.SetCamUpDir(newupvec);
 
-			g_befcamEye = g_camEye;
-			ChaVector3 diffv;
-			diffv = g_camEye - g_camtargetpos;
-			if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
-				g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
-			}
-			else {
-				g_camdist = (float)ChaVector3LengthDbl(&diffv);
-			}
+			g_chacamera.SetBefCamEye(g_chacamera.GetCamEye());
+			//g_chacamera.UpdateCameraDist();
+			//SetCamera3DFromEyePos();
+			float newcamdist = (float)g_chacamera.CalcCameraDist();
+			ChangeCameraDist(newcamdist, g_chacamera.GetCamMoveEyePos(), false);
 
-			SetCamera3DFromEyePos();
 		}
 	}
 	else {
@@ -48669,8 +48153,8 @@ int CameraForEditRotate(float rotxz, float roty)
 		else {
 			ChaMatrix matview;
 			ChaVector3 weye, wat;
-			weye = g_camEye;
-			wat = g_camtargetpos;
+			weye = g_chacamera.GetCamEye();
+			wat = g_chacamera.GetCamTargetPos();
 
 			ChaVector3 viewvec, upvec, rotaxisy, rotaxisxz;
 			viewvec = wat - weye;
@@ -48686,12 +48170,12 @@ int CameraForEditRotate(float rotxz, float roty)
 				ChaVector3Cross(&rotaxisy, (const ChaVector3*)&viewvec, (const ChaVector3*)&rotaxisxz);
 				ChaVector3Normalize(&rotaxisy, &rotaxisy);
 
-				if (GetCurrentModel() && (s_curboneno >= 0) && s_camtargetflag) {
+				if (GetCurrentModel() && (s_curboneno >= 0) && g_chacamera.GetCamTargetFlag()) {
 					CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 					_ASSERT(curbone);
 					if (curbone) {
-						g_befcamtargetpos = g_camtargetpos;
-						g_camtargetpos = curbone->GetChildWorld();
+						g_chacamera.SetBefCamTargetPos(g_chacamera.GetCamTargetPos());
+						g_chacamera.SetCamTargetPos(curbone->GetChildWorld());
 					}
 					else {
 						s_curboneno = -1;
@@ -48703,8 +48187,8 @@ int CameraForEditRotate(float rotxz, float roty)
 				aftrotmat.SetIdentity();//2023/02/12
 				rotmaty.SetIdentity();//2023/02/12
 				rotmatxz.SetIdentity();//2023/02/12
-				ChaMatrixTranslation(&befrotmat, -g_camtargetpos.x, -g_camtargetpos.y, -g_camtargetpos.z);
-				ChaMatrixTranslation(&aftrotmat, g_camtargetpos.x, g_camtargetpos.y, g_camtargetpos.z);
+				ChaMatrixTranslation(&befrotmat, -g_chacamera.GetCamTargetPos().x, -g_chacamera.GetCamTargetPos().y, -g_chacamera.GetCamTargetPos().z);
+				ChaMatrixTranslation(&aftrotmat, g_chacamera.GetCamTargetPos().x, g_chacamera.GetCamTargetPos().y, g_chacamera.GetCamTargetPos().z);
 				ChaMatrixRotationAxis(&rotmaty, &rotaxisy, rotxz * (float)DEG2PAI);
 				ChaMatrixRotationAxis(&rotmatxz, &rotaxisxz, roty * (float)DEG2PAI);
 
@@ -48713,36 +48197,28 @@ int CameraForEditRotate(float rotxz, float roty)
 				ChaVector3 neweye;
 				ChaVector3TransformCoord(&neweye, &weye, &mat);
 
-				g_befcamEye = g_camEye;
-				g_camEye = neweye;
-				//!!!!!ChaMatrixLookAtRH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
-				//ChaMatrixLookAtLH(&s_matView, &g_camEye, &g_camtargetpos, &s_camUpVec);
+				g_chacamera.SetBefCamEye(g_chacamera.GetCamEye());
+				g_chacamera.SetCamEye(neweye);
 
-				ChaVector3 diffv;
-				diffv = neweye - g_camtargetpos;
-				if ((g_cameraheightflag == 1) && (g_cameragmodel != nullptr) && s_moveeyepos) {
-					g_camdist = (float)ChaVector3LengthDbl_2D(&diffv);
-				}
-				else {
-					g_camdist = (float)ChaVector3LengthDbl(&diffv);
-				}
-
+				//g_chacamera.UpdateCameraDist();
+				float newcamdist = (float)g_chacamera.CalcCameraDist();
+				ChangeCameraDist(newcamdist, g_chacamera.GetCamMoveEyePos(), false);
 			}
 			else {
-				g_camEye = g_befcamEye;
-				g_camtargetpos = g_befcamtargetpos;
+				g_chacamera.SetCamEye(g_chacamera.GetBefCamEye());
+				g_chacamera.SetCamTargetPos(g_chacamera.GetBefCamTargetPos());
 			}
 
 			SetCamera3DFromEyePos();
 		}
 	}
 	else {
-		if (GetCurrentModel() && (s_curboneno >= 0) && s_camtargetflag) {
+		if (GetCurrentModel() && (s_curboneno >= 0) && g_chacamera.GetCamTargetFlag()) {
 			CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
 			_ASSERT(curbone);
 			if (curbone) {
-				g_befcamtargetpos = g_camtargetpos;
-				g_camtargetpos = curbone->GetChildWorld();
+				g_chacamera.SetBefCamTargetPos(g_chacamera.GetCamTargetPos());
+				g_chacamera.SetCamTargetPos(curbone->GetChildWorld());
 			}
 			else {
 				s_curboneno = -1;
@@ -48768,7 +48244,7 @@ int CameraForEditDist(float deltadist)
 			//	newcamdist = deltadist;
 			//}
 			//else {
-				newcamdist = g_camdist + deltadist;
+				newcamdist = g_chacamera.GetCamDist() + deltadist;
 			//}
 			ChangeCameraDist(newcamdist, true, false);
 		}
@@ -48802,7 +48278,7 @@ void OnCameraTargetOnce()
 		else {
 			//Once　
 			s_befLockMatView = s_matView;
-			s_camtargetOnceflag = 1;
+			g_chacamera.SetCamTargetOnceFlag(1);
 		}
 	}
 }
@@ -48823,22 +48299,21 @@ void OnCameraTargetAlways()
 			}
 			else {
 				s_befLockMatView = s_matView;//2024/06/06
-				s_camtargetflag = true;
+				g_chacamera.SetCamTargetFlag(true);
 
 				//sellockオンの時はカメラが選択ジョイント中心回転、targetdispオンの時はカメラがマニピュレータ(カメラターゲット位置)中心回転
 				//両方オンにすると分かりずらいので排他選択
 				if (s_sidemenu_targetdisp) {
 					s_sidemenu_targetdisp->setValue(false, false);
-					s_camtargetdisp = false;
+					g_chacamera.SetCamTargetDisp(false);
 				}
 
-				s_camtargetOnceflag = 1;//2024/06/04  2024/06/06オンの時だけ
-
+				g_chacamera.SetCamTargetOnceFlag(1);//2024/06/04  2024/06/06オンの時だけ
 			}
 		}
 	}
 	else {
-		s_camtargetflag = false;
+		g_chacamera.SetCamTargetFlag(false);
 	}
 }
 
@@ -48846,16 +48321,30 @@ void OnCameraTargetManipulator()
 {
 	bool value = s_sidemenu_targetdisp->getValue();
 	if (value) {
-		s_camtargetdisp = true;
+		g_chacamera.SetCamTargetDisp(true);
 
 		//sellockオンの時はカメラが選択ジョイント中心回転、targetdispオンの時はカメラがマニピュレータ(カメラターゲット位置)中心回転
 		//両方オンにすると分かりずらいので排他選択
 		if (s_sidemenu_sellock) {
 			s_sidemenu_sellock->setValue(false, false);
-			s_camtargetflag = false;
+			g_chacamera.SetCamTargetFlag(false);
 		}
 	}
 	else {
-		s_camtargetdisp = false;
+		g_chacamera.SetCamTargetDisp(false);
 	}
+}
+
+int ChangeCameraDist(float newcamdist, bool moveeyeposflag, bool calledbyslider)
+{
+	
+	g_chacamera.ChangeCameraDist(newcamdist, moveeyeposflag, calledbyslider);
+	SetCamera3DFromEyePos();
+
+	if (s_sidemenuWnd && s_sidemenu_camdistSlider && (calledbyslider == false)) {
+		s_sidemenu_camdistSlider->setValue(g_chacamera.GetCamDist(), false);
+		s_sidemenuWnd->callRewrite();
+	}
+
+	return 0;
 }
