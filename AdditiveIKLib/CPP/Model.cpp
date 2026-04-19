@@ -4544,14 +4544,19 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 				MODELBOUND mb5 = m_bound_per5[max(0, (totalcount / OBJBOUNDING_BLOCKNUM - 1))];
 
 				int sphcollision;
-				if ((calc_outofview || curobj->GetInView(0)) && curobj->GetDispFlag()) {
+				
+				//!!!!! 修正予定 !!!!!
+				//CollisionLocal_Ray_BB_Sph()関数はCMQOObjectのメンバを参照していない　static関数にするべき?
+				//複数のMQOObjectに対する判定処理なので　curobjのGetInView()やGetDispFlag()は関係ない
+				
+				//if ((calc_outofview || curobj->GetInView(0)) && curobj->GetDispFlag()) {
 					sphcollision = curobj->CollisionLocal_Ray_BB_Sph(mb5, startlocal, dirlocal, rayleng);
 					//int collision = curobj->CollisionLocal_Ray_BB(mb5, startlocal, dirlocal, rayleng);
-				}
-				else {
-					//非表示オブジェクトの場合は　衝突しない
-					sphcollision = 0;
-				}
+				//}
+				//else {
+				//	//非表示オブジェクトの場合は　衝突しない
+				//	sphcollision = 0;
+				//}
 				if (sphcollision == 0) {
 					//バウンダリーで衝突しない場合には　次のバウンダリーの判定にジャンプ
 					int currentblock = totalcount / OBJBOUNDING_BLOCKNUM;
