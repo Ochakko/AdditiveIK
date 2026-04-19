@@ -2,7 +2,7 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2026/04/19
-　AdditiveIK 1.0.0.65 RC1(リリース候補1)
+　AdditiveIK 1.0.0.65 release
 　　1.0.0.64からの変更点
 　　　衝突判定の修正
 　　　　指定個数のバウンダリをまとめたバウンダリブロックを使う処理の修正
