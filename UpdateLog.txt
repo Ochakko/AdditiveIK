@@ -2,6 +2,9 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2026/04/25
+　メッシュを扱わない衝突判定をChaColliクラスに.
+
 2026/04/20
 　バウンダリーブロック処理の修正
 　

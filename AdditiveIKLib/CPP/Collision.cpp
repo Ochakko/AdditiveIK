@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <math.h>
@@ -10,7 +10,6 @@
 #include <windows.h>
 #include <crtdbg.h>
 
-#define COLLISIONCPP
 #include <Collision.h>
 
 #define DBGH
@@ -18,7 +17,26 @@
 
 #include <ChaVecCalc.h>
 
-int ChkRay( int allowrev, int i1, int i2, int i3, 
+
+
+int ChaColli::ChkRay_BB_Sph(MODELBOUND objbb, ChaVector3 startlocal, ChaVector3 dirlocal, double rayleng)
+{
+	if (objbb.IsValid() == false) {
+		return 0;//ãƒã‚¦ãƒ³ãƒ€ãƒªãƒ¼ãŒç„¡ã„å ´åˆã«ã¯å½“ãŸã‚‰ãªã„
+	}
+
+	ChaVector3 raycenter = (startlocal + (startlocal + (dirlocal * rayleng))) * 0.50f;
+	ChaVector3 diffcenter = raycenter - objbb.center;
+	double diffleng = ChaVector3LengthDbl(&diffcenter);
+	if (diffleng > (rayleng + objbb.r)) {
+		return 0;
+	}
+	else {
+		return 1;
+	}
+}
+
+int ChaColli::ChkRay( int allowrev, int i1, int i2, int i3, 
 	ChaVector3* pointbuf, ChaVector3 startpos, ChaVector3 dir, 
 	float justval, int* justptr )
 {
@@ -59,7 +77,7 @@ int ChkRay( int allowrev, int i1, int i2, int i3,
 		return 0;
 	}
 	if( (allowrev == 0) && (dotface < 0.0f) ){
-		//— –Ê‚Í“–‚½‚ç‚È‚¢
+		//è£é¢ã¯å½“ãŸã‚‰ãªã„
 		return 0;
 	}
 
@@ -117,7 +135,7 @@ int ChkRay( int allowrev, int i1, int i2, int i3,
 
 }
 
-int ChkRay(int allowrev, 
+int ChaColli::ChkRay(int allowrev,
 	double nearestdist,//2025/09/14
 	int i1, int i2, int i3,
 	BINORMALDISPV* pointbuf, ChaVector3 startpos, ChaVector3 dir,
@@ -160,7 +178,7 @@ int ChkRay(int allowrev,
 		return 0;
 	}
 	if ((allowrev == 0) && (dotface < 0.0f)) {
-		//— –Ê‚Í“–‚½‚ç‚È‚¢
+		//è£é¢ã¯å½“ãŸã‚‰ãªã„
 		return 0;
 	}
 
@@ -224,7 +242,7 @@ int ChkRay(int allowrev,
 
 }
 
-int ChkRay(int allowrev,
+int ChaColli::ChkRay(int allowrev,
 	BINORMALDISPV p0, BINORMALDISPV p1, BINORMALDISPV p2,
 	ChaVector3 startpos, ChaVector3 dir,
 	float justval, int* justptr)
@@ -266,7 +284,7 @@ int ChkRay(int allowrev,
 		return 0;
 	}
 	if ((allowrev == 0) && (dotface < 0.0f)) {
-		//— –Ê‚Í“–‚½‚ç‚È‚¢
+		//è£é¢ã¯å½“ãŸã‚‰ãªã„
 		return 0;
 	}
 
@@ -327,9 +345,9 @@ int ChkRay(int allowrev,
 
 
 
-int CalcShadowToPlane( ChaVector3 srcpos, ChaVector3 planedir, ChaVector3 planepos, ChaVector3* shadowptr )
+int ChaColli::CalcShadowToPlane( ChaVector3 srcpos, ChaVector3 planedir, ChaVector3 planepos, ChaVector3* shadowptr )
 {
-	//–Ê‚ÆƒŒƒC‚Æ‚ÌŒð“_(shadow)‚ð‹‚ß‚éB
+	//é¢ã¨ãƒ¬ã‚¤ã¨ã®äº¤ç‚¹(shadow)ã‚’æ±‚ã‚ã‚‹ã€‚
 	//s-->start, e-->end, b-->point on plane, n-->plane dir
 
 	if (!shadowptr){

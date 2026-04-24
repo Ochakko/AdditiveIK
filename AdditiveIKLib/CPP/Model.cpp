@@ -4506,6 +4506,7 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 		return 0;//2025/12/28 視野外は当たらないことに.
 	}
 
+	ChaColli chacolli;
 
 	ChaVector3 dirglobal;
 	dirglobal = endglobal - startglobal;
@@ -4539,24 +4540,18 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 		CMQOObject* curobj = itr->second;
 		if (curobj && !curobj->IsND()) {
+
+			//#########################################
+			//複数CMQOObjectをまとめたバウンダリに対する判定
+			//#########################################
 			//2025/09/23
 			if ((mb5num >= 1) && ((totalcount % OBJBOUNDING_BLOCKNUM) == 0)) {
 				MODELBOUND mb5 = m_bound_per5[max(0, (totalcount / OBJBOUNDING_BLOCKNUM - 1))];
 
 				int sphcollision;
 				
-				//!!!!! 修正予定 !!!!!
-				//CollisionLocal_Ray_BB_Sph()関数はCMQOObjectのメンバを参照していない　static関数にするべき?
 				//複数のMQOObjectに対する判定処理なので　curobjのGetInView()やGetDispFlag()は関係ない
-				
-				//if ((calc_outofview || curobj->GetInView(0)) && curobj->GetDispFlag()) {
-					sphcollision = curobj->CollisionLocal_Ray_BB_Sph(mb5, startlocal, dirlocal, rayleng);
-					//int collision = curobj->CollisionLocal_Ray_BB(mb5, startlocal, dirlocal, rayleng);
-				//}
-				//else {
-				//	//非表示オブジェクトの場合は　衝突しない
-				//	sphcollision = 0;
-				//}
+				sphcollision = chacolli.ChkRay_BB_Sph(mb5, startlocal, dirlocal, rayleng);
 				if (sphcollision == 0) {
 					//バウンダリーで衝突しない場合には　次のバウンダリーの判定にジャンプ
 					int currentblock = totalcount / OBJBOUNDING_BLOCKNUM;
@@ -4586,6 +4581,9 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 
 			bool onlychkinview = true;
 
+			//########################
+			//個別CMQOObjectに対する判定
+			//########################
 			//2026/01/25
 			if ((calc_outofview || curobj->GetInView(0)) && curobj->GetDispFlag()) {//2025/12/28 視野内だけ計算
 				if (!gpuflag) {//### CPU ###
@@ -12945,6 +12943,8 @@ int CModel::CalcAxisAndRotForIKRotate(int limitdegflag,
 	}
 	int curmotid = GetCurrentMotID();
 
+	ChaColli chacolli;
+
 	ChaMatrix invmodelwm;
 	invmodelwm = ChaMatrixInv(GetWorldMat());
 	ChaVector3 modelcamtarget, modelcameye;
@@ -12974,8 +12974,8 @@ int CModel::CalcAxisAndRotForIKRotate(int limitdegflag,
 
 	ChaVector3 parbef, chilbef, tarbef;
 	parbef = modelparentpos;
-	CalcShadowToPlane(modelchildpos, ikaxis, modelparentpos, &chilbef);
-	CalcShadowToPlane(targetpos, ikaxis, modelparentpos, &tarbef);
+	chacolli.CalcShadowToPlane(modelchildpos, ikaxis, modelparentpos, &chilbef);
+	chacolli.CalcShadowToPlane(targetpos, ikaxis, modelparentpos, &tarbef);
 
 	ChaVector3 vec0, vec1;
 	vec0 = chilbef - parbef;
@@ -13026,6 +13026,8 @@ int CModel::CalcAxisAndRotForIKRotateVert(int limitdegflag,
 	}
 	int curmotid = GetCurrentMotID();
 
+	ChaColli chacolli;
+
 	ChaVector3 ikaxis = g_chacamera.GetCamTargetPos() - g_chacamera.GetCamEye();
 	ChaVector3Normalize(&ikaxis, &ikaxis);
 
@@ -13046,8 +13048,8 @@ int CModel::CalcAxisAndRotForIKRotateVert(int limitdegflag,
 	{
 		ChaVector3 parbef, chilbef, tarbef;
 		parbef = parworld;
-		CalcShadowToPlane(chilworld, ikaxis, parworld, &chilbef);
-		CalcShadowToPlane(targetpos, ikaxis, parworld, &tarbef);
+		chacolli.CalcShadowToPlane(chilworld, ikaxis, parworld, &chilbef);
+		chacolli.CalcShadowToPlane(targetpos, ikaxis, parworld, &tarbef);
 		ChaVector3 vec0, vec1;
 		vec0 = chilbef - parbef;
 		ChaVector3Normalize(&vec0, &vec0);
@@ -13071,8 +13073,8 @@ int CModel::CalcAxisAndRotForIKRotateVert(int limitdegflag,
 	{
 		ChaVector3 parbef, chilbef, tarbef;
 		parbef = parworld;
-		CalcShadowToPlane(chilworld, rotaxis3, parworld, &chilbef);
-		CalcShadowToPlane(targetpos, rotaxis3, parworld, &tarbef);
+		chacolli.CalcShadowToPlane(chilworld, rotaxis3, parworld, &chilbef);
+		chacolli.CalcShadowToPlane(targetpos, rotaxis3, parworld, &tarbef);
 		ChaVector3 vec0, vec1;
 		vec0 = chilbef - parbef;
 		ChaVector3Normalize(&vec0, &vec0);

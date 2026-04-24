@@ -2180,23 +2180,24 @@ int CMQOObject::CollisionLocal_Ray(ChaVector3 startlocal, ChaVector3 dirlocal,
 	int hitflag;
 	int justflag;
 	float justval = 0.01f;
+	ChaColli chacolli;
 	for( fno = 0; fno < face_count; fno++ ){
 		hitflag = 0;
 		justflag = 0;
 		CMQOFace* curface = faceptr + fno;
 		if( curface->GetPointNum() == 3 ){
-			hitflag = ChkRay( allowrev, curface->GetIndex( 0 ), curface->GetIndex( 1 ), curface->GetIndex( 2 ), 
+			hitflag = chacolli.ChkRay( allowrev, curface->GetIndex( 0 ), curface->GetIndex( 1 ), curface->GetIndex( 2 ), 
 				pointptr, startlocal, dirlocal, justval, &justflag );
 			if( hitflag || justflag ){
 				return 1;
 			}
 		}else if( curface->GetPointNum() == 4 ){
-			hitflag = ChkRay( allowrev, curface->GetIndex( 0 ), curface->GetIndex( 1 ), curface->GetIndex( 2 ), 
+			hitflag = chacolli.ChkRay( allowrev, curface->GetIndex( 0 ), curface->GetIndex( 1 ), curface->GetIndex( 2 ),
 				pointptr, startlocal, dirlocal, justval, &justflag );
 			if( hitflag || justflag ){
 				return 1;
 			}
-			hitflag = ChkRay( allowrev, curface->GetIndex( 0 ), curface->GetIndex( 2 ), curface->GetIndex( 3 ), 
+			hitflag = chacolli.ChkRay( allowrev, curface->GetIndex( 0 ), curface->GetIndex( 2 ), curface->GetIndex( 3 ),
 				pointptr, startlocal, dirlocal, justval, &justflag );
 			if( hitflag || justflag ){
 				return 1;
@@ -2206,24 +2207,6 @@ int CMQOObject::CollisionLocal_Ray(ChaVector3 startlocal, ChaVector3 dirlocal,
 	
 	return 0;
 }
-
-int CMQOObject::CollisionLocal_Ray_BB_Sph(MODELBOUND objbb, ChaVector3 startlocal, ChaVector3 dirlocal, double rayleng)
-{
-	if (objbb.IsValid() == false) {
-		return 0;//バウンダリーが無い場合には当たらない
-	}
-
-	ChaVector3 raycenter = (startlocal + (startlocal + (dirlocal * rayleng))) * 0.50f;
-	ChaVector3 diffcenter = raycenter - objbb.center;
-	double diffleng = ChaVector3LengthDbl(&diffcenter);
-	if (diffleng > (rayleng + objbb.r)) {
-		return 0;
-	}
-	else {
-		return 1;
-	}
-}
-
 
 
 int CMQOObject::CollisionLocal_Ray_BB(MODELBOUND objbb, ChaVector3 startlocal, ChaVector3 dirlocal, double rayleng)
@@ -2242,8 +2225,9 @@ int CMQOObject::CollisionLocal_Ray_BB(MODELBOUND objbb, ChaVector3 startlocal, C
 		return 0;//バウンダリーが無い場合には当たらない
 	}
 
+	ChaColli chacolli;
 	//2025/09/14 球で粗く判定
-	int sphcollision = CollisionLocal_Ray_BB_Sph(objbb, startlocal, dirlocal, rayleng);
+	int sphcollision = chacolli.ChkRay_BB_Sph(objbb, startlocal, dirlocal, rayleng);
 	if (sphcollision == 0) {
 		return 0;
 	}
@@ -2317,7 +2301,7 @@ int CMQOObject::CollisionLocal_Ray_BB(MODELBOUND objbb, ChaVector3 startlocal, C
 
 		justflag = 0;
 		hitflag = 0;
-		hitflag = ChkRay(allowrev,
+		hitflag = chacolli.ChkRay(allowrev,
 			index0, index1, index2,
 			points, startlocal, dirlocal, justval, &justflag);
 		if (hitflag || justflag) {
@@ -2341,7 +2325,8 @@ int CMQOObject::CollisionLocal_Ray_BB(ChaVector3 startlocal, ChaVector3 dirlocal
 	}
 
 	//2025/09/14 球で粗く判定
-	int sphcollision = CollisionLocal_Ray_BB_Sph(objbb, startlocal, dirlocal, rayleng);
+	ChaColli chacolli;
+	int sphcollision = chacolli.ChkRay_BB_Sph(objbb, startlocal, dirlocal, rayleng);
 	if (sphcollision == 0) {
 		return 0;
 	}
@@ -2416,7 +2401,7 @@ int CMQOObject::CollisionLocal_Ray_BB(ChaVector3 startlocal, ChaVector3 dirlocal
 
 		justflag = 0;
 		hitflag = 0;
-		hitflag = ChkRay(allowrev,
+		hitflag = chacolli.ChkRay(allowrev,
 			index0, index1, index2,
 			points, startlocal, dirlocal, justval, &justflag);
 		if (hitflag || justflag) {
@@ -2503,6 +2488,8 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 		allowrev = 1;
 	}
 
+	ChaColli chacolli;
+
 	int fno;
 	int hitflag;
 	int justflag;
@@ -2549,7 +2536,7 @@ int CMQOObject::CollisionLocal_Ray_Pm3(ChaVector3 startlocal, ChaVector3 dirloca
 
 		ChaVector3 tmphitpos;
 		tmphitpos.SetParams(0.0f, 0.0f, 0.0f);
-		hitflag = ChkRay(allowrev, 
+		hitflag = chacolli.ChkRay(allowrev,
 			nearestdist,//2025/09/14 
 			index0, index1, index2,
 			dispv, startlocal, dirlocal, justval, &justflag, &tmphitpos);
@@ -2590,6 +2577,8 @@ int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglo
 	}
 	*hitfaceindex = -1;
 	dsthitpos->SetParams(0.0f, 0.0f, 0.0f);
+
+	ChaColli chacolli;
 
 	//2025/12/28 視野外は計算しないことに
 	if (!GetInView(0)) {
@@ -2640,7 +2629,7 @@ int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglo
 	//return dispobj->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos, dstdist);
 
 	if (GetPm3() != nullptr) {
-		int sphcollision = CollisionLocal_Ray_BB_Sph(GetBound(), startlocal, dirlocal, rayleng);//2025/09/15 球で粗く判定(CPU)
+		int sphcollision = chacolli.ChkRay_BB_Sph(GetBound(), startlocal, dirlocal, rayleng);//2025/09/15 球で粗く判定(CPU)
 		if (sphcollision == 0) {
 			*hitfaceindex = -1;
 			dsthitpos->SetZeroVec3();
@@ -2651,7 +2640,7 @@ int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglo
 		return dispobj->PickRay(startglobal, dirglobal, excludeinvface, hitfaceindex, dsthitpos, dstdist);
 	}
 	else if(GetPm4() != nullptr){
-		//2025/09/15 polymesh4の場合には　バウンダリーもボーントランスフォームした上で　CollisionLocal_Ray_BB_Sphで粗く判定
+		//2025/09/15 polymesh4の場合には　バウンダリーもボーントランスフォームした上で　ChkRay_BB_Sphで粗く判定
 		CBone* clusterbone = GetClusterTopBone();
 		if (clusterbone) {
 			MODELBOUND mb = GetBound();
@@ -2661,7 +2650,7 @@ int CMQOObject::CollisionGlobal_Ray_Pm(ChaVector3 startglobal, ChaVector3 dirglo
 			ChaVector3TransformCoord(&center1, &(mb.center), &curwm);
 			mb.center = center1;
 	
-			int sphcollision = CollisionLocal_Ray_BB_Sph(mb, startglobal, dirglobal, rayleng);//2025/09/15 球で粗く判定(CPU)
+			int sphcollision = chacolli.ChkRay_BB_Sph(mb, startglobal, dirglobal, rayleng);//2025/09/15 球で粗く判定(CPU)
 			if (sphcollision == 0) {
 				*hitfaceindex = -1;
 				dsthitpos->SetZeroVec3();

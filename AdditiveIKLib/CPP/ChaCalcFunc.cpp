@@ -832,11 +832,11 @@ bool ChaCalcFunc::CalcAxisAndRotForIKRotateAxis(CModel* srcmodel, int limitdegfl
 	//	return true;
 	//}
 
-
+	ChaColli chacolli;
 	ChaVector3 parbef, chilbef, tarbef;
 	parbef = modelparentpos;
-	CalcShadowToPlane(modelchildpos, ikaxis, modelparentpos, &chilbef);
-	CalcShadowToPlane(targetpos, ikaxis, modelparentpos, &tarbef);
+	chacolli.CalcShadowToPlane(modelchildpos, ikaxis, modelparentpos, &chilbef);
+	chacolli.CalcShadowToPlane(targetpos, ikaxis, modelparentpos, &tarbef);
 
 	ChaVector3 vec0, vec1;
 	vec0 = chilbef - parbef;
