@@ -18,6 +18,7 @@
 #include <MQOObject.h>
 #include <MQOMaterial.h>
 #include <ChaCamera.h>
+#include <ChaScene.h>
 
 #include "..\\BTMANAGER\\BPWorld.h"
 #include <ImpFile.h>
@@ -46,7 +47,7 @@
 
 using namespace std;
 
-
+extern ChaScene* g_chascene;
 extern HWND g_mainhwnd;//アプリケーションウインドウハンドル AdditiveIK.cpp
 extern float g_tmpmqomult;
 extern WCHAR g_tmpmqopath[MULTIPATH];
@@ -186,6 +187,26 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 		srccameraonload->upvec.z), return 1);
 	CallF(Write2File("  <CameraDist>%.3f</CameraDist>\r\n", g_chacamera.GetCamDist()), return 1);
 
+	
+	CallF(Write2File("  <CameraAlwaysLock>%d</CameraAlwaysLock>\r\n", g_chacamera.GetCamTargetFlag()), return 1);
+	CallF(Write2File("  <CameraMoveEye>%d</CameraMoveEye>\r\n", (g_chacamera.GetCamMoveEyePos() ? 1 : 0)), return 1);
+	CallF(Write2File("  <CameraControlHeight>%d</CameraControlHeight>\r\n", g_chacamera.GetCameraHeightFlag()), return 1);
+	CallF(Write2File("  <CameraHeight>%.3f</CameraHeight>\r\n", g_chacamera.GetCameraHeight()), return 1);
+	if (g_chacamera.GetCameraGModel() != nullptr) {
+		char mbname[MAX_PATH] = { 0 };
+		WCHAR wname[MAX_PATH] = { 0L };
+		wcscpy_s(wname, MAX_PATH, g_chacamera.GetCameraGModel()->GetModelFolder());
+		WideCharToMultiByte(CP_ACP, 0, wname, -1, mbname, MAX_PATH, NULL, NULL);
+		CallF(Write2File("  <CameraGModelFolder>%s</CameraGModelFolder>\r\n", mbname), return 1);
+
+		char mbname2[MAX_PATH] = { 0 };
+		WCHAR wname2[MAX_PATH] = { 0L };
+		wcscpy_s(wname2, MAX_PATH, g_chacamera.GetCameraGModel()->GetFileName());
+		WideCharToMultiByte(CP_ACP, 0, wname2, -1, mbname2, MAX_PATH, NULL, NULL);
+		CallF(Write2File("  <CameraGModelName>%s</CameraGModelName>\r\n", mbname2), return 1);
+	}
+
+
 	CallF(Write2File("  <AKScale>%.3f</AKScale>\r\n", g_akscale), return 1);
 	CallF(Write2File("  <BtVScaleOnLimitEul>%.3f</BtVScaleOnLimitEul>\r\n", g_physicalVeloScale), return 1);
 
@@ -265,7 +286,9 @@ int CChaFile::WriteFileInfo()
 	//version 1014 : 2025/09/15 1.0.0.52へ向けて  <ModelDisp>, <BoneMarkDisp>, <RigidMarkDisp>, <SelectModel>追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1014</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1015 : 2026/01/01 1.0.0.57へ向けて  <IKStopAllOFF>追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1015</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1015</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1016 : 2026/04/25 1.0.0.66へ向けて  ChaCameraの不足分追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1016</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -902,6 +925,49 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	}
 
 
+	bool getcameraalwayslock = false;
+	int tempalwayslock = -1;
+	result = Read_Int(&m_xmliobuf, "<CameraAlwaysLock>", "</CameraAlwaysLock>", &tempalwayslock);
+	if (result == 0) {
+		//g_chacamera.SetCamTargetFlag(tempalwayslock);
+		getcameraalwayslock = true;
+	}
+	bool getcameramoveeye = false;
+	int tempmoveeye = -1;
+	result = Read_Int(&m_xmliobuf, "<CameraMoveEye>", "</CameraMoveEye>", &tempmoveeye);
+	if (result == 0) {
+		//g_chacamera.SetCamMoveEyePos(((tempmoveeye == 1) ? true : false));
+		getcameramoveeye = true;
+	}
+	bool getcameraheightflag = false;
+	int tempheightflag = -1;
+	result = Read_Int(&m_xmliobuf, "<CameraControlHeight>", "</CameraControlHeight>", &tempheightflag);
+	if (result == 0) {
+		//g_chacamera.SetCameraHeightFlag(tempheightflag);
+		getcameraheightflag = true;
+	}
+	bool getcameraheight = false;
+	float tempcameraheight = (float)g_chacamera.GetCameraHeight();
+	result = Read_Float(&m_xmliobuf, "<CameraHeight>", "</CCameraHeight>", &tempcameraheight);
+	if (result == 0) {
+		getcameraheight = true;
+	}
+
+	bool getcameragmodelfolder = false;
+	char camgmodelfolder[MAX_PATH] = { 0 };
+	result = Read_Str(&m_xmliobuf, "<CameraGModelFolder>", "</CameraGModelFolder>", camgmodelfolder, MAX_PATH);
+	if (result == 0) {
+		getcameragmodelfolder = true;
+	}
+	bool getcameragmodelname = false;
+	char camgmodelname[MAX_PATH] = { 0 };
+	result = Read_Str(&m_xmliobuf, "<CameraGModelName>", "</CameraGModelName>", camgmodelname, MAX_PATH);
+	if (result == 0) {
+		getcameragmodelname = true;
+	}
+
+
+
 	bool getakscale = false;
 	float tempakscale = (float)g_akscale;
 	result = Read_Float(&m_xmliobuf, "<AKScale>", "</AKScale>", &tempakscale);
@@ -1017,7 +1083,26 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	if (getcameradist) {
 		g_chacamera.SetCamDist(tempcameradist);
 	}
-
+	if (getcameraalwayslock) {
+		g_chacamera.SetCamTargetFlag(tempalwayslock);
+	}
+	if (getcameramoveeye) {
+		g_chacamera.SetCamMoveEyePos(((tempmoveeye == 1) ? true : false));
+	}
+	if (getcameraheightflag) {
+		g_chacamera.SetCameraHeightFlag(tempheightflag);
+	}
+	if (getcameraheight) {
+		g_chacamera.SetCameraHeight(tempcameraheight);
+	}
+	if (getcameragmodelname && getcameragmodelfolder) {
+		if (g_chascene) {
+			CModel* camg = g_chascene->GetModel(camgmodelfolder, camgmodelname);
+			if (camg != nullptr) {
+				g_chacamera.SetCameraGModel(camg);
+			}
+		}
+	}
 
 
 	if (getakscale) {

@@ -19322,8 +19322,36 @@ int PostOpenChaFile()
 	if (s_owpSpeedSlider) {
 		s_owpSpeedSlider->setValue(g_dspeed, false);
 	}
-	
-	ChangeCameraDist(g_chacamera.GetCamDist() , g_chacamera.GetCamMoveEyePos(), false);
+
+
+	//ChangeCameraDist(g_chacamera.GetCamDist() , g_chacamera.GetCamMoveEyePos(), false);
+	//if (g_chascene && (g_chacamera.GetCameraGModel() != nullptr) && (s_cameragmodelCombo != nullptr)) {
+	//	WCHAR wname[MAX_PATH] = { 0L };
+	//	wcscpy_s(wname, MAX_PATH, g_chacamera.GetCameraGModel()->GetFileName());
+
+	//	int findselected = -1;
+	//	int modelnum = g_chascene->GetModelNum();
+	//	int modelindex;
+	//	for (modelindex = 0; modelindex < modelnum; modelindex++) {
+	//		MODELELEM curmodelelem = g_chascene->GetModelElem(modelindex);
+	//		if (curmodelelem.modelptr != nullptr) {
+	//			WCHAR gname[MAX_PATH] = { 0L };
+	//			wcscpy_s(gname, MAX_PATH, curmodelelem.modelptr->GetFileName());
+
+	//			if (wcscmp(wname, gname) == 0) {
+	//				findselected = modelindex;
+	//			}
+	//		}
+	//	}
+	//	if (findselected >= 0) {
+	//		s_cameragmodelCombo->setSelectedCombo(findselected + 1);
+	//	}
+	//}
+	//if (s_sidemenu_sellock) {
+	//	s_sidemenu_sellock->setValue(((g_chacamera.GetCamTargetFlag() == 1) ? true : false));
+	//}
+
+
 
 
 	s_bulletdlg.CreateBulletWnd();//作成済でない場合に作成
@@ -25242,7 +25270,7 @@ int OnFrameKeyboard()
 			//Always Lock to Selected Joint.
 			g_chacamera.SetCamTargetFlag((g_chacamera.GetCamTargetFlag() == 0) ? 1 : 0);
 			if (s_sidemenu_sellock) {
-				s_sidemenu_sellock->setValue(g_chacamera.GetCamTargetFlag(), true);
+				s_sidemenu_sellock->setValue(((g_chacamera.GetCamTargetFlag() == 1) ? true : false), true);
 			}
 		}
 		//TourBox
@@ -30482,7 +30510,7 @@ int CreateSideMenuWnd()
 				_ASSERT(0);
 				return 1;
 			}
-			s_sidemenu_sellock = new OWP_CheckBoxA(L"AlwaysLock", g_chacamera.GetCamTargetFlag(), 15, false);
+			s_sidemenu_sellock = new OWP_CheckBoxA(L"AlwaysLock", ((g_chacamera.GetCamTargetFlag() == 1) ? true : false), 15, false);
 			if (!s_sidemenu_sellock) {
 				_ASSERT(0);
 				return 1;
