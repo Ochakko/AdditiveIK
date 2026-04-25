@@ -6003,6 +6003,15 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 		return;
 	}
 
+
+	FbxCluster* pcluster = FindClusterBySkeleton(pmodel, pNode);//2023/05/19
+	//if (pcluster == nullptr) {
+	//	return;
+	//}
+	//if (pcluster->GetSrcObjectCount() <= 0) {
+	//	return;
+	//}
+
 	FbxAMatrix lGlobalPosition;
 	lGlobalPosition.SetIdentity();
 
@@ -6259,8 +6268,8 @@ void FbxSetDefaultBonePosReq(FbxScene* pScene, CModel* pmodel, CNodeOnLoad* node
 			//bindposeが見つからなかった場合
 			//###############################
 
-			FbxCluster* pcluster = FindClusterBySkeleton(pmodel, pNode);//2023/05/19
-			if (pcluster) {
+			//FbxCluster* pcluster = FindClusterBySkeleton(pmodel, pNode);//2023/05/19
+			if (pcluster != nullptr) {
 				//#################################################################################################
 				//モデル中にeMeshが存在する場合　Meshの中で定義されているskinのclusterから情報を探す
 				//本来はbindposeが存在するはずなのに　何らかの原因でbindposeが書き出されなかった場合に有効なようだ

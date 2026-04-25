@@ -1,7 +1,13 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
-
+2026/04/26
+　AdditiveIK 1.0.0.66 RC1(リリース候補1)
+　　1.0.0.65からの変更点
+　　　バウンダリーブロック処理の修正
+　　　右ペイン上部のカメラパラメータをプロジェクト保存時に保存
+　
+　
 2026/04/25
 　メッシュを扱わない衝突判定をChaColliクラスに.
 　
