@@ -2845,12 +2845,16 @@ int CFootRigDlg::GetGroundPos(CFootInfo* srcfootinfo, CModel* groundmodel, ChaVe
 
 
 	if (srcfootinfo->GetFirstPosOnGround()) {
-		//#################
-		//初回のフットリグ計算
-		//#################
-
-		srcfootinfo->SetFirstPosOnGround(false);
-		int dbgflag1 = 1;
+		//##########################################################################
+		//初回（１００回分）のフットリグ計算
+		//厳密に1回だけにすると　初期設定タイミングと実行時間の関係で　地面に乗れないことがあった
+		//##########################################################################
+		int chkcount = srcfootinfo->GetFirstPosOnGroundCount();
+		if (chkcount >= 100) {//100回
+			srcfootinfo->SetFirstPosOnGround(false);
+			int dbgflag1 = 1;
+		}
+		srcfootinfo->SetFirstPosOnGroundCount(chkcount + 1);
 
 		//ステージに接地した直後など　長いRayが必要
 		ChaVector3 startglobal2 = basepos + ChaVector3(0.0f, 2000.0f, 0.0f);//2000.0

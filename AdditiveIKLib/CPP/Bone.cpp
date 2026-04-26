@@ -2847,9 +2847,10 @@ int CBone::CalcRigidElemParams(bool setinstancescale, CBone* childbone, int sets
 
 	//if ((setstartflag != 0) || (m_firstcalcrigid == true)){
 	if (curre->GetColtype() == COL_CAPSULE_INDEX) {
-		unordered_map<int, CMQOObject*>::iterator itrobj;
+		//unordered_map<int, CMQOObject*>::iterator itrobj;
+		vector<CMQOObject*>::iterator itrobj;
 		for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++) {
-			CMQOObject* curobj = itrobj->second;
+			CMQOObject* curobj = *itrobj;// itrobj->second;
 			_ASSERT(curobj);
 			if (strcmp(curobj->GetName(), "cylinder") == 0) {
 				CallF(curobj->ScaleBtCapsule(setinstancescale, curre, diffleng, 0, &cylileng), return 1);
@@ -2863,25 +2864,28 @@ int CBone::CalcRigidElemParams(bool setinstancescale, CBone* childbone, int sets
 		}
 	}
 	else if (curre->GetColtype() == COL_CONE_INDEX) {
-		unordered_map<int, CMQOObject*>::iterator itrobj;
+		//unordered_map<int, CMQOObject*>::iterator itrobj;
+		vector<CMQOObject*>::iterator itrobj;
 		for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++) {
-			CMQOObject* curobj = itrobj->second;
+			CMQOObject* curobj = *itrobj;// itrobj->second;
 			_ASSERT(curobj);
 			CallF(curobj->ScaleBtCone(setinstancescale, curre, diffleng, &cylileng, &sphr), return 1);
 		}
 	}
 	else if (curre->GetColtype() == COL_SPHERE_INDEX) {
-		unordered_map<int, CMQOObject*>::iterator itrobj;
+		//unordered_map<int, CMQOObject*>::iterator itrobj;
+		vector<CMQOObject*>::iterator itrobj;
 		for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++) {
-			CMQOObject* curobj = itrobj->second;
+			CMQOObject* curobj = *itrobj;// itrobj->second;
 			_ASSERT(curobj);
 			CallF(curobj->ScaleBtSphere(setinstancescale, curre, diffleng, &cylileng, &sphr), return 1);
 		}
 	}
 	else if (curre->GetColtype() == COL_BOX_INDEX) {
-		unordered_map<int, CMQOObject*>::iterator itrobj;
+		//unordered_map<int, CMQOObject*>::iterator itrobj;
+		vector<CMQOObject*>::iterator itrobj;
 		for (itrobj = curcoldisp->GetMqoObjectBegin(); itrobj != curcoldisp->GetMqoObjectEnd(); itrobj++) {
-			CMQOObject* curobj = itrobj->second;
+			CMQOObject* curobj = *itrobj;// itrobj->second;
 			_ASSERT(curobj);
 			CallF(curobj->ScaleBtBox(setinstancescale, curre, diffleng, &cylileng, &sphr, &boxz), return 1);
 #ifndef NDEBUG

@@ -839,7 +839,7 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 
  								if (curobj && !curobj->IsND() && 
 									(curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(0)) {
-								//if (curobj) {
+								//if (curobj != nullptr) {
 
 								
 									if (curobj->GetDispLine()) {
@@ -1152,7 +1152,7 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 
 						if (curobj && !curobj->IsND() && 
 							(curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(0)) {
-							//if (curobj) {
+							//if (curobj != nullptr) {
 
 
 							if (curobj->GetDispLine()) {
@@ -1323,7 +1323,7 @@ int ChaScene::RenderInstancingModel(CModel* srcmodel, bool forcewithalpha,
 
 						if (curobj && !curobj->IsND() && 
 							(curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(0)) {
-							//if (curobj) {
+							//if (curobj != nullptr) {
 
 
 							if (curobj->GetDispLine()) {
@@ -1477,7 +1477,7 @@ int ChaScene::AddToRefPos(CModel* srcmodel, bool forcewithalpha, myRenderer::Ren
 
 						if (curobj && !curobj->IsND() &&
 							(curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(refposindex)) {
-							//if (curobj) {
+							//if (curobj != nullptr) {
 
 
 							if (curobj->GetDispLine()) {

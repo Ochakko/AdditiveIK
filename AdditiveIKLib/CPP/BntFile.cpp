@@ -207,9 +207,11 @@ typedef struct tag_bntvertex
 
 	CallF( WriteNumber( srcmodel->GetMqoObjectSize() ), return 1 );
 
-	unordered_map<int, CMQOObject*>::iterator itrobj;
+	//unordered_map<int, CMQOObject*>::iterator itrobj;
+	vector<CMQOObject*>::iterator itrobj;
 	for( itrobj = srcmodel->GetMqoObjectBegin(); itrobj != srcmodel->GetMqoObjectEnd(); itrobj++ ){
-		CMQOObject* curobj = itrobj->second;
+		//CMQOObject* curobj = itrobj->second;
+		CMQOObject* curobj = *itrobj;
 		if( !curobj ){
 			_ASSERT( 0 );
 			return 1;

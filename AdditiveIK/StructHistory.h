@@ -10,6 +10,9 @@
 #include <unordered_map>
 #include <string>
 
+#include <ChaCamera.h>
+
+extern ChaCamera g_chacamera;
 
 typedef struct tag_cpinfo
 {
@@ -20,7 +23,6 @@ typedef struct tag_cpinfo
 	int bvhtype;//0:undef, 1-144:bvh1 - bvh144, -1:bvh_other
 	int importance;//0:undef, 1:tiny, 2:alittle, 3:normal, 4:noticed, 5:imortant, 6:very important
 	WCHAR comment[HISTORYCOMMENTLEN];//WCHAR * 31文字まで。３２文字目は終端記号
-
 
 	bool operator== (const tag_cpinfo& chk) const {
 		if ((wcscmp(fbxname, chk.fbxname) == 0) &&
@@ -136,6 +138,29 @@ typedef struct tag_dollyelem
 		Init();
 	};
 }DOLLYELEM;
+
+typedef struct tag_cameradistparams
+{
+	float cameradist;
+	int alwayslock;
+	bool moveeye;
+	int heightflag;
+	float height;
+	CModel* gmodel;
+
+	void Init() {
+		cameradist = g_chacamera.GetCamDist();
+		alwayslock = g_chacamera.GetCamTargetFlag();
+		moveeye = g_chacamera.GetCamMoveEyePos();
+		heightflag = g_chacamera.GetCameraHeightFlag();
+		height = g_chacamera.GetCameraHeight();
+		gmodel = g_chacamera.GetCameraGModel();
+	};
+
+	tag_cameradistparams() {
+		Init();
+	};
+}CAMERADISTPARAMS;
 
 typedef struct tag_dollyelem2
 {

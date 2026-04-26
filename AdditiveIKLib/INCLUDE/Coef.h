@@ -138,10 +138,13 @@ enum {
 //FootRigの地面に指定するモデルは　Mayaでポリゴン数を削減して AdditiveIKで非表示にしたものを指定すると高速化可能
 #define PM3BOUNDINGFACENUM 200
 
-//2025/09/23
-//mqoobjectをOBJBOUNDING_BLOCKNUM単位でまとめてバウンダリー作成して粗く判定し高速化につなげる
-//#define OBJBOUNDING_BLOCKNUM 5
-#define OBJBOUNDING_BLOCKNUM 40
+//2026/04/26
+//OBJBOUNDING_BLOCKNUMは*.chaファイルで指定してCModelのメンバに格納することに
+//
+////2025/09/23
+////mqoobjectをOBJBOUNDING_BLOCKNUM単位でまとめてバウンダリー作成して粗く判定し高速化につなげる
+////#define OBJBOUNDING_BLOCKNUM 5
+//#define OBJBOUNDING_BLOCKNUM 40
 
 
 #define HISTORYCOMMENTLEN	32

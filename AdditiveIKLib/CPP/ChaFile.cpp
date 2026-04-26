@@ -324,6 +324,7 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 	CallF(Write2File("    <ModelFile>%s</ModelFile>\r\n", filename ), return 1 );
 	CallF(Write2File("    <ModelMult>%f</ModelMult>\r\n", curmodel->GetLoadMult() ), return 1 );
 	CallF(Write2File("    <ModelDisp>%d</ModelDisp>\r\n", (curmodel->GetModelDisp() ? 1 : 0)), return 1);
+	CallF(Write2File("    <ObjBoundingBlockNum>%d</ObjBoundingBlockNum>\r\n", curmodel->GetObjBoundingBlockNum()), return 1);
 
 	if (curmodel->GetGrassFlag() && srcgrasselem) {
 		CallF(Write2File("    <GrassFlag>1</GrassFlag>\r\n"), return 1);
@@ -350,6 +351,7 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 
 
 	CallF(Write2File("    <ModelPositionX>%f</ModelPositionX>\r\n", curmodel->GetModelPosition().x), return 1);
+
 	CallF(Write2File("    <ModelPositionY>%f</ModelPositionY>\r\n", curmodel->GetModelPosition().y), return 1);
 	CallF(Write2File("    <ModelPositionZ>%f</ModelPositionZ>\r\n", curmodel->GetModelPosition().z), return 1);
 
@@ -741,13 +743,14 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 
 int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath, 
 	CFootRigDlg* srcfootrigdlg,
-	CModel* (*srcfbxfunc)( bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname, bool srcgrassflag),
+	CModel* (*srcfbxfunc)( bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, 
+		std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum),
 	int (*srcReffunc)(), int (*srcImpFunc)(), int (*srcGcoFunc)(),
 	int (*srcReMenu)( int selindex1, int callbymenu1 ), 
 	int (*srcRgdMenu)( int selindex2, int callbymenu2 ), 
 	int (*srcMorphMenu)( int selindex3 ), int (*srcImpMenu)( int selindex4 ),
 	std::vector<CGrassElem*>& dstgrasselemvec,
-	DOLLYELEM2* dstcameraonload)
+	DOLLYELEM2* dstcameraonload, CAMERADISTPARAMS* dstdistparams)
 {
 	m_mode = XMLIO_LOAD;
 	m_FbxFunc = srcfbxfunc;
@@ -764,7 +767,7 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	if (!strpath || !srcfootrigdlg ||
 		!srcfbxfunc || !srcReffunc || !srcImpFunc || !srcGcoFunc ||
 		!srcReMenu || !srcRgdMenu || !srcMorphMenu || !srcImpMenu ||
-		!dstcameraonload) {
+		!dstcameraonload || !dstdistparams) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -1081,29 +1084,36 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	}
 
 	if (getcameradist) {
-		g_chacamera.SetCamDist(tempcameradist);
+		dstdistparams->cameradist = tempcameradist;
+		//g_chacamera.SetCamDist(tempcameradist);
 	}
 	if (getcameraalwayslock) {
-		g_chacamera.SetCamTargetFlag(tempalwayslock);
+		dstdistparams->alwayslock = tempalwayslock;
+		//g_chacamera.SetCamTargetFlag(tempalwayslock);
 	}
 	if (getcameramoveeye) {
-		g_chacamera.SetCamMoveEyePos(((tempmoveeye == 1) ? true : false));
+		dstdistparams->moveeye = (tempmoveeye == 1);
+		//g_chacamera.SetCamMoveEyePos(((tempmoveeye == 1) ? true : false));
 	}
 	if (getcameraheightflag) {
-		g_chacamera.SetCameraHeightFlag(tempheightflag);
+		dstdistparams->heightflag = tempheightflag;
+		//g_chacamera.SetCameraHeightFlag(tempheightflag);
 	}
 	if (getcameraheight) {
-		g_chacamera.SetCameraHeight(tempcameraheight);
+		dstdistparams->height = tempcameraheight;
+		//g_chacamera.SetCameraHeight(tempcameraheight);
 	}
+
+	dstdistparams->gmodel = nullptr;
 	if (getcameragmodelname && getcameragmodelfolder) {
 		if (g_chascene) {
 			CModel* camg = g_chascene->GetModel(camgmodelfolder, camgmodelname);
 			if (camg != nullptr) {
-				g_chacamera.SetCameraGModel(camg);
+				dstdistparams->gmodel = camg;
+				//g_chacamera.SetCameraGModel(camg);
 			}
 		}
 	}
-
 
 	if (getakscale) {
 		g_akscale = tempakscale;
@@ -1197,6 +1207,9 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	int getmodeldisp = 0;
 	int modeldisp = 1;
 	
+	int getobjboundingblocknum = 0;
+	int objboundingblocknum = 40;
+
 	int refnum = 0;
 	int impnum = 0;
 	int curre = 0;
@@ -1216,6 +1229,9 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 
 	CallF(Read_Float(xmlbuf, "<ModelMult>", "</ModelMult>", &modelmult), return 1);
 	getmodeldisp = Read_Int(xmlbuf, "<ModelDisp>", "</ModelDisp>", &modeldisp);
+
+	getobjboundingblocknum = Read_Int(xmlbuf, "<ObjBoundingBlockNum>", "</ObjBoundingBlockNum>", &objboundingblocknum);
+
 
 	int grassflag = 0;
 	std::vector<ChaMatrix> grassmatvec;
@@ -1349,12 +1365,22 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 		inittimeline = 1;
 	}
 	
-	
+	int setobjboundingblocknum = 40;
+	if (getobjboundingblocknum == 0) {
+		if ((objboundingblocknum >= 1) && (objboundingblocknum <= 2000)) {
+			setobjboundingblocknum = objboundingblocknum;
+		}
+		else {
+			_ASSERT(0);
+			//out of range
+			setobjboundingblocknum = 40;
+		}
+	}
 	int skipdefref = (int)(refnum != 0);//default_ref.refが無い場合にCModel::LoadFBXでdefault_ref.refを作るためのフラグ
 	//int skipdefref = 0;//CModel::LoadFBXでCreateRigidElemReqを呼ぶ必要がある。FBXだけ読み込んでいる状態でdefault_refが必要。
 	CModel* newmodel = 0;
 	bool callfromcha = true;
-	newmodel = (this->m_FbxFunc)( callfromcha, (characnt == (charanum - 1)), skipdefref, inittimeline, ikstopname, (grassflag == 1) );
+	newmodel = (this->m_FbxFunc)(callfromcha, (characnt == (charanum - 1)), skipdefref, inittimeline, ikstopname, (grassflag == 1), setobjboundingblocknum);
 	
 	if (!newmodel) {
 		_ASSERT(0);
@@ -1394,6 +1420,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	else {
 		newmodel->SetModelDisp(true);
 	}
+
 
 	int laternamenum = (int)latername.size();
 	int laterno;

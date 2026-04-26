@@ -2517,7 +2517,8 @@ static int InitCurMotion(int selectflag, double expandmotion);
 static int OpenChaFile();
 static int PostOpenChaFile();//2024/04/17 常駐スライダーなどに読込値を反映する
 CModel* OpenMQOFile();
-CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname, bool srcgrassflag);
+CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, 
+	std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum);
 static int OpenREFile();
 static int OpenImpFile();
 static int OpenGcoFile();
@@ -9638,7 +9639,7 @@ int RetargetFile(char* fbxpath)
 		std::vector<std::string> ikstopname;
 		ikstopname.clear();
 		bool grassflag = false;
-		newmodel = OpenFBXFile(false, false, 0, 1, ikstopname, grassflag);
+		newmodel = OpenFBXFile(false, false, 0, 1, ikstopname, grassflag, 40);
 		if (newmodel) {
 			//GetCurrentModel() = s_convbone_model_batch;
 
@@ -10304,7 +10305,7 @@ int OpenFile()
 			}
 			std::vector<std::string> ikstopname;
 			ikstopname.clear();
-			newmodel = OpenFBXFile(false, true, 0, 1, ikstopname, s_grassflag);
+			newmodel = OpenFBXFile(false, true, 0, 1, ikstopname, s_grassflag, 40);
 			if (newmodel) {
 				result = 0;
 				newmodel->RemakeHSVToonTexture(nullptr);//2026/03/06
@@ -10393,7 +10394,7 @@ int OpenFile()
 
 				std::vector<std::string> ikstopname;
 				ikstopname.clear();
-				newmodel = OpenFBXFile(false, true, 0, 1, ikstopname, s_grassflag);
+				newmodel = OpenFBXFile(false, true, 0, 1, ikstopname, s_grassflag, 40);
 				if (newmodel) {
 					result = 0;
 					newmodel->RemakeHSVToonTexture(nullptr);//2026/03/06
@@ -10703,7 +10704,8 @@ void CalcTotalBound()
 }
 
 
-CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, std::vector<std::string> ikstopname, bool srcgrassflag)
+CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, 
+	std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum)
 {
 	static int s_dbgcnt = 0;
 	s_dbgcnt++;
@@ -10794,7 +10796,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 		return 0;
 	}
 	newmodel->SetLoadingMotionCount(0);//2022/11/01
-
+	newmodel->SetObjBoundingBlockNum(setobjboundingblocknum);//2026/04/26
 
 	if (s_grassflag) {
 		//2024/05/11
@@ -13880,13 +13882,18 @@ int refreshModelPanel()
 	}
 
 	if (objnum > 0) {
-		unordered_map<int, CMQOObject*>::iterator itrobj;
-		for (itrobj = GetCurrentModel()->GetMqoObjectBegin(); itrobj != GetCurrentModel()->GetMqoObjectEnd(); itrobj++) {
-			CMQOObject* curobj = itrobj->second;
-			WCHAR wname[256];
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char*)curobj->GetName(), 256, wname, 256);
-			s_owpLayerTable->newLine(wname, (void*)curobj);
-			s_owpLayerTable->setVisible(wname, (curobj->GetDispFlag() > 0), true);
+		//unordered_map<int, CMQOObject*>::iterator itrobj;
+		//for (itrobj = GetCurrentModel()->GetMqoObjectBegin(); itrobj != GetCurrentModel()->GetMqoObjectEnd(); itrobj++) {
+		//	CMQOObject* curobj = itrobj->second;
+		int objindex;
+		for (objindex = 0; objindex < objnum; objindex++) {
+			CMQOObject* curobj = GetCurrentModel()->GetMqoObject(objindex);
+			if (curobj != nullptr) {
+				WCHAR wname[256];
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char*)curobj->GetName(), 256, wname, 256);
+				s_owpLayerTable->newLine(wname, (void*)curobj);
+				s_owpLayerTable->setVisible(wname, (curobj->GetDispFlag() > 0), true);
+			}
 		}
 	}
 	else {
@@ -19125,7 +19132,6 @@ int SaveProject()
 		OnChangeModel(GetCurrentModel(), forceflag, callundo);
 	}
 
-
 	if (oldcursor) {
 		SetCursor(oldcursor);
 	}
@@ -19477,12 +19483,14 @@ int OpenChaFile()
 	
 	CChaFile chafile;
 	DOLLYELEM2 cameraonload;
+	CAMERADISTPARAMS distparams;
 	cameraonload.Init();
+	distparams.Init();
 	int ret = chafile.LoadChaFile(g_limitdegflag, g_tmpmqopath,
 		&s_footrigdlg,
 		OpenFBXFile, OpenREFile, OpenImpFile, OpenGcoFile,
 		OnREMenu, OnRgdMenu, OnRgdMorphMenu, OnImpMenu,
-		s_grassElemVec, &cameraonload);
+		s_grassElemVec, &cameraonload, &distparams);
 	if (ret == 1) {
 		_ASSERT(0);
 		SetCursor(oldcursor);
@@ -19497,7 +19505,8 @@ int OpenChaFile()
 
 	//OnAddMotion(GetCurrentModel()->GetCurMotInfo()->motid);
 
-	//全てのモデルが読み込まれた後で*.friを読み込む
+
+	////全てのモデルが読み込まれた後で*.friを読み込む
 	s_footrigdlg.LoadFootRigFile(s_chasavedir, s_chasavename);
 
 
@@ -19515,9 +19524,19 @@ int OpenChaFile()
 		}
 	}
 
-
+	//FootRigの設定よりも後で設定
+	g_chacamera.SetCamDist(distparams.cameradist);
+	g_chacamera.SetCamMoveEyePos(distparams.moveeye);
+	g_chacamera.SetCameraHeightFlag(distparams.heightflag);
+	g_chacamera.SetCameraHeight(distparams.height);
+	g_chacamera.SetCameraGModel(distparams.gmodel);
 
 	PostOpenChaFile();//2024/04/17 常駐スライダーなどにchaファイル読込値を反映する
+
+	g_chacamera.SetCamTargetFlag(distparams.alwayslock);
+	if (s_sidemenu_sellock) {//OnModelMenu()内部で sidemenu_sellockのチェックがfalseになるので　ここで設定
+		s_sidemenu_sellock->setValue(g_chacamera.GetCamTargetFlag() != 0);
+	}
 
 
 	//履歴を保存する。chaファイルだけ。
@@ -25270,7 +25289,7 @@ int OnFrameKeyboard()
 			//Always Lock to Selected Joint.
 			g_chacamera.SetCamTargetFlag((g_chacamera.GetCamTargetFlag() == 0) ? 1 : 0);
 			if (s_sidemenu_sellock) {
-				s_sidemenu_sellock->setValue(((g_chacamera.GetCamTargetFlag() == 1) ? true : false), true);
+				s_sidemenu_sellock->setValue((g_chacamera.GetCamTargetFlag() != 0), true);
 			}
 		}
 		//TourBox
@@ -30091,7 +30110,7 @@ int CreateLongTimelineWnd()
 int Params2SideMenuWnd()//2024/06/06
 {
 	if (s_sidemenu_sellock) {
-		s_sidemenu_sellock->setValue(g_chacamera.GetCamTargetFlag(), false);
+		s_sidemenu_sellock->setValue((g_chacamera.GetCamTargetFlag() != 0), false);
 	}
 
 	if (s_sidemenu_targetdisp) {
@@ -30510,7 +30529,7 @@ int CreateSideMenuWnd()
 				_ASSERT(0);
 				return 1;
 			}
-			s_sidemenu_sellock = new OWP_CheckBoxA(L"AlwaysLock", ((g_chacamera.GetCamTargetFlag() == 1) ? true : false), 15, false);
+			s_sidemenu_sellock = new OWP_CheckBoxA(L"AlwaysLock", (g_chacamera.GetCamTargetFlag() != 0), 15, false);
 			if (!s_sidemenu_sellock) {
 				_ASSERT(0);
 				return 1;
@@ -31556,7 +31575,7 @@ int CreateLayerWnd()
 		s_owpLayerTable->setChangeVisibleListener([](int index) {
 			if (GetCurrentModel() && s_owpLayerTable) {
 				CMQOObject* curobj = (CMQOObject*)(s_owpLayerTable->getObj(index));
-				if (curobj) {
+				if (curobj != nullptr) {
 					if (s_owpLayerTable->getVisible(index)) {
 						curobj->SetDispFlag(1);
 					}

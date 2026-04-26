@@ -979,7 +979,7 @@ void CreateAndCopyFbxNodeReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* 
 				psaveparentnode->AddChild(psavenode);
 
 				CMQOObject* curobj = ploadnode->GetMqoObject();
-				if (curobj) {
+				if (curobj != nullptr) {
 					CreateFbxMesh(pSdkManager, pScene, pmodel, curobj, psavenode, srcnode, blsindex);
 				}
 			}
@@ -1512,7 +1512,7 @@ void CreateSkinMeshReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* pmodel
 					if (type == FbxNodeAttribute::eMesh)
 					{
 						CMQOObject* curobj = ploadnode->GetMqoObject();
-						if (curobj) {
+						if (curobj != nullptr) {
 
 							int mqoobjclusternum = curobj->GetClusterSize();
 							if (mqoobjclusternum >= 1) {//2023/07/29
@@ -1668,7 +1668,7 @@ void CreateSkinMeshReq(FbxManager* pSdkManager, FbxScene* pScene, CModel* pmodel
 						//////s_blsinfo.clear();
 
 						//CMQOObject* curobj = ploadnode->GetMqoObject();
-						//if (curobj) {
+						//if (curobj != nullptr) {
 						//	const char* dummynameptr = strstr(curobj->GetName(), "_ND_dtri");
 						//	if (!dummynameptr) {
 

@@ -524,6 +524,8 @@ int CModel::InitParams()
 {
 	m_selectedboneno = 0;
 
+	m_objBounding_BlockNum = 25;
+
 	int index1;
 	for (index1 = 0; index1 < REFPOSMAXNUM; index1++) {
 		m_inview[index1] = false;
@@ -882,9 +884,12 @@ int CModel::DestroyMaterial()
 int CModel::DestroyObject()
 {
 
-	unordered_map<int, CMQOObject*>::iterator itr;
-	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
-		CMQOObject* delobj = itr->second;
+	//unordered_map<int, CMQOObject*>::iterator itr;
+	//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+	//	CMQOObject* delobj = itr->second;
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* delobj = m_object[objindex];
 		if( delobj ){
 			delete delobj;
 		}
@@ -1370,11 +1375,13 @@ _ASSERT(m_bonelist[0]);
 	ChaMatrix offsetmat;
 	ChaMatrixIdentity( &offsetmat );
 	offsetmat.SetScale(ChaVector3(srcmult, srcmult, srcmult));
-	unordered_map<int,CMQOObject*>::iterator itr;
-	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
-		CMQOObject* curobj = itr->second;
+	//unordered_map<int,CMQOObject*>::iterator itr;
+	//for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
+	//	CMQOObject* curobj = itr->second;
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
 		if( curobj ){
-			
 			debugcount++;
 
 			CallF( curobj->MultMat( offsetmat ), return 1 );
@@ -1479,13 +1486,17 @@ _ASSERT(m_bonelist[0]);
 		}
 
 
-		unordered_map<int, CMQOObject*>::iterator itr2;
-		for (itr2 = m_object.begin(); itr2 != m_object.end(); itr2++) {
-			CMQOObject* curobj = itr2->second;
-			if (curobj) {
-				char* findnd = strstr((char*)curobj->GetName(), "_ND");
+		//unordered_map<int, CMQOObject*>::iterator itr2;
+		//for (itr2 = m_object.begin(); itr2 != m_object.end(); itr2++) {
+		//	CMQOObject* curobj = itr2->second;
+		//	if (curobj != nullptr) {
+		int objnum2 = (int)m_object.size();
+		for (int objindex2 = 0; objindex2 < objnum2; objindex2++) {
+			CMQOObject* curobj2 = m_object[objindex2];
+			if (curobj2) {
+				char* findnd = strstr((char*)curobj2->GetName(), "_ND");
 				if (findnd) {
-					curobj->SetDispFlag(0);
+					curobj2->SetDispFlag(0);
 				}
 			}
 		}
@@ -1628,7 +1639,7 @@ int CModel::CreateMaterialTexture()
 //	unordered_map<int, CMQOObject*>::iterator itrobj;
 //	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
 //		CMQOObject* curobj = itrobj->second;
-//		if (curobj) {
+//		if (curobj != nullptr) {
 //			unordered_map<int, CMQOMaterial*>::iterator itrmat;
 //			for (itrmat = curobj->GetMaterialBegin(); itrmat != curobj->GetMaterialEnd(); itrmat++) {
 //				CMQOMaterial* curmat = itrmat->second;
@@ -1919,21 +1930,24 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 
 	MODELBOUND modelmb;//モデル全体のバウンダリー
 	MODELBOUND addmb;//ループごとの追加バウンダリー
-	MODELBOUND mb5;//ループOBJBOUNDING_BLOCKNUM回ごとの メッシュOBJBOUNDING_BLOCKNUM個分のバウンダリー
+	MODELBOUND mb5;//ループGetObjBoundingBlockNum()回ごとの メッシュGetObjBoundingBlockNum()個分のバウンダリー
 	modelmb.Init();
 	addmb.Init();
 	mb5.Init();
 
-	m_bound_per5.clear();//メッシュ OBJBOUNDING_BLOCKNUM個分のバウンダリーのVector
+	m_bound_per5.clear();//メッシュ GetObjBoundingBlockNum()個分のバウンダリーのVector
 
 
 	int totalcount = 0;//メッシュ処理カウントの合計
-	int count5 = 0;//OBJBOUNDING_BLOCKNUM個単位のメッシュ処理のカウント
+	int count5 = 0;//GetObjBoundingBlockNum()個単位のメッシュ処理のカウント
 
-	unordered_map<int,CMQOObject*>::iterator itr;
-	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
-		CMQOObject* curobj = itr->second;
-		if (curobj && !curobj->IsND()) {
+	//unordered_map<int,CMQOObject*>::iterator itr;
+	//for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
+	//	CMQOObject* curobj = itr->second;
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if ((curobj != nullptr) && !curobj->IsND()) {
 
 			addmb.Init();
 
@@ -1972,34 +1986,37 @@ int CModel::GetModelBound( MODELBOUND* dstb )
 			}
 
 
-			//OBJBOUNDING_BLOCKNUM個単位の バウンダリーを作成
+			//GetObjBoundingBlockNum()個単位の バウンダリーを メンバ変数に登録
+			if (((totalcount % GetObjBoundingBlockNum()) == 0) && (totalcount != 0)) {
+				//GetObjBoundingBlockNum()個のメッシュごとにmb5を登録
+				//
+				//m_bound_per5[0] : 0から39
+				//m_bound_per5[1] : 40から79
+				//m_bound_per5[2] : 80から119
+				m_bound_per5.push_back(mb5);
+			}
+
+			//GetObjBoundingBlockNum()個単位の バウンダリーを作成
 			if (count5 == 0) {
-				//OBJBOUNDING_BLOCKNUM個単位のバウンダリーに１個目のメッシュのバウンダリをセット
+				//GetObjBoundingBlockNum()個単位のバウンダリーに１個目のメッシュのバウンダリをセット
 				mb5.Init();
 				mb5 = addmb;
 			}
 			else {
-				//OBJBOUNDING_BLOCKNUM個単位のバウンダリーに２個目以降のメッシュのバウンダリをセット
+				//GetObjBoundingBlockNum()個単位のバウンダリーに２個目以降のメッシュのバウンダリをセット
 				AddModelBound(&mb5, &addmb);
-			}
-
-
-			//OBJBOUNDING_BLOCKNUM個単位の バウンダリーを メンバ変数に登録
-			if (((totalcount % OBJBOUNDING_BLOCKNUM) == 0) && (totalcount != 0)) {
-				//OBJBOUNDING_BLOCKNUM個のメッシュごとにmb5を登録 totalcount == 0のバウンダリーはm_bound_per5の最初のバウンダリに含む(最初だけ1個分多い)
-				m_bound_per5.push_back(mb5);
 			}
 
 			//カウンタ更新
 			totalcount++;
 			count5++;
-			if (count5 >= OBJBOUNDING_BLOCKNUM) {
+			if (count5 >= GetObjBoundingBlockNum()) {
 				count5 = 0;
 			}
 		}
 	}
-	//ループトータル回数がOBJBOUNDING_BLOCKNUMの倍数ではない場合　最後のmb5を OBJBOUNDING_BLOCKNUM個分バウンダリーのVectorに追加
-	if ((totalcount != 0) && ((count5 - 1) % OBJBOUNDING_BLOCKNUM) != 0) {
+	//ループトータル回数がGetObjBoundingBlockNum()の倍数ではない場合　最後のmb5を GetObjBoundingBlockNum()個分バウンダリーのVectorに追加
+	if ((totalcount != 0) && ((count5 - 1) % GetObjBoundingBlockNum()) != 0) {
 		m_bound_per5.push_back(mb5);
 	}
 
@@ -2221,10 +2238,14 @@ int CModel::SetFaceOfShape( CMQOFace** ppface, int facenum, int shapeno, CMQOFac
 
 int CModel::MakeObjectName()
 {
-	unordered_map<int, CMQOObject*>::iterator itrobj;
-	for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
-		CMQOObject* curobj = itrobj->second;
-		if( curobj ){
+	//unordered_map<int, CMQOObject*>::iterator itrobj;
+	//for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
+	//	CMQOObject* curobj = itrobj->second;
+	//	if( curobj ){
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if (curobj != nullptr) {
 			char* nameptr = (char*)curobj->GetName();
 			if (nameptr) {
 				*(nameptr + 256 - 1) = 0;
@@ -2363,10 +2384,14 @@ int CModel::DbgDumpBoneReq(int level, CBone* boneptr, int broflag)
 
 int CModel::MakePolyMesh3(bool fbxfileflag)
 {
-	unordered_map<int,CMQOObject*>::iterator itr;
-	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
-		CMQOObject* curobj = itr->second;
-		if( curobj ){
+	//unordered_map<int,CMQOObject*>::iterator itr;
+	//for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
+	//	CMQOObject* curobj = itr->second;
+	//	if( curobj ){
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if (curobj != nullptr) {
 			CallF(curobj->MakePolymesh3(fbxfileflag, m_pdev, this), return 1);
 		}
 	}
@@ -2375,10 +2400,14 @@ int CModel::MakePolyMesh3(bool fbxfileflag)
 }
 int CModel::MakePolyMesh4()
 {
-	unordered_map<int,CMQOObject*>::iterator itr;
-	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
-		CMQOObject* curobj = itr->second;
-		if( curobj ){
+	//unordered_map<int,CMQOObject*>::iterator itr;
+	//for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
+	//	CMQOObject* curobj = itr->second;
+	//	if( curobj ){
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if (curobj != nullptr) {
 			CallF( curobj->MakePolymesh4(m_pdev, this), return 1 );
 		}
 	}
@@ -2388,10 +2417,14 @@ int CModel::MakePolyMesh4()
 
 int CModel::MakeExtLine()
 {
-	unordered_map<int,CMQOObject*>::iterator itr;
-	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
-		CMQOObject* curobj = itr->second;
-		if( curobj ){
+	//unordered_map<int,CMQOObject*>::iterator itr;
+	//for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
+	//	CMQOObject* curobj = itr->second;
+	//	if( curobj ){
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if (curobj != nullptr) {
 			CallF( curobj->MakeExtLine(this), return 1 );
 		}
 	}
@@ -2415,11 +2448,15 @@ int CModel::MakeDispObj()
 	//	hasbone = 0;
 	//}
 
-	unordered_map<int,CMQOObject*>::iterator itr;
-	for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
-		CMQOObject* curobj = itr->second;
-		if( curobj ){
+	//unordered_map<int,CMQOObject*>::iterator itr;
+	//for( itr = m_object.begin(); itr != m_object.end(); itr++ ){
+	//	CMQOObject* curobj = itr->second;
+	//	if( curobj ){
 
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if (curobj != nullptr) {
 			int clusternum = (int)curobj->GetClusterSize();
 			if ((GetNoBoneFlag() == false) && (clusternum >= 1)) {
 				hasbone = 1;
@@ -2553,12 +2590,17 @@ int CModel::SetBlendShapeObject()
 {
 	m_object_blendshape.clear();
 
-	unordered_map<int, CMQOObject*>::iterator itrobj;
-	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
-		CMQOObject* curobj = itrobj->second;
-		_ASSERT(curobj);
-		if (!(curobj->EmptyShape())) {
-			m_object_blendshape.push_back(curobj);
+	//unordered_map<int, CMQOObject*>::iterator itrobj;
+	//for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+	//	CMQOObject* curobj = itrobj->second;
+	//	_ASSERT(curobj);
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if (curobj != nullptr) {
+			if (!(curobj->EmptyShape())) {
+				m_object_blendshape.push_back(curobj);
+			}
 		}
 	}
 
@@ -3735,11 +3777,15 @@ int CModel::AddMotion(const char* srcname, const WCHAR* wfilename, double srclen
 	//BlendShape
 	// anim格納用のデータ作成だけ
 	//#########################
-	unordered_map<int, CMQOObject*>::iterator itrobj;
-	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
-		CMQOObject* curobj = itrobj->second;
-		_ASSERT(curobj);
-		if (!(curobj->EmptyShape())) {
+	//unordered_map<int, CMQOObject*>::iterator itrobj;
+	//for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+	//	CMQOObject* curobj = itrobj->second;
+	//	_ASSERT(curobj);
+
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if ((curobj != nullptr) && !(curobj->EmptyShape())) {
 			int shapenum = curobj->GetShapeNameNum();
 			int shapeindex;
 			for (shapeindex = 0; shapeindex < shapenum; shapeindex++) {
@@ -4531,45 +4577,51 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 
 
 	int totalcount = 0;//メッシュ処理カウントの合計
-	//int count5 = 0;//OBJBOUNDING_BLOCKNUM個単位のメッシュ処理のカウント
+	//int count5 = 0;//GetObjBoundingBlockNum()個単位のメッシュ処理のカウント
 
 	int mb5num = (int)m_bound_per5.size();
 
 
-	unordered_map<int, CMQOObject*>::iterator itr;
-	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-		CMQOObject* curobj = itr->second;
-		if (curobj && !curobj->IsND()) {
-
+	int objectnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objectnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if ((curobj != nullptr) && !curobj->IsND()) {
 			//#########################################
 			//複数CMQOObjectをまとめたバウンダリに対する判定
 			//#########################################
 			//2025/09/23
-			if ((mb5num >= 1) && ((totalcount % OBJBOUNDING_BLOCKNUM) == 0)) {
-				MODELBOUND mb5 = m_bound_per5[max(0, (totalcount / OBJBOUNDING_BLOCKNUM - 1))];
+			if ((mb5num >= 1) && ((totalcount % GetObjBoundingBlockNum()) == 0)) {
+				//m_bound_per5[0] : 0から39
+				//m_bound_per5[1] : 40から79
+				//m_bound_per5[2] : 80から119
+				int currentblock = max(0, totalcount / GetObjBoundingBlockNum());
+				MODELBOUND mb5 = m_bound_per5[currentblock];
 
 				int sphcollision;
-				
+
 				//複数のMQOObjectに対する判定処理なので　curobjのGetInView()やGetDispFlag()は関係ない
 				sphcollision = chacolli.ChkRay_BB_Sph(mb5, startlocal, dirlocal, rayleng);
 				if (sphcollision == 0) {
 					//バウンダリーで衝突しない場合には　次のバウンダリーの判定にジャンプ
-					int currentblock = totalcount / OBJBOUNDING_BLOCKNUM;
-					int nextcount = currentblock * OBJBOUNDING_BLOCKNUM + 1;
+					int nextcount = (currentblock + 1) * GetObjBoundingBlockNum();
 
+					totalcount++;//カレントの分
+
+					//次のバウンダリブロックまでindexを進める
 					while (totalcount < nextcount) {
-						if (itr != m_object.end()) {
-							itr++;
-							CMQOObject* curobj2 = itr->second;
-							if (curobj2 && !curobj2->IsND()) {
-								totalcount++;
-							}
-						}
-						else {
+						objindex++;
+						if (objindex >= objectnum) {
 							break;
+						}
+						CMQOObject* curobj2 = m_object[objindex];
+						if ((curobj2 != nullptr) && !curobj2->IsND()) {
+							totalcount++;
 						}
 					}
 					continue;
+				}
+				else {
+					totalcount++;
 				}
 			}
 
@@ -4623,8 +4675,6 @@ int CModel::CollisionPolyMesh3_Ray(bool gpuflag, ChaVector3 startglobal, ChaVect
 				//視野外
 				//何もしない
 			}
-
-			totalcount++;
 		}
 	}
 
@@ -4844,11 +4894,10 @@ int CModel::ChangeMotFrameLeng( int motid, double srcleng )
 		}
 
 		//2024/06/07 blendshapeアニメ　モーフアニメのアニメ長変更
-		unordered_map<int, CMQOObject*>::iterator itrobj;
-		for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
-			CMQOObject* curobj = itrobj->second;
-			_ASSERT(curobj);
-			if (!(curobj->EmptyShape())) {
+		int objnum = (int)m_object.size();
+		for (int objindex = 0; objindex < objnum; objindex++) {
+			CMQOObject* curobj = m_object[objindex];
+			if ((curobj != nullptr) && !(curobj->EmptyShape())) {
 				curobj->ChangeMorphAnimFrameLeng(motid, srcleng);
 			}
 		}
@@ -4948,10 +4997,14 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 
 int CModel::MakeEnglishName()
 {
-	unordered_map<int, CMQOObject*>::iterator itrobj;
-	for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
-		CMQOObject* curobj = itrobj->second;
-		if( curobj ){
+	//unordered_map<int, CMQOObject*>::iterator itrobj;
+	//for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
+	//	CMQOObject* curobj = itrobj->second;
+	//	if( curobj ){
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if (curobj != nullptr) {
 			CallF( ConvEngName( ENGNAME_DISP, (char*)curobj->GetName(), 256, (char*)curobj->GetEngName(), 256 ), return 1 );
 		}
 	}
@@ -5620,7 +5673,10 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 	newobj->SetObjFrom(OBJFROM_FBX);
 	newobj->SetName(nodename);
 	newobj->SetFbxNode(pNode);
-	m_object[ newobj->GetObjectNo() ] = newobj;
+	//m_object[newobj->GetObjectNo()] = newobj;
+	int newobjno = (int)m_object.size();
+	newobj->SetObjectNo(newobjno);//2026/04/26 s_alloccntは複数モデル読み込み時に０から始まらない
+	m_object.push_back(newobj);
 	m_node2mqoobj[pNode] = newobj;
 
 
@@ -8959,10 +9015,13 @@ int CModel::RenderBoneMark(bool limitdegflag, InstancedSprite* bcircleptr,
 
 void CModel::ResetDispObjScale()
 {
-	unordered_map<int, CMQOObject*>::iterator itr;
-	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-		CMQOObject* curobj = itr->second;
-		if (curobj && curobj->GetDispObj()) {
+	//unordered_map<int, CMQOObject*>::iterator itr;
+	//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+	//	CMQOObject* curobj = itr->second;
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if ((curobj != nullptr) && curobj->GetDispObj()) {
 			curobj->GetDispObj()->ResetScaleInstancing();
 		}
 	}
@@ -9562,7 +9621,7 @@ int CModel::GetTextureNameVec(std::vector<std::string>& dstvec)
 	//unordered_map<int, CMQOObject*>::iterator itrobj;
 	//for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
 	//	CMQOObject* curobj = itrobj->second;
-	//	if (curobj) {
+	//	if (curobj != nullptr) {
 	//		unordered_map<int, CMQOMaterial*>::iterator itrmat2;
 	//		for (itrmat2 = curobj->GetMaterialBegin(); itrmat2 != curobj->GetMaterialEnd(); itrmat2++) {
 	//			CMQOMaterial* curmat2 = itrmat2->second;
@@ -12752,10 +12811,14 @@ void CModel::SetCurrentRigidElemReq(CBone* srcbone, string curname)
 int CModel::MultDispObj( ChaVector3 srcmult, ChaVector3 srctra )
 {
 
-	unordered_map<int,CMQOObject*>::iterator itrobj;
-	for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
-		CMQOObject* curobj = itrobj->second;
-		if( curobj ){
+	//unordered_map<int,CMQOObject*>::iterator itrobj;
+	//for( itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++ ){
+	//	CMQOObject* curobj = itrobj->second;
+	//	if( curobj ){
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if (curobj != nullptr) {
 			CallF( curobj->MultScale( srcmult, srctra ), return 1 );			
 		}
 	}
@@ -23429,10 +23492,14 @@ int CModel::ChkInView(int refposindex)
 		SetInView(true, refposindex);
 		SetInShadow(false, refposindex);
 
-		unordered_map<int, CMQOObject*>::iterator itr;
-		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-			CMQOObject* curobj = itr->second;
-			if (curobj) {
+		//unordered_map<int, CMQOObject*>::iterator itr;
+		//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+		//	CMQOObject* curobj = itr->second;
+		//	if (curobj != nullptr) {
+		int objnum = (int)m_object.size();
+		for (int objindex = 0; objindex < objnum; objindex++) {
+			CMQOObject* curobj = m_object[objindex];
+			if (curobj != nullptr) {
 				curobj->SetInView(true, refposindex);
 			}
 		}
@@ -23452,10 +23519,14 @@ int CModel::ChkInView(int refposindex)
 		SetInView(true, refposindex);
 		SetInShadow(false, refposindex);
 
-		unordered_map<int, CMQOObject*>::iterator itr;
-		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-			CMQOObject* curobj = itr->second;
-			if (curobj) {
+		//unordered_map<int, CMQOObject*>::iterator itr;
+		//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+		//	CMQOObject* curobj = itr->second;
+		//	if (curobj != nullptr) {
+		int objnum = (int)m_object.size();
+		for (int objindex = 0; objindex < objnum; objindex++) {
+			CMQOObject* curobj = m_object[objindex];
+			if (curobj != nullptr) {
 				curobj->SetInView(true, refposindex);
 			}
 		}
@@ -23475,10 +23546,14 @@ int CModel::ChkInView(int refposindex)
 		SetInView(true, refposindex);
 		SetInShadow(false, refposindex);
 
-		unordered_map<int, CMQOObject*>::iterator itr;
-		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-			CMQOObject* curobj = itr->second;
-			if (curobj) {
+		//unordered_map<int, CMQOObject*>::iterator itr;
+		//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+		//	CMQOObject* curobj = itr->second;
+		//	if (curobj != nullptr) {
+		int objnum = (int)m_object.size();
+		for (int objindex = 0; objindex < objnum; objindex++) {
+			CMQOObject* curobj = m_object[objindex];
+			if (curobj != nullptr) {
 				curobj->SetInView(true, refposindex);
 			}
 		}
@@ -23500,10 +23575,14 @@ int CModel::ChkInView(int refposindex)
 		SetInView(true, refposindexZero);
 		SetInShadow(false, refposindexZero);
 
-		unordered_map<int, CMQOObject*>::iterator itr;
-		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-			CMQOObject* curobj = itr->second;
-			if (curobj) {
+		//unordered_map<int, CMQOObject*>::iterator itr;
+		//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+		//	CMQOObject* curobj = itr->second;
+		//	if (curobj != nullptr) {
+		int objnum = (int)m_object.size();
+		for (int objindex = 0; objindex < objnum; objindex++) {
+			CMQOObject* curobj = m_object[objindex];
+			if (curobj != nullptr) {
 				if ((strstr(curobj->GetName(), "LOD1") != 0) ||
 					(strstr(curobj->GetName(), "LOD2") != 0) ||
 					(strstr(curobj->GetName(), "LOD3") != 0)) {
@@ -23676,7 +23755,7 @@ int CModel::ChkInView(int refposindex)
 //		unordered_map<int, CMQOObject*>::iterator itr;
 //		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 //			CMQOObject* curobj = itr->second;
-//			if (curobj) {
+//			if (curobj != nullptr) {
 //				curobj->SetInView(true, refposindex);
 //			}
 //		}
@@ -23697,7 +23776,7 @@ int CModel::ChkInView(int refposindex)
 //		unordered_map<int, CMQOObject*>::iterator itr;
 //		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 //			CMQOObject* curobj = itr->second;
-//			if (curobj) {
+//			if (curobj != nullptr) {
 //				curobj->SetInView(true, refposindex);
 //			}
 //		}
@@ -23773,7 +23852,7 @@ int CModel::ChkInView(int refposindex)
 //			unordered_map<int, CMQOObject*>::iterator itr;
 //			for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 //				CMQOObject* curobj = itr->second;
-//				if (curobj) {
+//				if (curobj != nullptr) {
 //					curobj->SetInView(true, refposindex);
 //				}
 //			}
@@ -23905,10 +23984,14 @@ int CModel::SetLODNum()
 	//LODが2Levelsなのか3Levelsなのか4Levelsを調べて　LODGroupにLODNumをセットする
 	//#######################################################################
 
-	unordered_map<int, CMQOObject*>::iterator itr;
-	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-		CMQOObject* curobj = itr->second;
-		if (curobj) {
+	//unordered_map<int, CMQOObject*>::iterator itr;
+	//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+	//	CMQOObject* curobj = itr->second;
+	//	if (curobj != nullptr) {
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if (curobj != nullptr) {
 			char objname[256] = { 0 };
 			strcpy_s(objname, 256, curobj->GetName());
 			char headname[256] = { 0 };
@@ -23944,10 +24027,14 @@ int CModel::SetLODNum()
 
 int CModel::SetLODNum(const char* srcheadname, int srcnum)
 {
-	unordered_map<int, CMQOObject*>::iterator itr;
-	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-		CMQOObject* curobj = itr->second;
-		if (curobj) {
+	//unordered_map<int, CMQOObject*>::iterator itr;
+	//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+	//	CMQOObject* curobj = itr->second;
+	//	if (curobj != nullptr) {
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if (curobj != nullptr) {
 			if (strstr(curobj->GetName(), srcheadname) != 0) {
 				curobj->SetLODNum(srcnum);//srcnumがm_lodnumより大きい場合にだけセットされる
 			}
@@ -23973,22 +24060,28 @@ int CModel::CreateObjno2DigElem()
 		//#########
 		//mqo file
 		//#########
-		int objno = 0;
+		//int objno = 0;
 		int depth = 0;
-		unordered_map<int,CMQOObject*>::iterator itr;
-		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-			CMQOObject* curobj = itr->second;
+		//unordered_map<int,CMQOObject*>::iterator itr;
+		//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+		//	CMQOObject* curobj = itr->second;
+		int objnum = (int)m_object.size();
+		for (int objindex = 0; objindex < objnum; objindex++) {
+			CMQOObject* curobj = m_object[objindex];
+			if (curobj != nullptr) {
+				DISPGROUPELEM digelem;
+				digelem.Init();
+				//digelem.objno = objno;
+				digelem.objno = objindex;
+				digelem.depth = depth;
+				digelem.groupno = 1;// default value : groupno = groupindex + 1
+				digelem.pNode = 0;
+				digelem.mqoobject = curobj;
 
-			DISPGROUPELEM digelem;
-			digelem.Init();
-			digelem.objno = objno;
-			digelem.depth = depth;
-			digelem.groupno = 1;// default value : groupno = groupindex + 1
-			digelem.pNode = 0;
-			digelem.mqoobject = curobj;
-
-			m_objno2digelem[objno] = digelem;
-			objno++;
+				m_objno2digelem[objindex] = digelem;
+				//m_objno2digelem[objno] = digelem;
+				//objno++;
+			}
 		}
 	}
 
@@ -24059,11 +24152,14 @@ int CModel::SetBlendShapeGUI(std::vector<CBlendShapeElem>& blendshapeelem)
 {
 	blendshapeelem.clear();
 
-	unordered_map<int, CMQOObject*>::iterator itrobj;
-	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
-		CMQOObject* curobj = itrobj->second;
-		_ASSERT(curobj);
-		if (!(curobj->EmptyShape())) {
+	//unordered_map<int, CMQOObject*>::iterator itrobj;
+	//for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+	//	CMQOObject* curobj = itrobj->second;
+	//	_ASSERT(curobj);
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if ((curobj != nullptr) && !(curobj->EmptyShape())) {
 			CBlendShapeElem addelem;
 			addelem.Init();
 
@@ -24148,10 +24244,14 @@ int CModel::MakeDispGroupForRender()
 
 int CModel::MakeLaterMaterial()
 {
-	unordered_map<int, CMQOObject*>::iterator itrobj;
-	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
-		CMQOObject* curobj = itrobj->second;
-		if (curobj) {
+	//unordered_map<int, CMQOObject*>::iterator itrobj;
+	//for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+	//	CMQOObject* curobj = itrobj->second;
+	//	if (curobj != nullptr) {
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if (curobj != nullptr) {
 			int result = curobj->MakeLaterMaterial(m_latertransparent);
 			_ASSERT(result == 0);
 		}
@@ -24413,10 +24513,14 @@ int CModel::Retarget(CModel* srcbvhmodel, ChaMatrix smatView, ChaMatrix smatProj
 }
 
 CMQOObject* CModel::GetMQOObjectByName(const char* findpattern) {
-	std::unordered_map<int, CMQOObject*>::iterator itrobj;
-	for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
-		CMQOObject* curobj = itrobj->second;
-		if (curobj) {
+	//std::unordered_map<int, CMQOObject*>::iterator itrobj;
+	//for (itrobj = m_object.begin(); itrobj != m_object.end(); itrobj++) {
+	//	CMQOObject* curobj = itrobj->second;
+	//	if (curobj != nullptr) {
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if (curobj != nullptr) {
 			if (strcmp(curobj->GetName(), findpattern) == 0) {
 				return curobj;
 			}
@@ -24573,10 +24677,14 @@ void CModel::SetDistChkInView(float srcval, int refposindex)
 		return;
 	}
 	else {
-		unordered_map<int, CMQOObject*>::iterator itr;
-		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-			CMQOObject* curobj = itr->second;
-			if (curobj) {
+		//unordered_map<int, CMQOObject*>::iterator itr;
+		//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+		//	CMQOObject* curobj = itr->second;
+		//	if (curobj != nullptr) {
+		int objnum = (int)m_object.size();
+		for (int objindex = 0; objindex < objnum; objindex++) {
+			CMQOObject* curobj = m_object[objindex];
+			if (curobj != nullptr) {
 				curobj->SetDistFromCamera(srcval, refposindex);
 			}
 		}
@@ -24600,7 +24708,7 @@ int CModel::CreateChkInView()
 		//unordered_map<int, CMQOObject*>::iterator itr;
 		//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 		//	CMQOObject* curobj = itr->second;
-		//	if (curobj) {
+		//	if (curobj != nullptr) {
 		//		MODELBOUND mb;
 		//		mb.Init();
 		//		int forceinview = 1;
@@ -24621,7 +24729,7 @@ int CModel::CreateChkInView()
 		//unordered_map<int, CMQOObject*>::iterator itr;
 		//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
 		//	CMQOObject* curobj = itr->second;
-		//	if (curobj) {
+		//	if (curobj != nullptr) {
 		//		MODELBOUND mb;
 		//		mb.Init();
 		//		int forceinview = 1;
@@ -24658,11 +24766,14 @@ int CModel::CreateChkInView()
 		// モーションでの全体移動に対応
 		//###############################################################
 
-		unordered_map<int, CMQOObject*>::iterator itr;
-		for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-			CMQOObject* curobj = itr->second;
-			//if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
-			if (curobj && curobj->GetDispObj()) {
+		//unordered_map<int, CMQOObject*>::iterator itr;
+		//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+		//	CMQOObject* curobj = itr->second;
+		//	//if (curobj && (curobj->GetDispObj() || curobj->GetDispLine())) {
+		int objnum = (int)m_object.size();
+		for (int objindex = 0; objindex < objnum; objindex++) {
+			CMQOObject* curobj = m_object[objindex];
+			if ((curobj != nullptr) && curobj->GetDispObj()) {
 				MODELBOUND mb;
 				mb.Init();
 				mb = curobj->GetBound();
@@ -24915,10 +25026,13 @@ void CModel::SetOrg2FootRigMatReq(int limitdegflag, CBone* srcbone, bool broflag
 
 int CModel::SetGPUInteraction(bool srcflag)
 {
-	unordered_map<int, CMQOObject*>::iterator itr;
-	for (itr = m_object.begin(); itr != m_object.end(); itr++) {
-		CMQOObject* curobj = itr->second;
-		if (curobj && curobj->GetPm3()) {
+	//unordered_map<int, CMQOObject*>::iterator itr;
+	//for (itr = m_object.begin(); itr != m_object.end(); itr++) {
+	//	CMQOObject* curobj = itr->second;
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if ((curobj != nullptr) && curobj->GetPm3()) {
 			curobj->SetGPUInteraction(srcflag);
 
 			//if (srcflag) {

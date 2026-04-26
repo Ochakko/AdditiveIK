@@ -57,7 +57,7 @@ void CMQOFile::InitLoadParams()
 {
 
 	m_modelptr = 0;
-	m_objcnt = 0;
+	m_objcnt = -1;
 
 	ZeroMemory( m_linechar, sizeof(char) * LINECHARLENG );
 	ZeroMemory( m_wline, sizeof( WCHAR ) * LINECHARLENG );
@@ -908,7 +908,9 @@ int CMQOFile::ReadObject( MQOSTATE* nextstate )
 		*nextstate = BEGIN_FINISH;
 		return 1;
 	}
-	m_modelptr->SetMqoObject( newobj->GetObjectNo(), newobj );
+	//m_modelptr->SetMqoObject( newobj->GetObjectNo(), newobj );
+	newobj->SetObjectNo(m_objcnt);
+	m_modelptr->AddMqoObject(newobj);
 	currentobj = newobj;//!!!!
 
 	//name‚ÌƒZƒbƒg
@@ -1124,9 +1126,10 @@ int CMQOFile::ReadFace( MQOSTATE* nextstate )
 
 int CMQOFile::Multiple()
 {
-	unordered_map<int,CMQOObject*>::iterator itr;
-	for( itr = m_modelptr->GetMqoObjectBegin(); itr != m_modelptr->GetMqoObjectEnd(); itr++ ){
-		CMQOObject* curobj = itr->second;
+	//unordered_map<int,CMQOObject*>::iterator itr;
+	vector<CMQOObject*>::iterator itrobj;
+	for(itrobj = m_modelptr->GetMqoObjectBegin(); itrobj != m_modelptr->GetMqoObjectEnd(); itrobj++){
+		CMQOObject* curobj = *itrobj;// itr->second;
 		if( curobj ){
 			CallF( curobj->MultMat( m_offsetmat ), return 1 );
 			CallF( curobj->MultVertex(), return 1; );

@@ -246,6 +246,7 @@ public:
 		m_calc_only_inview = true;
 
 		m_first_posonground = true;//2026/02/01
+		m_first_posonground_count = 0;
 	};
 	void DestroyObjs() { InitParams(); };
 
@@ -289,6 +290,12 @@ public:
 	};
 	void SetFirstPosOnGround(bool srcval) {
 		m_first_posonground = srcval;
+	};
+	int GetFirstPosOnGroundCount() {
+		return m_first_posonground_count;
+	};
+	void SetFirstPosOnGroundCount(int srcval) {
+		m_first_posonground_count = srcval;
 	};
 
 	bool GetCalcOnlyInView() {
@@ -507,6 +514,7 @@ private:
 	bool m_onlyonground;
 	bool m_calc_only_inview;
 	bool m_first_posonground;
+	int m_first_posonground_count;
 };
 
 

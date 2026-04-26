@@ -1652,14 +1652,19 @@ public: //accesser
 		//}
 		return m_object[ srcobjno ];
 	};
-	std::unordered_map<int,CMQOObject*>::iterator GetMqoObjectBegin(){
+	//std::unordered_map<int,CMQOObject*>::iterator GetMqoObjectBegin(){
+	std::vector<CMQOObject*>::iterator GetMqoObjectBegin() {
 		return m_object.begin();
 	};
-	std::unordered_map<int,CMQOObject*>::iterator GetMqoObjectEnd(){
+	//std::unordered_map<int,CMQOObject*>::iterator GetMqoObjectEnd(){
+	std::vector<CMQOObject*>::iterator GetMqoObjectEnd() {
 		return m_object.end();
 	};
-	void SetMqoObject( int srcindex, CMQOObject* srcobj ){
-		m_object[ srcindex ] = srcobj;
+	//void SetMqoObject( int srcindex, CMQOObject* srcobj ){
+	//	m_object[ srcindex ] = srcobj;
+	//};
+	void AddMqoObject(CMQOObject* srcobj) {
+		m_object.push_back(srcobj);
 	};
 	int GetBlendShapeObjectSize() {
 		return (int)m_object_blendshape.size();
@@ -3780,6 +3785,15 @@ public: //accesser
 		SetIKStopFlag();
 	};
 
+	void SetObjBoundingBlockNum(int srcval)
+	{
+		m_objBounding_BlockNum = srcval;
+	};
+	int GetObjBoundingBlockNum()
+	{
+		return m_objBounding_BlockNum;
+	};
+
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -3797,6 +3811,8 @@ private:
 	bool m_inshadow[REFPOSMAXNUM];
 	bool m_inmorph;
 	ChaFrustumInfo m_frustum;
+
+	int m_objBounding_BlockNum;//バウンダリブロックのブロックの大きさ　*.chaファイルで指定して変更可能
 	MODELBOUND m_bound;
 	std::vector<MODELBOUND> m_bound_per5;
 
@@ -3826,7 +3842,8 @@ private:
 	char m_defaultrename[MAX_PATH];//RigidEelemファイル*.refのデフォルトのファイル名。
 	char m_defaultimpname[MAX_PATH];//インパルスファイル*.impのデフォルトのファイル名。
 
-	std::unordered_map<int, CMQOObject*> m_object;//オブジェクト。別の言葉でいうと３Dモデルにおける名前が付けられているパーツや部品。
+	//std::unordered_map<int, CMQOObject*> m_object;//オブジェクト。別の言葉でいうと３Dモデルにおける名前が付けられているパーツや部品。
+	std::vector<CMQOObject*> m_object;
 	std::unordered_map<int, CBone*> m_bonelist;//ボーンをボーンIDから検索できるようにしたmap。
 	std::unordered_map<std::string, CBone*> m_bonename;//ボーンを名前から検索できるようにしたmap。
 	std::vector<std::string> m_ikstopname;//2023/07/21 IKStopフラグを設定するジョイントの名前の一部
