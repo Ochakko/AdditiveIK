@@ -2,7 +2,7 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2026/04/26
-　AdditiveIK 1.0.0.66 RC2(リリース候補2)
+　AdditiveIK 1.0.0.66 release
 　　1.0.0.65からの変更点
 　　　バウンダリーブロック処理の修正.
 　　　　不具合修正
