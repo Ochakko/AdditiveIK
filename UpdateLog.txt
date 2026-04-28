@@ -1,6 +1,12 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/04/29
+　バウンダリーブロック処理を修正 again.
+　　バウンダリーブロックのデバッグ開始
+　　デバッガで追いかけてデバッグしました
+　　BlockNum 1, 2, 3, 4, 5でテスト
+　　
 2026/04/26
 　AdditiveIK 1.0.0.66 release
 　　1.0.0.65からの変更点
