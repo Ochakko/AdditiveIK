@@ -9692,7 +9692,7 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcfra
 			fbxLclPos[1] = m_lastvalid_translate[1];
 		}
 		if (std::isnan(fbxLclPos[1])) {
-			fbxLclPos[1] = m_lastvalid_translate[1];
+			fbxLclPos[2] = m_lastvalid_translate[2];
 		}
 		m_lastvalid_translate = fbxLclPos;
 		
@@ -9705,7 +9705,7 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcfra
 			fbxLclRot[1] = m_lastvalid_translate[1];
 		}
 		if (std::isnan(fbxLclRot[1])) {
-			fbxLclRot[1] = m_lastvalid_translate[1];
+			fbxLclRot[2] = m_lastvalid_translate[2];
 		}
 		m_lastvalid_rotate = fbxLclRot;
 	
@@ -9718,7 +9718,7 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcfra
 			fbxLclScl[1] = m_lastvalid_translate[1];
 		}
 		if (std::isnan(fbxLclScl[1])) {
-			fbxLclScl[1] = m_lastvalid_translate[1];
+			fbxLclScl[2] = m_lastvalid_translate[2];
 		}
 		m_lastvalid_scale = fbxLclScl;
 
