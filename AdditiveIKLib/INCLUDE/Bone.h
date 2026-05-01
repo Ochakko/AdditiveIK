@@ -2107,6 +2107,13 @@ private:
 	ChaVector3 m_posture_child_pos_offset;
 	ChaVector3 m_posture_child_rot_offset;
 
+
+	FbxDouble3 m_lastvalid_translate;
+	FbxDouble3 m_lastvalid_rotate;
+	FbxDouble3 m_lastvalid_scale;
+
+
+
 	CBone* m_parent;
 	CBone* m_child;
 	CBone* m_brother;

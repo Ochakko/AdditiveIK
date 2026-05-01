@@ -213,6 +213,13 @@ Smooth平滑化<br>
 　https://area.autodesk.jp/product/maya-3ds-max-indie/<br>
 <br>
 <br>
+　開発環境(2026/05/02時点)の変更点。<br>
+　FBXSDKは2020.3.9(VC2022) https://www.autodesk.com/products/fbx/ <br>
+　Unity3D 6000系の最新<br>
+　プロが作ったアセットをUnityAssetStoreでゲットしてUnity3Dでfbx出力 https://assetstore.unity.com/?locale=ja-JP <br>
+　その際にfbxに変換するよりも、もともとfbxで入っているものをMayaで調整する方が状態が良い<br>
+<br>
+<br>
 　開発環境(2024/06/26時点)を書きます。<br>
 　OS Windows11 Pro<br>
 　VisualStudio2022Pro(VisualStudioSubscription)<br>

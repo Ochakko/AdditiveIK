@@ -411,11 +411,13 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(CModel* cameramodel, int cameramotid
 		cameramat2.SetIdentity();
 
 
-		cameramat1 = GetCameraMatLoaded(cameramodel, cameramotid, roundingframe);
+		cameramat1 = GetCameraMatLoaded(cameramodel, cameramotid, roundingframe);		
 		double nextroundingframe = roundingframe + 1.0;
 		cameramat2 = GetCameraMatLoaded(cameramodel, cameramotid, nextroundingframe);
 		double t = (m_time - roundingframe);
 		cameramat = cameramat1 + (cameramat2 - cameramat1) * (float)t;
+
+		cameramat = cameramat1;
 
 		return cameramat;
 	}
@@ -424,6 +426,12 @@ ChaMatrix CCameraFbx::GetCameraTransformMat(CModel* cameramodel, int cameramotid
 		//#####################################
 		//fbxのモーションを返す 必要に応じて格納する
 		//#####################################
+
+
+		////for debug
+		//if ((cameramotid == 2) && IsEqualRoundingTime(nextframe, 301.0)) {
+		//	int dbgflag1 = 1;
+		//}
 
 		ChaMatrix localnodemat, localnodeanimmat;
 		localnodemat.SetIdentity();
@@ -1041,7 +1049,7 @@ ChaMatrix CCameraFbx::GetCameraMatLoaded(CModel* cameramodel, int cameramotid, d
 		}
 		else {
 			//####################################################################################
-			//モーションポイントが存在しない場合　フレームがアニメ調よりも大きいと想定　最後のフレームの姿勢を返す
+			//モーションポイントが存在しない場合　フレームがアニメ長よりも大きいと想定　最後のフレームの姿勢を返す
 			//####################################################################################
 
 			MOTINFO camerami = cameramodel->GetMotInfo(cameramotid);

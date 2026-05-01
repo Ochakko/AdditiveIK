@@ -1546,6 +1546,17 @@ int ChaMatrix::MakeLookAt(ChaVector3 srcpos, ChaVector3 srctarget, ChaVector3 sr
 	return 0;
 }
 
+bool ChaMatrix::IsNanMatrix()
+{
+	bool nanflag = false;
+	for (int index0 = 0; index0 < 16; index0++) {
+		if (std::isnan(data[index0])) {
+			nanflag = true;
+			break;
+		}
+	}
+	return nanflag;
+}
 
 
 ChaMatrix ChaMatrix::operator= (ChaMatrix m) { 
@@ -2027,6 +2038,17 @@ int CQuaternion::SetRotation(EFbxRotationOrder rotorder, CQuaternion* srcaxisq, 
 		invaxisQ.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 	}
 
+	//2026/05/02
+	//角度０の場合　誤差を避けるために　掛け算をしないで　角度０のqをセットする
+	if ((fabs(srceul.x) < 1e-3) && 
+		(fabs(srceul.y) < 1e-3) && 
+		(fabs(srceul.z) < 1e-3)) 
+	{
+		this->SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+		return 0;
+	}
+
+
 	CQuaternion q, qx, qy, qz;
 	float cosx, sinx, cosy, siny, cosz, sinz;
 
@@ -2159,6 +2181,15 @@ int CQuaternion::SetRotationXYZ(CQuaternion* axisq, ChaVector3 srcdeg)
 		invaxisQ.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 	}
 
+	//2026/05/02
+	//角度０の場合　誤差を避けるために　掛け算をしないで　角度０のqをセットする
+	if ((fabs(srcdeg.x) < 1e-3) &&
+		(fabs(srcdeg.y) < 1e-3) &&
+		(fabs(srcdeg.z) < 1e-3))
+	{
+		this->SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+		return 0;
+	}
 
 	CQuaternion q, qx, qy, qz;
 	float cosx, sinx, cosy, siny, cosz, sinz;
@@ -2247,6 +2278,16 @@ int CQuaternion::SetRotationXYZ(CQuaternion* axisq, double degx, double degy, do
 		invaxisQ.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 	}
 
+	//2026/05/02
+	//角度０の場合　誤差を避けるために　掛け算をしないで　角度０のqをセットする
+	if ((fabs(degx) < 1e-3) &&
+		(fabs(degy) < 1e-3) &&
+		(fabs(degz) < 1e-3))
+	{
+		this->SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+		return 0;
+	}
+
 	CQuaternion q, qx, qy, qz;
 	float cosx, sinx, cosy, siny, cosz, sinz;
 
@@ -2286,6 +2327,17 @@ int CQuaternion::SetRotationRadXYZ(CQuaternion* axisq, double radx, double rady,
 		axisQ.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 		invaxisQ.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 	}
+
+	//2026/05/02
+	//角度０の場合　誤差を避けるために　掛け算をしないで　角度０のqをセットする
+	if ((fabs(radx) < 1e-6) &&
+		(fabs(rady) < 1e-6) &&
+		(fabs(radz) < 1e-6))
+	{
+		this->SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+		return 0;
+	}
+
 
 	CQuaternion q, qx, qy, qz;
 	float cosx, sinx, cosy, siny, cosz, sinz;
@@ -2329,6 +2381,15 @@ int CQuaternion::SetRotationZXY(CQuaternion* axisq, ChaVector3 srcdeg)
 		invaxisQ.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 	}
 
+	//2026/05/02
+	//角度０の場合　誤差を避けるために　掛け算をしないで　角度０のqをセットする
+	if ((fabs(srcdeg.x) < 1e-3) &&
+		(fabs(srcdeg.x) < 1e-3) &&
+		(fabs(srcdeg.x) < 1e-3))
+	{
+		this->SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+		return 0;
+	}
 
 	CQuaternion q, qx, qy, qz;
 	float cosx, sinx, cosy, siny, cosz, sinz;
@@ -2369,6 +2430,16 @@ int CQuaternion::SetRotationZXY(CQuaternion* axisq, double degx, double degy, do
 	else {
 		axisQ.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
 		invaxisQ.SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+	}
+
+	//2026/05/02
+	//角度０の場合　誤差を避けるために　掛け算をしないで　角度０のqをセットする
+	if ((fabs(degx) < 1e-3) &&
+		(fabs(degy) < 1e-3) &&
+		(fabs(degz) < 1e-3))
+	{
+		this->SetParams(1.0f, 0.0f, 0.0f, 0.0f);
+		return 0;
 	}
 
 	CQuaternion q, qx, qy, qz;
@@ -4150,7 +4221,28 @@ int CQuaternion::Q2EulXYZusingQ(bool srcunderIKRot, bool srcunderRetarget,
 //}
 
 
+BOOL FbxDouble3NanZero(FbxDouble3 srcvec3, FbxDouble3& dstvec3)
+{
+	//vec3の中にNANが含まれていた場合、dstvec3メンバに０をセットしてFALSEを返す
+	//vec3の中にNANが含まれていない場合、dstvec3メンバにsrcvec3をそのままセットしてTRUEを返す
 
+	FbxDouble3 tempvec3 = srcvec3;
+
+	BOOL nanflag = FALSE;
+
+	int vecindex;
+	for (vecindex = 0; vecindex < 3; vecindex++) {
+		if (std::isnan(tempvec3[vecindex])) {
+			dstvec3[vecindex] = 0.0;
+			nanflag = TRUE;
+		}
+		else {
+			dstvec3[vecindex] = tempvec3[vecindex];
+		}
+	}
+
+	return nanflag;
+}
 
 BOOL IsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul)
 {

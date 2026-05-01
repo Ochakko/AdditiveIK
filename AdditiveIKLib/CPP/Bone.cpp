@@ -524,6 +524,9 @@ int CBone::InitParams()
 	//m_ikrotrec_u.clear();
 	//m_ikrotrec_v.clear();
 
+	m_lastvalid_translate = FbxDouble3(0.0, 0.0, 0.0);
+	m_lastvalid_rotate = FbxDouble3(0.0, 0.0, 0.0);
+	m_lastvalid_scale = FbxDouble3(1.0, 1.0, 1.0);
 
 	return 0;
 }
@@ -9663,6 +9666,8 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcfra
 	//Enullノードの子供のCancel2Modeで正常に再生可能なカメラアニメ保存読み込みで検証したところ
 	//Lcl*.Get()を保存するとアニメが変質したが　EvaluateLocal*を保存すると変質しなかった
 	//#########################################################################################
+	
+
 	FbxDouble3 fbxLclPos;
 	FbxDouble3 fbxLclRot;
 	FbxDouble3 fbxLclScl;
@@ -9673,12 +9678,51 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcfra
 		fbxLclScl = pNode->LclScaling.Get();
 	}
 	else {
+		//####################################################################################################
+		//2026/05/02 
+		// FbxSdk2020.3.7から(2020.3.9も)カメラの親のeNullに対して　EvaluateLocal*をすると　数値にnanが混じることがある
+		// 数値にNANが混じった場合に　一番最近の有効値をいれてみたが　本質的な解決ではない
+		//####################################################################################################
+
 		fbxLclPos = pNode->EvaluateLocalTranslation(fbxtime, FbxNode::eSourcePivot, true, true);
+		if (std::isnan(fbxLclPos[0])) {
+			fbxLclPos[0] = m_lastvalid_translate[0];
+		}
+		if (std::isnan(fbxLclPos[1])) {
+			fbxLclPos[1] = m_lastvalid_translate[1];
+		}
+		if (std::isnan(fbxLclPos[1])) {
+			fbxLclPos[1] = m_lastvalid_translate[1];
+		}
+		m_lastvalid_translate = fbxLclPos;
+		
+
 		fbxLclRot = pNode->EvaluateLocalRotation(fbxtime, FbxNode::eSourcePivot, true, true);
+		if (std::isnan(fbxLclRot[0])) {
+			fbxLclRot[0] = m_lastvalid_translate[0];
+		}
+		if (std::isnan(fbxLclRot[1])) {
+			fbxLclRot[1] = m_lastvalid_translate[1];
+		}
+		if (std::isnan(fbxLclRot[1])) {
+			fbxLclRot[1] = m_lastvalid_translate[1];
+		}
+		m_lastvalid_rotate = fbxLclRot;
+	
+
 		fbxLclScl = pNode->EvaluateLocalScaling(fbxtime, FbxNode::eSourcePivot, true, true);
+		if (std::isnan(fbxLclScl[0])) {
+			fbxLclScl[0] = m_lastvalid_translate[0];
+		}
+		if (std::isnan(fbxLclScl[1])) {
+			fbxLclScl[1] = m_lastvalid_translate[1];
+		}
+		if (std::isnan(fbxLclScl[1])) {
+			fbxLclScl[1] = m_lastvalid_translate[1];
+		}
+		m_lastvalid_scale = fbxLclScl;
+
 	}
-
-
 
 	EFbxRotationOrder rotationorder;
 	pNode->GetRotationOrder(FbxNode::eSourcePivot, rotationorder);
@@ -9784,11 +9828,9 @@ int CBone::CalcLocalNodePosture(bool bindposeflag, FbxNode* pNode, double srcfra
 	else {
 		*plocalnodemat = localnodemat;
 	}
-	
 
 	*plocalnodeanimmat = localnodeanimmat;//明示的にlclrot入りの姿勢を使う場合用
-
-
+	
 	return 0;
 }
 
@@ -9800,28 +9842,33 @@ void CBone::CalcNodePostureReq(bool bindposeflag, FbxNode* pNode,
 		return;
 	}
 
-
-
 	ChaMatrix localnodemat, localnodeanimmat;
 	localnodemat.SetIdentity();
 	localnodeanimmat.SetIdentity();
 	CalcLocalNodePosture(bindposeflag, pNode, srcframe, &localnodemat, &localnodeanimmat);
 
-	//親方向へ計算
-	ChaMatrix tmpmat1, tmpmat2;
-	tmpmat1 = *plocalnodemat * localnodemat;
-	tmpmat2 = *plocalnodeanimmat * localnodeanimmat;
+	//####################################################################################################
+	//2026/05/02 
+	// FbxSdk2020.3.7から(2020.3.9も)カメラの親のeNullに対して　EvaluateLocal*をすると　数値にnanが混じることがある
+	//####################################################################################################
+	
+	//数値にnanが混ざった場合には　その値に何を掛けても意味が無いので　nanで無い時だけ再帰
+	if (!localnodemat.IsNanMatrix() && !localnodeanimmat.IsNanMatrix()) {
+		//親方向へ計算
+		ChaMatrix tmpmat1, tmpmat2;
+		tmpmat1 = *plocalnodemat * localnodemat;
+		tmpmat2 = *plocalnodeanimmat * localnodeanimmat;
 
-	*plocalnodemat = tmpmat1;
-	*plocalnodeanimmat = tmpmat2;
+		*plocalnodemat = tmpmat1;
+		*plocalnodeanimmat = tmpmat2;
 
-	//親方向へ計算
-	if (GetParent(false)) {
-		GetParent(false)->CalcNodePostureReq(bindposeflag, pNode->GetParent(), srcframe, plocalnodemat, plocalnodeanimmat);
+		//親方向へ計算
+		if (GetParent(false)) {
+			GetParent(false)->CalcNodePostureReq(bindposeflag, pNode->GetParent(), srcframe, plocalnodemat, plocalnodeanimmat);
+		}
 	}
+
 }
-
-
 
 ////2023/02/16
 ////fbxの初期姿勢のジョイントの向きを書き出すために追加

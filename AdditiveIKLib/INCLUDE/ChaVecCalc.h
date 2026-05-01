@@ -174,7 +174,7 @@ public:
 	float* GetDataPtr();
 
 	int MakeLookAt(ChaVector3 srcpos, ChaVector3 srctarget, ChaVector3 srcupvec);
-
+	bool IsNanMatrix();
 
 public:
 	union
@@ -959,6 +959,7 @@ typedef  struct tag_modelbound
 
 
 #ifdef CHACALCCPP
+BOOL FbxDouble3NanZero(FbxDouble3 srcvec3, FbxDouble3& dstvec3);
 BOOL IsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul);
 ChaMatrix ChaMatrixTranspose(ChaMatrix srcmat);
 
@@ -1057,6 +1058,7 @@ ChaMatrix ChaMatrixFromFbxAMatrix(FbxAMatrix srcmat);
 ChaMatrix CalcAxisMatX(ChaVector3 vecx, ChaVector3 srcpos, ChaMatrix srcmat);
 
 #else
+extern BOOL FbxDouble3NanZero(FbxDouble3 srcvec3, FbxDouble3& dstvec3);
 extern BOOL IsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul);
 extern ChaMatrix ChaMatrixTranspose(ChaMatrix srcmat);
 
