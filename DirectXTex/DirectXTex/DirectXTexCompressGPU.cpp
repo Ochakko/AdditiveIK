@@ -172,7 +172,7 @@ namespace
             ScratchImage image;
             HRESULT hr = E_UNEXPECTED;
 
-            auto const srgb = GetSRGBFlags(compress);
+            const auto srgb = GetSRGBFlags(compress);
 
             switch (tformat)
             {
@@ -254,12 +254,15 @@ HRESULT DirectX::CompressEx(
     ScratchImage& image,
     std::function<bool __cdecl(size_t, size_t)> statusCallback)
 {
-    if (!pDevice || IsCompressed(srcImage.format) || !IsCompressed(format))
+    if (!pDevice || IsCompressed(srcImage.format) || !IsCompressed(format) || !IsValid(srcImage.format))
         return E_INVALIDARG;
 
     if (IsTypeless(format)
         || IsTypeless(srcImage.format) || IsPlanar(srcImage.format) || IsPalettized(srcImage.format))
         return HRESULT_E_NOT_SUPPORTED;
+
+    if (!srcImage.pixels)
+        return E_POINTER;
 
     // Setup GPU compressor
     std::unique_ptr<GPUCompressBC> gpubc(new (std::nothrow) GPUCompressBC);
@@ -326,7 +329,7 @@ HRESULT DirectX::CompressEx(
     ScratchImage& cImages,
     std::function<bool __cdecl(size_t, size_t)> statusCallback)
 {
-    if (!pDevice || !srcImages || !nimages)
+    if (!pDevice || !srcImages || !nimages || !IsValid(metadata.format))
         return E_INVALIDARG;
 
     if (IsCompressed(metadata.format) || !IsCompressed(format))

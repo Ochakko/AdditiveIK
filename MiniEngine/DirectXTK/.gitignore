@@ -18,6 +18,7 @@
 *.VC.db
 *.nupkg
 .vs
+.vscode
 Bin
 /Src/Shaders/Compiled/*.inc
 /Src/Shaders/Compiled/*.pdb
@@ -27,3 +28,5 @@ Bin
 /wiki
 /out
 /CMakeUserPresets.json
+/build/vcpkg_installed
+/build/obj

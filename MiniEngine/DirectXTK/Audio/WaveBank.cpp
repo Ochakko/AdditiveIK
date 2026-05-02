@@ -33,7 +33,9 @@ public:
         mPrepared(false),
         mStreaming(false)
     {
-        assert(mEngine != nullptr);
+        if (!engine)
+            throw std::invalid_argument("AudioEngine is required");
+
         mEngine->RegisterNotify(this, false);
     }
 
@@ -125,8 +127,7 @@ public:
     }
 
     void __cdecl OnDestroyParent() noexcept override
-    {
-    }
+    {}
 
     AudioEngine*                        mEngine;
     std::list<IVoiceNotify*>            mInstances;
@@ -612,7 +613,6 @@ bool WaveBank::GetPrivateData(unsigned int index, void* data, size_t datasize)
 _Use_decl_annotations_
 WaveBank::WaveBank(AudioEngine* engine, const __wchar_t* wbFileName) :
     WaveBank(engine, reinterpret_cast<const unsigned short*>(wbFileName))
-{
-}
+{}
 
 #endif // !_NATIVE_WCHAR_T_DEFINED

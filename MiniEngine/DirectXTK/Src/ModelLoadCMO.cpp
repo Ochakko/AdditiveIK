@@ -17,161 +17,8 @@
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
+#include "CMO.h"
 
-//--------------------------------------------------------------------------------------
-// .CMO files are built by Visual Studio's MeshContentTask and an example renderer was
-// provided in the VS Direct3D Starter Kit
-// https://devblogs.microsoft.com/cppblog/developing-an-app-with-the-visual-studio-3d-starter-kit-part-1-of-3/
-// https://devblogs.microsoft.com/cppblog/developing-an-app-with-the-visual-studio-3d-starter-kit-part-2-of-3/
-// https://devblogs.microsoft.com/cppblog/developing-an-app-with-the-visual-studio-3d-starter-kit-part-3-of-3/
-//--------------------------------------------------------------------------------------
-
-namespace VSD3DStarter
-{
-    // .CMO files
-
-    // UINT - Mesh count
-    // { [Mesh count]
-    //      UINT - Length of name
-    //      wchar_t[] - Name of mesh (if length > 0)
-    //      UINT - Material count
-    //      { [Material count]
-    //          UINT - Length of material name
-    //          wchar_t[] - Name of material (if length > 0)
-    //          Material structure
-    //          UINT - Length of pixel shader name
-    //          wchar_t[] - Name of pixel shader (if length > 0)
-    //          { [8]
-    //              UINT - Length of texture name
-    //              wchar_t[] - Name of texture (if length > 0)
-    //          }
-    //      }
-    //      BYTE - 1 if there is skeletal animation data present
-    //      UINT - SubMesh count
-    //      { [SubMesh count]
-    //          SubMesh structure
-    //      }
-    //      UINT - IB Count
-    //      { [IB Count]
-    //          UINT - Number of USHORTs in IB
-    //          USHORT[] - Array of indices
-    //      }
-    //      UINT - VB Count
-    //      { [VB Count]
-    //          UINT - Number of verts in VB
-    //          Vertex[] - Array of vertices
-    //      }
-    //      UINT - Skinning VB Count
-    //      { [Skinning VB Count]
-    //          UINT - Number of verts in Skinning VB
-    //          SkinningVertex[] - Array of skinning verts
-    //      }
-    //      MeshExtents structure
-    //      [If skeleton animation data is not present, file ends here]
-    //      UINT - Bone count
-    //      { [Bone count]
-    //          UINT - Length of bone name
-    //          wchar_t[] - Bone name (if length > 0)
-    //          Bone structure
-    //      }
-    //      UINT - Animation clip count
-    //      { [Animation clip count]
-    //          UINT - Length of clip name
-    //          wchar_t[] - Clip name (if length > 0)
-    //          float - Start time
-    //          float - End time
-    //          UINT - Keyframe count
-    //          { [Keyframe count]
-    //              Keyframe structure
-    //          }
-    //      }
-    // }
-
-#pragma pack(push,1)
-
-    struct Material
-    {
-        DirectX::XMFLOAT4   Ambient;
-        DirectX::XMFLOAT4   Diffuse;
-        DirectX::XMFLOAT4   Specular;
-        float               SpecularPower;
-        DirectX::XMFLOAT4   Emissive;
-        DirectX::XMFLOAT4X4 UVTransform;
-    };
-
-    constexpr uint32_t MAX_TEXTURE = 8;
-
-    struct SubMesh
-    {
-        uint32_t MaterialIndex;
-        uint32_t IndexBufferIndex;
-        uint32_t VertexBufferIndex;
-        uint32_t StartIndex;
-        uint32_t PrimCount;
-    };
-
-    constexpr uint32_t NUM_BONE_INFLUENCES = 4;
-
-    struct SkinningVertex
-    {
-        uint32_t boneIndex[NUM_BONE_INFLUENCES];
-        float boneWeight[NUM_BONE_INFLUENCES];
-    };
-
-    struct MeshExtents
-    {
-        float CenterX, CenterY, CenterZ;
-        float Radius;
-
-        float MinX, MinY, MinZ;
-        float MaxX, MaxY, MaxZ;
-    };
-
-    struct Bone
-    {
-        int32_t ParentIndex;
-        DirectX::XMFLOAT4X4 InvBindPos;
-        DirectX::XMFLOAT4X4 BindPos;
-        DirectX::XMFLOAT4X4 LocalTransform;
-    };
-
-    struct Clip
-    {
-        float StartTime;
-        float EndTime;
-        uint32_t keys;
-    };
-
-    struct Keyframe
-    {
-        uint32_t BoneIndex;
-        float Time;
-        DirectX::XMFLOAT4X4 Transform;
-    };
-
-#pragma pack(pop)
-
-    const Material s_defMaterial =
-    {
-        { 0.2f, 0.2f, 0.2f, 1.f },
-        { 0.8f, 0.8f, 0.8f, 1.f },
-        { 0.0f, 0.0f, 0.0f, 1.f },
-        1.f,
-        { 0.0f, 0.0f, 0.0f, 1.0f },
-        { 1.f, 0.f, 0.f, 0.f,
-          0.f, 1.f, 0.f, 0.f,
-          0.f, 0.f, 1.f, 0.f,
-          0.f, 0.f, 0.f, 1.f },
-    };
-} // namespace
-
-static_assert(sizeof(VSD3DStarter::Material) == 132, "CMO Mesh structure size incorrect");
-static_assert(sizeof(VSD3DStarter::SubMesh) == 20, "CMO Mesh structure size incorrect");
-static_assert(sizeof(VSD3DStarter::SkinningVertex) == 32, "CMO Mesh structure size incorrect");
-static_assert(sizeof(VSD3DStarter::MeshExtents) == 40, "CMO Mesh structure size incorrect");
-static_assert(sizeof(VSD3DStarter::Bone) == 196, "CMO Mesh structure size incorrect");
-static_assert(sizeof(VSD3DStarter::Clip) == 12, "CMO Mesh structure size incorrect");
-static_assert(sizeof(VSD3DStarter::Keyframe) == 72, "CMO Mesh structure size incorrect");
 
 namespace
 {
@@ -207,6 +54,8 @@ namespace
         static constexpr unsigned int InputElementCount = 5;
         static const D3D12_INPUT_ELEMENT_DESC InputElements[InputElementCount];
     };
+
+    static_assert(sizeof(VertexPositionNormalTangentColorTexture) == sizeof(VSD3DStarter::Vertex), "mismatch with CMO vertex type");
 
     const D3D12_INPUT_ELEMENT_DESC VertexPositionNormalTangentColorTexture::InputElements[] =
     {
@@ -283,7 +132,8 @@ namespace
         MaterialRecordCMO() noexcept :
             pMaterial(nullptr),
             materialIndex(0),
-            texture{} {}
+            texture{}
+        {}
     };
 
     // Shared VB input element description
@@ -333,7 +183,7 @@ namespace
 //======================================================================================
 
 _Use_decl_annotations_
-std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
+std::unique_ptr<Model> Model::CreateFromCMO(
     ID3D12Device* device,
     const uint8_t* meshData, size_t dataSize,
     ModelLoaderFlags flags,
@@ -359,6 +209,9 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
     if (!*nMesh)
         throw std::runtime_error("No meshes found");
 
+    if (*nMesh > UINT16_MAX)
+        throw std::runtime_error("Too many meshes in a file");
+
     std::map<std::wstring, int> textureDictionary;
     std::vector<ModelMaterialInfo> modelmats;
 
@@ -375,7 +228,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
         if (dataSize < usedSize)
             throw std::runtime_error("End of file");
 
-        auto meshName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize));
+        auto meshName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize)); // CodeQL [SM02986] The cast here is intentional to interpret the string in the buffer.
 
         usedSize += sizeof(wchar_t)*(*nName);
         if (dataSize < usedSize)
@@ -389,6 +242,9 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
         usedSize += sizeof(uint32_t);
         if (dataSize < usedSize)
             throw std::runtime_error("End of file");
+
+        if (*nMats > UINT16_MAX)
+            throw std::overflow_error("Too many materials");
 
         std::vector<MaterialRecordCMO> materials;
         materials.reserve(*nMats);
@@ -404,7 +260,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
             if (dataSize < usedSize)
                 throw std::runtime_error("End of file");
 
-            auto matName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize));
+            auto matName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize)); // CodeQL [SM02986] The cast here is intentional to interpret the string in the buffer.
 
             usedSize += sizeof(wchar_t)*(*nName);
             if (dataSize < usedSize)
@@ -426,7 +282,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
             if (dataSize < usedSize)
                 throw std::runtime_error("End of file");
 
-            auto psName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize));
+            auto psName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize)); // CodeQL [SM02986] The cast here is intentional to interpret the string in the buffer.
 
             usedSize += sizeof(wchar_t)*(*nName);
             if (dataSize < usedSize)
@@ -441,7 +297,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
                 if (dataSize < usedSize)
                     throw std::runtime_error("End of file");
 
-                auto txtName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize));
+                auto txtName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize)); // CodeQL [SM02986] The cast here is intentional to interpret the string in the buffer.
 
                 usedSize += sizeof(wchar_t)*(*nName);
                 if (dataSize < usedSize)
@@ -494,6 +350,9 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
         if (!*nIBs)
             throw std::runtime_error("No index buffers found\n");
 
+        if (*nIBs > UINT16_MAX)
+            throw std::overflow_error("Too many index buffers");
+
         struct IBData
         {
             size_t          nIndices;
@@ -527,7 +386,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
                     throw std::runtime_error("IB too large for DirectX 12");
             }
 
-            auto const ibBytes = static_cast<size_t>(sizeInBytes);
+            const auto ibBytes = static_cast<size_t>(sizeInBytes);
 
             auto indexes = reinterpret_cast<const uint16_t*>(meshData + usedSize);
             usedSize += ibBytes;
@@ -554,6 +413,9 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
 
         if (!*nVBs)
             throw std::runtime_error("No vertex buffers found\n");
+
+        if (*nVBs > UINT16_MAX)
+            throw std::overflow_error("Too many vertex buffers");
 
         struct VBData
         {
@@ -665,7 +527,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
                 if (dataSize < usedSize)
                     throw std::runtime_error("End of file");
 
-                auto boneName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize));
+                auto boneName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize)); // CodeQL [SM02986] The cast here is intentional to interpret the string in the buffer.
 
                 usedSize += sizeof(wchar_t) * (*nName);
                 if (dataSize < usedSize)
@@ -932,7 +794,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
 
             auto& mat = materials[sm.MaterialIndex];
 
-            auto part = new ModelMeshPart(partCount++);
+            auto part = std::make_unique<ModelMeshPart>(partCount++);
 
             part->indexCount = sm.PrimCount * 3;
             part->materialIndex = mat.materialIndex;
@@ -946,11 +808,11 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
 
             if (mat.pMaterial->Diffuse.w < 1)
             {
-                mesh->alphaMeshParts.emplace_back(part);
+                mesh->alphaMeshParts.emplace_back(std::move(part));
             }
             else
             {
-                mesh->opaqueMeshParts.emplace_back(part);
+                mesh->opaqueMeshParts.emplace_back(std::move(part));
             }
         }
 
@@ -971,7 +833,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
 
 //--------------------------------------------------------------------------------------
 _Use_decl_annotations_
-std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
+std::unique_ptr<Model> Model::CreateFromCMO(
     ID3D12Device* device,
     const wchar_t* szFileName,
     ModelLoaderFlags flags,
@@ -1006,7 +868,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
 #if defined(_MSC_VER) && !defined(_NATIVE_WCHAR_T_DEFINED)
 
 _Use_decl_annotations_
-std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
+std::unique_ptr<Model> Model::CreateFromCMO(
     ID3D12Device* device,
     const __wchar_t* szFileName,
     ModelLoaderFlags flags,

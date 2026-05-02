@@ -414,7 +414,7 @@ namespace
 
         for (size_t y = 0; y < destImage.height; ++y)
         {
-            auto const& toY = lfY[y];
+            const auto& toY = lfY[y];
 
             if (toY.u0 != u0)
             {
@@ -444,7 +444,7 @@ namespace
 
             for (size_t x = 0; x < destImage.width; ++x)
             {
-                auto const& toX = lfX[x];
+                const auto& toX = lfX[x];
 
                 BILINEAR_INTERPOLATE(target[x], toX, toY, row0, row1)
             }
@@ -511,7 +511,7 @@ namespace
 
         for (size_t y = 0; y < destImage.height; ++y)
         {
-            auto const& toY = cfY[y];
+            const auto& toY = cfY[y];
 
             // Scanline 1
             if (toY.u0 != u0)
@@ -602,7 +602,7 @@ namespace
 
             for (size_t x = 0; x < destImage.width; ++x)
             {
-                auto const& toX = cfX[x];
+                const auto& toX = cfX[x];
 
                 XMVECTOR C0, C1, C2, C3;
 
@@ -811,7 +811,7 @@ namespace
 
         static_assert(TEX_FILTER_POINT == 0x100000, "TEX_FILTER_ flag values don't match TEX_FILTER_MASK");
 
-        unsigned long filter_select = filter & TEX_FILTER_MODE_MASK;
+        uint32_t filter_select = filter & TEX_FILTER_MODE_MASK;
         if (!filter_select)
         {
             // Default filter choice
@@ -952,7 +952,9 @@ HRESULT DirectX::Resize(
     if (!srcImages || !nimages || width == 0 || height == 0)
         return E_INVALIDARG;
 
-    if ((width > UINT32_MAX) || (height > UINT32_MAX))
+    if ((width > UINT32_MAX) || (height > UINT32_MAX)
+        || (metadata.width > UINT32_MAX)
+        || (metadata.height > UINT32_MAX))
         return E_INVALIDARG;
 
     TexMetadata mdata2 = metadata;

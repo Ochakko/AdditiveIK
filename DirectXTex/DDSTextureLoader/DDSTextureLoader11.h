@@ -51,6 +51,7 @@ namespace DirectX
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-dynamic-exception-spec"
+#pragma clang diagnostic ignored "-Wextra-semi-stmt"
 #endif
 
     DEFINE_ENUM_FLAG_OPERATORS(DDS_LOADER_FLAGS);

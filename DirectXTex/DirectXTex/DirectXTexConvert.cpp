@@ -194,7 +194,9 @@ namespace
     const XMVECTORF32 g_Grayscale = { { { 0.2125f, 0.7154f, 0.0721f, 0.0f } } };
     const XMVECTORF32 g_HalfMin = { { { -65504.f, -65504.f, -65504.f, -65504.f } } };
     const XMVECTORF32 g_HalfMax = { { { 65504.f, 65504.f, 65504.f, 65504.f } } };
-    const XMVECTORF32 g_8BitBias = { { { 0.5f / 255.f, 0.5f / 255.f, 0.5f / 255.f, 0.5f / 255.f } } };
+
+    constexpr float g_8BitBias = 0.5f / 255.f;
+    const XMVECTORF32 g_8BitBiasV = { { { g_8BitBias, g_8BitBias, g_8BitBias, g_8BitBias } } };
 }
 
 //-------------------------------------------------------------------------------------
@@ -415,6 +417,9 @@ void DirectX::Internal::CopyScanline(
         case DXGI_FORMAT_A8_UNORM:
             memset(pDestination, 0xff, outSize);
             return;
+
+        default:
+            break;
         }
     }
 
@@ -585,6 +590,9 @@ void DirectX::Internal::SwizzleScanline(
                 return;
             }
         }
+        break;
+
+    default:
         break;
     }
 
@@ -977,8 +985,8 @@ _Use_decl_annotations_ bool DirectX::Internal::LoadScanline(
             auto sPtr = static_cast<const uint32_t*>(pSource);
             for (size_t icount = 0; icount < (size - sizeof(uint32_t) + 1); icount += sizeof(uint32_t))
             {
-                auto const d = static_cast<float>(*sPtr & 0xFFFFFF) / 16777215.f;
-                auto const s = static_cast<float>((*sPtr & 0xFF000000) >> 24);
+                const auto d = static_cast<float>(*sPtr & 0xFFFFFF) / 16777215.f;
+                const auto s = static_cast<float>((*sPtr & 0xFF000000) >> 24);
                 ++sPtr;
                 if (dPtr >= ePtr) break;
                 *(dPtr++) = XMVectorSet(d, s, 0.f, 1.f);
@@ -993,7 +1001,7 @@ _Use_decl_annotations_ bool DirectX::Internal::LoadScanline(
             auto sPtr = static_cast<const uint32_t*>(pSource);
             for (size_t icount = 0; icount < (size - sizeof(uint32_t) + 1); icount += sizeof(uint32_t))
             {
-                auto const r = static_cast<float>(*sPtr & 0xFFFFFF) / 16777215.f;
+                const auto r = static_cast<float>(*sPtr & 0xFFFFFF) / 16777215.f;
                 ++sPtr;
                 if (dPtr >= ePtr) break;
                 *(dPtr++) = XMVectorSet(r, 0.f /* typeless component assumed zero */, 0.f, 1.f);
@@ -1008,7 +1016,7 @@ _Use_decl_annotations_ bool DirectX::Internal::LoadScanline(
             auto sPtr = static_cast<const uint32_t*>(pSource);
             for (size_t icount = 0; icount < (size - sizeof(uint32_t) + 1); icount += sizeof(uint32_t))
             {
-                auto const g = static_cast<float>((*sPtr & 0xFF000000) >> 24);
+                const auto g = static_cast<float>((*sPtr & 0xFF000000) >> 24);
                 ++sPtr;
                 if (dPtr >= ePtr) break;
                 *(dPtr++) = XMVectorSet(0.f /* typeless component assumed zero */, g, 0.f, 1.f);
@@ -1338,9 +1346,9 @@ _Use_decl_annotations_ bool DirectX::Internal::LoadScanline(
                 // G = 1.1678Y' - 0.3929Cb' - 0.8152Cr'
                 // B = 1.1678Y' + 2.0232Cb'
 
-                auto const r = static_cast<int>((76533 * y + 104905 * v + 32768) >> 16);
-                auto const g = static_cast<int>((76533 * y - 25747 * u - 53425 * v + 32768) >> 16);
-                auto const b = static_cast<int>((76533 * y + 132590 * u + 32768) >> 16);
+                const auto r = static_cast<int>((76533 * y + 104905 * v + 32768) >> 16);
+                const auto g = static_cast<int>((76533 * y - 25747 * u - 53425 * v + 32768) >> 16);
+                const auto b = static_cast<int>((76533 * y + 132590 * u + 32768) >> 16);
 
                 if (dPtr >= ePtr) break;
                 *(dPtr++) = XMVectorSet(float(std::min<int>(std::max<int>(r, 0), 1023)) / 1023.f,
@@ -1361,7 +1369,7 @@ _Use_decl_annotations_ bool DirectX::Internal::LoadScanline(
                 const int64_t u = int64_t(sPtr->x) - 32768;
                 const int64_t y = int64_t(sPtr->y) - 4096;
                 const int64_t v = int64_t(sPtr->z) - 32768;
-                auto const a = static_cast<int>(sPtr->w);
+                const auto a = static_cast<int>(sPtr->w);
                 ++sPtr;
 
                 // http://msdn.microsoft.com/en-us/library/windows/desktop/bb970578.aspx
@@ -1374,9 +1382,9 @@ _Use_decl_annotations_ bool DirectX::Internal::LoadScanline(
                 // G = 1.1689Y' - 0.3933Cb' - 0.8160Cr'
                 // B = 1.1689Y'+ 2.0251Cb'
 
-                auto const r = static_cast<int>((76607 * y + 105006 * v + 32768) >> 16);
-                auto const g = static_cast<int>((76607 * y - 25772 * u - 53477 * v + 32768) >> 16);
-                auto const b = static_cast<int>((76607 * y + 132718 * u + 32768) >> 16);
+                const auto r = static_cast<int>((76607 * y + 105006 * v + 32768) >> 16);
+                const auto g = static_cast<int>((76607 * y - 25772 * u - 53477 * v + 32768) >> 16);
+                const auto b = static_cast<int>((76607 * y + 132718 * u + 32768) >> 16);
 
                 if (dPtr >= ePtr) break;
                 *(dPtr++) = XMVectorSet(float(std::min<int>(std::max<int>(r, 0), 65535)) / 65535.f,
@@ -1756,7 +1764,7 @@ bool DirectX::Internal::StoreScanline(
             for (size_t icount = 0; icount < (size - sizeof(XMUBYTEN4) + 1); icount += sizeof(XMUBYTEN4))
             {
                 if (sPtr >= ePtr) break;
-                const XMVECTOR v = XMVectorAdd(*sPtr++, g_8BitBias);
+                const XMVECTOR v = XMVectorAdd(*sPtr++, g_8BitBiasV);
                 XMStoreUByteN4(dPtr++, v);
             }
             return true;
@@ -1954,7 +1962,7 @@ bool DirectX::Internal::StoreScanline(
             for (size_t icount = 0; icount < size; icount += sizeof(uint8_t))
             {
                 if (sPtr >= ePtr) break;
-                float v = XMVectorGetX(*sPtr++);
+                float v = XMVectorGetX(*sPtr++) + g_8BitBias;
                 v = std::max<float>(std::min<float>(v, 1.f), 0.f);
                 *(dPtr++) = static_cast<uint8_t>(v * 255.f);
             }
@@ -2014,7 +2022,7 @@ bool DirectX::Internal::StoreScanline(
             for (size_t icount = 0; icount < size; icount += sizeof(uint8_t))
             {
                 if (sPtr >= ePtr) break;
-                float v = XMVectorGetW(*sPtr++);
+                float v = XMVectorGetW(*sPtr++) + g_8BitBias;
                 v = std::max<float>(std::min<float>(v, 1.f), 0.f);
                 *(dPtr++) = static_cast<uint8_t>(v * 255.f);
             }
@@ -2059,7 +2067,7 @@ bool DirectX::Internal::StoreScanline(
                 const XMVECTOR v0 = *sPtr++;
                 const XMVECTOR v1 = (sPtr < ePtr) ? XMVectorSplatY(*sPtr++) : XMVectorZero();
                 XMVECTOR v = XMVectorSelect(v1, v0, g_XMSelect1110);
-                v = XMVectorAdd(v, g_8BitBias);
+                v = XMVectorAdd(v, g_8BitBiasV);
                 XMStoreUByteN4(dPtr++, v);
             }
             return true;
@@ -2078,7 +2086,7 @@ bool DirectX::Internal::StoreScanline(
                 const XMVECTOR v0 = XMVectorSwizzle<1, 0, 3, 2>(*sPtr++);
                 const XMVECTOR v1 = (sPtr < ePtr) ? XMVectorSplatY(*sPtr++) : XMVectorZero();
                 XMVECTOR v = XMVectorSelect(v1, v0, select1101);
-                v = XMVectorAdd(v, g_8BitBias);
+                v = XMVectorAdd(v, g_8BitBiasV);
                 XMStoreUByteN4(dPtr++, v);
             }
             return true;
@@ -2094,11 +2102,11 @@ bool DirectX::Internal::StoreScanline(
             {
                 if (sPtr >= ePtr) break;
                 XMVECTOR v = XMVectorSwizzle<2, 1, 0, 3>(*sPtr++);
-#if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
+            #if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
                 v = XMVectorMultiplyAdd(v, s_Scale, g_XMOneHalf);
-#else
+            #else
                 v = XMVectorMultiply(v, s_Scale);
-#endif
+            #endif
                 XMStoreU565(dPtr++, v);
             }
             return true;
@@ -2109,19 +2117,19 @@ bool DirectX::Internal::StoreScanline(
         if (size >= sizeof(XMU555))
         {
             static const XMVECTORF32 s_Scale = { { { 31.f, 31.f, 31.f, 1.f } } };
-#if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
+        #if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
             static const XMVECTORF32 s_OneHalfXYZ = { { { 0.5f, 0.5f, 0.5f, 0.f } } };
-#endif
+        #endif
             XMU555 * __restrict dPtr = static_cast<XMU555*>(pDestination);
             for (size_t icount = 0; icount < (size - sizeof(XMU555) + 1); icount += sizeof(XMU555))
             {
                 if (sPtr >= ePtr) break;
                 XMVECTOR v = XMVectorSwizzle<2, 1, 0, 3>(*sPtr++);
-#if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
+            #if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
                 v = XMVectorMultiplyAdd(v, s_Scale, s_OneHalfXYZ);
-#else
+            #else
                 v = XMVectorMultiply(v, s_Scale);
-#endif
+            #endif
                 XMStoreU555(dPtr, v);
                 dPtr->w = (XMVectorGetW(v) > threshold) ? 1u : 0u;
                 ++dPtr;
@@ -2139,7 +2147,7 @@ bool DirectX::Internal::StoreScanline(
             {
                 if (sPtr >= ePtr) break;
                 XMVECTOR v = XMVectorSwizzle<2, 1, 0, 3>(*sPtr++);
-                v = XMVectorAdd(v, g_8BitBias);
+                v = XMVectorAdd(v, g_8BitBiasV);
                 XMStoreUByteN4(dPtr++, v);
             }
             return true;
@@ -2155,7 +2163,7 @@ bool DirectX::Internal::StoreScanline(
             {
                 if (sPtr >= ePtr) break;
                 XMVECTOR v = XMVectorPermute<2, 1, 0, 7>(*sPtr++, g_XMIdentityR3);
-                v = XMVectorAdd(v, g_8BitBias);
+                v = XMVectorAdd(v, g_8BitBiasV);
                 XMStoreUByteN4(dPtr++, v);
             }
             return true;
@@ -2397,11 +2405,11 @@ bool DirectX::Internal::StoreScanline(
             {
                 if (sPtr >= ePtr) break;
                 XMVECTOR v = XMVectorSwizzle<2, 1, 0, 3>(*sPtr++);
-#if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
+            #if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
                 v = XMVectorMultiplyAdd(v, s_Scale, g_XMOneHalf);
-#else
+            #else
                 v = XMVectorMultiply(v, s_Scale);
-#endif
+            #endif
                 XMStoreUNibble4(dPtr++, v);
             }
             return true;
@@ -2417,11 +2425,11 @@ bool DirectX::Internal::StoreScanline(
             {
                 if (sPtr >= ePtr) break;
                 XMVECTOR v = XMVectorSwizzle<3, 2, 1, 0>(*sPtr++);
-#if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
+            #if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
                 v = XMVectorMultiplyAdd(v, s_Scale, g_XMOneHalf);
-#else
+            #else
                 v = XMVectorMultiply(v, s_Scale);
-#endif
+            #endif
                 XMStoreUNibble4(dPtr++, v);
             }
             return true;
@@ -2497,11 +2505,11 @@ bool DirectX::Internal::StoreScanline(
             for (size_t icount = 0; icount < (size - sizeof(uint8_t) + 1); icount += sizeof(uint8_t))
             {
                 if (sPtr >= ePtr) break;
-#if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
+            #if defined(_M_ARM) || defined(_M_ARM64) || defined(_M_HYBRID_X86_ARM64) || defined(_M_ARM64EC) || __arm__ || __aarch64__
                 const XMVECTOR v = XMVectorMultiplyAdd(*sPtr++, s_Scale, g_XMOneHalf);
-#else
+            #else
                 const XMVECTOR v = XMVectorMultiply(*sPtr++, s_Scale);
-#endif
+            #endif
                 XMUNIBBLE4 nibble;
                 XMStoreUNibble4(&nibble, v);
                 *dPtr = static_cast<uint8_t>(nibble.v);
@@ -4710,7 +4718,7 @@ namespace
             filter &= ~(TEX_FILTER_SRGB_IN | TEX_FILTER_SRGB_OUT);
         }
 
-        auto const wicsrgb = CheckWICColorSpace(pfGUID, targetGUID);
+        const auto wicsrgb = CheckWICColorSpace(pfGUID, targetGUID);
 
         if (wicsrgb != (filter & (TEX_FILTER_SRGB_IN | TEX_FILTER_SRGB_OUT)))
         {
@@ -4827,7 +4835,7 @@ namespace
                 {
                     if (!statusCallback(h, srcImage.height))
                     {
-                       return E_ABORT;
+                        return E_ABORT;
                     }
                 }
 
@@ -4937,7 +4945,7 @@ namespace
         {\
             const size_t rowPitch = srcImage.rowPitch;\
             \
-            auto const sourceE = reinterpret_cast<const srcType*>(pSrc + srcImage.slicePitch);\
+            const auto sourceE = reinterpret_cast<const srcType*>(pSrc + srcImage.slicePitch);\
             auto pSrcUV = pSrc + (srcImage.height * rowPitch);\
             \
             for(size_t y = 0; y < srcImage.height; y+= 2)\
@@ -5102,7 +5110,9 @@ HRESULT DirectX::ConvertEx(
     ScratchImage& image,
     std::function<bool __cdecl(size_t, size_t)> statusCallback)
 {
-    if ((srcImage.format == format) || !IsValid(format))
+    if ((srcImage.format == format)
+        || !IsValid(format)
+        || !IsValid(srcImage.format))
         return E_INVALIDARG;
 
     if (!srcImage.pixels)
@@ -5196,7 +5206,10 @@ HRESULT DirectX::ConvertEx(
     ScratchImage& result,
     std::function<bool __cdecl(size_t, size_t)> statusCallback)
 {
-    if (!srcImages || !nimages || (metadata.format == format) || !IsValid(format))
+    if (!srcImages || !nimages
+        || (metadata.format == format)
+        || !IsValid(format)
+        || !IsValid(metadata.format))
         return E_INVALIDARG;
 
     if (IsCompressed(metadata.format) || IsCompressed(format)
@@ -5442,7 +5455,7 @@ HRESULT DirectX::ConvertToSinglePlane(
     const TexMetadata& metadata,
     ScratchImage& result) noexcept
 {
-    if (!srcImages || !nimages)
+    if (!srcImages || !nimages || !IsPlanar(metadata.format))
         return E_INVALIDARG;
 
     if (metadata.IsVolumemap())

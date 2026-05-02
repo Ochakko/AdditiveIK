@@ -230,6 +230,12 @@ namespace
             generateMipsPSO = CreateGenMipsPipelineState(device, rootSignature.Get(), GenerateMips_main, sizeof(GenerateMips_main));
         }
 
+        GenerateMipsResources(const GenerateMipsResources&) = delete;
+        GenerateMipsResources& operator=(const GenerateMipsResources&) = delete;
+
+        GenerateMipsResources(GenerateMipsResources&&) = default;
+        GenerateMipsResources& operator=(GenerateMipsResources&&) = default;
+
     private:
         static ComPtr<ID3D12RootSignature> CreateGenMipsRootSignature(
             _In_ ID3D12Device* device)
@@ -239,10 +245,10 @@ namespace
                 | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS
                 | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS
                 | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS
-#ifdef _GAMING_XBOX_SCARLETT
+            #ifdef _GAMING_XBOX_SCARLETT
                 | D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS
                 | D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS
-#endif
+            #endif
                 | D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 
             const CD3DX12_STATIC_SAMPLER_DESC sampler(
@@ -296,14 +302,16 @@ class ResourceUploadBatch::Impl
 {
 public:
     Impl(
-        _In_ ID3D12Device* device) noexcept
+        _In_ ID3D12Device* device)
         : mDevice(device)
         , mCommandType(D3D12_COMMAND_LIST_TYPE_DIRECT)
         , mInBeginEndBlock(false)
         , mTypedUAVLoadAdditionalFormats(false)
         , mStandardSwizzle64KBSupported(false)
     {
-        assert(device != nullptr);
+        if (!device)
+            throw std::invalid_argument("Direct3D device is null");
+
         D3D12_FEATURE_DATA_D3D12_OPTIONS options = {};
         if (SUCCEEDED(device->CheckFeatureSupport(
             D3D12_FEATURE_D3D12_OPTIONS,
@@ -314,6 +322,12 @@ public:
             mStandardSwizzle64KBSupported = options.StandardSwizzle64KBSupported != 0;
         }
     }
+
+    Impl(const Impl&) = delete;
+    Impl& operator=(const Impl&) = delete;
+
+    Impl(Impl&&) = default;
+    Impl& operator=(Impl&&) = default;
 
     // Call this before your multiple calls to Upload.
     void Begin(D3D12_COMMAND_LIST_TYPE commandType)
@@ -346,7 +360,7 @@ public:
     }
 
     // Asynchronously uploads a resource. The memory in subRes is copied.
-    // The resource must be in the COPY_DEST state.
+    // The resource must be in the COPY_DEST or COMMON state.
     void Upload(
         _In_ ID3D12Resource* resource,
         uint32_t subresourceIndexStart,
@@ -356,6 +370,9 @@ public:
         if (!mInBeginEndBlock)
             throw std::logic_error("Can't call Upload on a closed ResourceUploadBatch.");
 
+        if (!resource || !subRes || !numSubresources)
+            throw std::invalid_argument("Resource/subresource are null");
+
         const UINT64 uploadSize = GetRequiredIntermediateSize(
             resource,
             subresourceIndexStart,
@@ -363,7 +380,7 @@ public:
 
         //const CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
         const CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_GPU_UPLOAD);
-        auto const resDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadSize);
+        const auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadSize);
 
         // Create a temporary buffer
         ComPtr<ID3D12Resource> scratchResource = nullptr;
@@ -398,6 +415,9 @@ public:
         if (!mInBeginEndBlock)
             throw std::logic_error("Can't call Upload on a closed ResourceUploadBatch.");
 
+        if (!resource)
+            throw std::invalid_argument("Resource is null");
+
         // Submit resource copy to command list
         mList->CopyBufferRegion(resource, 0, buffer.Resource(), buffer.ResourceOffset(), buffer.Size());
 
@@ -409,13 +429,11 @@ public:
     // Resource must be in the PIXEL_SHADER_RESOURCE state
     void GenerateMips(_In_ ID3D12Resource* resource)
     {
-        if (resource == nullptr)
-        {
-            throw std::invalid_argument("Nullptr passed to GenerateMips");
-        }
-
         if (!mInBeginEndBlock)
             throw std::logic_error("Can't call GenerateMips on a closed ResourceUploadBatch.");
+
+        if (!resource)
+            throw std::invalid_argument("GenerateMips resource is null");
 
         if (mCommandType == D3D12_COMMAND_LIST_TYPE_COPY)
         {
@@ -497,6 +515,9 @@ public:
         if (!mInBeginEndBlock)
             throw std::logic_error("Can't call Upload on a closed ResourceUploadBatch.");
 
+        if (!resource)
+            throw std::invalid_argument("Transition resource is null");
+
         if (mCommandType == D3D12_COMMAND_LIST_TYPE_COPY)
         {
             switch (stateAfter)
@@ -539,6 +560,9 @@ public:
     {
         if (!mInBeginEndBlock)
             throw std::logic_error("ResourceUploadBatch already closed.");
+
+        if (!commandQueue)
+            throw std::invalid_argument("Direct3D queue is null");
 
         ThrowIfFailed(mList->Close());
 
@@ -695,7 +719,7 @@ private:
 
         SetDebugObjectName(descriptorHeap.Get(), L"ResourceUploadBatch");
 
-        auto const descriptorSize = static_cast<int>(mDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+        const auto descriptorSize = static_cast<int>(mDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 
         // Create the top-level SRV
     #if defined(_MSC_VER) || !defined(_WIN32)
@@ -936,7 +960,7 @@ private:
 
         D3D12_HEAP_DESC heapDesc = {};
     #if defined(_MSC_VER) || !defined(_WIN32)
-        auto const allocInfo = mDevice->GetResourceAllocationInfo(0, 1, &copyDesc);
+        const auto allocInfo = mDevice->GetResourceAllocationInfo(0, 1, &copyDesc);
     #else
         D3D12_RESOURCE_ALLOCATION_INFO allocInfo;
         std::ignore = mDevice->GetResourceAllocationInfo(&allocInfo, 0, 1, &copyDesc);
@@ -1065,8 +1089,7 @@ private:
 // Public constructor.
 ResourceUploadBatch::ResourceUploadBatch(_In_ ID3D12Device* device) noexcept(false)
     : pImpl(std::make_unique<Impl>(device))
-{
-}
+{}
 
 
 ResourceUploadBatch::ResourceUploadBatch(ResourceUploadBatch&&) noexcept = default;

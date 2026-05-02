@@ -19,11 +19,23 @@ using Microsoft::WRL::ComPtr;
 #pragma region Implementations
 #ifdef USING_GAMEINPUT
 
-#include <GameInput.h>
-
 //======================================================================================
 // Win32 + GameInput implementation
 //======================================================================================
+
+#if defined(GAMEINPUT_API_VERSION) && (GAMEINPUT_API_VERSION == 1)
+using namespace GameInput::v1;
+#elif defined(GAMEINPUT_API_VERSION) && (GAMEINPUT_API_VERSION == 2)
+using namespace GameInput::v2;
+#elif defined(GAMEINPUT_API_VERSION) && (GAMEINPUT_API_VERSION == 3)
+using namespace GameInput::v3;
+#endif
+
+using GameInputCreateFn = HRESULT(*)(IGameInput**);
+
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wmicrosoft-cast"
+#endif
 
 //
 // Call this static function from your Window Message Procedure
@@ -77,7 +89,26 @@ public:
 
         s_mouse = this;
 
+    #if defined(_GAMING_XBOX) || defined(GAMEINPUT_API_VERSION)
         HRESULT hr = GameInputCreate(mGameInput.GetAddressOf());
+    #else
+        if (!s_gameInputCreate)
+        {
+            s_gameInputModule = LoadLibraryExW(L"GameInput.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+            if (s_gameInputModule)
+            {
+                s_gameInputCreate = reinterpret_cast<GameInputCreateFn>(reinterpret_cast<void*>(GetProcAddress(s_gameInputModule, "GameInputCreate")));
+            }
+
+            if (!s_gameInputCreate)
+            {
+                DebugTrace("ERROR: GetProcAddress GameInputCreate failed\n");
+                throw std::runtime_error("GameInput.dll is not installed on this system");
+            }
+        }
+
+        HRESULT hr = s_gameInputCreate(mGameInput.GetAddressOf());
+    #endif
         if (SUCCEEDED(hr))
         {
             ThrowIfFailed(mGameInput->RegisterDeviceCallback(
@@ -93,12 +124,11 @@ public:
         {
             DebugTrace("ERROR: GameInputCreate [mouse] failed with %08X\n", static_cast<unsigned int>(hr));
         #ifdef _GAMING_XBOX
-            ThrowIfFailed(hr);
-        #elif defined(_DEBUG)
+            throw com_exception(hr);
+        #else
             DebugTrace(
-                "\t**** Check that the 'GameInput Service' is running on this system.             ****\n"
-                "\t**** NOTE: No relative movement be returned and IsConnected will return false. ****\n"
-            );
+                "\t**** Install the latest GameInputRedist package on this system.       ****\n"
+                "\t**** NOTE: All calls to GetState will be reported as 'not connected'. ****\n");
         #endif
         }
 
@@ -121,7 +151,11 @@ public:
         {
             if (mGameInput)
             {
+            #if defined(GAMEINPUT_API_VERSION) && (GAMEINPUT_API_VERSION >= 1)
+                if (!mGameInput->UnregisterCallback(mDeviceToken))
+            #else
                 if (!mGameInput->UnregisterCallback(mDeviceToken, UINT64_MAX))
+            #endif
                 {
                     DebugTrace("ERROR: GameInput::UnregisterCallback [mouse] failed");
                 }
@@ -219,7 +253,7 @@ public:
         {
             ShowCursor(TRUE);
 
-#ifndef _GAMING_XBOX
+        #ifndef _GAMING_XBOX
             POINT point;
             point.x = mState.x;
             point.y = mState.y;
@@ -230,7 +264,7 @@ public:
             }
 
             ClipCursor(nullptr);
-#endif
+        #endif
         }
     }
 
@@ -312,15 +346,18 @@ private:
         _In_ IGameInputDevice *,
         _In_ uint64_t,
         _In_ GameInputDeviceStatus currentStatus,
-        _In_ GameInputDeviceStatus) noexcept
+        _In_ GameInputDeviceStatus previousStatus) noexcept
     {
         auto impl = reinterpret_cast<Mouse::Impl*>(context);
 
-        if (currentStatus & GameInputDeviceConnected)
+        const bool wasConnected = (previousStatus & GameInputDeviceConnected) != 0;
+        const bool isConnected = (currentStatus & GameInputDeviceConnected) != 0;
+
+        if (isConnected && !wasConnected)
         {
             ++impl->mConnected;
         }
-        else if (impl->mConnected > 0)
+        else if (!isConnected && wasConnected && impl->mConnected > 0)
         {
             --impl->mConnected;
         }
@@ -328,7 +365,7 @@ private:
 
     void ClipToWindow() noexcept
     {
-#ifndef _GAMING_XBOX
+    #ifndef _GAMING_XBOX
         assert(mWindow != nullptr);
 
         RECT rect;
@@ -352,13 +389,21 @@ private:
         rect.bottom = lr.y;
 
         ClipCursor(&rect);
-#endif
+    #endif
     }
+
+#if !defined(_GAMING_XBOX) && !defined(GAMEINPUT_API_VERSION)
+    static HMODULE s_gameInputModule;
+    static GameInputCreateFn s_gameInputCreate;
+#endif
 };
 
+#if !defined(_GAMING_XBOX) && !defined(GAMEINPUT_API_VERSION)
+HMODULE Mouse::Impl::s_gameInputModule = nullptr;
+GameInputCreateFn Mouse::Impl::s_gameInputCreate = nullptr;
+#endif
 
 Mouse::Impl* Mouse::Impl::s_mouse = nullptr;
-
 
 void Mouse::ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -393,9 +438,9 @@ void Mouse::ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam)
             }
             else
             {
-#ifndef _GAMING_XBOX
+            #ifndef _GAMING_XBOX
                 ClipCursor(nullptr);
-#endif
+            #endif
             }
         }
         else
@@ -448,6 +493,9 @@ void Mouse::ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam)
         case XBUTTON2:
             pImpl->mState.xButton2 = true;
             break;
+
+        default:
+            break;
         }
         break;
 
@@ -460,6 +508,9 @@ void Mouse::ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam)
 
         case XBUTTON2:
             pImpl->mState.xButton2 = false;
+            break;
+
+        default:
             break;
         }
         break;
@@ -521,13 +572,16 @@ void Mouse::SetWindow(HWND window)
 
 #include <Windows.Devices.Input.h>
 
+// This symbol is defined for Win32 desktop applications, but not for UWP
+constexpr float USER_DEFAULT_SCREEN_DPI = 96.f;
+
 class Mouse::Impl
 {
 public:
     explicit Impl(Mouse* owner) noexcept(false) :
         mState{},
         mOwner(owner),
-        mDPI(96.f),
+        mDPI(USER_DEFAULT_SCREEN_DPI),
         mMode(MODE_ABSOLUTE),
         mAutoReset(true),
         mLastX(0),
@@ -900,8 +954,8 @@ private:
 
             const float dpi = s_mouse->mDPI;
 
-            s_mouse->mState.x = static_cast<int>(pos.X * dpi / 96.f + 0.5f);
-            s_mouse->mState.y = static_cast<int>(pos.Y * dpi / 96.f + 0.5f);
+            s_mouse->mState.x = static_cast<int>(pos.X * dpi / USER_DEFAULT_SCREEN_DPI + 0.5f);
+            s_mouse->mState.y = static_cast<int>(pos.Y * dpi / USER_DEFAULT_SCREEN_DPI + 0.5f);
         }
 
         return S_OK;
@@ -964,8 +1018,8 @@ private:
 
                 float dpi = s_mouse->mDPI;
 
-                s_mouse->mState.x = static_cast<int>(pos.X * dpi / 96.f + 0.5f);
-                s_mouse->mState.y = static_cast<int>(pos.Y * dpi / 96.f + 0.5f);
+                s_mouse->mState.x = static_cast<int>(pos.X * dpi / USER_DEFAULT_SCREEN_DPI + 0.5f);
+                s_mouse->mState.y = static_cast<int>(pos.Y * dpi / USER_DEFAULT_SCREEN_DPI + 0.5f);
             }
         }
 
@@ -1434,8 +1488,8 @@ void Mouse::ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam)
                     const int width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
                     const int height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
-                    auto const x = static_cast<int>((float(raw.data.mouse.lLastX) / 65535.0f) * float(width));
-                    auto const y = static_cast<int>((float(raw.data.mouse.lLastY) / 65535.0f) * float(height));
+                    const auto x = static_cast<int>((float(raw.data.mouse.lLastX) / 65535.0f) * float(width));
+                    const auto y = static_cast<int>((float(raw.data.mouse.lLastY) / 65535.0f) * float(height));
 
                     if (pImpl->mRelativeX == INT32_MAX)
                     {
@@ -1497,6 +1551,9 @@ void Mouse::ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam)
         case XBUTTON2:
             pImpl->mState.xButton2 = true;
             break;
+
+        default:
+            break;
         }
         break;
 
@@ -1509,6 +1566,9 @@ void Mouse::ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam)
 
         case XBUTTON2:
             pImpl->mState.xButton2 = false;
+            break;
+
+        default:
             break;
         }
         break;
@@ -1535,13 +1595,14 @@ void Mouse::ProcessMessage(UINT message, WPARAM wParam, LPARAM lParam)
 #endif
 #pragma endregion
 
+#ifdef _MSC_VER
 #pragma warning( disable : 4355 )
+#endif
 
 // Public constructor.
 Mouse::Mouse() noexcept(false)
     : pImpl(std::make_unique<Impl>(this))
-{
-}
+{}
 
 
 // Move constructor.

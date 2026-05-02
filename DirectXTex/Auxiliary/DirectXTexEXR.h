@@ -1,7 +1,7 @@
 //--------------------------------------------------------------------------------------
 // File: DirectXTexEXR.h
 //
-// DirectXTex Auxillary functions for using the OpenEXR library
+// DirectXTex Auxilary functions for using the OpenEXR library
 //
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
@@ -14,13 +14,19 @@
 
 namespace DirectX
 {
-    HRESULT __cdecl GetMetadataFromEXRFile(
+    DIRECTX_TEX_API HRESULT __cdecl GetMetadataFromEXRFile(
         _In_z_ const wchar_t* szFile,
         _Out_ TexMetadata& metadata);
 
-    HRESULT __cdecl LoadFromEXRFile(
+    DIRECTX_TEX_API HRESULT __cdecl LoadFromEXRMemory(
+        _In_reads_bytes_(size) const uint8_t* pSource, _In_ size_t size,
+        _Out_opt_ TexMetadata* metadata, _Out_ ScratchImage& image);
+
+    DIRECTX_TEX_API HRESULT __cdecl LoadFromEXRFile(
         _In_z_ const wchar_t* szFile,
         _Out_opt_ TexMetadata* metadata, _Out_ ScratchImage& image);
 
-    HRESULT __cdecl SaveToEXRFile(_In_ const Image& image, _In_z_ const wchar_t* szFile);
+    DIRECTX_TEX_API HRESULT __cdecl SaveToEXRFile(
+        _In_ const Image& image,
+        _In_z_ const wchar_t* szFile);
 }

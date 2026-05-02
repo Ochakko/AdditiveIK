@@ -14,7 +14,7 @@
 #pragma warning(disable : 4005)
 #endif
 #define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
+#define NOMINMAX 1
 #define NODRAWTEXT
 #define NOMCX
 #define NOSERVICE
@@ -25,6 +25,7 @@
 
 #include <Windows.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -85,14 +86,15 @@ namespace
 
     HRESULT ReadData(_In_z_ const wchar_t* szFile, std::unique_ptr<uint8_t[]>& blob, size_t& blobSize)
     {
+        if (!szFile)
+            return E_INVALIDARG;
+
         blob.reset();
 
-    #if (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
-        ScopedHandle hFile(safe_handle(CreateFile2(szFile, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, nullptr)));
-    #else
-        ScopedHandle hFile(safe_handle(CreateFileW(szFile, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
-            FILE_FLAG_SEQUENTIAL_SCAN, nullptr)));
-    #endif
+        ScopedHandle hFile(safe_handle(CreateFile2(
+            szFile,
+            GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING,
+            nullptr)));
         if (!hFile)
         {
             return HRESULT_FROM_WIN32(GetLastError());
@@ -343,6 +345,9 @@ HRESULT __cdecl LoadFromPortablePixMap(
 
                 mode = PPM_DATA_R - 1;
                 break;
+
+            default:
+                break;
             }
 
             mode++;
@@ -357,6 +362,9 @@ HRESULT __cdecl SaveToPortablePixMap(
     _In_ const Image& image,
     _In_z_ const wchar_t* szFile) noexcept
 {
+    if (!szFile)
+        return E_INVALIDARG;
+
     switch (image.format)
     {
     case DXGI_FORMAT_R8G8B8A8_UNORM:
@@ -413,13 +421,10 @@ HRESULT __cdecl SaveToPortablePixMap(
         }
     }
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
-    ScopedHandle hFile(safe_handle(CreateFile2(szFile,
-        GENERIC_WRITE, 0, CREATE_ALWAYS, nullptr)));
-#else
-    ScopedHandle hFile(safe_handle(CreateFileW(szFile,
-        GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr)));
-#endif
+    ScopedHandle hFile(safe_handle(CreateFile2(
+        szFile,
+        GENERIC_WRITE, 0, CREATE_ALWAYS,
+        nullptr)));
     if (!hFile)
         return HRESULT_FROM_WIN32(GetLastError());
 
@@ -439,9 +444,9 @@ HRESULT __cdecl SaveToPortablePixMap(
 
 
 //============================================================================
-// PFM (Portable Float Map)
+// PFM (Portable Float Map) / PHM (Portable Half Map)
 // http://paulbourke.net/dataformats/pbmhdr/
-// https://oyranos.org/2015/03/portable-float-map-with-16-bit-half/index.html
+// https://github.com/syoyo/libphm
 //============================================================================
 
 HRESULT __cdecl LoadFromPortablePixMapHDR(
@@ -684,6 +689,9 @@ HRESULT __cdecl SaveToPortablePixMapHDR(
     _In_ const Image& image,
     _In_z_ const wchar_t* szFile) noexcept
 {
+    if (!szFile)
+        return E_INVALIDARG;
+
     switch (image.format)
     {
     case DXGI_FORMAT_R32G32B32A32_FLOAT:
@@ -728,13 +736,10 @@ HRESULT __cdecl SaveToPortablePixMapHDR(
 
     tmpImage.Release();
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
-    ScopedHandle hFile(safe_handle(CreateFile2(szFile,
-        GENERIC_WRITE, 0, CREATE_ALWAYS, nullptr)));
-#else
-    ScopedHandle hFile(safe_handle(CreateFileW(szFile,
-        GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr)));
-#endif
+    ScopedHandle hFile(safe_handle(CreateFile2(
+        szFile,
+        GENERIC_WRITE, 0, CREATE_ALWAYS,
+        nullptr)));
     if (!hFile)
         return HRESULT_FROM_WIN32(GetLastError());
 

@@ -27,6 +27,10 @@ static_assert(WIN10_DXGI_FORMAT_V208 == DXGI_FORMAT_V208, "Windows SDK mismatch 
 static_assert(WIN10_DXGI_FORMAT_V408 == DXGI_FORMAT_V408, "Windows SDK mismatch detected");
 #endif
 
+#if defined(NTDDI_WIN11_GE) && !defined(_GAMING_XBOX) && !defined(__MINGW32__)
+static_assert(WIN11_DXGI_FORMAT_A4B4G4R4_UNORM == DXGI_FORMAT_A4B4G4R4_UNORM, "Windows SDK mismatch detected");
+#endif
+
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
@@ -41,6 +45,12 @@ namespace
         const GUID& wic;
         DXGI_FORMAT format;
         bool        srgb;
+
+        constexpr WICTranslate(const GUID& wg, DXGI_FORMAT fmt, bool isrgb) noexcept :
+            wic(wg),
+            format(fmt),
+            srgb(isrgb)
+        {}
     };
 
     constexpr WICTranslate g_WICFormats[] =
@@ -75,7 +85,6 @@ namespace
 
     BOOL WINAPI InitializeWICFactory(PINIT_ONCE, PVOID, PVOID *ifactory) noexcept
     {
-    #if (_WIN32_WINNT >= _WIN32_WINNT_WIN8) || defined(_WIN7_PLATFORM_UPDATE)
         HRESULT hr = CoCreateInstance(
             CLSID_WICImagingFactory2,
             nullptr,
@@ -103,16 +112,6 @@ namespace
             );
             return SUCCEEDED(hr) ? TRUE : FALSE;
         }
-    #else
-        g_WIC2 = false;
-
-        return SUCCEEDED(CoCreateInstance(
-            CLSID_WICImagingFactory,
-            nullptr,
-            CLSCTX_INPROC_SERVER,
-            __uuidof(IWICImagingFactory),
-            ifactory)) ? TRUE : FALSE;
-    #endif
     }
 
 #else // !WIN32
@@ -141,13 +140,11 @@ DXGI_FORMAT DirectX::Internal::WICToDXGI(const GUID& guid) noexcept
             return g_WICFormats[i].format;
     }
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8) || defined(_WIN7_PLATFORM_UPDATE)
     if (g_WIC2)
     {
         if (memcmp(&GUID_WICPixelFormat96bppRGBFloat, &guid, sizeof(GUID)) == 0)
             return DXGI_FORMAT_R32G32B32_FLOAT;
     }
-#endif
 
     return DXGI_FORMAT_UNKNOWN;
 }
@@ -187,7 +184,6 @@ bool DirectX::Internal::DXGIToWIC(DXGI_FORMAT format, GUID& guid, bool ignoreRGB
         memcpy(&guid, &GUID_WICPixelFormat32bppBGR, sizeof(GUID));
         return true;
 
-    #if (_WIN32_WINNT >= _WIN32_WINNT_WIN8) || defined(_WIN7_PLATFORM_UPDATE)
     case DXGI_FORMAT_R32G32B32_FLOAT:
         if (g_WIC2)
         {
@@ -195,7 +191,6 @@ bool DirectX::Internal::DXGIToWIC(DXGI_FORMAT format, GUID& guid, bool ignoreRGB
             return true;
         }
         break;
-    #endif
 
     default:
         for (size_t i = 0; i < std::size(g_WICFormats); ++i)
@@ -270,11 +265,11 @@ REFGUID DirectX::GetWICCodec(WICCodecs codec) noexcept
     case WIC_CODEC_ICO:
         return GUID_ContainerFormatIco;
 
-#ifdef NTDDI_WIN10_RS4
+    #ifdef NTDDI_WIN10_RS4
     case WIC_CODEC_HEIF:
         // This requires installing https://aka.ms/heif
         return GUID_ContainerFormatHeif;
-#endif
+    #endif
 
     default:
         return GUID_NULL;
@@ -319,14 +314,12 @@ void DirectX::SetWICFactory(_In_opt_ IWICImagingFactory* pWIC) noexcept
     bool iswic2 = false;
     if (pWIC)
     {
-    #if(_WIN32_WINNT >= _WIN32_WINNT_WIN8) || defined(_WIN7_PLATFORM_UPDATE)
         ComPtr<IWICImagingFactory2> wic2;
         HRESULT hr = pWIC->QueryInterface(IID_PPV_ARGS(wic2.GetAddressOf()));
         if (SUCCEEDED(hr))
         {
             iswic2 = true;
         }
-    #endif
         pWIC->AddRef();
     }
 
@@ -400,10 +393,20 @@ bool DirectX::IsVideo(DXGI_FORMAT fmt) noexcept
 
 //-------------------------------------------------------------------------------------
 _Use_decl_annotations_
-bool DirectX::IsPlanar(DXGI_FORMAT fmt) noexcept
+bool DirectX::IsPlanar(DXGI_FORMAT fmt, bool isd3d12) noexcept
 {
     switch (static_cast<int>(fmt))
     {
+    case DXGI_FORMAT_R32G8X24_TYPELESS:
+    case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
+    case DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS:
+    case DXGI_FORMAT_X32_TYPELESS_G8X24_UINT:
+    case DXGI_FORMAT_R24G8_TYPELESS:
+    case DXGI_FORMAT_D24_UNORM_S8_UINT:
+    case DXGI_FORMAT_R24_UNORM_X8_TYPELESS:
+    case DXGI_FORMAT_X24_TYPELESS_G8_UINT:
+        return isd3d12; // Direct3D 12 considers these planar, Direct3D 11 does not.
+
     case DXGI_FORMAT_NV12:      // 4:2:0 8-bit
     case DXGI_FORMAT_P010:      // 4:2:0 10-bit
     case DXGI_FORMAT_P016:      // 4:2:0 16-bit
@@ -912,6 +915,45 @@ size_t DirectX::BitsPerColor(DXGI_FORMAT fmt) noexcept
 
 
 //-------------------------------------------------------------------------------------
+// Returns bytes per block for a given DXGI BC format, or 0 on failure
+//-------------------------------------------------------------------------------------
+_Use_decl_annotations_
+size_t DirectX::BytesPerBlock(DXGI_FORMAT fmt) noexcept
+{
+    switch (fmt)
+    {
+    case DXGI_FORMAT_BC1_TYPELESS:
+    case DXGI_FORMAT_BC1_UNORM:
+    case DXGI_FORMAT_BC1_UNORM_SRGB:
+    case DXGI_FORMAT_BC4_TYPELESS:
+    case DXGI_FORMAT_BC4_UNORM:
+    case DXGI_FORMAT_BC4_SNORM:
+        return 8;
+
+    case DXGI_FORMAT_BC2_TYPELESS:
+    case DXGI_FORMAT_BC2_UNORM:
+    case DXGI_FORMAT_BC2_UNORM_SRGB:
+    case DXGI_FORMAT_BC3_TYPELESS:
+    case DXGI_FORMAT_BC3_UNORM:
+    case DXGI_FORMAT_BC3_UNORM_SRGB:
+    case DXGI_FORMAT_BC5_TYPELESS:
+    case DXGI_FORMAT_BC5_UNORM:
+    case DXGI_FORMAT_BC5_SNORM:
+    case DXGI_FORMAT_BC6H_TYPELESS:
+    case DXGI_FORMAT_BC6H_UF16:
+    case DXGI_FORMAT_BC6H_SF16:
+    case DXGI_FORMAT_BC7_TYPELESS:
+    case DXGI_FORMAT_BC7_UNORM:
+    case DXGI_FORMAT_BC7_UNORM_SRGB:
+        return 16;
+
+    default:
+        return 0;
+    }
+}
+
+
+//-------------------------------------------------------------------------------------
 // Computes the image row pitch in bytes, and the slice ptich (size in bytes of the image)
 // based on DXGI format, width, and height
 //-------------------------------------------------------------------------------------
@@ -924,6 +966,9 @@ HRESULT DirectX::ComputePitch(DXGI_FORMAT fmt, size_t width, size_t height,
 
     switch (static_cast<int>(fmt))
     {
+    case DXGI_FORMAT_UNKNOWN:
+        return E_INVALIDARG;
+
     case DXGI_FORMAT_BC1_TYPELESS:
     case DXGI_FORMAT_BC1_UNORM:
     case DXGI_FORMAT_BC1_UNORM_SRGB:
@@ -1018,13 +1063,13 @@ HRESULT DirectX::ComputePitch(DXGI_FORMAT fmt, size_t width, size_t height,
             return E_INVALIDARG;
         }
 
-        #if (__cplusplus >= 201703L)
-            [[fallthrough]];
-        #elif defined(__clang__)
-            [[clang::fallthrough]];
-        #elif defined(_MSC_VER)
-            __fallthrough;
-        #endif
+    #if (__cplusplus >= 201703L)
+        [[fallthrough]];
+    #elif defined(__clang__)
+        [[clang::fallthrough]];
+    #elif defined(_MSC_VER)
+        __fallthrough;
+    #endif
 
     case XBOX_DXGI_FORMAT_D16_UNORM_S8_UINT:
     case XBOX_DXGI_FORMAT_R16_UNORM_X8_TYPELESS:
@@ -1144,6 +1189,9 @@ size_t DirectX::ComputeScanlines(DXGI_FORMAT fmt, size_t height) noexcept
 {
     switch (static_cast<int>(fmt))
     {
+    case DXGI_FORMAT_UNKNOWN:
+        return 0;
+
     case DXGI_FORMAT_BC1_TYPELESS:
     case DXGI_FORMAT_BC1_UNORM:
     case DXGI_FORMAT_BC1_UNORM_SRGB:
@@ -1196,6 +1244,163 @@ size_t DirectX::ComputeScanlines(DXGI_FORMAT fmt, size_t height) noexcept
         assert(!IsCompressed(fmt) && !IsPlanar(fmt));
         return height;
     }
+}
+
+
+//-------------------------------------------------------------------------------------
+// Compute standard tile shape for 64KB tiles
+//-------------------------------------------------------------------------------------
+namespace
+{
+    constexpr size_t TILED_RESOURCE_TILE_SIZE_IN_BYTES = 65536;
+}
+
+_Use_decl_annotations_
+HRESULT DirectX::ComputeTileShape(
+    DXGI_FORMAT fmt,
+    TEX_DIMENSION dimension,
+    TileShape& tiling) noexcept
+{
+    tiling = {};
+
+    if (IsVideo(fmt) || IsPacked(fmt))
+        return E_INVALIDARG;
+
+    const size_t bpp = BitsPerPixel(fmt);
+    if (!bpp || bpp == 1 || bpp == 24 || bpp == 96)
+        return E_INVALIDARG;
+
+    const bool iscompressed = IsCompressed(fmt);
+
+    switch (dimension)
+    {
+    case TEX_DIMENSION_TEXTURE1D:
+        if (iscompressed)
+            return E_INVALIDARG;
+
+        tiling.width = (bpp) ? ((TILED_RESOURCE_TILE_SIZE_IN_BYTES * 8) / bpp) : TILED_RESOURCE_TILE_SIZE_IN_BYTES;
+        tiling.height = tiling.depth = 1;
+        break;
+
+    case TEX_DIMENSION_TEXTURE2D:
+        tiling.depth = 1;
+        if (iscompressed)
+        {
+            size_t bpb = BytesPerBlock(fmt);
+            switch (bpb)
+            {
+            case 8:
+                tiling.width = 128 * 4;
+                tiling.height = 64 * 4;
+                break;
+
+            case 16:
+                tiling.width = tiling.height = 64 * 4;
+                break;
+
+            default:
+                return E_INVALIDARG;
+            }
+
+            assert(((tiling.width / 4) * (tiling.height / 4) * bpb) == TILED_RESOURCE_TILE_SIZE_IN_BYTES);
+        }
+        else
+        {
+            if (bpp <= 8)
+            {
+                tiling.width = tiling.height = 256;
+            }
+            else if (bpp <= 16)
+            {
+                tiling.width = 256;
+                tiling.height = 128;
+            }
+            else if (bpp <= 32)
+            {
+                tiling.width = tiling.height = 128;
+            }
+            else if (bpp <= 64)
+            {
+                tiling.width = 128;
+                tiling.height = 64;
+            }
+            else if (bpp <= 128)
+            {
+                tiling.width = tiling.height = 64;
+            }
+            else
+            {
+                tiling = {};
+                return E_INVALIDARG;
+            }
+
+            assert(((tiling.width * tiling.height * bpp) / 8) == TILED_RESOURCE_TILE_SIZE_IN_BYTES);
+        }
+        break;
+
+    case TEX_DIMENSION_TEXTURE3D:
+        if (iscompressed)
+        {
+            size_t bpb = BytesPerBlock(fmt);
+            switch (bpb)
+            {
+            case 8:
+                tiling.width = 32 * 4;
+                tiling.height = 16 * 4;
+                tiling.depth = 16;
+                break;
+
+            case 16:
+                tiling.width = tiling.height = 16 * 4;
+                tiling.depth = 16;
+                break;
+
+            default:
+                return E_INVALIDARG;
+            }
+
+            assert(((tiling.width / 4) * (tiling.height / 4) * tiling.depth * bpb) == TILED_RESOURCE_TILE_SIZE_IN_BYTES);
+        }
+        else
+        {
+            if (bpp <= 8)
+            {
+                tiling.width = 64;
+                tiling.height = tiling.depth = 32;
+            }
+            else if (bpp <= 16)
+            {
+                tiling.width = tiling.height = tiling.depth = 32;
+            }
+            else if (bpp <= 32)
+            {
+                tiling.width = tiling.height = 32;
+                tiling.depth = 16;
+            }
+            else if (bpp <= 64)
+            {
+                tiling.width = 32;
+                tiling.height = tiling.depth = 16;
+            }
+            else if (bpp <= 128)
+            {
+                tiling.width = tiling.height = tiling.depth = 16;
+            }
+            else
+            {
+                tiling = {};
+                return E_INVALIDARG;
+            }
+
+            assert(((tiling.width * tiling.height * tiling.depth * bpp) / 8) == TILED_RESOURCE_TILE_SIZE_IN_BYTES);
+        }
+        break;
+
+    default:
+        return E_INVALIDARG;
+    }
+
+    return S_OK;
 }
 
 
@@ -1487,7 +1692,6 @@ DXGI_FORMAT DirectX::MakeTypelessFLOAT(DXGI_FORMAT fmt) noexcept
 // TexMetadata
 //=====================================================================================
 
-_Use_decl_annotations_
 size_t TexMetadata::ComputeIndex(size_t mip, size_t item, size_t slice) const noexcept
 {
     if (mip >= mipLevels)
@@ -1536,6 +1740,72 @@ size_t TexMetadata::ComputeIndex(size_t mip, size_t item, size_t slice) const no
     }
 }
 
+// Equivalent to D3D11CacluateSubresource: MipSlice + ArraySlice * MipLevels
+uint32_t TexMetadata::CalculateSubresource(size_t mip, size_t item) const noexcept
+{
+    uint32_t result = uint32_t(-1);
+
+    if (mip < mipLevels)
+    {
+        switch (dimension)
+        {
+        case TEX_DIMENSION_TEXTURE1D:
+        case TEX_DIMENSION_TEXTURE2D:
+            if (item < arraySize)
+            {
+                return static_cast<uint32_t>(mip + item*mipLevels);
+            }
+            break;
+
+        case TEX_DIMENSION_TEXTURE3D:
+            // No support for arrays of volumes
+            if (item == 0)
+            {
+                result = static_cast<uint32_t>(mip);
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    return result;
+}
+
+// Equivalent to D3D12CacluateSubresource: MipSlice + ArraySlice * MipLevels + PlaneSlice * MipLevels * ArraySize
+uint32_t TexMetadata::CalculateSubresource(size_t mip, size_t item, size_t plane) const noexcept
+{
+    uint32_t result = uint32_t(-1);
+
+    if (mip < mipLevels)
+    {
+        switch (dimension)
+        {
+        case TEX_DIMENSION_TEXTURE1D:
+        case TEX_DIMENSION_TEXTURE2D:
+            if (item < arraySize)
+            {
+                return static_cast<uint32_t>(mip + item*mipLevels + plane*mipLevels*arraySize);
+            }
+            break;
+
+        case TEX_DIMENSION_TEXTURE3D:
+            // No support for arrays of volumes
+            if (item == 0)
+            {
+                result = static_cast<uint32_t>(mip + plane*mipLevels);
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    return result;
+}
+
 
 //=====================================================================================
 // Blob - Bitmap image container
@@ -1575,7 +1845,7 @@ HRESULT Blob::Initialize(size_t size) noexcept
 
     Release();
 
-    m_buffer = _aligned_malloc(size, 16);
+    m_buffer = reinterpret_cast<uint8_t*>(_aligned_malloc(size, 16));
     if (!m_buffer)
     {
         Release();
@@ -1611,7 +1881,7 @@ HRESULT Blob::Resize(size_t size) noexcept
     if (!m_buffer || !m_size)
         return E_UNEXPECTED;
 
-    void *tbuffer = _aligned_malloc(size, 16);
+    auto tbuffer = reinterpret_cast<uint8_t*>(_aligned_malloc(size, 16));
     if (!tbuffer)
         return E_OUTOFMEMORY;
 

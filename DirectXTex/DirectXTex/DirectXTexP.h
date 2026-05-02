@@ -13,7 +13,7 @@
 
 #ifdef _MSC_VER
 // Off by default warnings
-#pragma warning(disable : 4619 4616 4061 4265 4365 4571 4623 4625 4626 4628 4668 4710 4711 4746 4774 4820 4987 5026 5027 5031 5032 5039 5045 5219 5246 5264 26812)
+#pragma warning(disable : 4619 4616 4061 4265 4365 4571 4623 4625 4626 4628 4668 4710 4711 4746 4774 4820 4865 4987 5026 5027 5031 5032 5039 5045 5219 5246 5264 26812)
 // C4619/4616 #pragma warning warnings
 // C4061 enumerator 'X' in switch of enum 'X' is not explicitly handled by a case label
 // C4265 class has virtual functions, but destructor is not virtual
@@ -29,6 +29,7 @@
 // C4746 volatile access of '<expression>' is subject to /volatile:<iso|ms> setting
 // C4774 format string expected in argument 3 is not a string literal
 // C4820 padding added after data member
+// C4865 the underlying type will change from 'int' to 'unsigned int' when '/Zc:enumTypes' is specified on the command line
 // C4987 nonstandard extension used
 // C5026 move constructor was implicitly defined as deleted
 // C5027 move assignment operator was implicitly defined as deleted
@@ -40,17 +41,24 @@
 // C5264 'const' variable is not used
 // 26812: The enum type 'x' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
 
-// Windows 8.1 SDK related Off by default warnings
-#pragma warning(disable : 4471 4917 4986 5029)
+#if defined(_XBOX_ONE) && defined(_TITLE)
+// Xbox One XDK related Off by default warnings
+#pragma warning(disable : 4471 4643 4917 4986 5029 5038 5040 5043 5204 5246 5256 5262 5267)
 // C4471 forward declaration of an unscoped enumeration must have an underlying type
+// C4643 Forward declaring in namespace std is not permitted by the C++ Standard
 // C4917 a GUID can only be associated with a class, interface or namespace
 // C4986 exception specification does not match previous declaration
 // C5029 nonstandard extension used
-
-// Xbox One XDK related Off by default warnings
-#pragma warning(disable : 4643)
-// C4643 Forward declaring in namespace std is not permitted by the C++ Standard
-#endif
+// C5038 data member 'X' will be initialized after data member 'Y'
+// C5040 dynamic exception specifications are valid only in C++14 and earlier; treating as noexcept(false)
+// C5043 exception specification does not match previous declaration
+// C5204 class has virtual functions, but its trivial destructor is not virtual; instances of objects derived from this class may not be destructed correctly
+// C5246 'anonymous struct or union': the initialization of a subobject should be wrapped in braces
+// C5256 a non-defining declaration of an enumeration with a fixed underlying type is only permitted as a standalone declaration
+// C5262 implicit fall-through occurs here; are you missing a break statement?
+// C5267 definition of implicit copy constructor for 'X' is deprecated because it has a user-provided assignment operator
+#endif // _XBOX_ONE && _TITLE
+#endif // _MSC_VER
 
 #ifdef __INTEL_COMPILER
 #pragma warning(disable : 161)
@@ -125,7 +133,7 @@
 #endif
 #include <d3d11_4.h>
 #else
-#include <d3d11_1.h>
+#include <d3d11_2.h>
 #endif
 #else // !WIN32
 #include <wsl/winadapter.h>
@@ -197,6 +205,9 @@ using WICPixelFormatGUID = GUID;
 #if defined(__MINGW32__) && !defined(E_BOUNDS)
 #define E_BOUNDS static_cast<HRESULT>(0x8000000BL)
 #endif
+
+// HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)
+#define HRESULT_ERROR_FILE_NOT_FOUND static_cast<HRESULT>(0x80070002)
 
 // HRESULT_FROM_WIN32(ERROR_ARITHMETIC_OVERFLOW)
 #define HRESULT_E_ARITHMETIC_OVERFLOW static_cast<HRESULT>(0x80070216L)
@@ -431,9 +442,6 @@ namespace DirectX
         //---------------------------------------------------------------------------------
         // Misc helper functions
         bool __cdecl IsAlphaAllOpaqueBC(_In_ const Image& cImage) noexcept;
-        bool __cdecl CalculateMipLevels(_In_ size_t width, _In_ size_t height, _Inout_ size_t& mipLevels) noexcept;
-        bool __cdecl CalculateMipLevels3D(_In_ size_t width, _In_ size_t height, _In_ size_t depth,
-            _Inout_ size_t& mipLevels) noexcept;
 
     #ifdef _WIN32
         HRESULT __cdecl ResizeSeparateColorAndAlpha(_In_ IWICImagingFactory* pWIC,

@@ -21,6 +21,7 @@
 #endif
 
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 
@@ -33,6 +34,30 @@
 #include <tuple>
 #endif
 
+#ifndef DIRECTX_TOOLKIT_API
+#ifdef DIRECTX_TOOLKIT_EXPORT
+#ifdef __GNUC__
+#define DIRECTX_TOOLKIT_API __attribute__ ((dllexport))
+#else
+#define DIRECTX_TOOLKIT_API __declspec(dllexport)
+#endif
+#elif defined(DIRECTX_TOOLKIT_IMPORT)
+#ifdef __GNUC__
+#define DIRECTX_TOOLKIT_API __attribute__ ((dllimport))
+#else
+#define DIRECTX_TOOLKIT_API __declspec(dllimport)
+#endif
+#else
+#define DIRECTX_TOOLKIT_API
+#endif
+#endif
+
+#if defined(DIRECTX_TOOLKIT_IMPORT) && defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4251)
+#endif
+
+
 namespace DirectX
 {
     class LinearAllocatorPage;
@@ -41,7 +66,7 @@ namespace DirectX
     {
     // Works a little like a smart pointer. The memory will only be fenced by the GPU once the pointer
     // has been invalidated or the user explicitly marks it for fencing.
-        class GraphicsResource
+        class DIRECTX_TOOLKIT_API GraphicsResource
         {
         public:
             GraphicsResource() noexcept;
@@ -82,7 +107,7 @@ namespace DirectX
             size_t                      mSize;
         };
 
-        class SharedGraphicsResource
+        class DIRECTX_TOOLKIT_API SharedGraphicsResource
         {
         public:
             SharedGraphicsResource() noexcept;
@@ -137,7 +162,7 @@ namespace DirectX
         class GraphicsMemory
         {
         public:
-            enum Tag
+            enum Tag : uint32_t
             {
                 TAG_GENERIC = 0,
                 TAG_CONSTANT,
@@ -148,27 +173,27 @@ namespace DirectX
                 TAG_COMPUTE,
             };
 
-            explicit GraphicsMemory(_In_ ID3D12Device* device);
+            DIRECTX_TOOLKIT_API explicit GraphicsMemory(_In_ ID3D12Device* device);
 
-            GraphicsMemory(GraphicsMemory&&) noexcept;
-            GraphicsMemory& operator= (GraphicsMemory&&) noexcept;
+            DIRECTX_TOOLKIT_API GraphicsMemory(GraphicsMemory&&) noexcept;
+            DIRECTX_TOOLKIT_API GraphicsMemory& operator= (GraphicsMemory&&) noexcept;
 
             GraphicsMemory(GraphicsMemory const&) = delete;
             GraphicsMemory& operator=(GraphicsMemory const&) = delete;
 
-            virtual ~GraphicsMemory();
+            DIRECTX_TOOLKIT_API virtual ~GraphicsMemory();
 
             // Make sure to keep the GraphicsResource handle alive as long as you need to access
             // the memory on the CPU. For example, do not simply cache GpuAddress() and discard
             // the GraphicsResource object, or your memory may be overwritten later.
-            GraphicsResource __cdecl Allocate(size_t size, size_t alignment = 16, uint32_t tag = TAG_GENERIC)
+            DIRECTX_TOOLKIT_API inline GraphicsResource __cdecl Allocate(size_t size, size_t alignment = 16, uint32_t tag = TAG_GENERIC)
             {
                 auto alloc = AllocateImpl(size, alignment);
-#ifdef USING_PIX_CUSTOM_MEMORY_EVENTS
+            #ifdef USING_PIX_CUSTOM_MEMORY_EVENTS
                 std::ignore = ReportCustomMemoryAlloc(alloc.Memory(), alloc.Size(), tag);
-#else
+            #else
                 UNREFERENCED_PARAMETER(tag);
-#endif
+            #endif
                 return alloc;
             }
 
@@ -178,10 +203,10 @@ namespace DirectX
                 constexpr size_t alignment = D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT;
                 constexpr size_t alignedSize = (sizeof(T) + alignment - 1) & ~(alignment - 1);
                 auto alloc = AllocateImpl(alignedSize, alignment);
-#ifdef USING_PIX_CUSTOM_MEMORY_EVENTS
-                // This cast is needed to capture the type information in the PDB
+            #ifdef USING_PIX_CUSTOM_MEMORY_EVENTS
+                            // This cast is needed to capture the type information in the PDB
                 std::ignore = reinterpret_cast<T*>(ReportCustomMemoryAlloc(alloc.Memory(), alloc.Size(), TAG_CONSTANT));
-#endif
+            #endif
                 return alloc;
             }
             template<typename T> GraphicsResource AllocateConstant(const T& setData)
@@ -193,34 +218,41 @@ namespace DirectX
 
             // Submits all the pending one-shot memory to the GPU.
             // The memory will be recycled once the GPU is done with it.
-            void __cdecl Commit(_In_ ID3D12CommandQueue* commandQueue);
+            DIRECTX_TOOLKIT_API void __cdecl Commit(_In_ ID3D12CommandQueue* commandQueue);
 
             // This frees up any unused memory.
             // If you want to make sure all memory is reclaimed, idle the GPU before calling this.
             // It is not recommended that you call this unless absolutely necessary (e.g. your
             // memory budget changes at run-time, or perhaps you're changing levels in your game.)
-            void __cdecl GarbageCollect();
+            DIRECTX_TOOLKIT_API void __cdecl GarbageCollect();
 
             // Memory statistics
-            GraphicsMemoryStatistics __cdecl GetStatistics();
-            void __cdecl ResetStatistics();
+            DIRECTX_TOOLKIT_API GraphicsMemoryStatistics __cdecl GetStatistics();
+            DIRECTX_TOOLKIT_API void __cdecl ResetStatistics();
+
+            // Properties
+            DIRECTX_TOOLKIT_API ID3D12Device* __cdecl GetDevice() const noexcept;
 
             // Singleton
             // Should only use nullptr for single GPU scenarios; mGPU requires a specific device
-            static GraphicsMemory& __cdecl Get(_In_opt_ ID3D12Device* device = nullptr);
+            DIRECTX_TOOLKIT_API static GraphicsMemory& __cdecl Get(_In_opt_ ID3D12Device* device = nullptr);
 
         private:
             // Private implementation.
             class Impl;
 
-            GraphicsResource __cdecl AllocateImpl(size_t size, size_t alignment);
+            DIRECTX_TOOLKIT_API GraphicsResource __cdecl AllocateImpl(size_t size, size_t alignment);
 
-#ifdef USING_PIX_CUSTOM_MEMORY_EVENTS
-            // The declspec is required to ensure the proper information is captured in the PDB
-            __declspec(allocator) static void* __cdecl ReportCustomMemoryAlloc(void* pMem, size_t size, UINT64 metadata);
-#endif
+        #ifdef USING_PIX_CUSTOM_MEMORY_EVENTS
+                    // The declspec is required to ensure the proper information is captured in the PDB
+            DIRECTX_TOOLKIT_API __declspec(allocator) static void* __cdecl ReportCustomMemoryAlloc(void* pMem, size_t size, UINT64 metadata);
+        #endif
 
             std::unique_ptr<Impl> pImpl;
         };
     }
 }
+
+#if defined(DIRECTX_TOOLKIT_IMPORT) && defined(_MSC_VER)
+#pragma warning(pop)
+#endif

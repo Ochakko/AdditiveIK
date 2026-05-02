@@ -456,6 +456,9 @@ public:
     explicit Impl(_In_ ID3D12Device* device)
         : mDescriptors(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, static_cast<size_t>(SamplerIndex::Count))
     {
+        if (!device)
+            throw std::invalid_argument("Direct3D device is null");
+
         SetDebugObjectName(mDescriptors.Heap(), L"CommonStates");
 
         for (size_t i = 0; i < static_cast<size_t>(SamplerIndex::Count); ++i)
@@ -463,6 +466,12 @@ public:
             device->CreateSampler(&SamplerDescs[i], mDescriptors.GetCpuHandle(i));
         }
     }
+
+    Impl(const Impl&) = delete;
+    Impl& operator=(const Impl&) = delete;
+
+    Impl(Impl&&) = default;
+    Impl& operator=(Impl&&) = default;
 
     D3D12_GPU_DESCRIPTOR_HANDLE Get(SamplerIndex i) const
     {
@@ -564,8 +573,7 @@ const D3D12_SAMPLER_DESC CommonStates::Impl::SamplerDescs[] =
 _Use_decl_annotations_
 CommonStates::CommonStates(ID3D12Device* device) :
     pImpl(std::make_unique<Impl>(device))
-{
-}
+{}
 
 CommonStates::CommonStates(CommonStates&&) noexcept = default;
 CommonStates& CommonStates::operator = (CommonStates&&) noexcept = default;

@@ -478,7 +478,7 @@ bool DirectX::IsValid(_In_ const WAVEFORMATEX* wfx) noexcept
 
             if (wfex->dwChannelMask)
             {
-                auto const channelBits = ChannelsSpecifiedInMask(wfex->dwChannelMask);
+                const auto channelBits = ChannelsSpecifiedInMask(wfex->dwChannelMask);
                 if (channelBits != wfx->nChannels)
                 {
                     DebugTrace("ERROR: WAVEFORMATEXTENSIBLE: nChannels=%u but ChannelMask has %u bits set\n",
@@ -521,6 +521,9 @@ void DirectX::CreateIntegerPCM(
     int channels,
     int sampleBits) noexcept
 {
+    if (!wfx)
+        return;
+
     const int blockAlign = channels * sampleBits / 8;
 
     wfx->wFormatTag = WAVE_FORMAT_PCM;
@@ -541,6 +544,9 @@ void DirectX::CreateFloatPCM(
     int sampleRate,
     int channels) noexcept
 {
+    if (!wfx)
+        return;
+
     const int blockAlign = channels * 4;
 
     wfx->wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
@@ -563,6 +569,9 @@ void DirectX::CreateADPCM(
     int channels,
     int samplesPerBlock) noexcept(false)
 {
+    if (!wfx)
+        return;
+
     if (wfxSize < (sizeof(WAVEFORMATEX) + MSADPCM_FORMAT_EXTRA_BYTES))
     {
         DebugTrace("CreateADPCM needs at least %zu bytes for the result\n",
@@ -592,7 +601,7 @@ void DirectX::CreateADPCM(
     adpcm->wNumCoef = MSADPCM_NUM_COEFFICIENTS;
 
     static ADPCMCOEFSET aCoef[7] = { { 256, 0}, {512, -256}, {0,0}, {192,64}, {240,0}, {460, -208}, {392,-232} };
-    memcpy(&adpcm->aCoef, aCoef, sizeof(aCoef));
+    memcpy(&adpcm->aCoef, aCoef, sizeof(aCoef)); // CodeQL [SM01947] Code scanner doesn't understand the 0-length MSVC array extension. MSADPCM_FORMAT_EXTRA_BYTES includes this memory.
 
     assert(IsValid(wfx));
 }
@@ -608,6 +617,9 @@ void DirectX::CreateXWMA(
     int avgBytes,
     bool wma3) noexcept
 {
+    if (!wfx)
+        return;
+
     wfx->wFormatTag = static_cast<WORD>((wma3) ? WAVE_FORMAT_WMAUDIO3 : WAVE_FORMAT_WMAUDIO2);
     wfx->nChannels = static_cast<WORD>(channels);
     wfx->nSamplesPerSec = static_cast<DWORD>(sampleRate);
@@ -644,12 +656,12 @@ void DirectX::CreateXMA2(
         throw std::invalid_argument("XMA2WAVEFORMATEX");
     }
 
-    int blockAlign = (channels * XMA_OUTPUT_SAMPLE_BITS) / 8;
+    unsigned int blockAlign = (static_cast<unsigned int>(channels) * XMA_OUTPUT_SAMPLE_BITS) / 8u;
 
     wfx->wFormatTag = WAVE_FORMAT_XMA2;
     wfx->nChannels = static_cast<WORD>(channels);
     wfx->nSamplesPerSec = static_cast<WORD>(sampleRate);
-    wfx->nAvgBytesPerSec = static_cast<DWORD>(blockAlign * sampleRate);
+    wfx->nAvgBytesPerSec = static_cast<DWORD>(blockAlign * static_cast<unsigned int>(sampleRate));
     wfx->nBlockAlign = static_cast<WORD>(blockAlign);
     wfx->wBitsPerSample = XMA_OUTPUT_SAMPLE_BITS;
     wfx->cbSize = sizeof(XMA2WAVEFORMATEX) - sizeof(WAVEFORMATEX);
@@ -755,23 +767,10 @@ void SoundEffectInstanceBase::Apply3D(const X3DAUDIO_LISTENER& listener, const X
         throw std::runtime_error("Apply3D");
     }
 
-    DWORD dwCalcFlags = X3DAUDIO_CALCULATE_MATRIX | X3DAUDIO_CALCULATE_DOPPLER | X3DAUDIO_CALCULATE_LPF_DIRECT;
-
-    if (mFlags & SoundEffectInstance_UseRedirectLFE)
-    {
-        // On devices with an LFE channel, allow the mono source data to be routed to the LFE destination channel.
-        dwCalcFlags |= X3DAUDIO_CALCULATE_REDIRECT_TO_LFE;
-    }
-
-    auto reverb = mReverbVoice;
-    if (reverb)
-    {
-        dwCalcFlags |= X3DAUDIO_CALCULATE_LPF_REVERB | X3DAUDIO_CALCULATE_REVERB;
-    }
-
     float matrix[XAUDIO2_MAX_AUDIO_CHANNELS * 8] = {};
     assert(mDSPSettings.SrcChannelCount <= XAUDIO2_MAX_AUDIO_CHANNELS);
     assert(mDSPSettings.DstChannelCount <= 8);
+    mDSPSettings.DopplerFactor = 1.f;
     mDSPSettings.pMatrixCoefficients = matrix;
 
     assert(engine != nullptr);
@@ -791,11 +790,11 @@ void SoundEffectInstanceBase::Apply3D(const X3DAUDIO_LISTENER& listener, const X
         lhListener.Position.z = -listener.Position.z;
         lhListener.Velocity.z = -listener.Velocity.z;
 
-        X3DAudioCalculate(engine->Get3DHandle(), &lhListener, &lhEmitter, dwCalcFlags, &mDSPSettings);
+        X3DAudioCalculate(engine->Get3DHandle(), &lhListener, &lhEmitter, mX3DCalcFlags, &mDSPSettings);
     }
     else
     {
-        X3DAudioCalculate(engine->Get3DHandle(), &listener, &emitter, dwCalcFlags, &mDSPSettings);
+        X3DAudioCalculate(engine->Get3DHandle(), &listener, &emitter, mX3DCalcFlags, &mDSPSettings);
     }
 
     mDSPSettings.pMatrixCoefficients = nullptr;
@@ -806,6 +805,7 @@ void SoundEffectInstanceBase::Apply3D(const X3DAUDIO_LISTENER& listener, const X
     assert(direct != nullptr);
     std::ignore = voice->SetOutputMatrix(direct, mDSPSettings.SrcChannelCount, mDSPSettings.DstChannelCount, matrix);
 
+    auto reverb = mReverbVoice;
     if (reverb)
     {
         for (size_t j = 0; (j < mDSPSettings.SrcChannelCount) && (j < XAUDIO2_MAX_AUDIO_CHANNELS); ++j)
@@ -869,6 +869,33 @@ namespace
 
         return true;
     }
+
+    inline bool IsValid(const X3DAUDIO_DISTANCE_CURVE& curve) noexcept
+    {
+        // These match the validation ranges in X3DAudio.
+        if (!curve.pPoints)
+            return false;
+
+        if (curve.PointCount < 2)
+            return false;
+
+        if (curve.pPoints[0].Distance != 0.f)
+            return false;
+
+        if (curve.pPoints[curve.PointCount - 1].Distance != 1.f)
+            return false;
+
+        for (uint32_t j = 0; j < curve.PointCount; ++j)
+        {
+            if (curve.pPoints[j].Distance < 0.f || curve.pPoints[j].Distance > 1.f)
+                return false;
+
+            if (!std::isfinite(curve.pPoints[j].DSPSetting))
+                return false;
+        }
+
+        return true;
+    }
 }
 
 void AudioListener::SetCone(const X3DAUDIO_CONE& listenerCone)
@@ -880,6 +907,45 @@ void AudioListener::SetCone(const X3DAUDIO_CONE& listenerCone)
     pCone = &ListenerCone;
 }
 
+bool AudioListener::IsValid() const noexcept
+{
+    if (!std::isfinite(OrientFront.x))
+        return false;
+    if (!std::isfinite(OrientFront.y))
+        return false;
+    if (!std::isfinite(OrientFront.z))
+        return false;
+
+    if (!std::isfinite(OrientTop.x))
+        return false;
+    if (!std::isfinite(OrientTop.y))
+        return false;
+    if (!std::isfinite(OrientTop.z))
+        return false;
+
+    if (!std::isfinite(Position.x))
+        return false;
+    if (!std::isfinite(Position.y))
+        return false;
+    if (!std::isfinite(Position.z))
+        return false;
+
+    if (!std::isfinite(Velocity.x))
+        return false;
+    if (!std::isfinite(Velocity.y))
+        return false;
+    if (!std::isfinite(Velocity.z))
+        return false;
+
+    if (pCone)
+    {
+        if (!::IsValid(*pCone))
+            return false;
+    }
+
+    return true;
+}
+
 void AudioEmitter::SetCone(const X3DAUDIO_CONE& emitterCone)
 {
     if (!::IsValid(emitterCone))
@@ -887,6 +953,102 @@ void AudioEmitter::SetCone(const X3DAUDIO_CONE& emitterCone)
 
     EmitterCone = emitterCone;
     pCone = &EmitterCone;
+}
+
+bool AudioEmitter::IsValid() const noexcept
+{
+    if (!std::isfinite(OrientFront.x))
+        return false;
+    if (!std::isfinite(OrientFront.y))
+        return false;
+    if (!std::isfinite(OrientFront.z))
+        return false;
+
+    if (!std::isfinite(OrientTop.x))
+        return false;
+    if (!std::isfinite(OrientTop.y))
+        return false;
+    if (!std::isfinite(OrientTop.z))
+        return false;
+
+    if (!std::isfinite(Position.x))
+        return false;
+    if (!std::isfinite(Position.y))
+        return false;
+    if (!std::isfinite(Position.z))
+        return false;
+
+    if (!std::isfinite(Velocity.x))
+        return false;
+    if (!std::isfinite(Velocity.y))
+        return false;
+    if (!std::isfinite(Velocity.z))
+        return false;
+
+    if (pCone)
+    {
+        if (!::IsValid(*pCone))
+            return false;
+    }
+
+    if (!std::isfinite(InnerRadius))
+        return false;
+    if (!std::isfinite(InnerRadiusAngle))
+        return false;
+
+    if (ChannelCount == 0 || ChannelCount > XAUDIO2_MAX_AUDIO_CHANNELS)
+        return false;
+
+    if (ChannelCount > 1)
+    {
+        if (!pChannelAzimuths)
+            return false;
+
+        for (uint32_t j = 0; j < ChannelCount; ++j)
+        {
+            if (pChannelAzimuths[j] < 0.f || pChannelAzimuths[j] > X3DAUDIO_2PI)
+                return false;
+        }
+    }
+
+    if (!std::isfinite(ChannelRadius))
+        return false;
+    if (!std::isfinite(CurveDistanceScaler))
+        return false;
+    if (!std::isfinite(DopplerScaler))
+        return false;
+
+    if (pVolumeCurve)
+    {
+        if (!::IsValid(*pVolumeCurve))
+            return false;
+    }
+
+    if (pLFECurve)
+    {
+        if (!::IsValid(*pLFECurve))
+            return false;
+    }
+
+    if (pLPFDirectCurve)
+    {
+        if (!::IsValid(*pLPFDirectCurve))
+            return false;
+    }
+
+    if (pLPFReverbCurve)
+    {
+        if (!::IsValid(*pLPFReverbCurve))
+            return false;
+    }
+
+    if (pReverbCurve)
+    {
+        if (!::IsValid(*pReverbCurve))
+            return false;
+    }
+
+    return true;
 }
 
 namespace

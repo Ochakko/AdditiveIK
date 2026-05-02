@@ -46,6 +46,12 @@ public:
     Impl(_In_ ID3D12Device* device, uint32_t effectFlags, const EffectPipelineStateDescription& pipelineDescription,
         D3D12_COMPARISON_FUNC alphaFunction);
 
+    Impl(const Impl&) = delete;
+    Impl& operator=(const Impl&) = delete;
+
+    Impl(Impl&&) = default;
+    Impl& operator=(Impl&&) = default;
+
     enum RootParameterIndex
     {
         ConstantBuffer,
@@ -194,10 +200,10 @@ AlphaTestEffect::Impl::Impl(
             | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS
             | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS
             | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS
-#ifdef _GAMING_XBOX_SCARLETT
+        #ifdef _GAMING_XBOX_SCARLETT
             | D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS
             | D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS
-#endif
+        #endif
             ;
 
         const CD3DX12_DESCRIPTOR_RANGE textureRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
@@ -298,7 +304,7 @@ void AlphaTestEffect::Impl::Apply(_In_ ID3D12GraphicsCommandList* commandList)
     if (dirtyFlags & EffectDirtyFlags::AlphaTest)
     {
         // Convert reference alpha from 8 bit integer to 0-1 float format.
-        auto const reference = static_cast<float>(referenceAlpha) / 255.0f;
+        const auto reference = static_cast<float>(referenceAlpha) / 255.0f;
 
         // Comparison tolerance of half the 8 bit integer precision.
         constexpr float threshold = 0.5f / 255.0f;
@@ -401,8 +407,7 @@ AlphaTestEffect::AlphaTestEffect(
     const EffectPipelineStateDescription& pipelineDescription,
     D3D12_COMPARISON_FUNC alphaFunction)
     : pImpl(std::make_unique<Impl>(device, effectFlags, pipelineDescription, alphaFunction))
-{
-}
+{}
 
 
 AlphaTestEffect::AlphaTestEffect(AlphaTestEffect&&) noexcept = default;

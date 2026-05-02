@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <new>
@@ -57,21 +58,23 @@ using Microsoft::WRL::ComPtr;
 //
 // See DDS.h in the 'Texconv' sample and the 'DirectXTex' library
 //--------------------------------------------------------------------------------------
+namespace
+{
 #pragma pack(push,1)
 
-constexpr uint32_t DDS_MAGIC = 0x20534444; // "DDS "
+    constexpr uint32_t DDS_MAGIC = 0x20534444; // "DDS "
 
-struct DDS_PIXELFORMAT
-{
-    uint32_t    size;
-    uint32_t    flags;
-    uint32_t    fourCC;
-    uint32_t    RGBBitCount;
-    uint32_t    RBitMask;
-    uint32_t    GBitMask;
-    uint32_t    BBitMask;
-    uint32_t    ABitMask;
-};
+    struct DDS_PIXELFORMAT
+    {
+        uint32_t    size;
+        uint32_t    flags;
+        uint32_t    fourCC;
+        uint32_t    RGBBitCount;
+        uint32_t    RBitMask;
+        uint32_t    GBitMask;
+        uint32_t    BBitMask;
+        uint32_t    ABitMask;
+    };
 
 #define DDS_FOURCC          0x00000004  // DDPF_FOURCC
 #define DDS_RGB             0x00000040  // DDPF_RGB
@@ -90,34 +93,37 @@ struct DDS_PIXELFORMAT
 #define DDS_CUBEMAP_NEGATIVEZ 0x00008200 // DDSCAPS2_CUBEMAP | DDSCAPS2_CUBEMAP_NEGATIVEZ
 
 #define DDS_CUBEMAP_ALLFACES ( DDS_CUBEMAP_POSITIVEX | DDS_CUBEMAP_NEGATIVEX |\
-                               DDS_CUBEMAP_POSITIVEY | DDS_CUBEMAP_NEGATIVEY |\
-                               DDS_CUBEMAP_POSITIVEZ | DDS_CUBEMAP_NEGATIVEZ )
+                                DDS_CUBEMAP_POSITIVEY | DDS_CUBEMAP_NEGATIVEY |\
+                                DDS_CUBEMAP_POSITIVEZ | DDS_CUBEMAP_NEGATIVEZ )
 
 #define DDS_CUBEMAP 0x00000200 // DDSCAPS2_CUBEMAP
 
-struct DDS_HEADER
-{
-    uint32_t        size;
-    uint32_t        flags;
-    uint32_t        height;
-    uint32_t        width;
-    uint32_t        pitchOrLinearSize;
-    uint32_t        depth; // only if DDS_HEADER_FLAGS_VOLUME is set in flags
-    uint32_t        mipMapCount;
-    uint32_t        reserved1[11];
-    DDS_PIXELFORMAT ddspf;
-    uint32_t        caps;
-    uint32_t        caps2;
-    uint32_t        caps3;
-    uint32_t        caps4;
-    uint32_t        reserved2;
-};
+    struct DDS_HEADER
+    {
+        uint32_t        size;
+        uint32_t        flags;
+        uint32_t        height;
+        uint32_t        width;
+        uint32_t        pitchOrLinearSize;
+        uint32_t        depth; // only if DDS_HEADER_FLAGS_VOLUME is set in flags
+        uint32_t        mipMapCount;
+        uint32_t        reserved1[11];
+        DDS_PIXELFORMAT ddspf;
+        uint32_t        caps;
+        uint32_t        caps2;
+        uint32_t        caps3;
+        uint32_t        caps4;
+        uint32_t        reserved2;
+    };
 
 #pragma pack(pop)
 
-//--------------------------------------------------------------------------------------
-namespace
-{
+    static_assert(sizeof(DDS_PIXELFORMAT) == 32, "DDS pixel format size mismatch");
+    static_assert(sizeof(DDS_HEADER) == 124, "DDS Header size mismatch");
+
+    constexpr size_t DDS_DX9_HEADER_SIZE = sizeof(uint32_t) + sizeof(DDS_HEADER);
+
+    //--------------------------------------------------------------------------------------
     struct handle_closer { void operator()(HANDLE h) noexcept { if (h) CloseHandle(h); } };
 
     using ScopedHandle = std::unique_ptr<void, handle_closer>;
@@ -144,13 +150,13 @@ namespace
             return E_FAIL;
         }
 
-        if (ddsDataSize < (sizeof(uint32_t) + sizeof(DDS_HEADER)))
+        if (ddsDataSize < DDS_DX9_HEADER_SIZE)
         {
             return E_FAIL;
         }
 
         // DDS files always start with the same magic number ("DDS ")
-        auto const dwMagicNumber = *reinterpret_cast<const uint32_t*>(ddsData);
+        const auto dwMagicNumber = *reinterpret_cast<const uint32_t*>(ddsData);
         if (dwMagicNumber != DDS_MAGIC)
         {
             return E_FAIL;
@@ -175,9 +181,8 @@ namespace
 
         // setup the pointers in the process request
         *header = hdr;
-        auto offset = sizeof(uint32_t) + sizeof(DDS_HEADER);
-        *bitData = ddsData + offset;
-        *bitSize = ddsDataSize - offset;
+        *bitData = ddsData + DDS_DX9_HEADER_SIZE;
+        *bitSize = ddsDataSize - DDS_DX9_HEADER_SIZE;
 
         return S_OK;
     }
@@ -199,22 +204,10 @@ namespace
         *bitSize = 0;
 
         // open the file
-    #if (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
-        ScopedHandle hFile(safe_handle(CreateFile2(fileName,
-            GENERIC_READ,
-            FILE_SHARE_READ,
-            OPEN_EXISTING,
+        ScopedHandle hFile(safe_handle(CreateFile2(
+            fileName,
+            GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING,
             nullptr)));
-    #else
-        ScopedHandle hFile(safe_handle(CreateFileW(fileName,
-            GENERIC_READ,
-            FILE_SHARE_READ,
-            nullptr,
-            OPEN_EXISTING,
-            FILE_ATTRIBUTE_NORMAL,
-            nullptr)));
-    #endif
-
         if (!hFile)
         {
             return HRESULT_FROM_WIN32(GetLastError());
@@ -234,7 +227,7 @@ namespace
         }
 
         // Need at least enough data to fill the header and magic number to be a valid DDS
-        if (fileInfo.EndOfFile.LowPart < (sizeof(uint32_t) + sizeof(DDS_HEADER)))
+        if (fileInfo.EndOfFile.LowPart < DDS_DX9_HEADER_SIZE)
         {
             return E_FAIL;
         }
@@ -266,7 +259,7 @@ namespace
         }
 
         // DDS files always start with the same magic number ("DDS ")
-        auto const dwMagicNumber = *reinterpret_cast<const uint32_t*>(ddsData.get());
+        const auto dwMagicNumber = *reinterpret_cast<const uint32_t*>(ddsData.get());
         if (dwMagicNumber != DDS_MAGIC)
         {
             ddsData.reset();
@@ -294,9 +287,8 @@ namespace
 
         // setup the pointers in the process request
         *header = hdr;
-        auto offset = sizeof(uint32_t) + sizeof(DDS_HEADER);
-        *bitData = ddsData.get() + offset;
-        *bitSize = fileInfo.EndOfFile.LowPart - offset;
+        *bitData = ddsData.get() + DDS_DX9_HEADER_SIZE;
+        *bitSize = fileInfo.EndOfFile.LowPart - DDS_DX9_HEADER_SIZE;
 
         return S_OK;
     }
@@ -412,7 +404,7 @@ namespace
         _In_ size_t width,
         _In_ size_t height,
         _In_ D3DFORMAT fmt,
-        size_t* outNumBytes,
+        _Out_opt_ size_t* outNumBytes,
         _Out_opt_ size_t* outRowBytes,
         _Out_opt_ size_t* outNumRows) noexcept
     {
@@ -425,6 +417,9 @@ namespace
         size_t bpe = 0;
         switch (static_cast<int>(fmt))
         {
+        case D3DFMT_UNKNOWN:
+            return E_INVALIDARG;
+
         case D3DFMT_DXT1:
             bc = true;
             bpe = 8;
@@ -620,6 +615,9 @@ namespace
 
                 // Paletted texture formats are typically not supported on modern video cards aka D3DFMT_P8, D3DFMT_A8P8
                 break;
+
+            default:
+                return D3DFMT_UNKNOWN;
             }
         }
         else if (ddpf.flags & DDS_LUMINANCE)
@@ -651,6 +649,9 @@ namespace
                     return D3DFMT_A8L8; // Some DDS writers assume the bitcount should be 8 instead of 16
                 }
                 break;
+
+            default:
+                return D3DFMT_UNKNOWN;
             }
         }
         else if (ddpf.flags & DDS_ALPHA)
@@ -685,6 +686,9 @@ namespace
                     return D3DFMT_V8U8;
                 }
                 break;
+
+            default:
+                return D3DFMT_UNKNOWN;
             }
         }
         else if (ddpf.flags & DDS_BUMPLUMINANCE)
@@ -704,6 +708,9 @@ namespace
                     return D3DFMT_L6V5U5;
                 }
                 break;
+
+            default:
+                return D3DFMT_UNKNOWN;
             }
         }
         else if (ddpf.flags & DDS_FOURCC)
@@ -760,6 +767,9 @@ namespace
             case D3DFMT_A32B32G32R32F:
             case D3DFMT_CxV8U8:
                 return static_cast<D3DFORMAT>(ddpf.fourCC);
+
+            default:
+                return D3DFMT_UNKNOWN;
             }
         }
 

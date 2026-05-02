@@ -254,10 +254,10 @@ namespace
 
         const size_t progressTotal = std::max<size_t>(1, (image.height + 3) / 4);
 
-#pragma omp parallel for shared(progress)
+    #pragma omp parallel for shared(progress)
         for (int nb = 0; nb < static_cast<int>(nBlocks); ++nb)
         {
-#pragma omp flush (abort)
+        #pragma omp flush (abort)
             if (abort)
             {
                 // Short circuit the loop body if an abort is requested.
@@ -350,13 +350,13 @@ namespace
             // Report progress when a new row is reached.
             if (x == 0 && statusCallback)
             {
-#pragma omp atomic
+            #pragma omp atomic
                 progress += 4;
 
                 if (!statusCallback(progress, progressTotal))
                 {
                     abort = true;
-#pragma omp flush (abort)
+                #pragma omp flush (abort)
                 }
             }
         }
@@ -668,7 +668,7 @@ HRESULT DirectX::CompressEx(
     ScratchImage& image,
     std::function<bool __cdecl(size_t, size_t)> statusCallback)
 {
-    if (IsCompressed(srcImage.format) || !IsCompressed(format))
+    if (IsCompressed(srcImage.format) || !IsCompressed(format) || !IsValid(srcImage.format))
         return E_INVALIDARG;
 
     if (IsTypeless(format)
@@ -738,7 +738,7 @@ HRESULT DirectX::CompressEx(
     ScratchImage& cImages,
     std::function<bool __cdecl(size_t, size_t)> statusCallback)
 {
-    if (!srcImages || !nimages)
+    if (!srcImages || !nimages || !IsValid(metadata.format))
         return E_INVALIDARG;
 
     if (IsCompressed(metadata.format) || !IsCompressed(format))

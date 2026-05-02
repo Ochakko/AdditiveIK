@@ -69,11 +69,20 @@ public:
         , mEnableInstancing(false)
         , mDevice(device)
     {
+        if (!device)
+            throw std::invalid_argument("Direct3D device is null");
+
         if (textureDescriptors)
             mTextureDescriptors = std::make_unique<DescriptorHeap>(textureDescriptors);
         if (samplerDescriptors)
             mSamplerDescriptors = std::make_unique<DescriptorHeap>(samplerDescriptors);
     }
+
+    Impl(const Impl&) = delete;
+    Impl& operator=(const Impl&) = delete;
+
+    Impl(Impl&&) = delete;
+    Impl& operator=(Impl&&) = delete;
 
     std::shared_ptr<IEffect> CreateEffect(
         const EffectInfo& info,
@@ -490,8 +499,7 @@ void EffectFactory::Impl::ReleaseCache()
 
 EffectFactory::EffectFactory(_In_ ID3D12Device* device) :
     pImpl(std::make_shared<Impl>(device, nullptr, nullptr))
-{
-}
+{}
 
 EffectFactory::EffectFactory(_In_ ID3D12DescriptorHeap* textureDescriptors, _In_ ID3D12DescriptorHeap* samplerDescriptors)
 {

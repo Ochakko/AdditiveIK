@@ -77,8 +77,7 @@ namespace
         VoiceCallback& operator=(const VoiceCallback&) = delete;
 
         virtual ~VoiceCallback()
-        {
-        }
+        {}
 
         STDMETHOD_(void, OnVoiceProcessingPassStart) (UINT32) override {}
         STDMETHOD_(void, OnVoiceProcessingPassEnd)() override {}
@@ -135,6 +134,8 @@ namespace
         XAUDIO2FX_I3DL2_PRESET_LARGEHALL,           // Reverb_LargeHall
         XAUDIO2FX_I3DL2_PRESET_PLATE,               // Reverb_Plate
     };
+
+    constexpr uint32_t c_XAudio3DCalculateDefault = X3DAUDIO_CALCULATE_MATRIX | X3DAUDIO_CALCULATE_LPF_DIRECT;
 
     inline unsigned int makeVoiceKey(_In_ const WAVEFORMATEX* wfx) noexcept
     {
@@ -278,14 +279,14 @@ public:
         maxVoiceInstances(SIZE_MAX),
         mMasterVolume(1.f),
         mX3DAudio{},
+        mX3DCalcFlags(c_XAudio3DCalculateDefault),
         mCriticalError(false),
         mReverbEnabled(false),
         mEngineFlags(AudioEngine_Default),
         mOutputFormat{},
         mCategory(AudioCategory_GameEffects),
         mVoiceInstances(0)
-    {
-    }
+    {}
 
     ~Impl() = default;
 
@@ -338,6 +339,7 @@ public:
     float                               mMasterVolume;
 
     X3DAUDIO_HANDLE                     mX3DAudio;
+    uint32_t                            mX3DCalcFlags;
 
     bool                                mCriticalError;
     bool                                mReverbEnabled;
@@ -402,6 +404,7 @@ HRESULT AudioEngine::Impl::Reset(const WAVEFORMATEX* wfx, const wchar_t* deviceI
     mOutputFormat = {};
 
     memset(&mX3DAudio, 0, X3DAUDIO_HANDLE_BYTESIZE);
+    mX3DCalcFlags = c_XAudio3DCalculateDefault;
 
     mCriticalError = false;
     mReverbEnabled = false;
@@ -572,6 +575,8 @@ HRESULT AudioEngine::Impl::Reset(const WAVEFORMATEX* wfx, const wchar_t* deviceI
         }
 
         DebugTrace("INFO: I3DL2 reverb effect enabled for 3D positional audio\n");
+
+        mX3DCalcFlags |= X3DAUDIO_CALCULATE_LPF_REVERB | X3DAUDIO_CALCULATE_REVERB;
     }
 
     //
@@ -588,6 +593,22 @@ HRESULT AudioEngine::Impl::Reset(const WAVEFORMATEX* wfx, const wchar_t* deviceI
         mVolumeLimiter.Reset();
         xaudio2.Reset();
         return hr;
+    }
+
+    if ((masterChannelMask & SPEAKER_LOW_FREQUENCY) && !(mEngineFlags & AudioEngine_DisableLFERedirect))
+    {
+        // On devices with an LFE channel, allow the mono source data to be routed to the LFE destination channel.
+        mX3DCalcFlags |= X3DAUDIO_CALCULATE_REDIRECT_TO_LFE;
+    }
+
+    if (!(mEngineFlags & AudioEngine_DisableDopplerEffect))
+    {
+        mX3DCalcFlags |= X3DAUDIO_CALCULATE_DOPPLER;
+    }
+
+    if (mEngineFlags & AudioEngine_ZeroCenter3D)
+    {
+        mX3DCalcFlags |= X3DAUDIO_CALCULATE_ZEROCENTER;
     }
 
     //
@@ -950,6 +971,9 @@ void AudioEngine::Impl::AllocateVoice(
                         CreateXMA2(wfmt, sizeof(buff), defaultRate, wfx->nChannels, 65536, 2, 0);
                         break;
                     #endif
+
+                    default:
+                        throw std::invalid_argument("Unsupported wave format");
                     }
 
                 #ifdef VERBOSE_TRACE
@@ -1467,6 +1491,11 @@ X3DAUDIO_HANDLE& AudioEngine::Get3DHandle() const noexcept
 }
 
 
+uint32_t AudioEngine::Get3DCalculateFlags() const noexcept
+{
+    return pImpl->mX3DCalcFlags;
+}
+
 // Static methods.
 #if (defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)) || defined(USING_XAUDIO2_8)
 //--- Use Windows Runtime device enumeration ---
@@ -1477,15 +1506,19 @@ X3DAUDIO_HANDLE& AudioEngine::Get3DHandle() const noexcept
 // you will need to modify the library to use this codepath for Windows desktop
 // -or- use XAudio2Redist -or- use XAudio 2.8.
 
+#ifdef _MSC_VER
 #pragma comment(lib,"runtimeobject.lib")
 #pragma warning(push)
-#pragma warning(disable: 4471 5204 5256)
+#pragma warning(disable: 4471 5204 5256 6553)
+#endif
 #ifdef __clang__
 #pragma clang diagnostic ignored "-Wnonportable-system-include-path"
 #endif
 #include <Windows.Devices.Enumeration.h>
 #include <Windows.Media.Devices.h>
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 
 #include <wrl.h>
 
@@ -1501,9 +1534,9 @@ namespace
     {
     #if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
         InspectableClass(L"AudioEngine.PropertyIterator", FullTrust)
-    #else
+        #else
         InspectableClass(L"AudioEngine.PropertyIterator", BaseTrust)
-    #endif
+        #endif
 
     public:
         PropertyIterator() : mFirst(true), mString(c_PKEY_AudioEngine_DeviceFormat) {}
@@ -1551,9 +1584,9 @@ namespace
     {
     #if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
         InspectableClass(L"AudioEngine.PropertyList", FullTrust)
-    #else
+        #else
         InspectableClass(L"AudioEngine.PropertyList", BaseTrust)
-    #endif
+        #endif
 
     public:
         HRESULT STDMETHODCALLTYPE First(ABI::Windows::Foundation::Collections::IIterator<HSTRING> **first) override
@@ -1909,9 +1942,8 @@ AudioEngine::AudioEngine(
     const WAVEFORMATEX* wfx,
     const __wchar_t* deviceId,
     AUDIO_STREAM_CATEGORY category) noexcept(false) :
-        AudioEngine(flags, wfx, reinterpret_cast<const unsigned short*>(deviceId), category)
-{
-}
+    AudioEngine(flags, wfx, reinterpret_cast<const unsigned short*>(deviceId), category)
+{}
 
 _Use_decl_annotations_
 bool AudioEngine::Reset(const WAVEFORMATEX* wfx, const __wchar_t* deviceId)

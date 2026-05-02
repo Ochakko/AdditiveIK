@@ -29,7 +29,9 @@ using namespace DirectX;
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
 #endif
 
+#ifdef _MSC_VER
 #pragma warning(disable : 4061 4062)
+#endif
 
 //#define VERBOSE_TRACE
 
@@ -237,6 +239,7 @@ public:
         HANDLE events[] = { mBufferRead.get(), mBufferEnd.get() };
         switch (WaitForMultipleObjectsEx(static_cast<DWORD>(std::size(events)), events, FALSE, 0, FALSE))
         {
+        default:
         case WAIT_TIMEOUT:
             break;
 
@@ -362,7 +365,8 @@ public:
             audioBytes(0),
             startPosition(0),
             request{},
-            notify{} {}
+            notify{}
+        {}
     };
 
     Packets                         mPackets[MAX_BUFFER_COUNT];
@@ -521,7 +525,7 @@ HRESULT SoundStreamInstance::Impl::ReadBuffers() noexcept
         {
             if (mCurrentPosition < mLengthInBytes)
             {
-                auto const cbValid = static_cast<uint32_t>(std::min(mPacketSize, mLengthInBytes - mCurrentPosition));
+                const auto cbValid = static_cast<uint32_t>(std::min(mPacketSize, mLengthInBytes - mCurrentPosition));
 
                 mPackets[entry].valid = cbValid;
                 mPackets[entry].audioBytes = 0;
@@ -576,11 +580,7 @@ HRESULT SoundStreamInstance::Impl::PlayBuffers() noexcept
         if (mPackets[j].state == State::PENDING)
         {
             DWORD cb = 0;
-        #if (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
             const BOOL result = GetOverlappedResultEx(async, &mPackets[j].request, &cb, 0, FALSE);
-        #else
-            const BOOL result = GetOverlappedResult(async, &mPackets[j].request, &cb, FALSE);
-        #endif
             if (result)
             {
                 mPackets[j].state = State::READY;
@@ -756,8 +756,7 @@ const wchar_t* SoundStreamInstance::Impl::s_debugState[4] =
 _Use_decl_annotations_
 SoundStreamInstance::SoundStreamInstance(AudioEngine* engine, WaveBank* waveBank, unsigned int index, SOUND_EFFECT_INSTANCE_FLAGS flags) :
     pImpl(std::make_unique<Impl>(engine, waveBank, index, flags))
-{
-}
+{}
 
 
 // Move ctor/operator.

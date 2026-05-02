@@ -25,11 +25,29 @@
 
 #include <cstdint>
 
+#ifndef DIRECTX_TOOLKIT_API
+#ifdef DIRECTX_TOOLKIT_EXPORT
+#ifdef __GNUC__
+#define DIRECTX_TOOLKIT_API __attribute__ ((dllexport))
+#else
+#define DIRECTX_TOOLKIT_API __declspec(dllexport)
+#endif
+#elif defined(DIRECTX_TOOLKIT_IMPORT)
+#ifdef __GNUC__
+#define DIRECTX_TOOLKIT_API __attribute__ ((dllimport))
+#else
+#define DIRECTX_TOOLKIT_API __declspec(dllimport)
+#endif
+#else
+#define DIRECTX_TOOLKIT_API
+#endif
+#endif
+
 
 namespace DirectX
 {
     // Encapsulates all render target state when creating pipeline state objects
-    class RenderTargetState
+    class DIRECTX_TOOLKIT_API RenderTargetState
     {
     public:
         RenderTargetState() noexcept
@@ -39,8 +57,7 @@ namespace DirectX
             , dsvFormat(DXGI_FORMAT_UNKNOWN)
             , sampleDesc{}
             , nodeMask(0)
-        {
-        }
+        {}
 
         RenderTargetState(const RenderTargetState&) = default;
         RenderTargetState& operator=(const RenderTargetState&) = default;
@@ -60,6 +77,22 @@ namespace DirectX
             , nodeMask(0)
         {
             sampleDesc.Count = 1;
+            rtvFormats[0] = rtFormat;
+        }
+
+        // MSAA single render target convenience constructor
+        RenderTargetState(
+            _In_ DXGI_FORMAT rtFormat,
+            _In_ DXGI_FORMAT dsFormat,
+            _In_ uint32_t sampleCount,
+            _In_ uint32_t quality = 0) noexcept
+            : sampleMask(UINT_MAX)
+            , numRenderTargets(1)
+            , rtvFormats{}
+            , dsvFormat(dsFormat)
+            , sampleDesc{ sampleCount, quality }
+            , nodeMask(0)
+        {
             rtvFormats[0] = rtFormat;
         }
 

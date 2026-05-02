@@ -41,6 +41,11 @@ namespace
     {
         const GUID&         wic;
         DXGI_FORMAT         format;
+
+        constexpr WICTranslate(const GUID& wg, DXGI_FORMAT fmt) noexcept :
+            wic(wg),
+            format(fmt)
+        {}
     };
 
     constexpr WICTranslate g_WICFormats[] =
@@ -78,6 +83,11 @@ namespace
     {
         const GUID& source;
         const GUID& target;
+
+        constexpr WICConvert(const GUID& src, const GUID& tgt) noexcept :
+            source(src),
+            target(tgt)
+        {}
     };
 
     constexpr WICConvert g_WICConvert[] =
@@ -156,7 +166,7 @@ namespace DirectX
 {
     inline namespace DX12
     {
-        namespace Internal
+        namespace ToolKitInternal
         {
             IWICImagingFactory2* GetWIC() noexcept;
             // Also used by ScreenGrab
@@ -164,7 +174,7 @@ namespace DirectX
     }
 }
 
-IWICImagingFactory2* DirectX::DX12::Internal::GetWIC() noexcept
+IWICImagingFactory2* DirectX::DX12::ToolKitInternal::GetWIC() noexcept
 {
     static INIT_ONCE s_initOnce = INIT_ONCE_STATIC_INIT;
 
@@ -181,7 +191,7 @@ IWICImagingFactory2* DirectX::DX12::Internal::GetWIC() noexcept
     return factory;
 }
 
-using namespace DirectX::DX12::Internal;
+using namespace DirectX::DX12::ToolKitInternal;
 
 namespace
 {
@@ -227,7 +237,7 @@ namespace
     }
 
     //---------------------------------------------------------------------------------
-    HRESULT CreateTextureFromWIC(_In_ ID3D12Device* d3dDevice,
+    HRESULT CreateTextureFromWIC(_In_ ID3D12Device* device,
         _In_ IWICBitmapFrameDecode *frame,
         size_t maxsize,
         D3D12_RESOURCE_FLAGS resFlags,
@@ -414,8 +424,8 @@ namespace
         if (rowBytes > UINT32_MAX || numBytes > UINT32_MAX)
             return HRESULT_FROM_WIN32(ERROR_ARITHMETIC_OVERFLOW);
 
-        auto const rowPitch = static_cast<size_t>(rowBytes);
-        auto const imageSize = static_cast<size_t>(numBytes);
+        const auto rowPitch = static_cast<size_t>(rowBytes);
+        const auto imageSize = static_cast<size_t>(numBytes);
 
         decodedData.reset(new (std::nothrow) uint8_t[imageSize]);
         if (!decodedData)
@@ -529,7 +539,7 @@ namespace
         const CD3DX12_HEAP_PROPERTIES defaultHeapProperties(D3D12_HEAP_TYPE_DEFAULT);
 
         ID3D12Resource* tex = nullptr;
-        hr = d3dDevice->CreateCommittedResource(
+        hr = device->CreateCommittedResource(
             &defaultHeapProperties,
             D3D12_HEAP_FLAG_NONE,
             &desc,
@@ -601,7 +611,7 @@ namespace
 //--------------------------------------------------------------------------------------
 _Use_decl_annotations_
 HRESULT DirectX::LoadWICTextureFromMemory(
-    ID3D12Device* d3dDevice,
+    ID3D12Device* device,
     const uint8_t* wicData,
     size_t wicDataSize,
     ID3D12Resource** texture,
@@ -610,7 +620,7 @@ HRESULT DirectX::LoadWICTextureFromMemory(
     size_t maxsize) noexcept
 {
     return LoadWICTextureFromMemoryEx(
-        d3dDevice,
+        device,
         wicData,
         wicDataSize,
         maxsize,
@@ -623,7 +633,7 @@ HRESULT DirectX::LoadWICTextureFromMemory(
 
 _Use_decl_annotations_
 HRESULT DirectX::CreateWICTextureFromMemory(
-    ID3D12Device* d3dDevice,
+    ID3D12Device* device,
     ResourceUploadBatch& resourceUpload,
     const uint8_t* wicData,
     size_t wicDataSize,
@@ -632,7 +642,7 @@ HRESULT DirectX::CreateWICTextureFromMemory(
     size_t maxsize)
 {
     return CreateWICTextureFromMemoryEx(
-        d3dDevice,
+        device,
         resourceUpload,
         wicData,
         wicDataSize,
@@ -646,7 +656,7 @@ HRESULT DirectX::CreateWICTextureFromMemory(
 //--------------------------------------------------------------------------------------
 _Use_decl_annotations_
 HRESULT DirectX::LoadWICTextureFromMemoryEx(
-    ID3D12Device* d3dDevice,
+    ID3D12Device* device,
     const uint8_t* wicData,
     size_t wicDataSize,
     size_t maxsize,
@@ -661,7 +671,7 @@ HRESULT DirectX::LoadWICTextureFromMemoryEx(
         *texture = nullptr;
     }
 
-    if (!d3dDevice || !wicData || !texture)
+    if (!device || !wicData || !texture)
         return E_INVALIDARG;
 
     if (!wicDataSize)
@@ -695,7 +705,7 @@ HRESULT DirectX::LoadWICTextureFromMemoryEx(
     if (FAILED(hr))
         return hr;
 
-    hr = CreateTextureFromWIC(d3dDevice,
+    hr = CreateTextureFromWIC(device,
         frame.Get(), maxsize,
         resFlags, loadFlags,
         texture, decodedData, subresource);
@@ -710,7 +720,7 @@ HRESULT DirectX::LoadWICTextureFromMemoryEx(
 
 _Use_decl_annotations_
 HRESULT DirectX::CreateWICTextureFromMemoryEx(
-    ID3D12Device* d3dDevice,
+    ID3D12Device* device,
     ResourceUploadBatch& resourceUpload,
     const uint8_t* wicData,
     size_t wicDataSize,
@@ -724,7 +734,7 @@ HRESULT DirectX::CreateWICTextureFromMemoryEx(
         *texture = nullptr;
     }
 
-    if (!d3dDevice || !wicData || !texture)
+    if (!device || !wicData || !texture)
         return E_INVALIDARG;
 
     if (!wicDataSize)
@@ -770,7 +780,7 @@ HRESULT DirectX::CreateWICTextureFromMemoryEx(
 
     std::unique_ptr<uint8_t[]> decodedData;
     D3D12_SUBRESOURCE_DATA initData;
-    hr = CreateTextureFromWIC(d3dDevice,
+    hr = CreateTextureFromWIC(device,
         frame.Get(), maxsize,
         resFlags, loadFlags,
         texture, decodedData, initData);
@@ -806,7 +816,7 @@ HRESULT DirectX::CreateWICTextureFromMemoryEx(
 //--------------------------------------------------------------------------------------
 _Use_decl_annotations_
 HRESULT DirectX::LoadWICTextureFromFile(
-    ID3D12Device* d3dDevice,
+    ID3D12Device* device,
     const wchar_t* fileName,
     ID3D12Resource** texture,
     std::unique_ptr<uint8_t[]>& wicData,
@@ -814,7 +824,7 @@ HRESULT DirectX::LoadWICTextureFromFile(
     size_t maxsize) noexcept
 {
     return LoadWICTextureFromFileEx(
-        d3dDevice,
+        device,
         fileName,
         maxsize,
         D3D12_RESOURCE_FLAG_NONE,
@@ -826,7 +836,7 @@ HRESULT DirectX::LoadWICTextureFromFile(
 
 _Use_decl_annotations_
 HRESULT DirectX::CreateWICTextureFromFile(
-    ID3D12Device* d3dDevice,
+    ID3D12Device* device,
     ResourceUploadBatch& resourceUpload,
     const wchar_t* fileName,
     ID3D12Resource** texture,
@@ -834,7 +844,7 @@ HRESULT DirectX::CreateWICTextureFromFile(
     size_t maxsize)
 {
     return CreateWICTextureFromFileEx(
-        d3dDevice,
+        device,
         resourceUpload,
         fileName,
         maxsize,
@@ -847,7 +857,7 @@ HRESULT DirectX::CreateWICTextureFromFile(
 //--------------------------------------------------------------------------------------
 _Use_decl_annotations_
 HRESULT DirectX::LoadWICTextureFromFileEx(
-    ID3D12Device* d3dDevice,
+    ID3D12Device* device,
     const wchar_t* fileName,
     size_t maxsize,
     D3D12_RESOURCE_FLAGS resFlags,
@@ -861,7 +871,7 @@ HRESULT DirectX::LoadWICTextureFromFileEx(
         *texture = nullptr;
     }
 
-    if (!d3dDevice || !fileName || !texture)
+    if (!device || !fileName || !texture)
         return E_INVALIDARG;
 
     auto pWIC = GetWIC();
@@ -883,7 +893,7 @@ HRESULT DirectX::LoadWICTextureFromFileEx(
     if (FAILED(hr))
         return hr;
 
-    hr = CreateTextureFromWIC(d3dDevice, frame.Get(), maxsize,
+    hr = CreateTextureFromWIC(device, frame.Get(), maxsize,
         resFlags, loadFlags,
         texture, decodedData, subresource);
 
@@ -897,7 +907,7 @@ HRESULT DirectX::LoadWICTextureFromFileEx(
 
 _Use_decl_annotations_
 HRESULT DirectX::CreateWICTextureFromFileEx(
-    ID3D12Device* d3dDevice,
+    ID3D12Device* device,
     ResourceUploadBatch& resourceUpload,
     const wchar_t* fileName,
     size_t maxsize,
@@ -910,7 +920,7 @@ HRESULT DirectX::CreateWICTextureFromFileEx(
         *texture = nullptr;
     }
 
-    if (!d3dDevice || !fileName || !texture)
+    if (!device || !fileName || !texture)
         return E_INVALIDARG;
 
     auto pWIC = GetWIC();
@@ -944,7 +954,7 @@ HRESULT DirectX::CreateWICTextureFromFileEx(
 
     std::unique_ptr<uint8_t[]> decodedData;
     D3D12_SUBRESOURCE_DATA initData;
-    hr = CreateTextureFromWIC(d3dDevice, frame.Get(), maxsize,
+    hr = CreateTextureFromWIC(device, frame.Get(), maxsize,
         resFlags, loadFlags,
         texture, decodedData, initData);
 
@@ -982,33 +992,33 @@ HRESULT DirectX::CreateWICTextureFromFileEx(
 namespace DirectX
 {
     HRESULT __cdecl LoadWICTextureFromFile(
-        _In_ ID3D12Device* d3dDevice,
+        _In_ ID3D12Device* device,
         _In_z_ const __wchar_t* szFileName,
         _Outptr_ ID3D12Resource** texture,
         std::unique_ptr<uint8_t[]>& decodedData,
         D3D12_SUBRESOURCE_DATA& subresource,
         size_t maxsize) noexcept
     {
-        return LoadWICTextureFromFile(d3dDevice,
+        return LoadWICTextureFromFile(device,
             reinterpret_cast<const unsigned short*>(szFileName),
             texture, decodedData, subresource, maxsize);
     }
 
     HRESULT __cdecl CreateWICTextureFromFile(
-        _In_ ID3D12Device* d3dDevice,
+        _In_ ID3D12Device* device,
         ResourceUploadBatch& resourceUpload,
         _In_z_ const __wchar_t* szFileName,
         _Outptr_ ID3D12Resource** texture,
         bool generateMips,
         size_t maxsize)
     {
-        return CreateWICTextureFromFile(d3dDevice, resourceUpload,
+        return CreateWICTextureFromFile(device, resourceUpload,
             reinterpret_cast<const unsigned short*>(szFileName),
             texture, generateMips, maxsize);
     }
 
     HRESULT __cdecl LoadWICTextureFromFileEx(
-        _In_ ID3D12Device* d3dDevice,
+        _In_ ID3D12Device* device,
         _In_z_ const __wchar_t* szFileName,
         size_t maxsize,
         D3D12_RESOURCE_FLAGS resFlags,
@@ -1017,13 +1027,13 @@ namespace DirectX
         std::unique_ptr<uint8_t[]>& decodedData,
         D3D12_SUBRESOURCE_DATA& subresource) noexcept
     {
-        return LoadWICTextureFromFileEx(d3dDevice,
+        return LoadWICTextureFromFileEx(device,
             reinterpret_cast<const unsigned short*>(szFileName),
             maxsize, resFlags, loadFlags, texture, decodedData, subresource);
     }
 
     HRESULT __cdecl CreateWICTextureFromFileEx(
-        _In_ ID3D12Device* d3dDevice,
+        _In_ ID3D12Device* device,
         ResourceUploadBatch& resourceUpload,
         _In_z_ const __wchar_t* szFileName,
         size_t maxsize,
@@ -1031,7 +1041,7 @@ namespace DirectX
         WIC_LOADER_FLAGS loadFlags,
         _Outptr_ ID3D12Resource** texture)
     {
-        return CreateWICTextureFromFileEx(d3dDevice, resourceUpload,
+        return CreateWICTextureFromFileEx(device, resourceUpload,
             reinterpret_cast<const unsigned short*>(szFileName),
             maxsize, resFlags, loadFlags, texture);
     }

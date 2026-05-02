@@ -22,24 +22,24 @@ namespace
 {
     namespace cs5
     {
-        #include "BC7Encode_EncodeBlockCS.inc"
-        #include "BC7Encode_TryMode02CS.inc"
-        #include "BC7Encode_TryMode137CS.inc"
-        #include "BC7Encode_TryMode456CS.inc"
-        #include "BC6HEncode_EncodeBlockCS.inc"
-        #include "BC6HEncode_TryModeG10CS.inc"
-        #include "BC6HEncode_TryModeLE10CS.inc"
+    #include "BC7Encode_EncodeBlockCS.inc"
+    #include "BC7Encode_TryMode02CS.inc"
+    #include "BC7Encode_TryMode137CS.inc"
+    #include "BC7Encode_TryMode456CS.inc"
+    #include "BC6HEncode_EncodeBlockCS.inc"
+    #include "BC6HEncode_TryModeG10CS.inc"
+    #include "BC6HEncode_TryModeLE10CS.inc"
     }
 
     namespace cs4
     {
-        #include "BC7Encode_EncodeBlockCS_cs40.inc"
-        #include "BC7Encode_TryMode02CS_cs40.inc"
-        #include "BC7Encode_TryMode137CS_cs40.inc"
-        #include "BC7Encode_TryMode456CS_cs40.inc"
-        #include "BC6HEncode_EncodeBlockCS_cs40.inc"
-        #include "BC6HEncode_TryModeG10CS_cs40.inc"
-        #include "BC6HEncode_TryModeLE10CS_cs40.inc"
+    #include "BC7Encode_EncodeBlockCS_cs40.inc"
+    #include "BC7Encode_TryMode02CS_cs40.inc"
+    #include "BC7Encode_TryMode137CS_cs40.inc"
+    #include "BC7Encode_TryMode456CS_cs40.inc"
+    #include "BC6HEncode_EncodeBlockCS_cs40.inc"
+    #include "BC6HEncode_TryModeG10CS_cs40.inc"
+    #include "BC6HEncode_TryModeLE10CS_cs40.inc"
     }
 
     struct BufferBC6HBC7
@@ -101,8 +101,7 @@ GPUCompressBC::GPUCompressBC() noexcept :
     m_bc7_mode137(false),
     m_width(0),
     m_height(0)
-{
-}
+{}
 
 
 //-------------------------------------------------------------------------------------
@@ -264,7 +263,7 @@ HRESULT GPUCompressBC::Prepare(size_t width, size_t height, uint32_t flags, DXGI
     if (sizeInBytes >= UINT32_MAX)
         return HRESULT_E_ARITHMETIC_OVERFLOW;
 
-    auto const bufferSize = static_cast<size_t>(sizeInBytes);
+    const auto bufferSize = static_cast<size_t>(sizeInBytes);
 
     {
         D3D11_BUFFER_DESC desc = {};
@@ -459,7 +458,7 @@ HRESULT GPUCompressBC::Compress(const Image& srcImage, const Image& destImage)
     const size_t xblocks = std::max<size_t>(1, (m_width + 3) >> 2);
     const size_t yblocks = std::max<size_t>(1, (m_height + 3) >> 2);
 
-    auto const num_total_blocks = static_cast<UINT>(xblocks * yblocks);
+    const auto num_total_blocks = static_cast<UINT>(xblocks * yblocks);
     UINT num_blocks = num_total_blocks;
     UINT start_block_id = 0;
     while (num_blocks > 0)

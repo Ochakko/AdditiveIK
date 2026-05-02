@@ -10,7 +10,7 @@ class RenderTarget;
 
 //#include <d3dx12.h>
 //#include "../../DirectXTex/DirectXTex/DirectXTex.h"
-#include "../DirectXTex/DirectXTex/d3dx12.h"
+#include "../DirectXTex/Common/d3dx12.h"
 
 
 /// <summary>

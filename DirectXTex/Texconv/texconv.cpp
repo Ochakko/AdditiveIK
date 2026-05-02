@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -44,7 +45,6 @@
 #include <locale>
 #include <memory>
 #include <new>
-#include <set>
 #include <string>
 #include <tuple>
 
@@ -61,53 +61,66 @@
 #endif
 
 #include "DirectXTex.h"
-
 #include "DirectXPackedVector.h"
-
-//Uncomment to add support for OpenEXR (.exr)
-//#define USE_OPENEXR
 
 #ifdef USE_OPENEXR
 // See <https://github.com/Microsoft/DirectXTex/wiki/Adding-OpenEXR> for details
 #include "DirectXTexEXR.h"
 #endif
 
+// See <https://github.com/Microsoft/DirectXTex/wiki/Using-JPEG-PNG-OSS> for details
+#ifdef USE_LIBJPEG
+#include "DirectXTexJPEG.h"
+#endif
+#ifdef USE_LIBPNG
+#include "DirectXTexPNG.h"
+#endif
+
+#ifdef USE_XBOX_EXTS
+// See <https://github.com/microsoft/DirectXTex/wiki/DirectXTexXbox> for details
+#include "DirectXTexXbox.h"
+#endif
+
+#include <shellapi.h>
+
+#define TOOL_VERSION DIRECTX_TEX_VERSION
+#include "CmdLineHelpers.h"
+
+using namespace Helpers;
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 using Microsoft::WRL::ComPtr;
 
 namespace
 {
+    const wchar_t* g_ToolName = L"texconv";
+#if defined(USE_XBOX_EXTS) && defined(_USE_SCARLETT)
+    const wchar_t* g_Description = L"Microsoft (R) DirectX Texture Converter for Microsoft GDKX for Xbox Series X|S";
+#elif defined(USE_XBOX_EXTS)
+    const wchar_t* g_Description = L"Microsoft (R) DirectX Texture Converter for Microsoft GDKX for Xbox One";
+#else
+    const wchar_t* g_Description = L"Microsoft (R) DirectX Texture Converter [DirectXTex]";
+#endif
+    const wchar_t* g_FeedbackURL = L"https://github.com/microsoft/DirectXTex/issues";
+
     enum OPTIONS : uint64_t
     {
         OPT_RECURSIVE = 1,
-        OPT_FILELIST,
-        OPT_WIDTH,
-        OPT_HEIGHT,
-        OPT_MIPLEVELS,
-        OPT_FORMAT,
-        OPT_FILTER,
-        OPT_SRGBI,
-        OPT_SRGBO,
-        OPT_SRGB,
-        OPT_PREFIX,
-        OPT_SUFFIX,
-        OPT_OUTPUTDIR,
         OPT_TOLOWER,
         OPT_OVERWRITE,
-        OPT_FILETYPE,
         OPT_HFLIP,
         OPT_VFLIP,
         OPT_DDS_DWORD_ALIGN,
         OPT_DDS_BAD_DXTN_TAILS,
         OPT_DDS_PERMISSIVE,
+        OPT_DDS_IGNORE_MIPS,
         OPT_USE_DX10,
         OPT_USE_DX9,
         OPT_TGA20,
         OPT_TGAZEROALPHA,
-        OPT_WIC_QUALITY,
         OPT_WIC_LOSSLESS,
         OPT_WIC_MULTIFRAME,
+        OPT_WIC_UNCOMPRESSED,
         OPT_NOLOGO,
         OPT_TIMING,
         OPT_SEPALPHA,
@@ -122,24 +135,45 @@ namespace
         OPT_FORCE_SINGLEPROC,
         OPT_GPU,
         OPT_NOGPU,
-        OPT_FEATURE_LEVEL,
         OPT_FIT_POWEROF2,
-        OPT_ALPHA_THRESHOLD,
-        OPT_ALPHA_WEIGHT,
         OPT_NORMAL_MAP,
-        OPT_NORMAL_MAP_AMPLITUDE,
-        OPT_BC_COMPRESS,
         OPT_COLORKEY,
         OPT_TONEMAP,
         OPT_X2_BIAS,
         OPT_PRESERVE_ALPHA_COVERAGE,
         OPT_INVERT_Y,
         OPT_RECONSTRUCT_Z,
+        OPT_BCNONMULT4FIX,
+        OPT_IGNORE_SRGB_METADATA,
+    #ifdef USE_XBOX_EXTS
+        OPT_USE_XBOX,
+        OPT_XGMODE,
+    #endif
+        OPT_FLAGS_MAX,
+        OPT_FILELIST,
+        OPT_WIDTH,
+        OPT_HEIGHT,
+        OPT_MIPLEVELS,
+        OPT_FORMAT,
+        OPT_FILTER,
+        OPT_SRGBI,
+        OPT_SRGBO,
+        OPT_SRGB,
+        OPT_PREFIX,
+        OPT_SUFFIX,
+        OPT_OUTPUTDIR,
+        OPT_FILETYPE,
+        OPT_WIC_QUALITY,
+        OPT_FEATURE_LEVEL,
+        OPT_ALPHA_THRESHOLD,
+        OPT_ALPHA_WEIGHT,
+        OPT_NORMAL_MAP_AMPLITUDE,
+        OPT_BC_COMPRESS,
         OPT_ROTATE_COLOR,
         OPT_PAPER_WHITE_NITS,
-        OPT_BCNONMULT4FIX,
         OPT_SWIZZLE,
-        OPT_MAX
+        OPT_VERSION,
+        OPT_HELP,
     };
 
     enum
@@ -158,22 +192,10 @@ namespace
     {
         FORMAT_DXT5_NM = 1,
         FORMAT_DXT5_RXGB,
+        FORMAT_24BPP_LEGACY,
     };
 
-    static_assert(OPT_MAX <= 64, "dwOptions is a unsigned int bitfield");
-
-    struct SConversion
-    {
-        std::wstring szSrc;
-        std::wstring szFolder;
-    };
-
-    template<typename T>
-    struct SValue
-    {
-        const wchar_t*  name;
-        T               value;
-    };
+    static_assert(OPT_FLAGS_MAX <= 64, "dwOptions is a unsigned int bitfield");
 
     const SValue<uint64_t> g_pOptions[] =
     {
@@ -196,19 +218,12 @@ namespace
         { L"hflip",         OPT_HFLIP },
         { L"vflip",         OPT_VFLIP },
         { L"dword",         OPT_DDS_DWORD_ALIGN },
-        { L"badtails",      OPT_DDS_BAD_DXTN_TAILS },
-        { L"permissive",    OPT_DDS_PERMISSIVE },
         { L"dx10",          OPT_USE_DX10 },
         { L"dx9",           OPT_USE_DX9 },
         { L"tga20",         OPT_TGA20 },
-        { L"tgazeroalpha",  OPT_TGAZEROALPHA },
         { L"wicq",          OPT_WIC_QUALITY },
-        { L"wiclossless",   OPT_WIC_LOSSLESS },
-        { L"wicmulti",      OPT_WIC_MULTIFRAME },
         { L"nologo",        OPT_NOLOGO },
-        { L"timing",        OPT_TIMING },
         { L"sepalpha",      OPT_SEPALPHA },
-        { L"keepcoverage",  OPT_PRESERVE_ALPHA_COVERAGE },
         { L"nowic",         OPT_NO_WIC },
         { L"tu",            OPT_TYPELESS_UNORM },
         { L"tf",            OPT_TYPELESS_FLOAT },
@@ -217,7 +232,6 @@ namespace
         { L"xlum",          OPT_EXPAND_LUMINANCE },
         { L"wrap",          OPT_TA_WRAP },
         { L"mirror",        OPT_TA_MIRROR },
-        { L"singleproc",    OPT_FORCE_SINGLEPROC },
         { L"gpu",           OPT_GPU },
         { L"nogpu",         OPT_NOGPU },
         { L"fl",            OPT_FEATURE_LEVEL },
@@ -228,20 +242,95 @@ namespace
         { L"nmapamp",       OPT_NORMAL_MAP_AMPLITUDE },
         { L"bc",            OPT_BC_COMPRESS },
         { L"c",             OPT_COLORKEY },
+        { L"nits",          OPT_PAPER_WHITE_NITS },
+    #ifdef USE_XBOX_EXTS
+        { L"xbox",          OPT_USE_XBOX },
+        { L"xgmode",        OPT_XGMODE },
+    #endif
+
+        // Deprecated options (recommend using new -- alternatives)
+        { L"badtails",      OPT_DDS_BAD_DXTN_TAILS },
+        { L"permissive",    OPT_DDS_PERMISSIVE },
+        { L"ignoremips",    OPT_DDS_IGNORE_MIPS },
+        { L"tgazeroalpha",  OPT_TGAZEROALPHA },
+        { L"wiclossless",   OPT_WIC_LOSSLESS },
+        { L"wicmulti",      OPT_WIC_MULTIFRAME },
+        { L"timing",        OPT_TIMING },
+        { L"keepcoverage",  OPT_PRESERVE_ALPHA_COVERAGE },
+        { L"singleproc",    OPT_FORCE_SINGLEPROC },
         { L"tonemap",       OPT_TONEMAP },
         { L"x2bias",        OPT_X2_BIAS },
         { L"inverty",       OPT_INVERT_Y },
         { L"reconstructz",  OPT_RECONSTRUCT_Z },
         { L"rotatecolor",   OPT_ROTATE_COLOR },
-        { L"nits",          OPT_PAPER_WHITE_NITS },
         { L"fixbc4x4",      OPT_BCNONMULT4FIX },
         { L"swizzle",       OPT_SWIZZLE },
+
         { nullptr,          0 }
+    };
+
+    const SValue<uint64_t> g_pOptionsLong[] =
+    {
+        { L"alpha-threshold",       OPT_ALPHA_THRESHOLD },
+        { L"alpha-weight",          OPT_ALPHA_WEIGHT },
+        { L"bad-tails",             OPT_DDS_BAD_DXTN_TAILS },
+        { L"block-compress",        OPT_BC_COMPRESS },
+        { L"color-key",             OPT_COLORKEY },
+        { L"dword-alignment",       OPT_DDS_DWORD_ALIGN },
+        { L"expand-luminance",      OPT_EXPAND_LUMINANCE },
+        { L"feature-level",         OPT_FEATURE_LEVEL },
+        { L"file-list",             OPT_FILELIST },
+        { L"file-type",             OPT_FILETYPE },
+        { L"fit-power-of-2",        OPT_FIT_POWEROF2 },
+        { L"fix-bc-4x4",            OPT_BCNONMULT4FIX },
+        { L"format",                OPT_FORMAT },
+        { L"height",                OPT_HEIGHT },
+        { L"help",                  OPT_HELP },
+        { L"horizontal-flip",       OPT_HFLIP },
+        { L"ignore-mips",           OPT_DDS_IGNORE_MIPS },
+        { L"ignore-srgb",           OPT_IGNORE_SRGB_METADATA },
+        { L"image-filter",          OPT_FILTER },
+        { L"invert-y",              OPT_INVERT_Y },
+        { L"keep-coverage",         OPT_PRESERVE_ALPHA_COVERAGE },
+        { L"mip-levels",            OPT_MIPLEVELS },
+        { L"normal-map-amplitude",  OPT_NORMAL_MAP_AMPLITUDE },
+        { L"normal-map",            OPT_NORMAL_MAP },
+        { L"overwrite",             OPT_OVERWRITE },
+        { L"paper-white-nits",      OPT_PAPER_WHITE_NITS },
+        { L"permissive",            OPT_DDS_PERMISSIVE },
+        { L"prefix",                OPT_PREFIX },
+        { L"premultiplied-alpha",   OPT_PREMUL_ALPHA },
+        { L"reconstruct-z",         OPT_RECONSTRUCT_Z },
+        { L"rotate-color",          OPT_ROTATE_COLOR },
+        { L"separate-alpha",        OPT_SEPALPHA },
+        { L"single-proc",           OPT_FORCE_SINGLEPROC },
+        { L"srgb-in",               OPT_SRGBI },
+        { L"srgb-out",              OPT_SRGBO },
+        { L"suffix",                OPT_SUFFIX },
+        { L"swizzle",               OPT_SWIZZLE },
+        { L"tga-zero-alpha",        OPT_TGAZEROALPHA },
+        { L"timing",                OPT_TIMING },
+        { L"to-lowercase",          OPT_TOLOWER },
+        { L"tonemap",               OPT_TONEMAP },
+        { L"typeless-unorm",        OPT_TYPELESS_UNORM },
+        { L"typeless-float",        OPT_TYPELESS_FLOAT },
+        { L"version",               OPT_VERSION },
+        { L"vertical-flip",         OPT_VFLIP },
+        { L"wic-lossless",          OPT_WIC_LOSSLESS },
+        { L"wic-multiframe",        OPT_WIC_MULTIFRAME },
+        { L"wic-uncompressed",      OPT_WIC_UNCOMPRESSED },
+        { L"wic-quality",           OPT_WIC_QUALITY },
+        { L"width",                 OPT_WIDTH },
+        { L"x2-bias",               OPT_X2_BIAS },
+    #ifdef USE_XBOX_EXTS
+        { L"xbox-mode",             OPT_XGMODE },
+    #endif
+        { nullptr,                  0 }
     };
 
 #define DEFFMT(fmt) { L## #fmt, DXGI_FORMAT_ ## fmt }
 
-    const SValue<uint32_t> g_pFormats[] =
+    const SValue<DXGI_FORMAT> g_pFormats[] =
     {
         // List does not include _TYPELESS or depth/stencil formats
         DEFFMT(R32G32B32A32_FLOAT),
@@ -328,6 +417,14 @@ namespace
         // D3D11on12 format
         { L"A4B4G4R4_UNORM", DXGI_FORMAT(191) },
 
+    #ifdef USE_XBOX_EXTS
+        // Xbox One extended formats
+        { L"R10G10B10_7E3_A2_FLOAT", DXGI_FORMAT(116) },
+        { L"R10G10B10_6E4_A2_FLOAT", DXGI_FORMAT(117) },
+        { L"R10G10B10_SNORM_A2_UNORM", DXGI_FORMAT(189) },
+        { L"R4G4_UNORM", DXGI_FORMAT(190) },
+    #endif
+
         { nullptr, DXGI_FORMAT_UNKNOWN }
     };
 
@@ -357,11 +454,12 @@ namespace
         { L"BC3n", FORMAT_DXT5_NM },
         { L"DXT5nm", FORMAT_DXT5_NM },
         { L"RXGB", FORMAT_DXT5_RXGB },
+        { L"RGB24", FORMAT_24BPP_LEGACY },
 
         { nullptr, 0 }
     };
 
-    const SValue<uint32_t> g_pReadOnlyFormats[] =
+    const SValue<DXGI_FORMAT> g_pReadOnlyFormats[] =
     {
         DEFFMT(R32G32B32A32_TYPELESS),
         DEFFMT(R32G32B32_TYPELESS),
@@ -407,8 +505,17 @@ namespace
         { L"V208", DXGI_FORMAT(131) },
         { L"V408", DXGI_FORMAT(132) },
 
+    #ifdef USE_XBOX_EXTS
+        // Xbox One extended formats
+        { L"D16_UNORM_S8_UINT", DXGI_FORMAT(118) },
+        { L"R16_UNORM_X8_TYPELESS", DXGI_FORMAT(119) },
+        { L"X16_TYPELESS_G8_UINT", DXGI_FORMAT(120) },
+    #endif
+
         { nullptr, DXGI_FORMAT_UNKNOWN }
     };
+
+#undef DEFFMT
 
     const SValue<uint32_t> g_pFilters[] =
     {
@@ -446,24 +553,39 @@ namespace
         { nullptr, 0 },
     };
 
-#define CODEC_DDS 0xFFFF0001
-#define CODEC_TGA 0xFFFF0002
-#define CODEC_HDP 0xFFFF0003
-#define CODEC_JXR 0xFFFF0004
-#define CODEC_HDR 0xFFFF0005
-#define CODEC_PPM 0xFFFF0006
-#define CODEC_PFM 0xFFFF0007
+    constexpr uint32_t CODEC_DDS = 0xFFFF0001;
+    constexpr uint32_t CODEC_TGA = 0xFFFF0002;
+    constexpr uint32_t CODEC_HDP = 0xFFFF0003;
+    constexpr uint32_t CODEC_JXR = 0xFFFF0004;
+    constexpr uint32_t CODEC_HDR = 0xFFFF0005;
+    constexpr uint32_t CODEC_PPM = 0xFFFF0006;
+    constexpr uint32_t CODEC_PFM = 0xFFFF0007;
 
 #ifdef USE_OPENEXR
-#define CODEC_EXR 0xFFFF0008
+    constexpr uint32_t CODEC_EXR = 0xFFFF0008;
+#endif
+#ifdef USE_LIBJPEG
+    constexpr uint32_t CODEC_JPEG = 0xFFFF0009;
+#endif
+#ifdef USE_LIBPNG
+    constexpr uint32_t CODEC_PNG = 0xFFFF000A;
 #endif
 
     const SValue<uint32_t> g_pSaveFileTypes[] =   // valid formats to write to
     {
         { L"bmp",   WIC_CODEC_BMP  },
+    #ifdef USE_LIBJPEG
+        { L"jpg",   CODEC_JPEG     },
+        { L"jpeg",  CODEC_JPEG     },
+    #else
         { L"jpg",   WIC_CODEC_JPEG },
         { L"jpeg",  WIC_CODEC_JPEG },
+    #endif
+    #ifdef USE_LIBPNG
+        { L"png",   CODEC_PNG      },
+    #else
         { L"png",   WIC_CODEC_PNG  },
+    #endif
         { L"dds",   CODEC_DDS      },
         { L"ddx",   CODEC_DDS      },
         { L"tga",   CODEC_TGA      },
@@ -478,7 +600,6 @@ namespace
     #ifdef USE_OPENEXR
         { L"exr",   CODEC_EXR      },
     #endif
-        { L"heic",  WIC_CODEC_HEIF },
         { L"heif",  WIC_CODEC_HEIF },
         { nullptr,  CODEC_DDS      }
     };
@@ -537,223 +658,12 @@ HRESULT __cdecl SaveToPortablePixMapHDR(
 
 namespace
 {
-    inline HANDLE safe_handle(HANDLE h) noexcept { return (h == INVALID_HANDLE_VALUE) ? nullptr : h; }
-
-    struct find_closer { void operator()(HANDLE h) noexcept { assert(h != INVALID_HANDLE_VALUE); if (h) FindClose(h); } };
-
-    using ScopedFindHandle = std::unique_ptr<void, find_closer>;
-
-    constexpr static bool ispow2(size_t x)
+    constexpr static bool ispow2(size_t x) noexcept
     {
         return ((x != 0) && !(x & (x - 1)));
     }
 
-#ifdef _PREFAST_
-#pragma prefast(disable : 26018, "Only used with static internal arrays")
-#endif
-
-    template<typename T>
-    T LookupByName(const wchar_t *pName, const SValue<T> *pArray)
-    {
-        while (pArray->name)
-        {
-            if (!_wcsicmp(pName, pArray->name))
-                return pArray->value;
-
-            pArray++;
-        }
-
-        return 0;
-    }
-
-    template<typename T>
-    const wchar_t* LookupByValue(T value, const SValue<T> *pArray)
-    {
-        while (pArray->name)
-        {
-            if (value == pArray->value)
-                return pArray->name;
-
-            pArray++;
-        }
-
-        return L"";
-    }
-
-    void SearchForFiles(const std::filesystem::path& path, std::list<SConversion>& files, bool recursive, const wchar_t* folder)
-    {
-        // Process files
-        WIN32_FIND_DATAW findData = {};
-        ScopedFindHandle hFile(safe_handle(FindFirstFileExW(path.c_str(),
-            FindExInfoBasic, &findData,
-            FindExSearchNameMatch, nullptr,
-            FIND_FIRST_EX_LARGE_FETCH)));
-        if (hFile)
-        {
-            for (;;)
-            {
-                if (!(findData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_DIRECTORY)))
-                {
-                    SConversion conv = {};
-                    conv.szSrc = path.parent_path().append(findData.cFileName).native();
-                    if (folder)
-                    {
-                        conv.szFolder = folder;
-                    }
-                    files.push_back(conv);
-                }
-
-                if (!FindNextFileW(hFile.get(), &findData))
-                    break;
-            }
-        }
-
-        // Process directories
-        if (recursive)
-        {
-            auto searchDir = path.parent_path().append(L"*");
-
-            hFile.reset(safe_handle(FindFirstFileExW(searchDir.c_str(),
-                FindExInfoBasic, &findData,
-                FindExSearchLimitToDirectories, nullptr,
-                FIND_FIRST_EX_LARGE_FETCH)));
-            if (!hFile)
-                return;
-
-            for (;;)
-            {
-                if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                {
-                    if (findData.cFileName[0] != L'.')
-                    {
-                        auto subfolder = (folder)
-                            ? (std::wstring(folder) + std::wstring(findData.cFileName) + std::filesystem::path::preferred_separator)
-                            : (std::wstring(findData.cFileName) + std::filesystem::path::preferred_separator);
-
-                        auto subdir = path.parent_path().append(findData.cFileName).append(path.filename().c_str());
-
-                        SearchForFiles(subdir, files, recursive, subfolder.c_str());
-                    }
-                }
-
-                if (!FindNextFileW(hFile.get(), &findData))
-                    break;
-            }
-        }
-    }
-
-    void ProcessFileList(std::wifstream& inFile, std::list<SConversion>& files)
-    {
-        std::list<SConversion> flist;
-        std::set<std::wstring> excludes;
-
-        for (;;)
-        {
-            std::wstring fname;
-            std::getline(inFile, fname);
-            if (!inFile)
-                break;
-
-            if (fname[0] == L'#')
-            {
-                // Comment
-            }
-            else if (fname[0] == L'-')
-            {
-                if (flist.empty())
-                {
-                    wprintf(L"WARNING: Ignoring the line '%ls' in -flist\n", fname.c_str());
-                }
-                else
-                {
-                    std::filesystem::path path(fname.c_str() + 1);
-                    auto& npath = path.make_preferred();
-                    if (wcspbrk(fname.c_str(), L"?*") != nullptr)
-                    {
-                        std::list<SConversion> removeFiles;
-                        SearchForFiles(npath, removeFiles, false, nullptr);
-
-                        for (auto& it : removeFiles)
-                        {
-                            std::wstring name = it.szSrc;
-                            std::transform(name.begin(), name.end(), name.begin(), towlower);
-                            excludes.insert(name);
-                        }
-                    }
-                    else
-                    {
-                        std::wstring name = npath.c_str();
-                        std::transform(name.begin(), name.end(), name.begin(), towlower);
-                        excludes.insert(name);
-                    }
-                }
-            }
-            else if (wcspbrk(fname.c_str(), L"?*") != nullptr)
-            {
-                std::filesystem::path path(fname.c_str());
-                SearchForFiles(path.make_preferred(), flist, false, nullptr);
-            }
-            else
-            {
-                SConversion conv = {};
-                std::filesystem::path path(fname.c_str());
-                conv.szSrc = path.make_preferred().native();
-                flist.push_back(conv);
-            }
-        }
-
-        inFile.close();
-
-        if (!excludes.empty())
-        {
-            // Remove any excluded files
-            for (auto it = flist.begin(); it != flist.end();)
-            {
-                std::wstring name = it->szSrc;
-                std::transform(name.begin(), name.end(), name.begin(), towlower);
-                auto item = it;
-                ++it;
-                if (excludes.find(name) != excludes.end())
-                {
-                    flist.erase(item);
-                }
-            }
-        }
-
-        if (flist.empty())
-        {
-            wprintf(L"WARNING: No file names found in -flist\n");
-        }
-        else
-        {
-            files.splice(files.end(), flist);
-        }
-    }
-
-    void PrintFormat(DXGI_FORMAT Format)
-    {
-        for (auto pFormat = g_pFormats; pFormat->name; pFormat++)
-        {
-            if (static_cast<DXGI_FORMAT>(pFormat->value) == Format)
-            {
-                wprintf(L"%ls", pFormat->name);
-                return;
-            }
-        }
-
-        for (auto pFormat = g_pReadOnlyFormats; pFormat->name; pFormat++)
-        {
-            if (static_cast<DXGI_FORMAT>(pFormat->value) == Format)
-            {
-                wprintf(L"%ls", pFormat->name);
-                return;
-            }
-        }
-
-        wprintf(L"*UNKNOWN*");
-    }
-
-    void PrintInfo(const TexMetadata& info)
+    void PrintInfo(const TexMetadata& info, bool isXbox) noexcept
     {
         wprintf(L" (%zux%zu", info.width, info.height);
 
@@ -767,7 +677,7 @@ namespace
             wprintf(L",%zu", info.arraySize);
 
         wprintf(L" ");
-        PrintFormat(info.format);
+        PrintFormat(info.format, g_pFormats, g_pReadOnlyFormats);
 
         switch (info.dimension)
         {
@@ -809,74 +719,16 @@ namespace
             break;
         }
 
+        if (isXbox)
+        {
+            wprintf(L" Xbox");
+        }
+
         wprintf(L")");
     }
 
-    void PrintList(size_t cch, const SValue<uint32_t> *pValue)
-    {
-        while (pValue->name)
-        {
-            const size_t cchName = wcslen(pValue->name);
-
-            if (cch + cchName + 2 >= 80)
-            {
-                wprintf(L"\n      ");
-                cch = 6;
-            }
-
-            wprintf(L"%ls ", pValue->name);
-            cch += cchName + 2;
-            pValue++;
-        }
-
-        wprintf(L"\n");
-    }
-
-    void PrintLogo(bool versionOnly)
-    {
-        wchar_t version[32] = {};
-
-        wchar_t appName[_MAX_PATH] = {};
-        if (GetModuleFileNameW(nullptr, appName, _MAX_PATH))
-        {
-            const DWORD size = GetFileVersionInfoSizeW(appName, nullptr);
-            if (size > 0)
-            {
-                auto verInfo = std::make_unique<uint8_t[]>(size);
-                if (GetFileVersionInfoW(appName, 0, size, verInfo.get()))
-                {
-                    LPVOID lpstr = nullptr;
-                    UINT strLen = 0;
-                    if (VerQueryValueW(verInfo.get(), L"\\StringFileInfo\\040904B0\\ProductVersion", &lpstr, &strLen))
-                    {
-                        wcsncpy_s(version, reinterpret_cast<const wchar_t*>(lpstr), strLen);
-                    }
-                }
-            }
-        }
-
-        if (!*version || wcscmp(version, L"1.0.0.0") == 0)
-        {
-            swprintf_s(version, L"%03d (library)", DIRECTX_TEX_VERSION);
-        }
-
-        if (versionOnly)
-        {
-            wprintf(L"texconv version %ls\n", version);
-        }
-        else
-        {
-            wprintf(L"Microsoft (R) DirectX Texture Converter [DirectXTex] Version %ls\n", version);
-            wprintf(L"Copyright (C) Microsoft Corp.\n");
-        #ifdef _DEBUG
-            wprintf(L"*** Debug build ***\n");
-        #endif
-            wprintf(L"\n");
-        }
-    }
-
     _Success_(return)
-        bool GetDXGIFactory(_Outptr_ IDXGIFactory1** pFactory)
+        bool GetDXGIFactory(_Outptr_ IDXGIFactory1** pFactory) noexcept
     {
         if (!pFactory)
             return false;
@@ -901,105 +753,132 @@ namespace
         return SUCCEEDED(s_CreateDXGIFactory1(IID_PPV_ARGS(pFactory)));
     }
 
-    void PrintUsage()
+    void PrintUsage(bool full = false) noexcept
     {
-        PrintLogo(false);
+        PrintLogo(false, g_ToolName, g_Description);
 
         static const wchar_t* const s_usage =
-            L"Usage: texconv <options> [--] <files>\n"
-            L"\n"
+            L"Usage: texconv <options> [--] <files>\n\n";
+
+        static const wchar_t* const s_fullUsage =
             L"   -r                  wildcard filename search is recursive\n"
             L"     -r:flatten        flatten the directory structure (default)\n"
             L"     -r:keep           keep the directory structure\n"
-            L"   -flist <filename>   use text file with a list of input files (one per line)\n"
+            L"   -flist <filename>, --file-list <filename>\n"
+            L"                       use text file with a list of input files (one per line)\n"
             L"\n"
-            L"   -w <n>              width\n"
-            L"   -h <n>              height\n"
-            L"   -m <n>              miplevels\n"
-            L"   -f <format>         format\n"
+            L"   -w <n>, --width <n>                     width for output\n"
+            L"   -h <n>, --height <n>                    height for output\n"
+            L"   -m <n>, --mip-levels <n>                miplevels for output\n"
+            L"   -f <format>, --format <format>          pixel format for output\n"
             L"\n"
-            L"   -if <filter>        image filtering\n"
-            L"   -srgb{i|o}          sRGB {input, output}\n"
+            L"   -if <filter>, --image-filter <filter>   image filtering\n"
+            L"   -srgb{i|o}, --srgb-in, --srgb-out       sRGB {input, output}\n"
             L"\n"
-            L"   -px <string>        name prefix\n"
-            L"   -sx <string>        name suffix\n"
-            L"   -o <directory>      output directory\n"
-            L"   -l                  force output filename to lower case\n"
-            L"   -y                  overwrite existing output file (if any)\n"
-            L"   -ft <filetype>      output file type\n"
+            L"   -px <string>, --prefix <string>         name prefix\n"
+            L"   -sx <string>, --suffix <string>         name suffix\n"
+            L"   -o <directory>                          output directory\n"
+            L"   -l, --to-lowercase                      force output filename to lower case\n"
+            L"   -y, --overwrite                         overwrite existing output file (if any)\n"
+            L"   -ft <filetype>, --file-type <filetype>  output file type\n"
             L"\n"
-            L"   -hflip              horizonal flip of source image\n"
-            L"   -vflip              vertical flip of source image\n"
+            L"   -hflip, --horizontal-flip               horizonal flip of source image\n"
+            L"   -vflip, --vertical-flip                 vertical flip of source image\n"
             L"\n"
-            L"   -sepalpha           resize/generate mips alpha channel separately\n"
-            L"                       from color channels\n"
-            L"   -keepcoverage <ref> Preserve alpha coverage in mips for alpha test ref\n"
+            L"   -sepalpha, --separate-alpha   resize/generate mips alpha channel separately from color channels\n"
+            L"   --keep-coverage <ref>         Preserve alpha coverage in mips for alpha test ref\n"
             L"\n"
-            L"   -nowic              Force non-WIC filtering\n"
-            L"   -wrap, -mirror      texture addressing mode (wrap, mirror, or clamp)\n"
-            L"   -pmalpha            convert final texture to use premultiplied alpha\n"
-            L"   -alpha              convert premultiplied alpha to straight alpha\n"
-            L"   -at <threshold>     Alpha threshold used for BC1, RGBA5551, and WIC\n"
-            L"                       (defaults to 0.5)\n"
+            L"   -nowic                             Force non-WIC filtering\n"
+            L"   -wrap, -mirror                     texture addressing mode (wrap, mirror, or clamp)\n"
+            L"   -pmalpha, --premultiplied-alpha    convert final texture to use premultiplied alpha\n"
+            L"   -alpha                             convert premultiplied alpha to straight alpha\n"
+            L"   -at <threshold>, --alpha-threshold <threshold>\n"
+            L"                                      Alpha threshold used for BC1, RGBA5551, and WIC\n"
+            L"                                      (defaults to 0.5)\n"
             L"\n"
-            L"   -fl <feature-level> Set maximum feature level target (defaults to 11.0)\n"
-            L"   -pow2               resize to fit a power-of-2, respecting aspect ratio\n"
+            L"   -fl <feature-level>, --feature-level <feature-level>\n"
+            L"                       Set maximum feature level target (defaults to 11.0)\n"
+            L"   -pow2, --fit-power-of-2\n"
+            L"                       resize to fit a power-of-2, respecting aspect ratio\n"
             L"\n"
-            L"   -nmap <options>     converts height-map to normal-map\n"
+            L"   -nmap <options>, --normal-map <options>\n"
+            L"                       converts height-map to normal-map\n"
             L"                       options must be one or more of\n"
             L"                          r, g, b, a, l, m, u, v, i, o\n"
-            L"   -nmapamp <weight>   normal map amplitude (defaults to 1.0)\n"
+            L"   -nmapamp <weight>, --normal-map-amplitude <weight>\n"
+            L"                       normal map amplitude (defaults to 1.0)\n"
             L"\n"
-            L"                       (DDS input only)\n"
-            L"   -t{u|f}             TYPELESS format is treated as UNORM or FLOAT\n"
-            L"   -dword              Use DWORD instead of BYTE alignment\n"
-            L"   -badtails           Fix for older DXTn with bad mipchain tails\n"
-            L"   -permissive         Allow some DX9 variants with unusual header values\n"
-            L"   -fixbc4x4           Fix for odd-sized BC files that Direct3D can't load\n"
-            L"   -xlum               expand legacy L8, L16, and A8P8 formats\n"
+            L"                                  (DDS input only)\n"
+            L"   -tu, --typeless-unorm          TYPELESS format is treated as UNORM\n"
+            L"   -tf, --typeless-float          TYPELESS format is treated as FLOAT\n"
+            L"   -dword, --dword-alignment      Use DWORD instead of BYTE alignment\n"
+            L"   --bad-tails                    Fix for older DXTn with bad mipchain tails\n"
+            L"   --permissive                   Allow some DX9 variants with unusual header values\n"
+            L"   --ignore-mips                  Reads just the top-level mip which reads some invalid files\n"
+            L"   --fix-bc-4x4                   Fix for odd-sized BC files that Direct3D can't load\n"
+            L"   -xlum, --expand-luminance      Expand legacy L8, L16, and A8P8 formats\n"
             L"\n"
             L"                       (DDS output only)\n"
             L"   -dx10               Force use of 'DX10' extended header\n"
             L"   -dx9                Force use of legacy DX9 header\n"
+        #ifdef USE_XBOX_EXTS
+            L"   -xbox               Tile/swizzle and use 'XBOX' variant of DDS\n"
+            L"   -xgmode <mode>, --xbox-mode <mode>\n"\
+            L"                       Tile/swizzle using provided memory layout mode\n"
+        #endif
+            L"\n"
+            L"                       (PNG, JPG, TIF, TGA input only)\n"
+            L"   --ignore-srgb       Ignores any gamma setting in the metadata\n"
             L"\n"
             L"                       (TGA input only)\n"
-            L"   -tgazeroalpha       Allow all zero alpha channel files to be loaded 'as is'\n"
+            L"   --tga-zero-alpha    Allow all zero alpha channel files to be loaded 'as is'\n"
             L"\n"
             L"                       (TGA output only)\n"
             L"   -tga20              Write file including TGA 2.0 extension area\n"
             L"\n"
-            L"                       (BMP, PNG, JPG, TIF, WDP output only)\n"
-            L"   -wicq <quality>     When writing images with WIC use quality (0.0 to 1.0)\n"
-            L"   -wiclossless        When writing images with WIC use lossless mode\n"
-            L"   -wicmulti           When writing images with WIC encode multiframe images\n"
+            L"                       (BMP, PNG, JPG, TIF, WDP, and HIEF output only)\n"
+            L"   -wicq <quality>, --wic-quality <quality>\n"
+            L"                       When writing images with WIC use quality (0.0 to 1.0)\n"
+            L"   --wic-lossless      When writing images with WIC use lossless mode\n"
+            L"   --wic-uncompressed  When writing images with WIC use uncompressed mode\n"
+            L"   --wic-multiframe    When writing images with WIC encode multiframe images\n"
             L"\n"
             L"   -nologo             suppress copyright message\n"
-            L"   -timing             Display elapsed processing time\n"
+            L"   --timing            display elapsed processing time\n"
             L"\n"
         #ifdef _OPENMP
-            L"   -singleproc         Do not use multi-threaded compression\n"
+            L"   --single-proc       Do not use multi-threaded compression\n"
         #endif
             L"   -gpu <adapter>      Select GPU for DirectCompute-based codecs (0 is default)\n"
             L"   -nogpu              Do not use DirectCompute-based codecs\n"
             L"\n"
-            L"   -bc <options>       Sets options for BC compression\n"
+            L"   -bc <options>, --block-compress <options>\n"
+            L"                       Sets options for BC compression\n"
             L"                       options must be one or more of\n"
             L"                          d, u, q, x\n"
-            L"   -aw <weight>        BC7 GPU compressor weighting for alpha error metric\n"
+            L"   -aw <weight>, --alpha-weight <weight>\n"
+            L"                       BC7 GPU compressor weighting for alpha error metric\n"
             L"                       (defaults to 1.0)\n"
             L"\n"
-            L"   -c <hex-RGB>        colorkey (a.k.a. chromakey) transparency\n"
-            L"   -rotatecolor <rot>  rotates color primaries and/or applies a curve\n"
-            L"   -nits <value>       paper-white value in nits to use for HDR10 (def: 200.0)\n"
-            L"   -tonemap            Apply a tonemap operator based on maximum luminance\n"
-            L"   -x2bias             Enable *2 - 1 conversion cases for unorm/pos-only-float\n"
-            L"   -inverty            Invert Y (i.e. green) channel values\n"
-            L"   -reconstructz       Rebuild Z (blue) channel assuming X/Y are normals\n"
-            L"   -swizzle <rgba>     Swizzle image channels using HLSL-style mask\n"
+            L"   -c <hex-RGB>, --color-key <hex-RGB>    colorkey (a.k.a. chromakey) transparency\n"
+            L"   --rotate-color <rot>                   rotates color primaries and/or applies a curve\n"
+            L"\n"
+            L"   -nits <value>, --paper-white-nits <value>\n"
+            L"                       paper-white value in nits to use for HDR10 (def: 200.0)\n"
+            L"   --tonemap           Apply a tonemap operator based on maximum luminance\n"
+            L"   --x2-bias           Enable *2 - 1 conversion cases for unorm/pos-only-float\n"
+            L"   --invert-y          Invert Y (i.e. green) channel values\n"
+            L"   --reconstruct-z     Rebuild Z (blue) channel assuming X/Y are normals\n"
+            L"   --swizzle <rgba>    Swizzle image channels using HLSL-style mask\n"
             L"\n"
             L"   '-- ' is needed if any input filepath starts with the '-' or '/' character\n";
 
         wprintf(L"%ls", s_usage);
+
+        if (!full)
+            return;
+
+        wprintf(L"%ls", s_fullUsage);
 
         wprintf(L"\n   <format>: ");
         PrintList(13, g_pFormats);
@@ -1039,45 +918,8 @@ namespace
         }
     }
 
-    const wchar_t* GetErrorDesc(HRESULT hr)
-    {
-        static wchar_t desc[1024] = {};
-
-        LPWSTR errorText = nullptr;
-
-        const DWORD result = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-            nullptr, static_cast<DWORD>(hr),
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<LPWSTR>(&errorText), 0, nullptr);
-
-        *desc = 0;
-
-        if (result > 0 && errorText)
-        {
-            swprintf_s(desc, L": %ls", errorText);
-
-            size_t len = wcslen(desc);
-            if (len >= 1)
-            {
-                desc[len - 1] = 0;
-            }
-
-            if (errorText)
-                LocalFree(errorText);
-
-            for (wchar_t* ptr = desc; *ptr != 0; ++ptr)
-            {
-                if (*ptr == L'\r' || *ptr == L'\n')
-                {
-                    *ptr = L' ';
-                }
-            }
-        }
-
-        return desc;
-    }
-
     _Success_(return)
-        bool CreateDevice(int adapter, _Outptr_ ID3D11Device** pDevice)
+        bool CreateDevice(int adapter, _Outptr_ ID3D11Device** pDevice) noexcept
     {
         if (!pDevice)
             return false;
@@ -1174,7 +1016,7 @@ namespace
             return false;
     }
 
-    void FitPowerOf2(size_t origx, size_t origy, _Inout_ size_t& targetx, _Inout_ size_t& targety, size_t maxsize)
+    void FitPowerOf2(size_t origx, size_t origy, _Inout_ size_t& targetx, _Inout_ size_t& targety, size_t maxsize) noexcept
     {
         const float origAR = float(origx) / float(origy);
 
@@ -1300,13 +1142,13 @@ namespace
         0.f,            0.f,           0.f,          1.f
     };
 
-    inline float LinearToST2084(float normalizedLinearValue)
+    inline float LinearToST2084(float normalizedLinearValue) noexcept
     {
         const float ST2084 = pow((0.8359375f + 18.8515625f * pow(abs(normalizedLinearValue), 0.1593017578f)) / (1.0f + 18.6875f * pow(abs(normalizedLinearValue), 0.1593017578f)), 78.84375f);
         return ST2084;  // Don't clamp between [0..1], so we can still perform operations on scene values higher than 10,000 nits
     }
 
-    inline float ST2084ToLinear(float ST2084)
+    inline float ST2084ToLinear(float ST2084) noexcept
     {
         const float normalizedLinear = pow(std::max(pow(abs(ST2084), 1.0f / 78.84375f) - 0.8359375f, 0.0f) / (18.8515625f - 18.6875f * pow(abs(ST2084), 1.0f / 78.84375f)), 1.0f / 0.1593017578f);
         return normalizedLinear;
@@ -1316,7 +1158,7 @@ namespace
         _In_reads_(4) const wchar_t* mask,
         _Out_writes_(4) uint32_t* swizzleElements,
         _Out_writes_(4) uint32_t* zeroElements,
-        _Out_writes_(4) uint32_t* oneElements)
+        _Out_writes_(4) uint32_t* oneElements) noexcept
     {
         if (!mask || !swizzleElements || !zeroElements || !oneElements)
             return false;
@@ -1440,6 +1282,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
     bool keepRecursiveDirs = false;
     bool dxt5nm = false;
     bool dxt5rxgb = false;
+    bool use24bpp = false;
     uint32_t swizzleElements[4] = { 0, 1, 2, 3 };
     uint32_t zeroElements[4] = {};
     uint32_t oneElements[4] = {};
@@ -1460,58 +1303,127 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
     }
 
     // Process command line
+    if (argc < 2)
+    {
+        PrintUsage();
+        return 0;
+    }
+
+    // check for these first
+    if (!_wcsicmp(argv[1], L"help") || !_wcsicmp(argv[1], L"/?"))
+    {
+        PrintUsage(true);
+        return 0;
+    }
+    else if (!_wcsicmp(argv[1], L"feedback"))
+    {
+        std::ignore = ShellExecuteW(nullptr, L"open", g_FeedbackURL, nullptr, nullptr, SW_SHOW);
+        return 0;
+    }
+
     uint64_t dwOptions = 0;
     std::list<SConversion> conversion;
     bool allowOpts = true;
 
-    for (int iArg = 1; iArg < argc; iArg++)
+    for (int iArg = 1; iArg < argc; ++iArg)
     {
         PWSTR pArg = argv[iArg];
 
-        if (allowOpts
-            && ('-' == pArg[0]) && ('-' == pArg[1]))
+        if (allowOpts && (('-' == pArg[0]) || ('/' == pArg[0])))
         {
-            if (pArg[2] == 0)
+            uint64_t dwOption = 0;
+            PWSTR pValue = nullptr;
+
+            if (('-' == pArg[0]) && ('-' == pArg[1]))
             {
-                // "-- " is the POSIX standard for "end of options" marking to escape the '-' and '/' characters at the start of filepaths.
-                allowOpts = false;
-            }
-            else if (!_wcsicmp(pArg,L"--version"))
-            {
-                PrintLogo(true);
-                return 0;
-            }
-            else if (!_wcsicmp(pArg, L"--help"))
-            {
-                PrintUsage();
-                return 0;
+                if (pArg[2] == 0)
+                {
+                    // "-- " is the POSIX standard for "end of options" marking to escape the '-' and '/' characters at the start of filepaths.
+                    allowOpts = false;
+                    continue;
+                }
+                else
+                {
+                    pArg += 2;
+
+                    for (pValue = pArg; *pValue && (':' != *pValue) && ('=' != *pValue); ++pValue);
+
+                    if (*pValue)
+                        *pValue++ = 0;
+
+                    dwOption = LookupByName(pArg, g_pOptionsLong);
+                }
             }
             else
             {
-                wprintf(L"Unknown option: %ls\n", pArg);
-                return 1;
+                pArg++;
+
+                for (pValue = pArg; *pValue && (':' != *pValue) && ('=' != *pValue); ++pValue);
+
+                if (*pValue)
+                    *pValue++ = 0;
+
+                dwOption = LookupByName(pArg, g_pOptions);
+
+                if (!dwOption)
+                {
+                    if (LookupByName(pArg, g_pOptionsLong))
+                    {
+                        wprintf(L"ERROR: did you mean `--%ls` (with two dashes)?\n", pArg);
+                        return 1;
+                    }
+                }
             }
-        }
-        else if (allowOpts
-            && (('-' == pArg[0]) || ('/' == pArg[0])))
-        {
-            pArg++;
-            PWSTR pValue;
 
-            for (pValue = pArg; *pValue && (':' != *pValue); pValue++);
-
-            if (*pValue)
-                *pValue++ = 0;
-
-            const uint64_t dwOption = LookupByName(pArg, g_pOptions);
-
-            if (!dwOption || (dwOptions & (uint64_t(1) << dwOption)))
+            switch (dwOption)
             {
-                PrintUsage();
+            case 0:
+                wprintf(L"ERROR: Unknown option: `%ls`\n\nUse %ls --help\n", pArg, g_ToolName);
                 return 1;
-            }
 
-            dwOptions |= (uint64_t(1) << dwOption);
+            case OPT_FILELIST:
+            case OPT_WIDTH:
+            case OPT_HEIGHT:
+            case OPT_MIPLEVELS:
+            case OPT_FORMAT:
+            case OPT_FILTER:
+            case OPT_SRGBI:
+            case OPT_SRGBO:
+            case OPT_SRGB:
+            case OPT_PREFIX:
+            case OPT_SUFFIX:
+            case OPT_OUTPUTDIR:
+            case OPT_FILETYPE:
+            case OPT_WIC_QUALITY:
+            case OPT_FEATURE_LEVEL:
+            case OPT_ALPHA_THRESHOLD:
+            case OPT_ALPHA_WEIGHT:
+            case OPT_NORMAL_MAP_AMPLITUDE:
+            case OPT_BC_COMPRESS:
+            case OPT_ROTATE_COLOR:
+            case OPT_PAPER_WHITE_NITS:
+            case OPT_SWIZZLE:
+                // These don't use flag bits
+                break;
+
+            case OPT_VERSION:
+                PrintLogo(true, g_ToolName, g_Description);
+                return 0;
+
+            case OPT_HELP:
+                PrintUsage(true);
+                return 0;
+
+            default:
+                if (dwOptions & (UINT64_C(1) << dwOption))
+                {
+                    wprintf(L"ERROR: Duplicate option: `%ls`\n\n", pArg);
+                    return 1;
+                }
+
+                dwOptions |= (UINT64_C(1) << dwOption);
+                break;
+            }
 
             // Handle options with additional value parameter
             switch (dwOption)
@@ -1539,7 +1451,10 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_PAPER_WHITE_NITS:
             case OPT_PRESERVE_ALPHA_COVERAGE:
             case OPT_SWIZZLE:
-                // These support either "-arg:value" or "-arg value"
+            #ifdef USE_XBOX_EXTS
+            case OPT_XGMODE:
+            #endif
+                    // These support either "-arg:value" or "-arg value"
                 if (!*pValue)
                 {
                     if ((iArg + 1 >= argc))
@@ -1559,8 +1474,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_WIDTH:
                 if (swscanf_s(pValue, L"%zu", &width) != 1)
                 {
-                    wprintf(L"Invalid value specified with -w (%ls)\n", pValue);
-                    wprintf(L"\n");
+                    wprintf(L"Invalid value specified with -w (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1579,8 +1493,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_MIPLEVELS:
                 if (swscanf_s(pValue, L"%zu", &mipLevels) != 1)
                 {
-                    wprintf(L"Invalid value specified with -m (%ls)\n", pValue);
-                    wprintf(L"\n");
+                    wprintf(L"Invalid value specified with -m (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1605,9 +1518,13 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                             dxt5rxgb = true;
                             break;
 
+                        case FORMAT_24BPP_LEGACY:
+                            format = DXGI_FORMAT_B8G8R8X8_UNORM;
+                            use24bpp = true;
+                            break;
+
                         default:
-                            wprintf(L"Invalid value specified with -f (%ls)\n", pValue);
-                            wprintf(L"\n");
+                            wprintf(L"Invalid value specified with -f (%ls)\n\n", pValue);
                             PrintUsage();
                             return 1;
                         }
@@ -1619,8 +1536,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 dwFilter = static_cast<TEX_FILTER_FLAGS>(LookupByName(pValue, g_pFilters));
                 if (!dwFilter)
                 {
-                    wprintf(L"Invalid value specified with -if (%ls)\n", pValue);
-                    wprintf(L"\n");
+                    wprintf(L"Invalid value specified with -if (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1630,8 +1546,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 dwRotateColor = LookupByName(pValue, g_pRotateColor);
                 if (!dwRotateColor)
                 {
-                    wprintf(L"Invalid value specified with -rotatecolor (%ls)\n", pValue);
-                    wprintf(L"\n");
+                    wprintf(L"Invalid value specified with -rotatecolor (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1676,15 +1591,14 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 FileType = LookupByName(pValue, g_pSaveFileTypes);
                 if (!FileType)
                 {
-                    wprintf(L"Invalid value specified with -ft (%ls)\n", pValue);
-                    wprintf(L"\n");
+                    wprintf(L"Invalid value specified with -ft (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 break;
 
             case OPT_PREMUL_ALPHA:
-                if (dwOptions & (uint64_t(1) << OPT_DEMUL_ALPHA))
+                if (dwOptions & (UINT64_C(1) << OPT_DEMUL_ALPHA))
                 {
                     wprintf(L"Can't use -pmalpha and -alpha at same time\n\n");
                     PrintUsage();
@@ -1693,7 +1607,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 break;
 
             case OPT_DEMUL_ALPHA:
-                if (dwOptions & (uint64_t(1) << OPT_PREMUL_ALPHA))
+                if (dwOptions & (UINT64_C(1) << OPT_PREMUL_ALPHA))
                 {
                     wprintf(L"Can't use -pmalpha and -alpha at same time\n\n");
                     PrintUsage();
@@ -1818,8 +1732,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 maxSize = LookupByName(pValue, g_pFeatureLevels);
                 if (!maxSize)
                 {
-                    wprintf(L"Invalid value specified with -fl (%ls)\n", pValue);
-                    wprintf(L"\n");
+                    wprintf(L"Invalid value specified with -fl (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
@@ -1828,15 +1741,13 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_ALPHA_THRESHOLD:
                 if (swscanf_s(pValue, L"%f", &alphaThreshold) != 1)
                 {
-                    wprintf(L"Invalid value specified with -at (%ls)\n", pValue);
-                    wprintf(L"\n");
+                    wprintf(L"Invalid value specified with -at (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (alphaThreshold < 0.f)
                 {
-                    wprintf(L"-at (%ls) parameter must be positive\n", pValue);
-                    wprintf(L"\n");
+                    wprintf(L"-at (%ls) parameter must be positive\n\n", pValue);
                     return 1;
                 }
                 break;
@@ -1844,15 +1755,13 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             case OPT_ALPHA_WEIGHT:
                 if (swscanf_s(pValue, L"%f", &alphaWeight) != 1)
                 {
-                    wprintf(L"Invalid value specified with -aw (%ls)\n", pValue);
-                    wprintf(L"\n");
+                    wprintf(L"Invalid value specified with -aw (%ls)\n\n", pValue);
                     PrintUsage();
                     return 1;
                 }
                 else if (alphaWeight < 0.f)
                 {
-                    wprintf(L"-aw (%ls) parameter must be positive\n", pValue);
-                    wprintf(L"\n");
+                    wprintf(L"-aw (%ls) parameter must be positive\n\n", pValue);
                     return 1;
                 }
                 break;
@@ -1929,7 +1838,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 break;
 
             case OPT_USE_DX10:
-                if (dwOptions & (uint64_t(1) << OPT_USE_DX9))
+                if (dwOptions & (UINT64_C(1) << OPT_USE_DX9))
                 {
                     wprintf(L"Can't use -dx9 and -dx10 at same time\n\n");
                     PrintUsage();
@@ -1938,7 +1847,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 break;
 
             case OPT_USE_DX9:
-                if (dwOptions & (uint64_t(1) << OPT_USE_DX10))
+                if (dwOptions & (UINT64_C(1) << OPT_USE_DX10))
                 {
                     wprintf(L"Can't use -dx9 and -dx10 at same time\n\n");
                     PrintUsage();
@@ -2020,13 +1929,47 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     return 1;
                 }
                 break;
+
+            #ifdef USE_XBOX_EXTS
+            case OPT_XGMODE:
+                {
+                #ifdef _USE_SCARLETT
+                    static const SValue<uint32_t> s_pXGModes[] =
+                    {
+                        { L"xboxseriess",  XG_HARDWARE_VERSION_XBOX_SCARLETT_LOCKHART },
+                        { L"xboxseriesx",  XG_HARDWARE_VERSION_XBOX_SCARLETT_ANACONDA },
+                        { nullptr,     0 },
+                    };
+                #else
+                    static const SValue<uint32_t> s_pXGModes[] =
+                    {
+                        { L"xboxone",   XG_HARDWARE_VERSION_XBOX_ONE },
+                        { L"xboxonex",  XG_HARDWARE_VERSION_XBOX_ONE_X },
+                        { L"scorpio",   XG_HARDWARE_VERSION_SCORPIO },
+                        { nullptr,     0 },
+                    };
+                #endif
+
+                    const uint32_t mode = LookupByName(pValue, s_pXGModes);
+                    if (!mode)
+                    {
+                        printf("Invalid value specified with -xgmode (%ls)\n", pValue);
+                        wprintf(L"\n   <mode>: ");
+                        PrintList(14, s_pXGModes);
+                        return 1;
+                    }
+
+                    XGSetHardwareVersion(static_cast<XG_HARDWARE_VERSION>(mode));
+                    break;
+                }
+            #endif // USE_XBOX_EXTS
             }
         }
         else if (wcspbrk(pArg, L"?*") != nullptr)
         {
             const size_t count = conversion.size();
             std::filesystem::path path(pArg);
-            SearchForFiles(path.make_preferred(), conversion, (dwOptions & (uint64_t(1) << OPT_RECURSIVE)) != 0, nullptr);
+            SearchForFiles(path.make_preferred(), conversion, (dwOptions & (UINT64_C(1) << OPT_RECURSIVE)) != 0, nullptr);
             if (conversion.size() <= count)
             {
                 wprintf(L"No matching files found for %ls\n", pArg);
@@ -2048,8 +1991,8 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         return 0;
     }
 
-    if (~dwOptions & (uint64_t(1) << OPT_NOLOGO))
-        PrintLogo(false);
+    if (~dwOptions & (UINT64_C(1) << OPT_NOLOGO))
+        PrintLogo(false, g_ToolName, g_Description);
 
     auto fileTypeName = LookupByValue(FileType, g_pSaveFileTypes);
 
@@ -2102,21 +2045,50 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         }
 
         std::filesystem::path curpath(pConv->szSrc);
-        auto const ext = curpath.extension();
+        const auto ext = curpath.extension();
 
+    #ifndef USE_XBOX_EXTS
+        constexpr
+        #endif
+            bool isXbox = false;
         if (_wcsicmp(ext.c_str(), L".dds") == 0 || _wcsicmp(ext.c_str(), L".ddx") == 0)
         {
-            DDS_FLAGS ddsFlags = DDS_FLAGS_ALLOW_LARGE_FILES;
-            if (dwOptions & (uint64_t(1) << OPT_DDS_DWORD_ALIGN))
-                ddsFlags |= DDS_FLAGS_LEGACY_DWORD;
-            if (dwOptions & (uint64_t(1) << OPT_EXPAND_LUMINANCE))
-                ddsFlags |= DDS_FLAGS_EXPAND_LUMINANCE;
-            if (dwOptions & (uint64_t(1) << OPT_DDS_BAD_DXTN_TAILS))
-                ddsFlags |= DDS_FLAGS_BAD_DXTN_TAILS;
-            if (dwOptions & (uint64_t(1) << OPT_DDS_PERMISSIVE))
-                ddsFlags |= DDS_FLAGS_PERMISSIVE;
+        #ifdef USE_XBOX_EXTS
+            hr = Xbox::GetMetadataFromDDSFile(curpath.c_str(), info, isXbox);
+            if (FAILED(hr))
+            {
+                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                retVal = 1;
+                continue;
+            }
 
-            hr = LoadFromDDSFile(curpath.c_str(), ddsFlags, &info, *image);
+            if (isXbox)
+            {
+                Xbox::XboxImage xbox;
+
+                hr = Xbox::LoadFromDDSFile(curpath.c_str(), &info, xbox);
+                if (SUCCEEDED(hr))
+                {
+                    hr = Xbox::Detile(xbox, *image);
+                }
+            }
+            else
+            #endif // USE_XBOX_EXTS
+            {
+                DDS_FLAGS ddsFlags = DDS_FLAGS_ALLOW_LARGE_FILES;
+                if (dwOptions & (UINT64_C(1) << OPT_DDS_DWORD_ALIGN))
+                    ddsFlags |= DDS_FLAGS_LEGACY_DWORD;
+                if (dwOptions & (UINT64_C(1) << OPT_EXPAND_LUMINANCE))
+                    ddsFlags |= DDS_FLAGS_EXPAND_LUMINANCE;
+                if (dwOptions & (UINT64_C(1) << OPT_DDS_BAD_DXTN_TAILS))
+                    ddsFlags |= DDS_FLAGS_BAD_DXTN_TAILS;
+                if (dwOptions & (UINT64_C(1) << OPT_DDS_PERMISSIVE))
+                    ddsFlags |= DDS_FLAGS_PERMISSIVE;
+                if (dwOptions & (UINT64_C(1) << OPT_DDS_IGNORE_MIPS))
+                    ddsFlags |= DDS_FLAGS_IGNORE_MIPS;
+
+                hr = LoadFromDDSFile(curpath.c_str(), ddsFlags, &info, *image);
+            }
             if (FAILED(hr))
             {
                 wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
@@ -2126,11 +2098,11 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
             if (IsTypeless(info.format))
             {
-                if (dwOptions & (uint64_t(1) << OPT_TYPELESS_UNORM))
+                if (dwOptions & (UINT64_C(1) << OPT_TYPELESS_UNORM))
                 {
                     info.format = MakeTypelessUNORM(info.format);
                 }
-                else if (dwOptions & (uint64_t(1) << OPT_TYPELESS_FLOAT))
+                else if (dwOptions & (UINT64_C(1) << OPT_TYPELESS_FLOAT))
                 {
                     info.format = MakeTypelessFLOAT(info.format);
                 }
@@ -2158,7 +2130,11 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         else if (_wcsicmp(ext.c_str(), L".tga") == 0)
         {
             TGA_FLAGS tgaFlags = (IsBGR(format)) ? TGA_FLAGS_BGR : TGA_FLAGS_NONE;
-            if (dwOptions & (uint64_t(1) << OPT_TGAZEROALPHA))
+            if (dwOptions & (UINT64_C(1) << OPT_IGNORE_SRGB_METADATA))
+            {
+                tgaFlags |= TGA_FLAGS_IGNORE_SRGB;
+            }
+            if (dwOptions & (UINT64_C(1) << OPT_TGAZEROALPHA))
             {
                 tgaFlags |= TGA_FLAGS_ALLOW_ALL_ZERO_ALPHA;
             }
@@ -2191,7 +2167,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 continue;
             }
         }
-        else if (_wcsicmp(ext.c_str(), L".pfm") == 0)
+        else if (_wcsicmp(ext.c_str(), L".pfm") == 0 || _wcsicmp(ext.c_str(), L".phm") == 0)
         {
             hr = LoadFromPortablePixMapHDR(curpath.c_str(), &info, *image);
             if (FAILED(hr))
@@ -2213,6 +2189,42 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             }
         }
     #endif
+    #ifdef USE_LIBJPEG
+        else if (_wcsicmp(ext.c_str(), L".jpg") == 0 || _wcsicmp(ext.c_str(), L".jpeg") == 0)
+        {
+            JPEG_FLAGS jpegFlags = JPEG_FLAGS_NONE;
+            if (dwOptions & (UINT64_C(1) << OPT_IGNORE_SRGB_METADATA))
+            {
+                jpegFlags |= JPEG_FLAGS_DEFAULT_LINEAR;
+            }
+
+            hr = LoadFromJPEGFile(curpath.c_str(), jpegFlags, &info, *image);
+            if (FAILED(hr))
+            {
+                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                retVal = 1;
+                continue;
+            }
+        }
+    #endif
+    #ifdef USE_LIBPNG
+        else if (_wcsicmp(ext.c_str(), L".png") == 0)
+        {
+            PNG_FLAGS pngFlags = (IsBGR(format)) ? PNG_FLAGS_BGR : PNG_FLAGS_NONE;
+            if (dwOptions & (UINT64_C(1) << OPT_IGNORE_SRGB_METADATA))
+            {
+                pngFlags |= PNG_FLAGS_IGNORE_SRGB;
+            }
+
+            hr = LoadFromPNGFile(curpath.c_str(), pngFlags, &info, *image);
+            if (FAILED(hr))
+            {
+                wprintf(L" FAILED (%08X%ls)\n", static_cast<unsigned int>(hr), GetErrorDesc(hr));
+                retVal = 1;
+                continue;
+            }
+        }
+    #endif
         else
         {
             // WIC shares the same filter values for mode and dither
@@ -2225,7 +2237,13 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
             WIC_FLAGS wicFlags = WIC_FLAGS_NONE | dwFilter;
             if (FileType == CODEC_DDS)
+            {
                 wicFlags |= WIC_FLAGS_ALL_FRAMES;
+            }
+            if (dwOptions & (UINT64_C(1) << OPT_IGNORE_SRGB_METADATA))
+            {
+                wicFlags |= WIC_FLAGS_IGNORE_SRGB;
+            }
 
             hr = LoadFromWICFile(curpath.c_str(), wicFlags, &info, *image);
             if (FAILED(hr))
@@ -2240,14 +2258,14 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     }
                     else if (_wcsicmp(ext.c_str(), L".webp") == 0)
                     {
-                        wprintf(L"INFO: This format requires installing the WEBP Image Extensions - https://www.microsoft.com/p/webp-image-extensions/9pg2dk419drg\n");
+                        wprintf(L"INFO: This format requires installing the WEBP Image Extensions - https://apps.microsoft.com/detail/9PG2DK419DRG\n");
                     }
                 }
                 continue;
             }
         }
 
-        PrintInfo(info);
+        PrintInfo(info, isXbox);
 
         size_t tMips = (!mipLevels && info.mipLevels > 1) ? info.mipLevels : mipLevels;
 
@@ -2302,7 +2320,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             // Direct3D can only create BC resources with multiple-of-4 top levels
             if ((info.width % 4) != 0 || (info.height % 4) != 0)
             {
-                if (dwOptions & (uint64_t(1) << OPT_BCNONMULT4FIX))
+                if (dwOptions & (UINT64_C(1) << OPT_BCNONMULT4FIX))
                 {
                     std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
                     if (!timage)
@@ -2406,7 +2424,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         }
 
         // --- Undo Premultiplied Alpha (if requested) ---------------------------------
-        if ((dwOptions & (uint64_t(1) << OPT_DEMUL_ALPHA))
+        if ((dwOptions & (UINT64_C(1) << OPT_DEMUL_ALPHA))
             && HasAlpha(info.format)
             && info.format != DXGI_FORMAT_A8_UNORM)
         {
@@ -2457,7 +2475,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         }
 
         // --- Flip/Rotate -------------------------------------------------------------
-        if (dwOptions & ((uint64_t(1) << OPT_HFLIP) | (uint64_t(1) << OPT_VFLIP)))
+        if (dwOptions & ((UINT64_C(1) << OPT_HFLIP) | (UINT64_C(1) << OPT_VFLIP)))
         {
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
@@ -2468,10 +2486,10 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
             TEX_FR_FLAGS dwFlags = TEX_FR_ROTATE0;
 
-            if (dwOptions & (uint64_t(1) << OPT_HFLIP))
+            if (dwOptions & (UINT64_C(1) << OPT_HFLIP))
                 dwFlags |= TEX_FR_FLIP_HORIZONTAL;
 
-            if (dwOptions & (uint64_t(1) << OPT_VFLIP))
+            if (dwOptions & (UINT64_C(1) << OPT_VFLIP))
                 dwFlags |= TEX_FR_FLIP_VERTICAL;
 
             assert(dwFlags != 0);
@@ -2518,7 +2536,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 sizewarn = true;
         }
 
-        if (dwOptions & (uint64_t(1) << OPT_FIT_POWEROF2))
+        if (dwOptions & (UINT64_C(1) << OPT_FIT_POWEROF2))
         {
             FitPowerOf2(info.width, info.height, twidth, theight, maxSize);
         }
@@ -2890,7 +2908,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         }
 
         // --- Tonemap (if requested) --------------------------------------------------
-        if (dwOptions & uint64_t(1) << OPT_TONEMAP)
+        if (dwOptions & UINT64_C(1) << OPT_TONEMAP)
         {
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
@@ -2970,7 +2988,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         }
 
         // --- Convert -----------------------------------------------------------------
-        if (dwOptions & (uint64_t(1) << OPT_NORMAL_MAP))
+        if (dwOptions & (UINT64_C(1) << OPT_NORMAL_MAP))
         {
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
@@ -3058,7 +3076,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         }
 
         // --- ColorKey/ChromaKey ------------------------------------------------------
-        if ((dwOptions & (uint64_t(1) << OPT_COLORKEY))
+        if ((dwOptions & (UINT64_C(1) << OPT_COLORKEY))
             && HasAlpha(info.format))
         {
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
@@ -3117,7 +3135,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         }
 
         // --- Invert Y Channel --------------------------------------------------------
-        if (dwOptions & (uint64_t(1) << OPT_INVERT_Y))
+        if (dwOptions & (UINT64_C(1) << OPT_INVERT_Y))
         {
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
@@ -3166,7 +3184,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         }
 
         // --- Reconstruct Z Channel ---------------------------------------------------
-        if (dwOptions & (uint64_t(1) << OPT_RECONSTRUCT_Z))
+        if (dwOptions & (UINT64_C(1) << OPT_RECONSTRUCT_Z))
         {
             std::unique_ptr<ScratchImage> timage(new (std::nothrow) ScratchImage);
             if (!timage)
@@ -3428,7 +3446,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
         }
 
         // --- Premultiplied alpha (if requested) --------------------------------------
-        if ((dwOptions & (uint64_t(1) << OPT_PREMUL_ALPHA))
+        if ((dwOptions & (UINT64_C(1) << OPT_PREMUL_ALPHA))
             && HasAlpha(info.format)
             && info.format != DXGI_FORMAT_A8_UNORM)
         {
@@ -3598,7 +3616,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                             {
                                 s_tryonce = true;
 
-                                if (!(dwOptions & (uint64_t(1) << OPT_NOGPU)))
+                                if (!(dwOptions & (UINT64_C(1) << OPT_NOGPU)))
                                 {
                                     if (!CreateDevice(adapter, pDevice.GetAddressOf()))
                                         wprintf(L"\nWARNING: DirectCompute is not available, using BC6H / BC7 CPU codec\n");
@@ -3617,7 +3635,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
 
                     TEX_COMPRESS_FLAGS cflags = dwCompress;
                 #ifdef _OPENMP
-                    if (!(dwOptions & (uint64_t(1) << OPT_FORCE_SINGLEPROC)))
+                    if (!(dwOptions & (UINT64_C(1) << OPT_FORCE_SINGLEPROC)))
                     {
                         cflags |= TEX_COMPRESS_PARALLEL;
                     }
@@ -3677,7 +3695,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             {
                 // Aleady set TEX_ALPHA_MODE_PREMULTIPLIED
             }
-            else if (dwOptions & (uint64_t(1) << OPT_SEPALPHA))
+            else if (dwOptions & (UINT64_C(1) << OPT_SEPALPHA))
             {
                 info.SetAlphaMode(TEX_ALPHA_MODE_CUSTOM);
             }
@@ -3697,7 +3715,12 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             assert(img);
             const size_t nimg = image->GetImageCount();
 
-            PrintInfo(info);
+        #ifdef USE_XBOX_EXTS
+            const bool isXboxOut = ((FileType == CODEC_DDS) && (dwOptions & (UINT64_C(1) << OPT_USE_XBOX))) != 0;
+        #else
+            constexpr bool isXboxOut = false;
+        #endif
+            PrintInfo(info, isXboxOut);
             wprintf(L"\n");
 
             // Figure out dest filename
@@ -3717,7 +3740,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                     continue;
                 }
 
-                auto const err = static_cast<DWORD>(SHCreateDirectoryExW(nullptr, apath.c_str(), nullptr));
+                const auto err = static_cast<DWORD>(SHCreateDirectoryExW(nullptr, apath.c_str(), nullptr));
                 if (err != ERROR_SUCCESS && err != ERROR_ALREADY_EXISTS)
                 {
                     wprintf(L" directory creation FAILED (%08X%ls)\n",
@@ -3740,7 +3763,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             }
 
             std::wstring destName = dest.c_str();
-            if (dwOptions & (uint64_t(1) << OPT_TOLOWER))
+            if (dwOptions & (UINT64_C(1) << OPT_TOLOWER))
             {
                 std::transform(destName.begin(), destName.end(), destName.begin(), towlower);
             }
@@ -3749,7 +3772,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             wprintf(L"writing %ls", destName.c_str());
             fflush(stdout);
 
-            if (~dwOptions & (uint64_t(1) << OPT_OVERWRITE))
+            if (~dwOptions & (UINT64_C(1) << OPT_OVERWRITE))
             {
                 if (GetFileAttributesW(destName.c_str()) != INVALID_FILE_ATTRIBUTES)
                 {
@@ -3762,28 +3785,45 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
             switch (FileType)
             {
             case CODEC_DDS:
+            #ifdef USE_XBOX_EXTS
+                if (isXboxOut)
+                {
+                    Xbox::XboxImage xbox;
+
+                    hr = Xbox::Tile(img, nimg, info, xbox);
+                    if (SUCCEEDED(hr))
+                    {
+                        hr = Xbox::SaveToDDSFile(xbox, destName.c_str());
+                    }
+                }
+                else
+                #endif // USE_XBOX_EXTS
                 {
                     DDS_FLAGS ddsFlags = DDS_FLAGS_NONE;
-                    if (dwOptions & (uint64_t(1) << OPT_USE_DX10))
+                    if (dwOptions & (UINT64_C(1) << OPT_USE_DX10))
                     {
                         ddsFlags |= DDS_FLAGS_FORCE_DX10_EXT | DDS_FLAGS_FORCE_DX10_EXT_MISC2;
                     }
-                    else if (dwOptions & (uint64_t(1) << OPT_USE_DX9))
+                    else if (dwOptions & (UINT64_C(1) << OPT_USE_DX9))
                     {
                         if (dxt5rxgb)
                         {
                             ddsFlags |= DDS_FLAGS_FORCE_DXT5_RXGB;
+                        }
+                        else if (use24bpp)
+                        {
+                            ddsFlags |= DDS_FLAGS_FORCE_24BPP_RGB;
                         }
 
                         ddsFlags |= DDS_FLAGS_FORCE_DX9_LEGACY;
                     }
 
                     hr = SaveToDDSFile(img, nimg, info, ddsFlags, destName.c_str());
-                    break;
                 }
+                break;
 
             case CODEC_TGA:
-                hr = SaveToTGAFile(img[0], TGA_FLAGS_NONE, destName.c_str(), (dwOptions & (uint64_t(1) << OPT_TGA20)) ? &info : nullptr);
+                hr = SaveToTGAFile(img[0], TGA_FLAGS_NONE, destName.c_str(), (dwOptions & (UINT64_C(1) << OPT_TGA20)) ? &info : nullptr);
                 break;
 
             case CODEC_HDR:
@@ -3803,26 +3843,38 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                 hr = SaveToEXRFile(img[0], destName.c_str());
                 break;
             #endif
+            #ifdef USE_LIBJPEG
+            case CODEC_JPEG:
+                hr = SaveToJPEGFile(img[0], JPEG_FLAGS_NONE, destName.c_str());
+                break;
+            #endif
+            #ifdef USE_LIBPNG
+            case CODEC_PNG:
+                hr = SaveToPNGFile(img[0], PNG_FLAGS_NONE, destName.c_str());
+                break;
+            #endif
 
             default:
                 {
                     const WICCodecs codec = (FileType == CODEC_HDP || FileType == CODEC_JXR) ? WIC_CODEC_WMP : static_cast<WICCodecs>(FileType);
-                    const size_t nimages = (dwOptions & (uint64_t(1) << OPT_WIC_MULTIFRAME)) ? nimg : 1;
+                    const size_t nimages = (dwOptions & (UINT64_C(1) << OPT_WIC_MULTIFRAME)) ? nimg : 1;
                     hr = SaveToWICFile(img, nimages, WIC_FLAGS_NONE, GetWICCodec(codec), destName.c_str(), nullptr,
                         [&](IPropertyBag2* props)
                         {
-                            const bool wicLossless = (dwOptions & (uint64_t(1) << OPT_WIC_LOSSLESS)) != 0;
+                            const bool lossless = (dwOptions & (UINT64_C(1) << OPT_WIC_LOSSLESS)) != 0;
+                            const bool uncompressed = (dwOptions & (UINT64_C(1) << OPT_WIC_UNCOMPRESSED)) != 0;
 
                             switch (FileType)
                             {
+                            default:
                             case WIC_CODEC_JPEG:
-                                if (wicLossless || wicQuality >= 0.f)
+                                if (wicQuality >= 0.f)
                                 {
                                     PROPBAG2 options = {};
                                     VARIANT varValues = {};
                                     options.pstrName = const_cast<wchar_t*>(L"ImageQuality");
                                     varValues.vt = VT_R4;
-                                    varValues.fltVal = (wicLossless) ? 1.f : wicQuality;
+                                    varValues.fltVal = wicQuality;
                                     std::ignore = props->Write(1, &options, &varValues);
                                 }
                                 break;
@@ -3831,7 +3883,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                                 {
                                     PROPBAG2 options = {};
                                     VARIANT varValues = {};
-                                    if (wicLossless)
+                                    if (uncompressed)
                                     {
                                         options.pstrName = const_cast<wchar_t*>(L"TiffCompressionMethod");
                                         varValues.vt = VT_UI1;
@@ -3847,13 +3899,37 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
                                 }
                                 break;
 
+                            case WIC_CODEC_HEIF:
+                                {
+                                    PROPBAG2 options = {};
+                                    VARIANT varValues = {};
+                                    if (uncompressed)
+                                    {
+                                        options.pstrName = const_cast<wchar_t*>(L"HeifCompressionMethod");
+                                        varValues.vt = VT_UI1;
+                                    #if defined(NTDDI_WIN10_CU) && !defined(__MINGW32__)
+                                        varValues.bVal = WICHeifCompressionNone;
+                                    #else
+                                        varValues.bVal = 0x1 /* WICHeifCompressionNone */;
+                                    #endif
+                                    }
+                                    else if (wicQuality >= 0.f)
+                                    {
+                                        options.pstrName = const_cast<wchar_t*>(L"ImageQuality");
+                                        varValues.vt = VT_R4;
+                                        varValues.fltVal = wicQuality;
+                                    }
+                                    std::ignore = props->Write(1, &options, &varValues);
+                                }
+                                break;
+
                             case WIC_CODEC_WMP:
                             case CODEC_HDP:
                             case CODEC_JXR:
                                 {
                                     PROPBAG2 options = {};
                                     VARIANT varValues = {};
-                                    if (wicLossless)
+                                    if (lossless)
                                     {
                                         options.pstrName = const_cast<wchar_t*>(L"Lossless");
                                         varValues.vt = VT_BOOL;
@@ -3902,7 +3978,7 @@ int __cdecl wmain(_In_ int argc, _In_z_count_(argc) wchar_t* argv[])
     if (non4bc)
         wprintf(L"\nWARNING: Direct3D requires BC image to be multiple of 4 in width & height\n");
 
-    if (dwOptions & (uint64_t(1) << OPT_TIMING))
+    if (dwOptions & (UINT64_C(1) << OPT_TIMING))
     {
         LARGE_INTEGER qpcEnd = {};
         std::ignore = QueryPerformanceCounter(&qpcEnd);

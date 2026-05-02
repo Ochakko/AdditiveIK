@@ -200,14 +200,14 @@ namespace
     {
         static const D3D12_INPUT_ELEMENT_DESC s_elements[] =
         {
-           { "SV_Position",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-           { "NORMAL",       0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-           { "COLOR",        0, DXGI_FORMAT_B8G8R8A8_UNORM,  0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-           { "TANGENT",      0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-           { "BINORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-           { "TEXCOORD",     0, DXGI_FORMAT_R32G32_FLOAT,    0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-           { "BLENDINDICES", 0, DXGI_FORMAT_R8G8B8A8_UINT,   0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-           { "BLENDWEIGHT",  0, DXGI_FORMAT_R8G8B8A8_UNORM,  0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "SV_Position",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "NORMAL",       0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "COLOR",        0, DXGI_FORMAT_B8G8R8A8_UNORM,  0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TANGENT",      0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "BINORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD",     0, DXGI_FORMAT_R32G32_FLOAT,    0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "BLENDINDICES", 0, DXGI_FORMAT_R8G8B8A8_UINT,   0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+            { "BLENDWEIGHT",  0, DXGI_FORMAT_R8G8B8A8_UNORM,  0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         };
 
         using namespace DXUT;
@@ -376,7 +376,7 @@ namespace
 //======================================================================================
 
 _Use_decl_annotations_
-std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
+std::unique_ptr<Model> Model::CreateFromSDKMESH(
     ID3D12Device* device,
     const uint8_t* meshData,
     size_t idataSize,
@@ -392,9 +392,9 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
         throw std::runtime_error("End of file");
     auto header = reinterpret_cast<const DXUT::SDKMESH_HEADER*>(meshData);
 
-    const size_t headerSize = sizeof(DXUT::SDKMESH_HEADER)
-        + header->NumVertexBuffers * sizeof(DXUT::SDKMESH_VERTEX_BUFFER_HEADER)
-        + header->NumIndexBuffers * sizeof(DXUT::SDKMESH_INDEX_BUFFER_HEADER);
+    const uint64_t headerSize = sizeof(DXUT::SDKMESH_HEADER)
+        + uint64_t(header->NumVertexBuffers) * sizeof(DXUT::SDKMESH_VERTEX_BUFFER_HEADER)
+        + uint64_t(header->NumIndexBuffers) * sizeof(DXUT::SDKMESH_INDEX_BUFFER_HEADER);
     if (header->HeaderSize != headerSize)
         throw std::runtime_error("Not a valid SDKMESH file");
 
@@ -423,31 +423,51 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
         throw std::runtime_error("No materials found");
 
     // Sub-headers
+    uint64_t sizeBytes = uint64_t(header->NumVertexBuffers) * sizeof(DXUT::SDKMESH_VERTEX_BUFFER_HEADER);
+    if (sizeBytes > UINT32_MAX)
+        throw std::overflow_error("Too many vertex buffers");
+
     if (dataSize < header->VertexStreamHeadersOffset
-        || (dataSize < (header->VertexStreamHeadersOffset + uint64_t(header->NumVertexBuffers) * sizeof(DXUT::SDKMESH_VERTEX_BUFFER_HEADER))))
+        || (dataSize < (header->VertexStreamHeadersOffset + sizeBytes)))
         throw std::runtime_error("End of file");
     auto vbArray = reinterpret_cast<const DXUT::SDKMESH_VERTEX_BUFFER_HEADER*>(meshData + header->VertexStreamHeadersOffset);
 
+    sizeBytes = uint64_t(header->NumIndexBuffers) * sizeof(DXUT::SDKMESH_INDEX_BUFFER_HEADER);
+    if (sizeBytes > UINT32_MAX)
+        throw std::runtime_error("Too many index buffers");
+
     if (dataSize < header->IndexStreamHeadersOffset
-        || (dataSize < (header->IndexStreamHeadersOffset + uint64_t(header->NumIndexBuffers) * sizeof(DXUT::SDKMESH_INDEX_BUFFER_HEADER))))
+        || (dataSize < (header->IndexStreamHeadersOffset + sizeBytes)))
         throw std::runtime_error("End of file");
     auto ibArray = reinterpret_cast<const DXUT::SDKMESH_INDEX_BUFFER_HEADER*>(meshData + header->IndexStreamHeadersOffset);
 
+    sizeBytes = uint64_t(header->NumMeshes) * sizeof(DXUT::SDKMESH_MESH);
+    if (sizeBytes > UINT32_MAX)
+        throw std::runtime_error("Too many meshes");
+
     if (dataSize < header->MeshDataOffset
-        || (dataSize < (header->MeshDataOffset + uint64_t(header->NumMeshes) * sizeof(DXUT::SDKMESH_MESH))))
+        || (dataSize < (header->MeshDataOffset + sizeBytes)))
         throw std::runtime_error("End of file");
     auto meshArray = reinterpret_cast<const DXUT::SDKMESH_MESH*>(meshData + header->MeshDataOffset);
 
+    sizeBytes = uint64_t(header->NumTotalSubsets) * sizeof(DXUT::SDKMESH_SUBSET);
+    if (sizeBytes > UINT32_MAX)
+        throw std::runtime_error("Too many subsets");
+
     if (dataSize < header->SubsetDataOffset
-        || (dataSize < (header->SubsetDataOffset + uint64_t(header->NumTotalSubsets) * sizeof(DXUT::SDKMESH_SUBSET))))
+        || (dataSize < (header->SubsetDataOffset + sizeBytes)))
         throw std::runtime_error("End of file");
     auto subsetArray = reinterpret_cast<const DXUT::SDKMESH_SUBSET*>(meshData + header->SubsetDataOffset);
 
     const DXUT::SDKMESH_FRAME* frameArray = nullptr;
     if (header->NumFrames > 0)
     {
+        sizeBytes = uint64_t(header->NumFrames) * sizeof(DXUT::SDKMESH_FRAME);
+        if (sizeBytes > UINT32_MAX)
+            throw std::runtime_error("Too many frames");
+
         if (dataSize < header->FrameDataOffset
-            || (dataSize < (header->FrameDataOffset + uint64_t(header->NumFrames) * sizeof(DXUT::SDKMESH_FRAME))))
+            || (dataSize < (header->FrameDataOffset + sizeBytes)))
             throw std::runtime_error("End of file");
 
         if (flags & ModelLoader_IncludeBones)
@@ -456,8 +476,12 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
         }
     }
 
+    sizeBytes = uint64_t(header->NumMaterials) * sizeof(DXUT::SDKMESH_MATERIAL);
+    if (sizeBytes > UINT32_MAX)
+        throw std::runtime_error("Too many materials");
+
     if (dataSize < header->MaterialDataOffset
-        || (dataSize < (header->MaterialDataOffset + uint64_t(header->NumMaterials) * sizeof(DXUT::SDKMESH_MATERIAL))))
+        || (dataSize < (header->MaterialDataOffset + sizeBytes)))
         throw std::runtime_error("End of file");
 
     const DXUT::SDKMESH_MATERIAL* materialArray = nullptr;
@@ -574,8 +598,12 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
 
         // mh.NumVertexBuffers is sometimes not what you'd expect, so we skip validating it
 
+        sizeBytes = uint64_t(mh.NumSubsets) * sizeof(uint32_t);
+        if (sizeBytes >= UINT32_MAX)
+            throw std::runtime_error("Too many subsets");
+
         if (dataSize < mh.SubsetOffset
-            || (dataSize < mh.SubsetOffset + uint64_t(mh.NumSubsets) * sizeof(uint32_t)))
+            || (dataSize < mh.SubsetOffset + sizeBytes))
             throw std::runtime_error("End of file");
 
         auto subsets = reinterpret_cast<const uint32_t*>(meshData + mh.SubsetOffset);
@@ -583,8 +611,12 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
         const uint32_t* influences = nullptr;
         if (mh.NumFrameInfluences > 0)
         {
+            sizeBytes = uint64_t(mh.NumFrameInfluences) * sizeof(uint32_t);
+            if (sizeBytes >= UINT32_MAX)
+                throw std::runtime_error("Too many frame influences");
+
             if (dataSize < mh.FrameInfluenceOffset
-                || (dataSize < mh.FrameInfluenceOffset + uint64_t(mh.NumFrameInfluences) * sizeof(uint32_t)))
+                || (dataSize < mh.FrameInfluenceOffset + sizeBytes))
                 throw std::runtime_error("End of file");
 
             if (flags & ModelLoader_IncludeBones)
@@ -613,7 +645,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
         // Create subsets
         for (size_t j = 0; j < mh.NumSubsets; ++j)
         {
-            auto const sIndex = subsets[j];
+            const auto sIndex = subsets[j];
             if (sIndex >= header->NumTotalSubsets)
                 throw std::out_of_range("Invalid mesh found");
 
@@ -664,7 +696,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
                     (flags & ModelLoader_MaterialColorsSRGB) != 0);
             }
 
-            auto part = new ModelMeshPart(partCount++);
+            auto part = std::make_unique<ModelMeshPart>(partCount++);
 
             const auto& vh = vbArray[mh.VertexBuffers[0]];
             const auto& ih = ibArray[mh.IndexBuffer];
@@ -679,14 +711,14 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
 
             // Vertex data
             auto verts = bufferData + (vh.DataOffset - bufferDataOffset);
-            auto const vbytes = static_cast<size_t>(vh.SizeBytes);
+            const auto vbytes = static_cast<size_t>(vh.SizeBytes);
             part->vertexBufferSize = static_cast<uint32_t>(vh.SizeBytes);
             part->vertexBuffer = GraphicsMemory::Get(device).Allocate(vbytes, 16, GraphicsMemory::TAG_VERTEX);
             memcpy(part->vertexBuffer.Memory(), verts, vbytes);
 
             // Index data
             auto indices = bufferData + (ih.DataOffset - bufferDataOffset);
-            auto const ibytes = static_cast<size_t>(ih.SizeBytes);
+            const auto ibytes = static_cast<size_t>(ih.SizeBytes);
             part->indexBufferSize = static_cast<uint32_t>(ih.SizeBytes);
             part->indexBuffer = GraphicsMemory::Get(device).Allocate(ibytes, 16, GraphicsMemory::TAG_INDEX);
             memcpy(part->indexBuffer.Memory(), indices, ibytes);
@@ -695,9 +727,9 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
             part->vbDecl = vbDecls[mh.VertexBuffers[0]];
 
             if (mat.alphaValue < 1.0f)
-                mesh->alphaMeshParts.emplace_back(part);
+                mesh->alphaMeshParts.emplace_back(std::move(part));
             else
-                mesh->opaqueMeshParts.emplace_back(part);
+                mesh->opaqueMeshParts.emplace_back(std::move(part));
         }
 
         model->meshes.emplace_back(mesh);
@@ -772,7 +804,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
 
 //--------------------------------------------------------------------------------------
 _Use_decl_annotations_
-std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
+std::unique_ptr<Model> Model::CreateFromSDKMESH(
     ID3D12Device* device,
     const wchar_t* szFileName,
     ModelLoaderFlags flags)
@@ -801,7 +833,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
 #if defined(_MSC_VER) && !defined(_NATIVE_WCHAR_T_DEFINED)
 
 _Use_decl_annotations_
-std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
+std::unique_ptr<Model> Model::CreateFromSDKMESH(
     ID3D12Device* device,
     const __wchar_t* szFileName,
     ModelLoaderFlags flags)

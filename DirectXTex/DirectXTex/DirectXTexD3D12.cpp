@@ -88,6 +88,9 @@ namespace
                 res.SlicePitch = res.RowPitch * static_cast<PT>(height);
             }
             break;
+
+        default:
+            break;
         }
     }
 
@@ -134,11 +137,11 @@ namespace
         }
 
         if (!pCommandQ || !pSource || !pStaging)
-            return E_INVALIDARG;
+            return E_POINTER;
 
         numberOfPlanes = D3D12GetFormatPlaneCount(device, desc.Format);
         if (!numberOfPlanes)
-            return E_INVALIDARG;
+            return E_UNEXPECTED;
 
         if ((numberOfPlanes > 1) && IsDepthStencil(desc.Format))
         {
@@ -214,8 +217,11 @@ namespace
         bufferDesc.SampleDesc.Count = 1;
 
         ComPtr<ID3D12Resource> copySource(pSource);
+        D3D12_RESOURCE_STATES beforeStateSource = beforeState;
         if (desc.SampleDesc.Count > 1)
         {
+            TransitionResource(commandList.Get(), pSource, beforeState, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
+
             // MSAA content must be resolved before being copied to a staging texture
             auto descCopy = desc;
             descCopy.SampleDesc.Count = 1;
@@ -227,7 +233,7 @@ namespace
                 &defaultHeapProperties,
                 D3D12_HEAP_FLAG_NONE,
                 &descCopy,
-                D3D12_RESOURCE_STATE_COPY_DEST,
+                D3D12_RESOURCE_STATE_RESOLVE_DEST,
                 nullptr,
                 IID_GRAPHICS_PPV_ARGS(pTemp.GetAddressOf()));
             if (FAILED(hr))
@@ -264,6 +270,11 @@ namespace
             }
 
             copySource = pTemp;
+            beforeState = D3D12_RESOURCE_STATE_RESOLVE_DEST;
+        }
+        else
+        {
+            beforeStateSource = D3D12_RESOURCE_STATE_COPY_SOURCE;
         }
 
         // Create a staging texture
@@ -280,7 +291,7 @@ namespace
         assert(*pStaging);
 
         // Transition the resource if necessary
-        TransitionResource(commandList.Get(), pSource, beforeState, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        TransitionResource(commandList.Get(), copySource.Get(), beforeState, D3D12_RESOURCE_STATE_COPY_SOURCE);
 
         // Get the copy target location
         for (UINT j = 0; j < numberOfResources; ++j)
@@ -290,8 +301,8 @@ namespace
             commandList->CopyTextureRegion(&copyDest, 0, 0, 0, &copySrc, nullptr);
         }
 
-        // Transition the resource to the next state
-        TransitionResource(commandList.Get(), pSource, D3D12_RESOURCE_STATE_COPY_SOURCE, afterState);
+        // Transition the source resource to the next state
+        TransitionResource(commandList.Get(), pSource, beforeStateSource, afterState);
 
         hr = commandList->Close();
         if (FAILED(hr))
@@ -577,7 +588,7 @@ HRESULT DirectX::PrepareUpload(
 
     const UINT numberOfPlanes = D3D12GetFormatPlaneCount(pDevice, metadata.format);
     if (!numberOfPlanes)
-        return E_INVALIDARG;
+        return E_UNEXPECTED;
 
     if ((numberOfPlanes > 1) && IsDepthStencil(metadata.format))
     {
@@ -727,10 +738,10 @@ HRESULT DirectX::CaptureTexture(
     pCommandQueue->GetDevice(IID_GRAPHICS_PPV_ARGS(device.GetAddressOf()));
 
 #if defined(_MSC_VER) || !defined(_WIN32)
-    auto const desc = pSource->GetDesc();
+    const auto desc = pSource->GetDesc();
 #else
     D3D12_RESOURCE_DESC tmpDesc;
-    auto const& desc = *pSource->GetDesc(&tmpDesc);
+    const auto& desc = *pSource->GetDesc(&tmpDesc);
 #endif
 
     ComPtr<ID3D12Resource> pStaging;
