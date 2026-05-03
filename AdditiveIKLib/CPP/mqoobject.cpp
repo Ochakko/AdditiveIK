@@ -3516,6 +3516,9 @@ int CMQOObject::ChkInView(ChaMatrix matWorld, ChaMatrix matVP, int refposindex)
 	else if (strstr(GetName(), "LOD2") != 0) {
 		lodno = CHKINVIEW_LOD2;
 	}
+	else if (strstr(GetName(), "LOD3") != 0) {
+		lodno = CHKINVIEW_LOD3;
+	}
 
 	m_frustum[refposindex].ChkInView(GetLODNum(), lodno, srcmb, chkmatworld);
 

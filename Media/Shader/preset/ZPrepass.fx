@@ -81,7 +81,7 @@ cbuffer ModelCbMatrix : register(b1)
     float4 toonlightdir;
     float4 vFog;
     float4 vFogColor;
-    float4x4 mBoneMat[1000];
+    float4x4 mBoneMat[10000];
 };
 
 

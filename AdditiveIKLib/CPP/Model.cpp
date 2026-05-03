@@ -6903,20 +6903,20 @@ int CModel::SetMaterialTexNames(int textype, CMQOMaterial* newmqomat, char* temp
 	newmqomat->SetUVOffset(chauvoffset);//2024/03/05
 
 
-	if (emissiveflag && (newmqomat->GetEmissiveTex() && !(newmqomat->GetEmissiveTex()[0]))) {
+	if ((emissiveflag || (strstr(temptexname, "_E.") != 0)) && (newmqomat->GetEmissiveTex() && !(newmqomat->GetEmissiveTex()[0]))) {
 		//2024/06/14 emissive texture
 		newmqomat->SetEmissiveTex(temptexname);
 		newmqomat->SetAddressU_emissive(addressU);
 		newmqomat->SetAddressV_emissive(addressV);
 	}
 	else if ((newmqomat->GetNormalTex() && !(newmqomat->GetNormalTex()[0])) &&
-		(strstr(temptexname, "normal") != 0) || (strstr(temptexname, "Normal") != 0)) {
+		((strstr(temptexname, "normal") != 0) || (strstr(temptexname, "Normal") != 0) || (strstr(temptexname, "_N.") != 0))) {
 		newmqomat->SetNormalTex(temptexname);
 		newmqomat->SetAddressU_normal(addressU);
 		newmqomat->SetAddressV_normal(addressV);
 	}
 	else if ((newmqomat->GetMetalTex() && !(newmqomat->GetMetalTex()[0])) &&
-		(strstr(temptexname, "metal") != 0) || (strstr(temptexname, "Metal") != 0)) {
+		((strstr(temptexname, "metal") != 0) || (strstr(temptexname, "Metal") != 0) || (strstr(temptexname, "_MTM.") != 0))) {
 		newmqomat->SetMetalTex(temptexname);
 		newmqomat->SetAddressU_metal(addressU);
 		newmqomat->SetAddressV_metal(addressV);
@@ -6924,8 +6924,8 @@ int CModel::SetMaterialTexNames(int textype, CMQOMaterial* newmqomat, char* temp
 
 	//2025/06/28 if文順番変更　テクスチャファイル名にAlbedo_Normal, Albedo_Metalicと付くものがあるので　albedo判定はNormal,Metalよりも後でする
 	else if ((newmqomat->GetAlbedoTex() && !(newmqomat->GetAlbedoTex()[0])) &&
-		(strstr(temptexname, "albedo") != 0) || (strstr(temptexname, "Albedo") != 0) ||
-		(strstr(temptexname, "_Base") != 0)) {
+		((strstr(temptexname, "albedo") != 0) || (strstr(temptexname, "Albedo") != 0) ||
+		(strstr(temptexname, "_Base") != 0) || (strstr(temptexname, "_BC.") != 0))) {
 		newmqomat->SetAlbedoTex(temptexname);
 		newmqomat->SetAddressU_albedo(addressU);
 		newmqomat->SetAddressV_albedo(addressV);
@@ -23612,7 +23612,8 @@ int CModel::ChkInView(int refposindex)
 		for (int objindex = 0; objindex < objnum; objindex++) {
 			CMQOObject* curobj = m_object[objindex];
 			if (curobj != nullptr) {
-				if ((strstr(curobj->GetName(), "LOD1") != 0) ||
+				if ((strstr(curobj->GetName(), "LOD0") != 0) || 
+					(strstr(curobj->GetName(), "LOD1") != 0) ||
 					(strstr(curobj->GetName(), "LOD2") != 0) ||
 					(strstr(curobj->GetName(), "LOD3") != 0)) {
 					curobj->SetInView(false, refposindexZero);
@@ -24025,28 +24026,32 @@ int CModel::SetLODNum()
 			strcpy_s(objname, 256, curobj->GetName());
 			char headname[256] = { 0 };
 
+			const char* plod0 = strstr(objname, "LOD0");
 			const char* plod1 = strstr(objname, "LOD1");
 			const char* plod2 = strstr(objname, "LOD2");
 			const char* plod3 = strstr(objname, "LOD3");//2024/04/22
-			if ((plod1 != 0) && ((plod1 - objname) >= 1)) {
+			if ((plod0 != 0) && ((plod0 - objname) >= 1)) {
+				size_t headlen = (size_t)(plod0 - objname - 1);
+				strncpy_s(headname, 256, objname, headlen);
+				*(headname + headlen) = 0;
+				SetLODNum((const char*)headname, 1);
+			}
+			else if ((plod1 != 0) && ((plod1 - objname) >= 1)) {
 				size_t headlen = (size_t)(plod1 - objname - 1);
 				strncpy_s(headname, 256, objname, headlen);
 				*(headname + headlen) = 0;
-
 				SetLODNum((const char*)headname, 2);
 			}
 			else if ((plod2 != 0) && ((plod2 - objname) >= 1)) {
 				size_t headlen = (size_t)(plod2 - objname - 1);
 				strncpy_s(headname, 256, objname, headlen);
 				*(headname + headlen) = 0;
-
 				SetLODNum((const char*)headname, 3);
 			}
 			else if ((plod3 != 0) && ((plod3 - objname) >= 1)) {
 				size_t headlen = (size_t)(plod3 - objname - 1);
 				strncpy_s(headname, 256, objname, headlen);
 				*(headname + headlen) = 0;
-
 				SetLODNum((const char*)headname, 4);//2024/04/22
 			}
 		}
