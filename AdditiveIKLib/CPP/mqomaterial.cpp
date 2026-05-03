@@ -3295,16 +3295,10 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
 				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
 				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
-			}
-			//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
-			//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
-			//	if (m_expandShaderResourceView[i]) {
-			//		m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
-			//	}
-			//}
-			srvNo += NUM_SRV_ONE_MATERIAL;
 
-			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+				srvNo += NUM_SRV_ONE_MATERIAL;
+
+
 				m_descriptorHeap[refposindex].RegistConstantBuffer(cbNo, m_commonConstantBuffer[refposindex]);
 				if (m_expandConstantBuffer[refposindex].IsValid()) {
 					m_descriptorHeap[refposindex].RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer[refposindex]);//BoneMatrix
@@ -3312,11 +3306,11 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 				if (m_expandConstantBuffer2[refposindex].IsValid()) {
 					m_descriptorHeap[refposindex].RegistConstantBuffer(cbNo + 2, m_expandConstantBuffer2[refposindex]);//Shadow
 				}
-			}
 
-			cbNo += NUM_CBV_ONE_MATERIAL;
 
-			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+				cbNo += NUM_CBV_ONE_MATERIAL;
+
+
 				m_descriptorHeap[refposindex].Commit();
 			}
 		}
@@ -3334,16 +3328,10 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
 				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
 				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
-			}
-			//m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
-			//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
-			//	if (m_expandShaderResourceView[i]) {
-			//		m_shadowdescriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
-			//	}
-			//}
-			srvNo += NUM_SRV_ONE_MATERIAL;
 
-			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+				srvNo += NUM_SRV_ONE_MATERIAL;
+
+
 				m_shadowdescriptorHeap[refposindex].RegistConstantBuffer(cbNo, m_shadowcommonConstantBuffer[refposindex]);
 				if (m_expandConstantBuffer[refposindex].IsValid()) {
 					m_shadowdescriptorHeap[refposindex].RegistConstantBuffer(cbNo + 1, m_shadowexpandConstantBuffer[refposindex]);//BoneMatrix
@@ -3351,12 +3339,12 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 				if (m_expandConstantBuffer2[refposindex].IsValid()) {
 					m_shadowdescriptorHeap[refposindex].RegistConstantBuffer(cbNo + 2, m_shadowexpandConstantBuffer2[refposindex]);//Shadow
 				}
-			}
-			cbNo += NUM_CBV_ONE_MATERIAL;
 
-			m_createdescriptorflag = true;
+				cbNo += NUM_CBV_ONE_MATERIAL;
 
-			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+				m_createdescriptorflag = true;
+
+
 				m_shadowdescriptorHeap[refposindex].Commit();
 			}
 		}
@@ -3379,23 +3367,15 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
 				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
 				//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
-			}
-			//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
-			//	if (m_expandShaderResourceView[i]) {
-			//		m_descriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
-			//	}
-			//}
-			srvNo += NUM_SRV_ONE_MATERIAL;
 
-			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+				srvNo += NUM_SRV_ONE_MATERIAL;
+
+
 				m_descriptorHeap[refposindex].RegistConstantBuffer(cbNo, m_commonConstantBuffer[refposindex]);
-			}
-			//if (m_expandConstantBuffer.IsValid()) {
-			//	m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
-			//}
-			cbNo += NUM_CBV_ONE_MATERIAL;
 
-			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+				cbNo += NUM_CBV_ONE_MATERIAL;
+
+
 				m_descriptorHeap[refposindex].Commit();
 			}
 		}
@@ -3414,23 +3394,13 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
 				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
 				//m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
-			}
-			//for (int i = 0; i < MAX_MODEL_EXPAND_SRV; i++) {
-			//	if (m_expandShaderResourceView[i]) {
-			//		m_shadowdescriptorHeap.RegistShaderResource(srvNo + EXPAND_SRV_REG__START_NO + i, *m_expandShaderResourceView[i]);
-			//	}
-			//}
-			srvNo += NUM_SRV_ONE_MATERIAL;
-			
-			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-				m_shadowdescriptorHeap[refposindex].RegistConstantBuffer(cbNo, m_shadowcommonConstantBuffer[refposindex]);
-			}
-			//if (m_expandConstantBuffer.IsValid()) {
-			//	m_shadowdescriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer);
-			//}
-			cbNo += NUM_CBV_ONE_MATERIAL;
 
-			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+				srvNo += NUM_SRV_ONE_MATERIAL;
+			
+				m_shadowdescriptorHeap[refposindex].RegistConstantBuffer(cbNo, m_shadowcommonConstantBuffer[refposindex]);
+
+				cbNo += NUM_CBV_ONE_MATERIAL;
+
 				m_shadowdescriptorHeap[refposindex].Commit();
 			}
 		}

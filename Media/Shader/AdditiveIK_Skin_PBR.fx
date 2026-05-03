@@ -127,7 +127,7 @@ cbuffer ModelCbMatrix : register(b1)
     float4 toonlightdir;
     float4 vFog; //distfog{x:1/(far - near), y:1/far, z:rate}, hieghtfog{x:0.0, y:1/maxheight, z:rate}
     float4 vFogColor;
-    float4x4 mBoneMat[10000];
+    float4x4 mBoneMat[1000];
 };
 
 // step-8 影用のパラメータにアクセスする定数バッファーを定義
