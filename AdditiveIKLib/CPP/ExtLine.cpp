@@ -102,7 +102,7 @@ int CExtLine::CreateExtLine( CModel* srcmodel, int pointnum, int facenum, ChaVec
 		sprintf_s(materialname, 256, "materialForLine_%d", s_totallineno);
 		CMQOMaterial* chkmaterial = srcmodel->GetMQOMaterialByName(materialname);//bankŒŸõ
 		if (!chkmaterial) {
-			m_material = new CMQOMaterial();
+			m_material = new CMQOMaterial(srcmodel->GetRefPosMaxNum());
 			if (!m_material) {
 				DbgOut(L"ExtLine : CreateExtLine : newmat alloc error !!!");
 				return 1;

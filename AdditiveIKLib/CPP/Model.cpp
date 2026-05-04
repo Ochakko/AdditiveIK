@@ -504,12 +504,12 @@ static DWORD s_rigidflag = 0;
 
 
 
-CModel::CModel() : m_camerafbx(), m_frustum(), m_undomotion(), m_undocamera(), m_undoblendshape()
+CModel::CModel(int srcrefposmaxnum) : m_camerafbx(), m_frustum(), m_undomotion(), m_undocamera(), m_undoblendshape()
 {
 	InitializeCriticalSection(&m_CritSection_Node);
 	InitializeCriticalSection(&m_CritSection_MCE);
 
-	InitParams();
+	InitParams(srcrefposmaxnum);
 	s_alloccnt++;
 	m_modelno = s_alloccnt;
 }
@@ -520,17 +520,24 @@ CModel::~CModel()
 
 	DestroyObjs();
 }
-int CModel::InitParams()
+int CModel::InitParams(int srcrefposmaxnum)
 {
 	m_selectedboneno = 0;
 
 	m_objBounding_BlockNum = 25;
 
+	if ((srcrefposmaxnum >= 1) && (srcrefposmaxnum <= REFPOSMAXNUM)) {
+		m_refpos_maxnum = srcrefposmaxnum;
+	}
+	else {
+		m_refpos_maxnum = 1;
+	}
+
 	int index1;
-	for (index1 = 0; index1 < REFPOSMAXNUM; index1++) {
-		m_inview[index1] = false;
-		m_befinview[index1] = false;
-		m_inshadow[index1] = false;
+	for (index1 = 0; index1 < m_refpos_maxnum; index1++) {
+		m_inview.push_back(false);
+		m_befinview.push_back(false);
+		m_inshadow.push_back(false);
 	}
 	m_inmorph = false;
 
@@ -538,6 +545,7 @@ int CModel::InitParams()
 	m_chkinview = nullptr;
 
 	m_refposflag = false;
+
 	m_updateslot = 0;
 
 	m_underfootrig = false;
@@ -824,8 +832,11 @@ int CModel::DestroyObjs()
 
 	DeleteCriticalSection(&m_CritSection_MCE);//2025/02/09
 
+	m_inview.clear();
+	m_befinview.clear();
+	m_inshadow.clear();
 
-	InitParams();
+	InitParams(1);
 
 	return 0;
 }
@@ -2646,7 +2657,7 @@ int CModel::UpdateMatrix(bool limitdegflag,
 
 
 	ChkInView(refposindex);//2023/08/25 //2024/03/24
-	if(!ExistCurrentMotion()){
+	if(!ExistCurrentMotion() || GetNoBoneFlag()){//2026/05/05
 		return 0;//!!!!!!!!!!!!
 	}
 	else {
@@ -5066,7 +5077,7 @@ int CModel::AddDefMaterialIfEmpty()
 
 		CMQOMaterial* dummymat = GetMQOMaterialByName(dummyname);//既に存在するかどうかチェック
 		if (!dummymat) {
-			dummymat = new CMQOMaterial();
+			dummymat = new CMQOMaterial(GetRefPosMaxNum());
 			if (!dummymat) {
 				_ASSERT(0);
 				return 1;
@@ -5693,7 +5704,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 	
 
 
-	CMQOObject* newobj = new CMQOObject();
+	CMQOObject* newobj = new CMQOObject(this);
 	_ASSERT( newobj );
 	if (!newobj) {
 		_ASSERT(0);
@@ -5766,7 +5777,7 @@ CMQOObject* CModel::GetFBXMesh(FbxNode* pNode, FbxNodeAttribute *pAttrib)
 				CMQOMaterial* currentmaterial = GetMQOMaterialByName(materialname);//既に存在するかどうかチェック
 				if (!currentmaterial) {
 					//未登録テクスチャの登録処理
-					currentmaterial = new CMQOMaterial();
+					currentmaterial = new CMQOMaterial(GetRefPosMaxNum());
 					SetMQOMaterial(currentmaterial, material);//内容をセット
 					SetMQOMaterial(materialname, currentmaterial);//表にセット
 				}
@@ -7146,9 +7157,9 @@ CBone* CModel::CreateNewFbxBone(FbxNodeAttribute::EType type, FbxNode* curnode, 
 		return 0;
 	}
 
-	//RenderContext* pRenderContext = DXUTGetD3D11DeviceContext();
-	//newbone->LoadCapsuleShape(m_pdev, pRenderContext);//!!!!!!!!!!!
-	newbone->LoadCapsuleShape(m_pdev);//!!!!!!!!!!!
+	////RenderContext* pRenderContext = DXUTGetD3D11DeviceContext();
+	////newbone->LoadCapsuleShape(m_pdev, pRenderContext);//!!!!!!!!!!!
+	//newbone->LoadCapsuleShape(m_pdev);//!!!!!!!!!!!
 
 	char newbonename[JOINTNAMELENG];
 	strcpy_s(newbonename, JOINTNAMELENG, curnode->GetName());
@@ -7208,6 +7219,9 @@ CBone* CModel::CreateNewFbxBone(FbxNodeAttribute::EType type, FbxNode* curnode, 
 		else {
 			m_withoutStrJoint++;
 		}
+
+		newbone->LoadCapsuleShape(m_pdev);//!!!!!!!!!!! Skeletonにだけ作成
+
 	}
 	else if (type == FbxNodeAttribute::eNull) {
 
@@ -7250,6 +7264,8 @@ CBone* CModel::CreateNewFbxBone(FbxNodeAttribute::EType type, FbxNode* curnode, 
 			else {
 				m_withoutStrJoint++;
 			}
+
+			newbone->LoadCapsuleShape(m_pdev);//!!!!!!!!!!! Skeletonにだけ作成
 		}
 		else {
 			newbone->SetType(FBXBONE_NULL);
@@ -24707,7 +24723,7 @@ int CModel::RemakeHSVToonTexture(CMQOMaterial* srcmqomat)
 
 void CModel::SetDistChkInView(float srcval, int refposindex)
 {
-	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+	if ((refposindex < 0) || (refposindex >= GetRefPosMaxNum())) {
 		return;
 	}
 	else {

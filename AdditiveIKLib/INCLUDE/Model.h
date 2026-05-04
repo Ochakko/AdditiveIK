@@ -8,6 +8,8 @@
 #include <wchar.h>
 #include <string>
 #include <unordered_map>
+#include <list>
+#include <vector>
 
 #include <Coef.h>
 #include <OrgWindow.h>
@@ -276,7 +278,7 @@ public:
  * @breaf コンストラクタ
  * @return なし。
  */
-	CModel();
+	CModel(int srcrefposmaxnum);
 
 /**
  * @fn
@@ -1247,7 +1249,7 @@ public:
 	ChaMatrix RotMocapWalk(CFootRigDlg* srcfootrigdlg, double srcrot);
 
 private:
-	int InitParams();
+	int InitParams(int srcrefposmaxnum);
 	int DestroyObjs();
 
 	void CreateRigidElemReq(CBone* curbone, int reflag, std::string rename, int impflag, std::string impname);
@@ -1581,7 +1583,7 @@ public: //accesser
 	};
 
 	bool GetInView(int refposindex) {
-		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+		if ((refposindex < 0) || (refposindex >= m_inview.size())) {
 			return false;
 		}
 		else {
@@ -1597,7 +1599,7 @@ public: //accesser
 		}
 	};
 	bool GetBefInView(int refposindex) {
-		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+		if ((refposindex < 0) || (refposindex >= m_befinview.size())) {
 			return false;
 		}
 		else {
@@ -1605,7 +1607,7 @@ public: //accesser
 		}
 	};
 	void SetInView(bool srcflag, int refposindex) {
-		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+		if ((refposindex < 0) || (refposindex >= m_befinview.size()) || (refposindex >= m_inview.size())) {
 			return;
 		}
 		else {
@@ -1614,7 +1616,7 @@ public: //accesser
 		}
 	};
 	bool GetInShadow(int refposindex) {
-		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+		if ((refposindex < 0) || (refposindex >= m_inshadow.size())) {
 			return false;
 		}
 		else {
@@ -1622,7 +1624,7 @@ public: //accesser
 		}
 	};
 	void SetInShadow(bool srcflag, int refposindex) {
-		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+		if ((refposindex < 0) || (refposindex >= m_inshadow.size())) {
 			return;
 		}
 		else {
@@ -3401,6 +3403,19 @@ public: //accesser
 	{
 		return m_refposflag;
 	}
+	void SetRefPosMaxNum(int srcval) 
+	{
+		if ((srcval >= 1) && (srcval <= REFPOSMAXNUM)) {
+			m_refpos_maxnum = srcval;
+		}
+		else {
+			_ASSERT(0);
+			m_refpos_maxnum = 0;
+		}
+	}
+	int GetRefPosMaxNum() {
+		return m_refpos_maxnum;
+	}
 
 	void SetGrassFlag(bool srcflag)
 	{
@@ -3806,9 +3821,9 @@ public:
 	CRITICAL_SECTION m_CritSection_MCE;
 
 private:
-	bool m_inview[REFPOSMAXNUM];
-	bool m_befinview[REFPOSMAXNUM];
-	bool m_inshadow[REFPOSMAXNUM];
+	std::vector<bool> m_inview;// [REFPOSMAXNUM] ;
+	std::vector<bool> m_befinview;//[REFPOSMAXNUM];
+	std::vector<bool> m_inshadow;//[REFPOSMAXNUM];
 	bool m_inmorph;
 	ChaFrustumInfo m_frustum;
 
@@ -4007,6 +4022,8 @@ private:
 	INSTANCINGPARAMS m_instancingparams[RIGMULTINDEXMAX];
 
 	bool m_refposflag;
+	int m_refpos_maxnum;//*.chaファイル内でモデルごとに指定
+
 	bool m_skyflag;
 	bool m_groundflag;
 	bool m_grassflag;

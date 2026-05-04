@@ -2483,7 +2483,7 @@ static void DispProgressCalcLimitedWM();
 
 static int OnRenderModel(RenderContext* pRenderContext);
 static int OnRenderOnlyOneObj(myRenderer::RenderingEngine* re, RenderContext* rc);
-static int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel);
+static int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double currentframe);
 static int OnRenderGround(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
 static int OnRenderBoneMark(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
 static int OnRenderSelect(myRenderer::RenderingEngine* re, RenderContext* pRenderContext);
@@ -2518,7 +2518,7 @@ static int OpenChaFile();
 static int PostOpenChaFile();//2024/04/17 常駐スライダーなどに読込値を反映する
 CModel* OpenMQOFile();
 CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, 
-	std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum);
+	std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum, int srcrefposmaxnum);
 static int OpenREFile();
 static int OpenImpFile();
 static int OpenGcoFile();
@@ -6560,9 +6560,27 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 			bool calcslotflag = false;
 			//bool calcslotflag = true;
 			g_chascene->SetBoneMatrixForShader(btflag, calcslotflag);
+			g_chascene->ResetRefPos();
 			if (GetCurrentModel() && s_sprefpos.state) {
-				OnRenderRefPos(re, GetCurrentModel());
+				int modelnum = g_chascene->GetModelNum();
+				int modelcount;
+				for (modelcount = 0; modelcount < modelnum; modelcount++) {
+					CModel* curmodel = g_chascene->GetModel(modelcount);
+					if ((curmodel != nullptr) && (curmodel->GetRefPosMaxNum() >= 2)) {
+						curmodel->SetRefPosFlag(true);
+						OnRenderRefPos(re, curmodel, s_owpLTimeline->getCurrentTime());
+					}
+					else if(curmodel != nullptr) {
+						curmodel->SetRefPosFlag(false);
+					}
+				}
 			}
+			else {
+				g_chascene->SetRefPosFlag(nullptr);
+			}
+			//if (GetCurrentModel() && s_sprefpos.state) {
+			//	OnRenderRefPos(re, GetCurrentModel());
+			//}
 			g_chascene->RenderModels(re, lightflag, diffusemult, btflag);
 
 
@@ -9639,7 +9657,7 @@ int RetargetFile(char* fbxpath)
 		std::vector<std::string> ikstopname;
 		ikstopname.clear();
 		bool grassflag = false;
-		newmodel = OpenFBXFile(false, false, 0, 1, ikstopname, grassflag, 40);
+		newmodel = OpenFBXFile(false, false, 0, 1, ikstopname, grassflag, 40, 1);
 		if (newmodel) {
 			//GetCurrentModel() = s_convbone_model_batch;
 
@@ -10305,7 +10323,7 @@ int OpenFile()
 			}
 			std::vector<std::string> ikstopname;
 			ikstopname.clear();
-			newmodel = OpenFBXFile(false, true, 0, 1, ikstopname, s_grassflag, 40);
+			newmodel = OpenFBXFile(false, true, 0, 1, ikstopname, s_grassflag, 40, 1);
 			if (newmodel) {
 				result = 0;
 				newmodel->RemakeHSVToonTexture(nullptr);//2026/03/06
@@ -10394,7 +10412,7 @@ int OpenFile()
 
 				std::vector<std::string> ikstopname;
 				ikstopname.clear();
-				newmodel = OpenFBXFile(false, true, 0, 1, ikstopname, s_grassflag, 40);
+				newmodel = OpenFBXFile(false, true, 0, 1, ikstopname, s_grassflag, 40, 1);
 				if (newmodel) {
 					result = 0;
 					newmodel->RemakeHSVToonTexture(nullptr);//2026/03/06
@@ -10517,8 +10535,9 @@ CModel* OpenMQOFile()
 	DestroyTimeLine(1);
 
 	// Load the mesh
+	int refposmaxnum = 1;
 	CModel* newmodel;
-	newmodel = new CModel();
+	newmodel = new CModel(refposmaxnum);
 	if (!newmodel) {
 		_ASSERT(0);
 		return 0;
@@ -10705,7 +10724,7 @@ void CalcTotalBound()
 
 
 CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, 
-	std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum)
+	std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum, int srcrefposmaxnum)
 {
 	static int s_dbgcnt = 0;
 	s_dbgcnt++;
@@ -10790,7 +10809,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 
 	// Load the mesh
 	CModel* newmodel;
-	newmodel = new CModel();
+	newmodel = new CModel(srcrefposmaxnum);
 	if (!newmodel) {
 		_ASSERT(0);
 		return 0;
@@ -31629,19 +31648,15 @@ s_layerWnd->setVisible(false);
 
 }
 
-int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
+int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double currentframe)
 {
-	//###################
-	//描画キューをクリアする
-	//###################
-	g_chascene->ResetRefPos();
-
 	if (!re || !curmodel || !g_chascene) {
 		return 0;
 	}
 
 	if (s_sprefpos.state) {
-		if ((curmodel == GetCurrentModel()) && (curmodel->GetGrassFlag() == false)) {
+		if ((curmodel->GetGrassFlag() == false) &&
+			(curmodel->GetRefPosMaxNum() >= 1)) {
 			bool calcslotflag;
 			calcslotflag = true;//2024/03/20
 
@@ -31656,26 +31671,102 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 			roundingendframe = RoundingTime(g_motionbrush_endframe);
 			roundingapplyframe = RoundingTime(g_motionbrush_applyframe);
 
-			if (GetCurrentModel()->ExistCurrentMotion()) {
-				int curmotid = GetCurrentModel()->GetCurrentMotID();
-				double currentframe = GetCurrentModel()->GetCurrentFrame();
-				CBone* curbone = GetCurrentModel()->GetBoneByID(s_curboneno);
-				if (curbone) {
 
-					std::vector<ChaVector3> vecbonepos;
-					vecbonepos.clear();
-					ChaVector3 curbonepos;
+			//if (curmodel->ExistCurrentMotion()) {
+			if (!curmodel->GetNoBoneFlag() && curmodel->ExistCurrentMotion()) {
+//############################
+//モーションがあるモデルの場合
+//############################
 
-					ChaMatrix modelwm = GetCurrentModel()->GetWorldMat();
+				int curmotid = curmodel->GetCurrentMotID();
+				currentframe = curmodel->GetCurrentFrame();//モーションがある場合はモデルのフレームで上書き
+				CBone* curbone = curmodel->GetBoneByID(s_curboneno);
+				
 
-					double renderleng = roundingendframe - roundingstartframe;
+				std::vector<ChaVector3> vecbonepos;
+				vecbonepos.clear();
+				ChaVector3 curbonepos;
+
+				ChaMatrix modelwm = curmodel->GetWorldMat();
+
+				int refposindex = 0;
+				double renderleng = roundingendframe - roundingstartframe;
+
+
+				if (curmodel->GetRefPosMaxNum() == 1) {
+					//##########################
+					//残像無し　カレントフレームだけ
+					//##########################
+				}
+				else if (curmodel->GetRefPosMaxNum() == 2) {
+					//###############################################
+					//選択フレームの最後のフレームに残像　＋　カレントフレーム
+					//###############################################
+					//refframeのポーズを表示
+					int btflag1 = 0;
+					curmodel->SetMotionFrame(roundingendframe);
+
+
+
+
+					//################
+					//カメラアニメに対応
+					//################
+					ChaMatrix currentViewMat = s_matView;
+					if (g_chacamera.GetCameraAnimMode() != 0) {//2023/05/29 2023/06/04
+						//########################
+						//カメラアニメモード　オン
+						//########################
+						if (g_chacamera.GetCameraAnimModel() != nullptr) {
+							//g_chacamera.OnFramePreviewCamera(nextcameraframe);
+							ChaVector3 camEye, camtargetpos, cameraupdir;
+							g_chacamera.GetCameraAnimModel()->GetCameraAnimParams(roundingendframe, g_chacamera.GetCamDist(),
+								&camEye, &camtargetpos, &cameraupdir, 0, g_chacamera.GetCameraInheritMode());
+							//UpdateCameraDist();
+
+							//ビュー行列の算出
+							Matrix viewMatrix;
+							viewMatrix.MakeLookAt(Vector3(camEye.x, camEye.y, camEye.z),
+								Vector3(camtargetpos.x, camtargetpos.y, camtargetpos.z),
+								Vector3(cameraupdir.x, cameraupdir.y, cameraupdir.z));
+
+							currentViewMat.SetParams(viewMatrix);
+						}
+					}
+					ChaMatrix effectView = s_matView * (currentViewMat * ChaMatrixInv(s_matView));
+					//ChaMatrix effectView = currentViewMat;
+
+					g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
+						roundingendframe, refposindex);
+					curmodel->SetShaderConst(btflag1, calcslotflag);
+					curmodel->SetRefPosFl4x4ToDispObj(refposindex);
+
+					//カレントフレームから離れるほど　透明度を薄くする
+					const double refstartalpha = 0.80f;
+					ChaVector4 refdiffusemult;
+					refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)refstartalpha);
+
+					int lightflag = 0;
+					bool forcewithalpha = true;
+					int btflag = 0;
+					bool zcmpalways = true;
+					bool zenable = true;
+					g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
+						lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, effectView);
+
+					refposindex++;
+
+				}
+				else if (curmodel->GetRefPosMaxNum() >= 3) {
+					//#########################################################
+					//divnum個の残像　＋　選択ジョイントアロー表示　＋　カレントフレーム
+					//#########################################################
 
 					//2024/02/08 選択ジョイントの位置の軌跡を表示する際に補間無しのGetWorldMatで済ませたいのでRoundingTimeしてキーの位置限定にする
 					int divnum;
-					divnum = min((int)renderleng, (REFPOSMAXNUM - 2));//選択フレーム長より多くは分割しない
+					divnum = min((int)renderleng, (curmodel->GetRefPosMaxNum() - 2));//選択フレーム長より多くは分割しない
 					double renderstep = fmax(1.0, (renderleng / (double)divnum));//renderstep = 0は無限ループになる
 
-					int refposindex = 0;
 					if (renderleng > 0) {
 						bool addcurrentjointpos = false;
 						double renderframe, roundingrenderframe;
@@ -31683,33 +31774,60 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							renderframe = roundingstartframe + renderstep * (double)refposindex;
 							roundingrenderframe = RoundingTime(renderframe);
 
-							if ((addcurrentjointpos == false) && (roundingrenderframe >= currentframe)) {
-								double roundingcurrentframe = RoundingTime(currentframe);
-								GetCurrentModel()->SetMotionFrame(roundingcurrentframe);
+							if (curbone != nullptr) {
+								if ((addcurrentjointpos == false) && (roundingrenderframe >= currentframe)) {
+									double roundingcurrentframe = RoundingTime(currentframe);
+									curmodel->SetMotionFrame(roundingcurrentframe);
+									ChaVector3 tmpfpos = curbone->GetJointFPos();
+									ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingcurrentframe, 0) * modelwm;
+									ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
+									vecbonepos.push_back(curbonepos);
+									addcurrentjointpos = true;
+								}
+								curmodel->SetMotionFrame(roundingrenderframe);
 								ChaVector3 tmpfpos = curbone->GetJointFPos();
-								ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingcurrentframe, 0) * modelwm;
+								ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingrenderframe, 0) * modelwm;
 								ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
 								vecbonepos.push_back(curbonepos);
-								addcurrentjointpos = true;
 							}
-							GetCurrentModel()->SetMotionFrame(roundingrenderframe);
-							ChaVector3 tmpfpos = curbone->GetJointFPos();
-							ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingrenderframe, 0) * modelwm;
-							ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
-							vecbonepos.push_back(curbonepos);
-
 
 							//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
 
+							//################
+							//カメラアニメに対応
+							//################
+							ChaMatrix currentViewMat = s_matView;
+							if (g_chacamera.GetCameraAnimMode() != 0) {//2023/05/29 2023/06/04
+								//########################
+								//カメラアニメモード　オン
+								//########################
+								if (g_chacamera.GetCameraAnimModel() != nullptr) {
+									//g_chacamera.OnFramePreviewCamera(nextcameraframe);
+									ChaVector3 camEye, camtargetpos, cameraupdir;
+									g_chacamera.GetCameraAnimModel()->GetCameraAnimParams(roundingrenderframe, g_chacamera.GetCamDist(),
+										&camEye, &camtargetpos, &cameraupdir, 0, g_chacamera.GetCameraInheritMode());
+									//UpdateCameraDist();
+
+									//ビュー行列の算出
+									Matrix viewMatrix;
+									viewMatrix.MakeLookAt(Vector3(camEye.x, camEye.y, camEye.z), 
+										Vector3(camtargetpos.x, camtargetpos.y, camtargetpos.z), 
+										Vector3(cameraupdir.x, cameraupdir.y, cameraupdir.z));
+
+									currentViewMat.SetParams(viewMatrix);
+								}
+							}
+							//ChaMatrix effectView = s_matView * (currentViewMat * ChaMatrixInv(s_matView));
+							ChaMatrix effectView = s_matView * ChaMatrixInv(currentViewMat) * s_matView;
+							//ChaMatrix effectView = currentViewMat;
+
 							//refframeのポーズを表示
 							int btflag1 = 0;
-
-							GetCurrentModel()->SetMotionFrame(roundingrenderframe);
-
-							g_chascene->UpdateMatrixOneModel(GetCurrentModel(), g_limitdegflag, &modelwm, &s_matView, &s_matProj,
+							curmodel->SetMotionFrame(roundingrenderframe);
+							g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 								roundingrenderframe, refposindex);
-							GetCurrentModel()->SetShaderConst(btflag1, calcslotflag);
-							GetCurrentModel()->SetRefPosFl4x4ToDispObj(refposindex);
+							curmodel->SetShaderConst(btflag1, calcslotflag);
+							curmodel->SetRefPosFl4x4ToDispObj(refposindex);
 							//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
 
 							//カレントフレームから離れるほど　透明度を薄くする
@@ -31717,6 +31835,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
 							//2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
 							double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
+							//renderalpha = fmax(0.1f, renderalpha);
 							ChaVector4 refdiffusemult;
 							refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)renderalpha);
 							//const double refstartalpha = (double)g_refalpha * 0.01f;
@@ -31728,59 +31847,246 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							int btflag = 0;
 							bool zcmpalways = true;
 							bool zenable = true;
-							g_chascene->AddToRefPos(GetCurrentModel(), forcewithalpha, re,
-								lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
+							g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
+								lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, effectView);
 						}
 					}
+				}
+				else {
+					_ASSERT(0);
+					return 1;
+				}
+					
+				{
+					if ((refposindex >= 0) && (refposindex < curmodel->GetRefPosMaxNum())) {
+						////カレントフレームをレンダー
+						int btflag1 = 0;
 
-					{
-						if ((refposindex >= 0) && (refposindex < REFPOSMAXNUM)) {
-							////カレントフレームをレンダー
-							int btflag1 = 0;
+						curmodel->SetMotionFrame(currentframe);
 
-							GetCurrentModel()->SetMotionFrame(currentframe);
+						g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &s_matView, &s_matProj,
+							currentframe, refposindex);
+						curmodel->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
+						curmodel->SetRefPosFl4x4ToDispObj(refposindex);
+						//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
 
-							g_chascene->UpdateMatrixOneModel(GetCurrentModel(), g_limitdegflag, &modelwm, &s_matView, &s_matProj,
-								currentframe, refposindex);
-							GetCurrentModel()->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
-							GetCurrentModel()->SetRefPosFl4x4ToDispObj(refposindex);
-							//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
+						ChaVector4 refdiffusemult;
+						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 
-							ChaVector4 refdiffusemult;
-							refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
+						int lightflag = -1;
+						bool forcewithalpha = true;
+						int btflag = 0;
+						//bool zcmpalways = false;
+						bool zcmpalways = g_zalways;//2024/02/08 DispAndLimitsプレートメニューのチェックボックス
+						bool zenable = true;
+						g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
+							lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, s_matView);
 
-							int lightflag = -1;
-							bool forcewithalpha = true;
-							int btflag = 0;
-							//bool zcmpalways = false;
-							bool zcmpalways = g_zalways;//2024/02/08 DispAndLimitsプレートメニューのチェックボックス
-							bool zenable = true;
-							g_chascene->AddToRefPos(GetCurrentModel(), forcewithalpha, re,
-								lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
+						refposindex++;
+					}
+				}
 
-							refposindex++;
+
+
+				if (curbone != nullptr) {
+					//render arrow : selected bone : befpos --> aftpos arrow
+					CBone* childbone = curbone->GetChild(false);
+					if (childbone && childbone->IsSkeleton() && curbone->GetRefPosMark()) {
+						//ChaVector4 arrowdiffusemult.SetParams(1.0f, 0.5f, 0.5f, 0.85f);
+						ChaVector4 arrowdiffusemult;
+						arrowdiffusemult.SetParams(1.0f, 0.5f, 0.5f, 0.5f);
+
+						curbone->GetRefPosMark()->RenderRefArrow(g_limitdegflag,
+							re, g_chascene, s_matVP, curbone, arrowdiffusemult, 1, vecbonepos);
+						//curmodel->RenderBoneCircleOne(g_limitdegflag,
+						//	pRenderContext, s_bcircle, s_curboneno);
+					}
+				}
+				g_chascene->RenderRefPos(re, true);
+				g_chascene->RenderRefPos(re, false);
+			}
+			else {
+//#######################
+//ボーン無しモデル　背景など
+//#######################
+				ChaMatrix modelwm = curmodel->GetWorldMat();
+
+				int refposindex = 0;
+				double renderleng = roundingendframe - roundingstartframe;
+
+				if (curmodel->GetRefPosMaxNum() == 1) {
+					//##########################
+					//残像無し　カレントフレームだけ
+					//##########################
+				}
+				else if (curmodel->GetRefPosMaxNum() == 2) {
+					//###############################################
+					//選択フレームの最後のフレームに残像　＋　カレントフレーム
+					//###############################################
+					//refframeのポーズを表示
+					int btflag1 = 0;
+					curmodel->SetMotionFrame(roundingendframe);
+
+					//################
+					//カメラアニメに対応
+					//################
+					ChaMatrix currentViewMat = s_matView;
+					if (g_chacamera.GetCameraAnimMode() != 0) {//2023/05/29 2023/06/04
+						//########################
+						//カメラアニメモード　オン
+						//########################
+						if (g_chacamera.GetCameraAnimModel() != nullptr) {
+							//g_chacamera.OnFramePreviewCamera(nextcameraframe);
+							ChaVector3 camEye, camtargetpos, cameraupdir;
+							g_chacamera.GetCameraAnimModel()->GetCameraAnimParams(roundingendframe, g_chacamera.GetCamDist(),
+								&camEye, &camtargetpos, &cameraupdir, 0, g_chacamera.GetCameraInheritMode());
+							//UpdateCameraDist();
+
+							//ビュー行列の算出
+							Matrix viewMatrix;
+							viewMatrix.MakeLookAt(Vector3(camEye.x, camEye.y, camEye.z),
+								Vector3(camtargetpos.x, camtargetpos.y, camtargetpos.z),
+								Vector3(cameraupdir.x, cameraupdir.y, cameraupdir.z));
+
+							currentViewMat.SetParams(viewMatrix);
 						}
 					}
+					//ChaMatrix effectView = s_matView * (currentViewMat * ChaMatrixInv(s_matView));
+					ChaMatrix effectView = currentViewMat;
+					//ChaMatrix effectView = s_matView;
 
+					g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
+						roundingendframe, refposindex);
+					curmodel->SetShaderConst(btflag1, calcslotflag);
+					curmodel->SetRefPosFl4x4ToDispObj(refposindex);
 
+					//カレントフレームから離れるほど　透明度を薄くする
+					const double refstartalpha = 0.80f;
+					ChaVector4 refdiffusemult;
+					refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
+					refdiffusemult *= refdiffusemult;
 
-					{
-						//render arrow : selected bone : befpos --> aftpos arrow
-						CBone* childbone = curbone->GetChild(false);
-						if (childbone && childbone->IsSkeleton() && curbone->GetRefPosMark()) {
-							//ChaVector4 arrowdiffusemult.SetParams(1.0f, 0.5f, 0.5f, 0.85f);
-							ChaVector4 arrowdiffusemult;
-							arrowdiffusemult.SetParams(1.0f, 0.5f, 0.5f, 0.5f);
+					int lightflag = 0;
+					bool forcewithalpha = true;
+					int btflag = 0;
+					bool zcmpalways = true;
+					bool zenable = true;
+					g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
+						lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, effectView);
 
-							curbone->GetRefPosMark()->RenderRefArrow(g_limitdegflag,
-								re, g_chascene, s_matVP, curbone, arrowdiffusemult, 1, vecbonepos);
-							//GetCurrentModel()->RenderBoneCircleOne(g_limitdegflag,
-							//	pRenderContext, s_bcircle, s_curboneno);
-						}
-					}
-
+					refposindex++;
 
 				}
+				else if (curmodel->GetRefPosMaxNum() >= 3) {
+					//#########################################################
+					//divnum個の残像　＋　選択ジョイントアロー表示　＋　カレントフレーム
+					//#########################################################
+
+					//2024/02/08 選択ジョイントの位置の軌跡を表示する際に補間無しのGetWorldMatで済ませたいのでRoundingTimeしてキーの位置限定にする
+					int divnum;
+					divnum = min((int)renderleng, (curmodel->GetRefPosMaxNum() - 2));//選択フレーム長より多くは分割しない
+					double renderstep = fmax(1.0, (renderleng / (double)divnum));//renderstep = 0は無限ループになる
+
+					if (renderleng > 0) {
+						bool addcurrentjointpos = false;
+						double renderframe, roundingrenderframe;
+						for (refposindex = 0; refposindex <= divnum; refposindex++) {
+							renderframe = roundingstartframe + renderstep * (double)refposindex;
+							roundingrenderframe = RoundingTime(renderframe);
+
+							//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
+
+							//################
+							//カメラアニメに対応
+							//################
+							ChaMatrix currentViewMat = s_matView;
+							if (g_chacamera.GetCameraAnimMode() != 0) {//2023/05/29 2023/06/04
+								//########################
+								//カメラアニメモード　オン
+								//########################
+								if (g_chacamera.GetCameraAnimModel() != nullptr) {
+									//g_chacamera.OnFramePreviewCamera(nextcameraframe);
+									ChaVector3 camEye, camtargetpos, cameraupdir;
+									g_chacamera.GetCameraAnimModel()->GetCameraAnimParams(roundingrenderframe, g_chacamera.GetCamDist(),
+										&camEye, &camtargetpos, &cameraupdir, 0, g_chacamera.GetCameraInheritMode());
+									//UpdateCameraDist();
+
+									//ビュー行列の算出
+									Matrix viewMatrix;
+									viewMatrix.MakeLookAt(Vector3(camEye.x, camEye.y, camEye.z),
+										Vector3(camtargetpos.x, camtargetpos.y, camtargetpos.z),
+										Vector3(cameraupdir.x, cameraupdir.y, cameraupdir.z));
+
+									currentViewMat.SetParams(viewMatrix);
+								}
+							}
+							//ChaMatrix effectView = s_matView;
+							ChaMatrix effectView = currentViewMat;
+
+							//refframeのポーズを表示
+							int btflag1 = 0;
+							curmodel->SetMotionFrame(roundingrenderframe);
+							g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
+								roundingrenderframe, refposindex);
+							//curmodel->SetShaderConst(btflag1, calcslotflag);
+							//curmodel->SetRefPosFl4x4ToDispObj(refposindex);
+							//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
+
+							//カレントフレームから離れるほど　透明度を薄くする
+							const double refstartalpha = 0.10f;
+							double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
+							//2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
+							double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
+							renderalpha = fmax(0.1f, renderalpha);
+							ChaVector4 refdiffusemult;
+							refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)renderalpha);
+
+							int lightflag = 0;
+							bool forcewithalpha = true;
+							int btflag = 0;
+							bool zcmpalways = true;
+							bool zenable = true;
+							g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
+								lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, effectView);
+						}
+					}
+				}
+				else {
+					_ASSERT(0);
+					return 1;
+				}
+
+				{
+					if ((refposindex >= 0) && (refposindex < curmodel->GetRefPosMaxNum())) {
+						////カレントフレームをレンダー
+						int btflag1 = 0;
+
+						curmodel->SetMotionFrame(currentframe);
+
+						g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &s_matView, &s_matProj,
+							currentframe, refposindex);
+						//curmodel->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
+						//curmodel->SetRefPosFl4x4ToDispObj(refposindex);
+						//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
+
+						ChaVector4 refdiffusemult;
+						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.5f);
+
+						int lightflag = 0;
+						bool forcewithalpha = true;
+						int btflag = 0;
+						//bool zcmpalways = false;
+						bool zcmpalways = g_zalways;//2024/02/08 DispAndLimitsプレートメニューのチェックボックス
+						bool zenable = true;
+						g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
+							lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, s_matView);
+
+						refposindex++;
+					}
+				}
+
+				g_chascene->RenderRefPos(re, true);
+				g_chascene->RenderRefPos(re, false);
 			}
 		}
 	}
@@ -46997,7 +47303,8 @@ int OnCreateDevice()
 	//CBone::InitColDisp();
 	CBone::DestroyColDisp();
 
-	s_select = new CModel();
+	int refposmaxnum = 1;
+	s_select = new CModel(refposmaxnum);
 	if (!s_select) {
 		_ASSERT(0);
 		PostQuitMessage(1);
@@ -47112,7 +47419,7 @@ int OnCreateDevice()
 	
 	
 	
-	s_select_posture = new CModel();
+	s_select_posture = new CModel(refposmaxnum);
 	if (!s_select_posture) {
 		_ASSERT(0);
 		PostQuitMessage(1);
@@ -47123,7 +47430,7 @@ int OnCreateDevice()
 
 
 
-	s_sky = new CModel();
+	s_sky = new CModel(refposmaxnum);
 	if (!s_sky) {
 		_ASSERT(0);
 		PostQuitMessage(1);
@@ -47150,7 +47457,7 @@ int OnCreateDevice()
 
 
 	float rigmult = 1.0f;
-	s_rigopemark_sphere = new CModel();
+	s_rigopemark_sphere = new CModel(refposmaxnum);
 	if (!s_rigopemark_sphere) {
 		_ASSERT(0);
 		PostQuitMessage(1);
@@ -47160,7 +47467,7 @@ int OnCreateDevice()
 	CallF(s_rigopemark_sphere->LoadMQO(s_pdev,
 		L"..\\Media\\MameMedia\\rigmark.mqo", 0, rigmult, 0), return S_FALSE);
 
-	s_rigopemark_ringX = new CModel();
+	s_rigopemark_ringX = new CModel(refposmaxnum);
 	if (!s_rigopemark_ringX) {
 		_ASSERT(0);
 		PostQuitMessage(1);
@@ -47170,7 +47477,7 @@ int OnCreateDevice()
 	CallF(s_rigopemark_ringX->LoadMQO(s_pdev,
 		L"..\\Media\\MameMedia\\ringX.mqo", 0, rigmult, 0), return S_FALSE);
 
-	s_rigopemark_ringY = new CModel();
+	s_rigopemark_ringY = new CModel(refposmaxnum);
 	if (!s_rigopemark_ringY) {
 		_ASSERT(0);
 		PostQuitMessage(1);
@@ -47180,7 +47487,7 @@ int OnCreateDevice()
 	CallF(s_rigopemark_ringY->LoadMQO(s_pdev,
 		L"..\\Media\\MameMedia\\ringY.mqo", 0, rigmult, 0), return S_FALSE);
 
-	s_rigopemark_ringZ = new CModel();
+	s_rigopemark_ringZ = new CModel(refposmaxnum);
 	if (!s_rigopemark_ringZ) {
 		_ASSERT(0);
 		PostQuitMessage(1);
@@ -47193,7 +47500,7 @@ int OnCreateDevice()
 	s_matrigmat.SetParams(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 1.0f);
 	
 	
-	s_bmark = new CModel();
+	s_bmark = new CModel(refposmaxnum);
 	if (!s_bmark) {
 		_ASSERT(0);
 		PostQuitMessage(1);
@@ -47205,7 +47512,7 @@ int OnCreateDevice()
 	
 	
 	
-	s_ground = new CModel();
+	s_ground = new CModel(refposmaxnum);
 	if (!s_ground) {
 		_ASSERT(0);
 		PostQuitMessage(1);
@@ -47215,7 +47522,7 @@ int OnCreateDevice()
 	//CallF(s_ground->MakeDispObj(), return S_FALSE);
 	s_ground->SetGroundFlag(true);
 
-	s_gplane = new CModel();
+	s_gplane = new CModel(refposmaxnum);
 	if (!s_gplane) {
 		_ASSERT(0);
 		PostQuitMessage(1);

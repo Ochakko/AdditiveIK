@@ -32,7 +32,7 @@ public:
 	int LoadChaFile(bool limitdegflag, WCHAR* strpath,
 		CFootRigDlg* srcfootrigdlg,
 		CModel* (*srcfbxfunc)( bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, 
-			std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum),
+			std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum, int srcrefposmaxnum),
 		int (*srcReffunc)(), int (*srcImpFunc)(), int (*srcGcoFunc)(),
 		int (*srcReMenu)( int selindex1, int callbymenu1 ), 
 		int (*srcRgdMenu)( int selindex2, int callbymenu2 ), 
@@ -67,7 +67,7 @@ private:
 	CFootRigDlg* m_footrigdlg;//外部データ
 
 	CModel* (*m_FbxFunc)(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, 
-		std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum);
+		std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum, int srcrefposmaxnum);
 	int (*m_RefFunc)();
 	int (*m_ImpFunc)();
 	int (*m_GcoFunc)();

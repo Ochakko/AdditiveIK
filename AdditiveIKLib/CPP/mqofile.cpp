@@ -836,7 +836,7 @@ int CMQOFile::ReadMaterial( MQOSTATE* nextstate )
 			//この時点ではまだマテリアルの名前が分からない
 			//bankに登録済かどうかのチェックは　名前をパースした後でチェックする
 			//まずは　作成する
-			CMQOMaterial* newmat = new CMQOMaterial();
+			CMQOMaterial* newmat = new CMQOMaterial(m_modelptr->GetRefPosMaxNum());
 			if( !newmat ){
 				DbgOut( L"MQOFile : ReadMaterial : newmat alloc error !!!" );
 				*nextstate = BEGIN_FINISH;
@@ -902,7 +902,7 @@ int CMQOFile::ReadObject( MQOSTATE* nextstate )
 	m_objcnt++;
 
 	CMQOObject* newobj;
-	newobj = new CMQOObject();
+	newobj = new CMQOObject(m_modelptr);
 	if( !newobj ){
 		DbgOut( L"MQOFile : ReadObject : newobj alloc error !!!" );
 		*nextstate = BEGIN_FINISH;

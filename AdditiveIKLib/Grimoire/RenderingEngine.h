@@ -4,6 +4,7 @@
 //#include "ShadowMapRender.h"
 #include "PostEffect.h"
 #include <ChaVecCalc.h>
+
 #include <mqoobject.h>
 
 
@@ -112,6 +113,10 @@ namespace myRenderer
         };
 
         double GetDistFromCamera() {
+            if (!mqoobj || !pmodel) {
+                _ASSERT(0);
+                return 500000.0f;
+            }
             if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
                 _ASSERT(0);
                 return 500000.0f;

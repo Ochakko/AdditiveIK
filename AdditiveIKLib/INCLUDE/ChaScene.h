@@ -157,7 +157,7 @@ public:
 	int AddToRefPos(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderingEngine,
 		int lightflag, ChaVector4 diffusemult, int btflag,
 		bool zcmpalways, bool zenable,
-		int refposindex);
+		int refposindex, ChaMatrix currentMatView);
 	int RenderRefPos(myRenderer::RenderingEngine* renderingEngine, bool opaqueflag);
 
 

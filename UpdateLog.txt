@@ -2,6 +2,18 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2026/05/05
+　RefPos機能更新
+　　*.chaファイルの<RefPosMaxNum>でモデルごとにリファレンスポジション(RefPos)表示数を指定可能に.
+　　　1から100の整数で指定
+　　　1：RefPos無し
+　　　2：カレントフレームと選択範囲の最後のフレームに表示
+　　　3から100：カレントフレームと選択範囲内に 指定数値-2個 の残像を表示
+　　
+　　ボーンが入っていない背景などのモデルに対してもRefPosが機能するように.
+　　　表示数の指定の仕方は上記と同じ
+　　　
+　　
 2026/05/04
 　DescriptorHeap作成を最適化
 　　TheHunt Street読み込み時にビデオメモリ15.4GB消費
@@ -11,9 +23,8 @@ https://github.com/Ochakko/AdditiveIK
 　DescriptorHeap最適化で削減したメモリ分をRefPos機能にまわしてRefPos機能復活
 　　マウスでフレームを範囲選択した後、RefPosスプライトボタンを押すと６個の半透明残像が出ます
 　
-　1フレームだけ選択した状態でRefPosスプライトボタンを押すと、モデルと周囲が黒いブロックノイズで描画される不具合を修正
-　
-　
+　1フレームだけ選択した状態でRefPosスプライトボタンを押すと、モデルと周囲が黒いブロックノイズで描画される不具合を修正　　
+　　
 2026/05/03
 　CreateDescriptorHeaps()内のループを修正
 　　ボーンの最大数は元の1000個に戻しました

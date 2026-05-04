@@ -289,7 +289,7 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, double srcframe, int loopsta
 
 					if (curmodel->GetRefPosFlag() == false) {//2024/02/06
 						MATRIXCALLING curmc = UpdateMatrixCalling(curmodel);//2025/12/20
-						curmodel->UpdateMatrix(limitdegflag, 
+						curmodel->UpdateMatrix(limitdegflag,
 							&(curmc.matWorld[m_updateslot]), &(curmc.matView[m_updateslot]), &(curmc.matProj[m_updateslot]), 
 							needwaitflag, 0);
 					}
@@ -326,7 +326,6 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, double srcframe, int loopsta
 					}
 
 					if (curmodel->GetRefPosFlag() == false) {//2024/02/06
-
 						MATRIXCALLING curmc = UpdateMatrixCalling(curmodel);//2025/12/20
 						curmodel->UpdateMatrix(limitdegflag,
 							&(curmc.matWorld[m_updateslot]), &(curmc.matView[m_updateslot]), &(curmc.matProj[m_updateslot]),
@@ -357,7 +356,6 @@ int ChaScene::UpdateMatrixModels(bool limitdegflag, double srcframe, int loopsta
 					}
 
 					if (curmodel->GetRefPosFlag() == false) {//2024/02/06
-
 						MATRIXCALLING curmc = UpdateMatrixCalling(curmodel);//2025/12/20
 						curmodel->UpdateMatrix(limitdegflag,
 							&(curmc.matWorld[m_updateslot]), &(curmc.matView[m_updateslot]), &(curmc.matProj[m_updateslot]),
@@ -949,7 +947,7 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 
 			}
 
-			RenderRefPos(renderingEngine, (renderindex == 0));//2024/03/24
+			//RenderRefPos(renderingEngine, (renderindex == 0));//2024/03/24
 		}
 
 		//#########################################################################################################################
@@ -1415,7 +1413,7 @@ int ChaScene::ResetRefPos()
 int ChaScene::AddToRefPos(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderingEngine,
 	int lightflag, ChaVector4 diffusemult, int btflag,
 	bool zcmpalways, bool zenable,
-	int refposindex)
+	int refposindex, ChaMatrix currentMatView)
 {
 
 	if (!renderingEngine) {
@@ -1464,6 +1462,9 @@ int ChaScene::AddToRefPos(CModel* srcmodel, bool forcewithalpha, myRenderer::Ren
 			rendervec.clear();//!!!!!!!!!!!!!!!
 
 			if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView(refposindex)) {
+			//if (curmodel && curmodel->GetModelDisp()) {
+
+
 				//if (curmodel && curmodel->GetModelDisp()) {
 
 				ChaVector4 materialdisprate = curmodel->GetMaterialDispRate();
@@ -1541,21 +1542,27 @@ int ChaScene::AddToRefPos(CModel* srcmodel, bool forcewithalpha, myRenderer::Ren
 							//2025/12/20 UpdateMatrixModels()で使用したのと同じmatWorkd, matView, matProjを渡すように.
 							int renderslot = (m_updateslot == 0) ? 1 : 0;
 
-							MATRIXCALLING curmc = GetMatrixCalling(curmodel);
+							//MATRIXCALLING curmc = UpdateMatrixCalling(curmodel);//2025/12/20
+							//MATRIXCALLING curmc = GetMatrixCalling(curmodel);
 							//if (curmc.initflag[renderslot]) {
-							////if (curmc.initflag[m_updateslot]) {
-							//	//renderobj.mWorld = curmc.GetMatWorldForRender(m_updateslot).TKMatrix();
-							//	//renderobj.mView = curmc.GetMatViewForRender(m_updateslot).TKMatrix();
-							//	//renderobj.mProj = curmc.GetMatProjForRender(m_updateslot).TKMatrix();
-							//	renderobj.mWorld = curmc.GetMatWorldForRender(renderslot).TKMatrix();
-							//	renderobj.mView = curmc.GetMatViewForRender(renderslot).TKMatrix();
-							//	renderobj.mProj = curmc.GetMatProjForRender(renderslot).TKMatrix();
+							//if (curmc.initflag[m_updateslot]) {
+								//renderobj.mWorld = curmc.GetMatWorldForRender(m_updateslot).TKMatrix();
+								//renderobj.mView = curmc.GetMatViewForRender(m_updateslot).TKMatrix();
+								//renderobj.mProj = curmc.GetMatProjForRender(m_updateslot).TKMatrix();
+								//renderobj.mWorld = curmc.GetMatWorldForRender(renderslot).TKMatrix();
+								//renderobj.mView = curmc.GetMatViewForRender(renderslot).TKMatrix();
+								//renderobj.mProj = curmc.GetMatProjForRender(renderslot).TKMatrix();
 							//}
 							//else {
-								renderobj.mWorld = curmodel->GetWorldMat().TKMatrix();
-								renderobj.mView = curmodel->GetViewMat().TKMatrix();
-								renderobj.mProj = curmodel->GetProjMat().TKMatrix();
+							//	renderobj.mWorld = curmodel->GetWorldMat().TKMatrix();
+							//	renderobj.mView = curmodel->GetViewMat().TKMatrix();
+							//	renderobj.mProj = curmodel->GetProjMat().TKMatrix();
 							//}
+
+							renderobj.mWorld = curmodel->GetWorldMat().TKMatrix();
+							renderobj.mView = currentMatView.TKMatrix();//!!!!!!!!!!!!!!!!!カメラアニメ対応
+							renderobj.mProj = curmodel->GetProjMat().TKMatrix();
+
 
 							renderobj.renderkind = RENDERKIND_NORMAL;
 							renderobj.refposindex = refposindex;//2024/02/06
@@ -1585,6 +1592,7 @@ int ChaScene::RenderRefPos(myRenderer::RenderingEngine* renderingEngine, bool op
 			std::sort(m_refpos_opaque.begin(), m_refpos_opaque.end());//カメラ距離でソート
 			//不透明は近くから順に描画
 			Add3DModelToForwardRenderPass(m_refpos_opaque);
+			m_refpos_opaque.clear();
 		}
 	}
 	else {
@@ -1592,6 +1600,7 @@ int ChaScene::RenderRefPos(myRenderer::RenderingEngine* renderingEngine, bool op
 			std::sort(m_refpos_transparent.begin(), m_refpos_transparent.end());//カメラ距離でソート
 			std::reverse(m_refpos_transparent.begin(), m_refpos_transparent.end());//半透明は遠くから順番に描画
 			Add3DModelToForwardRenderPass(m_refpos_transparent);
+			m_refpos_transparent.clear();
 		}
 	}
 

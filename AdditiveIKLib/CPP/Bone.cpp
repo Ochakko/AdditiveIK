@@ -7482,8 +7482,10 @@ int CBone::LoadCapsuleShape(ID3D12Device* pdev)
 		}
 	}
 
+	int refposmaxnum = 1;
+
 	if (!s_coldisp[COL_CONE_INDEX]) {
-		s_coldisp[COL_CONE_INDEX] = new CModel();
+		s_coldisp[COL_CONE_INDEX] = new CModel(refposmaxnum);
 		if (!s_coldisp[COL_CONE_INDEX]) {
 			_ASSERT(0);
 			return 1;
@@ -7495,7 +7497,7 @@ int CBone::LoadCapsuleShape(ID3D12Device* pdev)
 	}
 
 	if (!s_coldisp[COL_CAPSULE_INDEX]) {
-		s_coldisp[COL_CAPSULE_INDEX] = new CModel();
+		s_coldisp[COL_CAPSULE_INDEX] = new CModel(refposmaxnum);
 		if (!s_coldisp[COL_CAPSULE_INDEX]) {
 			_ASSERT(0);
 			return 1;
@@ -7507,7 +7509,7 @@ int CBone::LoadCapsuleShape(ID3D12Device* pdev)
 	}
 
 	if (!s_coldisp[COL_SPHERE_INDEX]) {
-		s_coldisp[COL_SPHERE_INDEX] = new CModel();
+		s_coldisp[COL_SPHERE_INDEX] = new CModel(refposmaxnum);
 		if (!s_coldisp[COL_SPHERE_INDEX]) {
 			_ASSERT(0);
 			return 1;
@@ -7519,7 +7521,7 @@ int CBone::LoadCapsuleShape(ID3D12Device* pdev)
 	}
 
 	if (!s_coldisp[COL_BOX_INDEX]) {
-		s_coldisp[COL_BOX_INDEX] = new CModel();
+		s_coldisp[COL_BOX_INDEX] = new CModel(refposmaxnum);
 		if (!s_coldisp[COL_BOX_INDEX]) {
 			_ASSERT(0);
 			return 1;
@@ -7533,7 +7535,7 @@ int CBone::LoadCapsuleShape(ID3D12Device* pdev)
 
 	//2024/02/08 for RefPos
 	if (!s_refposmark) {
-		s_refposmark = new CModel();
+		s_refposmark = new CModel(refposmaxnum);
 		if (!s_refposmark) {
 			_ASSERT(0);
 			return 1;

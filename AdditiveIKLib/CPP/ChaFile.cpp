@@ -288,7 +288,9 @@ int CChaFile::WriteFileInfo()
 	//version 1015 : 2026/01/01 1.0.0.57へ向けて  <IKStopAllOFF>追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1015</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1016 : 2026/04/25 1.0.0.66へ向けて  ChaCameraの不足分追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1016</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1016</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1017 : 2026/04/25 1.0.0.67へ向けて  RefPosMaxNum追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1017</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -325,6 +327,7 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 	CallF(Write2File("    <ModelMult>%f</ModelMult>\r\n", curmodel->GetLoadMult() ), return 1 );
 	CallF(Write2File("    <ModelDisp>%d</ModelDisp>\r\n", (curmodel->GetModelDisp() ? 1 : 0)), return 1);
 	CallF(Write2File("    <ObjBoundingBlockNum>%d</ObjBoundingBlockNum>\r\n", curmodel->GetObjBoundingBlockNum()), return 1);
+	CallF(Write2File("    <RefPosMaxNum>%d</RefPosMaxNum>\r\n", curmodel->GetRefPosMaxNum()), return 1);
 
 	if (curmodel->GetGrassFlag() && srcgrasselem) {
 		CallF(Write2File("    <GrassFlag>1</GrassFlag>\r\n"), return 1);
@@ -744,7 +747,7 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath, 
 	CFootRigDlg* srcfootrigdlg,
 	CModel* (*srcfbxfunc)( bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, 
-		std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum),
+		std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum, int srcrefposmaxnum),
 	int (*srcReffunc)(), int (*srcImpFunc)(), int (*srcGcoFunc)(),
 	int (*srcReMenu)( int selindex1, int callbymenu1 ), 
 	int (*srcRgdMenu)( int selindex2, int callbymenu2 ), 
@@ -1210,6 +1213,9 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	int getobjboundingblocknum = 0;
 	int objboundingblocknum = 40;
 
+	int getrefposmaxnum = 0;
+	int refposmaxnum = 1;
+
 	int refnum = 0;
 	int impnum = 0;
 	int curre = 0;
@@ -1231,6 +1237,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	getmodeldisp = Read_Int(xmlbuf, "<ModelDisp>", "</ModelDisp>", &modeldisp);
 
 	getobjboundingblocknum = Read_Int(xmlbuf, "<ObjBoundingBlockNum>", "</ObjBoundingBlockNum>", &objboundingblocknum);
+	getrefposmaxnum = Read_Int(xmlbuf, "<RefPosMaxNum>", "</RefPosMaxNum>", &refposmaxnum);
 
 
 	int grassflag = 0;
@@ -1376,11 +1383,23 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 			setobjboundingblocknum = 40;
 		}
 	}
+
+	int setrefposmaxnum = 1;
+	if (getrefposmaxnum == 0) {
+		if ((refposmaxnum >= 1) && (refposmaxnum <= REFPOSMAXNUM)) {
+			setrefposmaxnum = refposmaxnum;
+		}
+		else {
+			_ASSERT(0);
+			setrefposmaxnum = 1;
+		}
+	}
 	int skipdefref = (int)(refnum != 0);//default_ref.refが無い場合にCModel::LoadFBXでdefault_ref.refを作るためのフラグ
 	//int skipdefref = 0;//CModel::LoadFBXでCreateRigidElemReqを呼ぶ必要がある。FBXだけ読み込んでいる状態でdefault_refが必要。
 	CModel* newmodel = 0;
 	bool callfromcha = true;
-	newmodel = (this->m_FbxFunc)(callfromcha, (characnt == (charanum - 1)), skipdefref, inittimeline, ikstopname, (grassflag == 1), setobjboundingblocknum);
+	newmodel = (this->m_FbxFunc)(callfromcha, (characnt == (charanum - 1)), skipdefref, inittimeline, ikstopname, (grassflag == 1), 
+		setobjboundingblocknum, setrefposmaxnum);
 	
 	if (!newmodel) {
 		_ASSERT(0);

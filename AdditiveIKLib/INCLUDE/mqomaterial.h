@@ -244,10 +244,43 @@ typedef struct tag_hsvtoon
 	};
 }HSVTOON;
 
+
+typedef struct tag_mqopipelines
+{
+	PipelineState m_pipelineState[MQOSHADER_MAX];
+	void Init() {
+		for (int shaderindex = 0; shaderindex < MQOSHADER_MAX; shaderindex++) {
+			m_pipelineState[shaderindex].InitParams();
+		}
+	};
+	void DestroyObjs() {
+		for (int shaderindex = 0; shaderindex < MQOSHADER_MAX; shaderindex++) {
+			m_pipelineState[shaderindex].DestroyObjs();
+		}
+	};
+	void Set(int shaderindex, D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc) {
+		m_pipelineState[shaderindex].Init(psoDesc);
+	}
+	ID3D12PipelineState* Get(int shaderindex) {
+		if ((shaderindex >= 0) && (shaderindex < MQOSHADER_MAX)) {
+			return m_pipelineState[shaderindex].Get();
+		}
+		else {
+			_ASSERT(0);
+			return nullptr;
+		}
+	}
+	tag_mqopipelines() {
+		Init();
+	};
+}MQOPIPELINES;
+
+
+
 class CMQOMaterial
 {
 public:
-	CMQOMaterial();
+	CMQOMaterial(int srcrefposnum);
 	~CMQOMaterial();
 
 	void DestroyObjs();
@@ -432,7 +465,7 @@ public:
 
 
 private:
-	int InitParams();
+	int InitParams(int srcrefposnum);
 
 	int ConvParamsTo3F();
 	int SetWhiteTexture();
@@ -1026,17 +1059,17 @@ public:
 	{
 		return m_refposflag;
 	}
-	void SetRefPosNum(int srcval)
+	void SetRefPosMaxNum(int srcval)
 	{
-		if ((srcval >= 0) && (srcval <= REFPOSMAXNUM)) {
+		if ((srcval >= 1) && (srcval <= REFPOSMAXNUM)) {
 			m_refposnum = srcval;
 		}
 		else {
 			_ASSERT(0);
-			m_refposnum = 0;
+			m_refposnum = 1;
 		}
 	}
-	int GetRefPosNum()
+	int GetRefPosMaxNum()
 	{
 		return m_refposnum;
 	}
@@ -1253,24 +1286,24 @@ private:
 	//###############
 	//root signature
 	//###############
-	RootSignature m_rootSignature[REFPOSMAXNUM] ;		//ルートシグネチャ。
-	RootSignature m_shadowrootSignature[REFPOSMAXNUM];	//ルートシグネチャ。
+	std::vector<RootSignature> m_rootSignature;// [REFPOSMAXNUM] ;		//ルートシグネチャ。
+	std::vector<RootSignature> m_shadowrootSignature;//[REFPOSMAXNUM];	//ルートシグネチャ。
 	//#############
 	//video memory
 	//#############
-	ConstantBuffer m_commonConstantBuffer[REFPOSMAXNUM];						//メッシュ共通の定数バッファ。
-	ConstantBuffer m_expandConstantBuffer[REFPOSMAXNUM];						//ユーザー拡張用の定数バッファ
-	ConstantBuffer m_expandConstantBuffer2[REFPOSMAXNUM];						//ユーザー拡張用の定数バッファ
-	ConstantBuffer m_shadowcommonConstantBuffer[REFPOSMAXNUM];				//メッシュ共通の定数バッファ。(shadow)
-	ConstantBuffer m_shadowexpandConstantBuffer[REFPOSMAXNUM];				//ユーザー拡張用の定数バッファ(shadow)
-	ConstantBuffer m_shadowexpandConstantBuffer2[REFPOSMAXNUM];				//ユーザー拡張用の定数バッファ(shadow)
+	std::vector<ConstantBuffer*> m_commonConstantBuffer;//[REFPOSMAXNUM];						//メッシュ共通の定数バッファ。
+	std::vector<ConstantBuffer*> m_expandConstantBuffer;//[REFPOSMAXNUM];						//ユーザー拡張用の定数バッファ
+	std::vector<ConstantBuffer*> m_expandConstantBuffer2;//[REFPOSMAXNUM];						//ユーザー拡張用の定数バッファ
+	std::vector<ConstantBuffer*> m_shadowcommonConstantBuffer;//[REFPOSMAXNUM];				//メッシュ共通の定数バッファ。(shadow)
+	std::vector<ConstantBuffer*> m_shadowexpandConstantBuffer;//[REFPOSMAXNUM];				//ユーザー拡張用の定数バッファ(shadow)
+	std::vector<ConstantBuffer*> m_shadowexpandConstantBuffer2;//[REFPOSMAXNUM];				//ユーザー拡張用の定数バッファ(shadow)
 	//#############
 	//system memory
 	//#############
-	SConstantBuffer m_cb[REFPOSMAXNUM];
-	SConstantBufferBoneMatrix m_cbMatrix[REFPOSMAXNUM];
-	SConstantBufferLights m_cbLights[REFPOSMAXNUM];
-	SConstantBufferShadow m_cbShadow[REFPOSMAXNUM];
+	std::vector<SConstantBuffer> m_cb;//[REFPOSMAXNUM];
+	std::vector<SConstantBufferBoneMatrix> m_cbMatrix;//[REFPOSMAXNUM];
+	std::vector<SConstantBufferLights> m_cbLights;//[REFPOSMAXNUM];
+	std::vector<SConstantBufferShadow> m_cbShadow;//[REFPOSMAXNUM];
 	//#############
 	//DescriptorHeap
 	//#############
@@ -1375,10 +1408,16 @@ private:
 	ChaVectorDbl2 m_uvscale;//2024/03/05
 	ChaVectorDbl2 m_uvoffset;//2024/03/05
 
-	PipelineState m_opaquePipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
-	PipelineState m_transPipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
-	PipelineState m_transNoZPipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
-	PipelineState m_zalwaysPipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
+	//PipelineState m_opaquePipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
+	//PipelineState m_transPipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
+	//PipelineState m_transNoZPipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
+	//PipelineState m_zalwaysPipelineState[MQOSHADER_MAX][REFPOSMAXNUM];
+	std::vector<MQOPIPELINES> m_opaquePipelineState2;// [MQOSHADER_MAX] [REFPOSMAXNUM] ;
+	std::vector<MQOPIPELINES> m_transPipelineState2;//[MQOSHADER_MAX][REFPOSMAXNUM];
+	std::vector<MQOPIPELINES> m_transNoZPipelineState2;//[MQOSHADER_MAX][REFPOSMAXNUM];
+	std::vector<MQOPIPELINES> m_zalwaysPipelineState2;//[MQOSHADER_MAX][REFPOSMAXNUM];
+
+
 	Shader* m_vsMQOShader[MQOSHADER_MAX];
 	Shader* m_psMQOShader[MQOSHADER_MAX];
 

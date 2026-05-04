@@ -56,9 +56,9 @@ typedef struct tag_latheelem
 } LATHEELEM;
 
 
-CMQOObject::CMQOObject() : m_frustum()
+CMQOObject::CMQOObject(CModel* srcmodel)// : m_frustum()
 {
-	InitParams();
+	InitParams(srcmodel);
 	s_alloccnt++;
 	m_objectno = s_alloccnt;
 }
@@ -246,8 +246,14 @@ int CMQOObject::DestroyShapeAnim(char* srcname, int srcmotid)
 	return 0;
 }
 
-void CMQOObject::InitParams()
+void CMQOObject::InitParams(CModel* srcmodel)
 {
+	if (srcmodel == nullptr) {
+		_ASSERT(0);
+		return;
+	}
+	m_parentmodel = srcmodel;
+
 	m_objfrom = OBJFROM_MQO;
 
 	m_pnode = 0;
@@ -335,8 +341,10 @@ void CMQOObject::InitParams()
 	m_cancelshadow = false;
 
 	int index0;
-	for (index0 = 0; index0 < REFPOSMAXNUM; index0++) {
-		m_frustum[index0].InitParams();
+	for (index0 = 0; index0 < GetParentModel()->GetRefPosMaxNum(); index0++) {
+		ChaFrustumInfo newfrustum;
+		newfrustum.InitParams();
+		m_frustum.push_back(newfrustum);
 	}
 
 	m_gpucollisionflag = false;
@@ -3426,15 +3434,18 @@ int CMQOObject::ChkInView(ChaMatrix matWorld, ChaMatrix matVP, int refposindex)
 {
 
 
-
-
+	if (GetParentModel() == nullptr) {
+		_ASSERT(0);
+		return 1;
+	}
 
 	//##############################################
 	//コンピュートシェーダに移行したのでこの関数は現在未使用
 	//##############################################
 
 
-	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) ||
+		(refposindex >= m_frustum.size())) {
 		_ASSERT(0);
 		return 1;
 	}
@@ -3527,7 +3538,14 @@ int CMQOObject::ChkInView(ChaMatrix matWorld, ChaMatrix matVP, int refposindex)
 
 bool CMQOObject::GetVisible(int refposindex)
 {
-	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+	if (GetParentModel() == nullptr) {
+		_ASSERT(0);
+		return false;
+	}
+
+
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) || 
+		(refposindex >= m_frustum.size())) {
 		_ASSERT(0);
 		return false;
 	}
@@ -3542,7 +3560,14 @@ bool CMQOObject::GetVisible(int refposindex)
 }
 bool CMQOObject::GetInView(int refposindex)
 {
-	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+	if (GetParentModel() == nullptr) {
+		_ASSERT(0);
+		return false;
+	}
+
+
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) || 
+		(refposindex >= m_frustum.size())) {
 		_ASSERT(0);
 		return false;
 	}
@@ -3551,7 +3576,13 @@ bool CMQOObject::GetInView(int refposindex)
 }
 bool CMQOObject::GetInShadow(int refposindex)
 {
-	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+	if (GetParentModel() == nullptr) {
+		_ASSERT(0);
+		return false;
+	}
+
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) || 
+		(refposindex >= m_frustum.size())) {
 		_ASSERT(0);
 		return false;
 	}
@@ -3565,16 +3596,30 @@ bool CMQOObject::GetInShadow(int refposindex)
 	}
 }
 
-void CMQOObject::SetInView(bool srcflag, int refposindex) {
-	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+void CMQOObject::SetInView(bool srcflag, int refposindex) 
+{
+	if (GetParentModel() == nullptr) {
+		_ASSERT(0);
+		return;
+	}
+
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) || 
+		(refposindex >= m_frustum.size())) {
 		_ASSERT(0);
 		return;
 	}
 
 	m_frustum[refposindex].SetVisible(srcflag);
 }
-void CMQOObject::SetInShadow(bool srcflag, int refposindex) {
-	if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
+void CMQOObject::SetInShadow(bool srcflag, int refposindex) 
+{
+	if (GetParentModel() == nullptr) {
+		_ASSERT(0);
+		return;
+	}
+
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) || 
+		(refposindex >= m_frustum.size())) {
 		_ASSERT(0);
 		return;
 	}
@@ -3944,4 +3989,30 @@ MODELBOUND CMQOObject::GetBound()
 	return retmb;
 }
 
+void CMQOObject::SetDistFromCamera(float srcval, int refposindex)
+{
+	if (GetParentModel() == nullptr) {
+		_ASSERT(0);
+		return;
+	}
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) ||
+		(m_frustum.size() <= 0) || (refposindex >= m_frustum.size())) {
+		_ASSERT(0);
+		return;
+	}
+	m_frustum[refposindex].SetDistFromCamera(srcval);
+}
+double CMQOObject::GetDistFromCamera(int refposindex)
+{
+	if (GetParentModel() == nullptr) {
+		_ASSERT(0);
+		return FLT_MAX;
+	}
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) ||
+		(m_frustum.size() <= 0) || (refposindex >= m_frustum.size())) {
+		_ASSERT(0);
+		return FLT_MAX;
+	}
+	return m_frustum[refposindex].GetDistFromCamera();
+}
 

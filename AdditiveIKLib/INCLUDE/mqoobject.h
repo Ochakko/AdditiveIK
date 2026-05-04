@@ -59,7 +59,7 @@ typedef struct tag_latermaterial
 class CMQOObject
 {
 public:
-	CMQOObject();
+	CMQOObject(CModel* srcmodel);
 	~CMQOObject();
 
 	int SetParams( char* srcchar, int srcleng );
@@ -178,7 +178,7 @@ public:
 	float GetShapeAnimWeight(int srcmotid, int framecnt, int channelindex);
 
 private:
-	void InitParams();
+	void InitParams(CModel* srcmodel);
 
 	int GetName( char* dstchar, int dstleng, char* srcchar, int pos, int srcleng );
 	int GetInt( int* dstint, char* srcchar, int pos, int srcleng, int* stepnum );
@@ -513,22 +513,8 @@ public:
 		return m_getuvnum;
 	}
 
-	void SetDistFromCamera(float srcval, int refposindex)
-	{
-		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
-			_ASSERT(0);
-			return;
-		}
-		m_frustum[refposindex].SetDistFromCamera(srcval);
-	}
-	double GetDistFromCamera(int refposindex)
-	{
-		if ((refposindex < 0) || (refposindex >= REFPOSMAXNUM)) {
-			_ASSERT(0);
-			return FLT_MAX;
-		}
-		return m_frustum[refposindex].GetDistFromCamera();
-	}
+	void SetDistFromCamera(float srcval, int refposindex);
+	double GetDistFromCamera(int refposindex);
 
 	void SetCancelShadow(bool srcflag)
 	{
@@ -547,7 +533,13 @@ public:
 		return m_gpucollisionflag;
 	}
 
+	CModel* GetParentModel()
+	{
+		return m_parentmodel;
+	}
+
 private:
+	CModel* m_parentmodel;
 	int m_objfrom;
 
 	int m_objectno;
@@ -589,7 +581,7 @@ private:
 
 	FbxNode* m_pnode;
 
-	ChaFrustumInfo m_frustum[REFPOSMAXNUM];
+	std::vector<ChaFrustumInfo> m_frustum;// [REFPOSMAXNUM] ;
 	bool m_cancelshadow;
 
 	CBone* m_clustertopbone;

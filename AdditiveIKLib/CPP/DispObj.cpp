@@ -1875,7 +1875,8 @@ int CDispObj::RenderNormalPM3Material(RenderContext* rc, myRenderer::RENDEROBJ r
 		mProj = g_cameraShadow->GetProjectionMatrix();
 	}
 	//定数バッファの設定、更新など描画の共通処理を実行する。
-	int refposindex = 0;//!!!!!!!!!
+	//int refposindex = 0;//!!!!!!!!!
+	int refposindex = renderobj.refposindex;//2026/05/05
 	curmat->DrawCommon(rc, renderobj, mView, mProj, refposindex);
 
 
