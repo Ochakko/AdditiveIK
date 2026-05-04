@@ -10,8 +10,10 @@ https://github.com/Ochakko/AdditiveIK
 　　
 　DescriptorHeap最適化で削減したメモリ分をRefPos機能にまわしてRefPos機能復活
 　　マウスでフレームを範囲選択した後、RefPosスプライトボタンを押すと６個の半透明残像が出ます
-
-
+　
+　1フレームだけ選択した状態でRefPosスプライトボタンを押すと、モデルと周囲が黒いブロックノイズで描画される不具合を修正
+　
+　
 2026/05/03
 　CreateDescriptorHeaps()内のループを修正
 　　ボーンの最大数は元の1000個に戻しました

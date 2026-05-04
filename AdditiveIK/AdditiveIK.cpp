@@ -31675,60 +31675,62 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 					divnum = min((int)renderleng, (REFPOSMAXNUM - 2));//選択フレーム長より多くは分割しない
 					double renderstep = fmax(1.0, (renderleng / (double)divnum));//renderstep = 0は無限ループになる
 
-					bool addcurrentjointpos = false;
 					int refposindex = 0;
-					double renderframe, roundingrenderframe;
-					for (refposindex = 0; refposindex <= divnum; refposindex++) {
-						renderframe = roundingstartframe + renderstep * (double)refposindex;
-						roundingrenderframe = RoundingTime(renderframe);
+					if (renderleng > 0) {
+						bool addcurrentjointpos = false;
+						double renderframe, roundingrenderframe;
+						for (refposindex = 0; refposindex <= divnum; refposindex++) {
+							renderframe = roundingstartframe + renderstep * (double)refposindex;
+							roundingrenderframe = RoundingTime(renderframe);
 
-						if ((addcurrentjointpos == false) && (roundingrenderframe >= currentframe)) {
-							double roundingcurrentframe = RoundingTime(currentframe);
-							GetCurrentModel()->SetMotionFrame(roundingcurrentframe);
+							if ((addcurrentjointpos == false) && (roundingrenderframe >= currentframe)) {
+								double roundingcurrentframe = RoundingTime(currentframe);
+								GetCurrentModel()->SetMotionFrame(roundingcurrentframe);
+								ChaVector3 tmpfpos = curbone->GetJointFPos();
+								ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingcurrentframe, 0) * modelwm;
+								ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
+								vecbonepos.push_back(curbonepos);
+								addcurrentjointpos = true;
+							}
+							GetCurrentModel()->SetMotionFrame(roundingrenderframe);
 							ChaVector3 tmpfpos = curbone->GetJointFPos();
-							ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingcurrentframe, 0) * modelwm;
+							ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingrenderframe, 0) * modelwm;
 							ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
 							vecbonepos.push_back(curbonepos);
-							addcurrentjointpos = true;
+
+
+							//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
+
+							//refframeのポーズを表示
+							int btflag1 = 0;
+
+							GetCurrentModel()->SetMotionFrame(roundingrenderframe);
+
+							g_chascene->UpdateMatrixOneModel(GetCurrentModel(), g_limitdegflag, &modelwm, &s_matView, &s_matProj,
+								roundingrenderframe, refposindex);
+							GetCurrentModel()->SetShaderConst(btflag1, calcslotflag);
+							GetCurrentModel()->SetRefPosFl4x4ToDispObj(refposindex);
+							//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
+
+							//カレントフレームから離れるほど　透明度を薄くする
+							const double refstartalpha = 0.80f;
+							double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
+							//2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
+							double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
+							ChaVector4 refdiffusemult;
+							refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)renderalpha);
+							//const double refstartalpha = (double)g_refalpha * 0.01f;
+							//ChaVector4 refdiffusemult;
+							//refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)refstartalpha);
+
+							int lightflag = 0;
+							bool forcewithalpha = true;
+							int btflag = 0;
+							bool zcmpalways = true;
+							bool zenable = true;
+							g_chascene->AddToRefPos(GetCurrentModel(), forcewithalpha, re,
+								lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
 						}
-						GetCurrentModel()->SetMotionFrame(roundingrenderframe);
-						ChaVector3 tmpfpos = curbone->GetJointFPos();
-						ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingrenderframe, 0) * modelwm;
-						ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
-						vecbonepos.push_back(curbonepos);
-
-
-						//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
-
-						//refframeのポーズを表示
-						int btflag1 = 0;
-
-						GetCurrentModel()->SetMotionFrame(roundingrenderframe);
-
-						g_chascene->UpdateMatrixOneModel(GetCurrentModel(), g_limitdegflag, &modelwm, &s_matView, &s_matProj,
-							roundingrenderframe, refposindex);
-						GetCurrentModel()->SetShaderConst(btflag1, calcslotflag);
-						GetCurrentModel()->SetRefPosFl4x4ToDispObj(refposindex);
-						//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
-
-						//カレントフレームから離れるほど　透明度を薄くする
-						const double refstartalpha = 0.80f;
-						double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
-						//2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
-						double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
-						ChaVector4 refdiffusemult;
-						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)renderalpha);
-						//const double refstartalpha = (double)g_refalpha * 0.01f;
-						//ChaVector4 refdiffusemult;
-						//refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)refstartalpha);
-
-						int lightflag = 0;
-						bool forcewithalpha = true;
-						int btflag = 0;
-						bool zcmpalways = true;
-						bool zenable = true;
-						g_chascene->AddToRefPos(GetCurrentModel(), forcewithalpha, re,
-							lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
 					}
 
 					{
