@@ -14119,7 +14119,8 @@ int RenderSelectFunc(myRenderer::RenderingEngine* re)
 		int btflag = 0;
 		bool zcmpalways = true;
 		bool zenable = false;
-		g_chascene->RenderOneModel(s_select, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
+		bool calcslotflag = false;
+		g_chascene->RenderOneModel(calcslotflag, s_select, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
 		//s_select->OnRender(withalpha, pRenderContext, lightflag, diffusemult);
 	}
 	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
@@ -14145,7 +14146,8 @@ int RenderSelectPostureFunc(myRenderer::RenderingEngine* re)
 		int btflag = 0;
 		bool zcmpalways = true;
 		bool zenable = false;
-		g_chascene->RenderOneModel(s_select_posture, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
+		bool calcslotflag = false;
+		g_chascene->RenderOneModel(calcslotflag, s_select_posture, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
 		//s_select_posture->OnRender(withalpha, pRenderContext, lightflag, diffusemult);
 	}
 	//pRenderContext->OMSetDepthStencilState(g_pDSStateZCmp, 1);
@@ -31629,12 +31631,19 @@ s_layerWnd->setVisible(false);
 
 int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 {
+	//###################
+	//描画キューをクリアする
+	//###################
+	g_chascene->ResetRefPos();
+
 	if (!re || !curmodel || !g_chascene) {
 		return 0;
 	}
 
 	if (s_sprefpos.state) {
 		if ((curmodel == GetCurrentModel()) && (curmodel->GetGrassFlag() == false)) {
+			bool calcslotflag;
+			calcslotflag = true;//2024/03/20
 
 			//int keynum;
 			//double startframe, endframe, applyframe;
@@ -31695,37 +31704,31 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 						int btflag1 = 0;
 
 						GetCurrentModel()->SetMotionFrame(roundingrenderframe);
-						//GetCurrentModel()->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, g_chascene->GetUpdateSlot());
+
 						g_chascene->UpdateMatrixOneModel(GetCurrentModel(), g_limitdegflag, &modelwm, &s_matView, &s_matProj,
 							roundingrenderframe, refposindex);
-
-
-						bool calcslotflag;
-						calcslotflag = true;//2024/03/20
-						//calcslotflag = false;
 						GetCurrentModel()->SetShaderConst(btflag1, calcslotflag);
 						GetCurrentModel()->SetRefPosFl4x4ToDispObj(refposindex);
+						//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
 
 						//カレントフレームから離れるほど　透明度を薄くする
-						//const double refstartalpha = 0.80f;
-						//double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
-						////2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
-						//double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
-						//ChaVector4 refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)renderalpha);
-						const double refstartalpha = (double)g_refalpha * 0.01f;
+						const double refstartalpha = 0.80f;
+						double renderalpha0 = (renderleng - fabs(currentframe - renderframe)) / renderleng;
+						//2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
+						double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
 						ChaVector4 refdiffusemult;
-						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)refstartalpha);
+						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)renderalpha);
+						//const double refstartalpha = (double)g_refalpha * 0.01f;
+						//ChaVector4 refdiffusemult;
+						//refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)refstartalpha);
 
 						int lightflag = 0;
 						bool forcewithalpha = true;
 						int btflag = 0;
 						bool zcmpalways = true;
 						bool zenable = true;
-						//g_chascene->RenderOneModel(GetCurrentModel(), forcewithalpha, re,
-						//	lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
 						g_chascene->AddToRefPos(GetCurrentModel(), forcewithalpha, re,
 							lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
-
 					}
 
 					{
@@ -31734,15 +31737,12 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							int btflag1 = 0;
 
 							GetCurrentModel()->SetMotionFrame(currentframe);
-							//GetCurrentModel()->UpdateMatrix(g_limitdegflag, &modelwm, &s_matVP, true, g_chascene->GetUpdateSlot());
+
 							g_chascene->UpdateMatrixOneModel(GetCurrentModel(), g_limitdegflag, &modelwm, &s_matView, &s_matProj,
 								currentframe, refposindex);
-
-							bool calcslotflag;
-							calcslotflag = true;//2024/03/20
-							//calcslotflag = false;
 							GetCurrentModel()->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
 							GetCurrentModel()->SetRefPosFl4x4ToDispObj(refposindex);
+							//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
 
 							ChaVector4 refdiffusemult;
 							refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
@@ -31753,9 +31753,6 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 							//bool zcmpalways = false;
 							bool zcmpalways = g_zalways;//2024/02/08 DispAndLimitsプレートメニューのチェックボックス
 							bool zenable = true;
-							//g_chascene->RenderOneModel(GetCurrentModel(), forcewithalpha, re,
-							//	lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
-
 							g_chascene->AddToRefPos(GetCurrentModel(), forcewithalpha, re,
 								lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex);
 
@@ -31763,7 +31760,6 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel)
 						}
 					}
 
-					//g_chascene->RenderRefPos(re);//RenderModelsで一緒にレンダー
 
 
 					{
@@ -31942,7 +31938,8 @@ int OnRenderSky(myRenderer::RenderingEngine* re, RenderContext* pRenderContext)
 		//bool zcmpalways = true;
 		bool zenable = false;//2024/03/25 上書き可能な背景として描画するのでZは書き込まない
 		int lightflag = -1;
-		g_chascene->RenderOneModel(s_sky, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
+		bool calcslotflag = false;
+		g_chascene->RenderOneModel(calcslotflag, s_sky, forcewithalpha, re, lightflag, diffusemult, btflag, zcmpalways, zenable);
 	}
 
 	return 0;
@@ -31976,7 +31973,8 @@ int OnRenderGround(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 		int btflag = 0;
 		bool zcmpalways = false;
 		bool zenable = true;
-		g_chascene->RenderOneModel(s_ground, forcewithalpha, re, 0, diffusemult, btflag, zcmpalways, zenable);
+		bool calcslotflag = false;
+		g_chascene->RenderOneModel(calcslotflag, s_ground, forcewithalpha, re, 0, diffusemult, btflag, zcmpalways, zenable);
 	}
 	//if (s_gplane && s_bpWorld && s_bpWorld->m_gplanedisp) {
 	//	ChaMatrix gpmat = s_inimat;

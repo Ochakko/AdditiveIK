@@ -209,7 +209,7 @@ private:
 	 //int CreateVBandIBLine(ID3D12Device* pdev);//extlineもCreateVBandIBで処理
 
 
-	void CreateDescriptorHeaps();
+	//void CreateDescriptorHeaps();
 
 
 private:

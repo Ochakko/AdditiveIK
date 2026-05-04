@@ -1243,22 +1243,17 @@ public:
 	//CreateDecl()内で　頂点フォーマットによって　定数を設定する
 	//###################################################
 	//拡張SRVが設定されるレジスタの開始番号。
-	//const int EXPAND_SRV_REG__START_NO = 10;
-	//const int EXPAND_SRV_REG__START_NO = 6;
-	int EXPAND_SRV_REG__START_NO = 5;
+	int EXPAND_SRV_REG__START_NO = 6;//SetDecl()でセット
 	//１つのマテリアルで使用されるSRVの数。
-	int NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
+	int NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);//SetDecl()でセット
 	//１つのマテリアルで使用されるCBVの数。
-	//const int NUM_CBV_ONE_MATERIAL = 2;
-	int NUM_CBV_ONE_MATERIAL = 1;
-
-
+	int NUM_CBV_ONE_MATERIAL = 3;//SetDecl()でセット
 
 private:
 	//###############
 	//root signature
 	//###############
-	RootSignature m_rootSignature[REFPOSMAXNUM];		//ルートシグネチャ。
+	RootSignature m_rootSignature[REFPOSMAXNUM] ;		//ルートシグネチャ。
 	RootSignature m_shadowrootSignature[REFPOSMAXNUM];	//ルートシグネチャ。
 	//#############
 	//video memory
@@ -1280,8 +1275,10 @@ private:
 	//DescriptorHeap
 	//#############
 	bool m_createdescriptorflag;
-	DescriptorHeap m_descriptorHeap[REFPOSMAXNUM];						//ディスクリプタヒープ。
-	DescriptorHeap m_shadowdescriptorHeap[REFPOSMAXNUM];					//ディスクリプタヒープ。
+	DescriptorHeap m_descriptorHeap;//[REFPOSMAXNUM];						//ディスクリプタヒープ。
+	DescriptorHeap m_shadowdescriptorHeap;//[REFPOSMAXNUM];					//ディスクリプタヒープ。
+
+
 
 	//#######
 	//RefPos

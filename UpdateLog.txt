@@ -2,6 +2,16 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2026/05/04
+　DescriptorHeap作成を最適化
+　　TheHunt Street読み込み時にビデオメモリ15.4GB消費
+　　こちらで使用しているビデオカードのビデオメモリは16GBなのでギリギリライン
+　　もう少し調整する可能性有
+　　
+　DescriptorHeap最適化で削減したメモリ分をRefPos機能にまわしてRefPos機能復活
+　　マウスでフレームを範囲選択した後、RefPosスプライトボタンを押すと６個の半透明残像が出ます
+
+
 2026/05/03
 　CreateDescriptorHeaps()内のループを修正
 　　ボーンの最大数は元の1000個に戻しました

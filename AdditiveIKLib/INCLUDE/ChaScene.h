@@ -144,7 +144,7 @@ public:
 	int RenderModels(myRenderer::RenderingEngine* Engine, int lightflag, ChaVector4 diffusemult, int btflag = 0);
 	void WaitForRenderModels();
 	void WaitForUpdateMatrixModels();
-	int RenderOneModel(CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderingEngine, 
+	int RenderOneModel(bool calcslotflag, CModel* srcmodel, bool forcewithalpha, myRenderer::RenderingEngine* renderingEngine, 
 		int lightflag, ChaVector4 diffusemult, int btflag, 
 		bool zcmpalways, bool zenable,
 		int refposindex = 0);
@@ -436,7 +436,7 @@ public:
 
 		m_forwardModelsReserveSize = 0;
 
-		ResetRefPos();
+		//ResetRefPos();//描画タイミングが違うのでリセットタイミングも別に.
 	};
 
 

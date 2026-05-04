@@ -475,16 +475,15 @@ void CMQOMaterial::DestroyObjs()
 	m_InstancingzalwaysLinePipelineState.DestroyObjs();
 
 
-	int rsindex;
-	for (rsindex = 0; rsindex < REFPOSMAXNUM; rsindex++) {
-		m_descriptorHeap[rsindex].DestroyObjs();
-		m_shadowdescriptorHeap[rsindex].DestroyObjs();
-	}
-	for (rsindex = 0; rsindex < REFPOSMAXNUM; rsindex++) {
+	m_descriptorHeap.DestroyObjs();
+	m_shadowdescriptorHeap.DestroyObjs();
+
+	for (int rsindex = 0; rsindex < REFPOSMAXNUM; rsindex++) {
 		m_rootSignature[rsindex].DestroyObjs();
 		//m_ZPrerootSignature[rsindex].DestroyObjs();
 		m_shadowrootSignature[rsindex].DestroyObjs();
 	}
+
 	m_InstancingrootSignature.DestroyObjs();
 
 	//bank管理の外部ポインタ
@@ -1647,16 +1646,16 @@ int CMQOMaterial::InitShadersAndPipelines(
 	samplerDescArray[5].MaxAnisotropy = 1;
 
 
-	int refposindex;
-	for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+
+	for (int refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
 		m_rootSignature[refposindex].Init(
 			samplerDescArray,
 			6,
 			numCbv,
 			numSrv,
 			8,
-			offsetInDescriptorsFromTableStartCB,
-			offsetInDescriptorsFromTableStartSRV
+			NUM_CBV_ONE_MATERIAL * refposindex,
+			0//NUM_SRV_ONE_MATERIAL * refposindex
 		);
 		m_shadowrootSignature[refposindex].Init(
 			samplerDescArray,
@@ -1664,11 +1663,10 @@ int CMQOMaterial::InitShadersAndPipelines(
 			numCbv,
 			numSrv,
 			8,
-			offsetInDescriptorsFromTableStartCB,
-			offsetInDescriptorsFromTableStartSRV
+			NUM_CBV_ONE_MATERIAL * refposindex,
+			0//NUM_SRV_ONE_MATERIAL * refposindex
 		);
 	}
-
 
 	//シェーダーを初期化。
 	int result;
@@ -1820,15 +1818,15 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 
 		if (vertextype != 2) {
-//#ifdef SAMPLE_11
-//			// 背面を描画していないと影がおかしくなるため、
-//			// シャドウのサンプルのみカリングをオフにする。
-//			// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
-//			// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
-//			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-//#else
-//			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-//#endif
+			//#ifdef SAMPLE_11
+			//			// 背面を描画していないと影がおかしくなるため、
+			//			// シャドウのサンプルのみカリングをオフにする。
+			//			// 本来はアプリ側からカリングモードを渡すのがいいのだけど、
+			//			// 書籍に記載しているコードに追記がいるので、エンジン側で吸収する。
+			//			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+			//#else
+			//			psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+			//#endif
 			if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 				(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
 				(shaderindex == MQOSHADER_TOON_SHADOWMAP)) {
@@ -2943,10 +2941,10 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 	if ((shaderindex == MQOSHADER_PBR_SHADOWMAP) ||
 		(shaderindex == MQOSHADER_STD_SHADOWMAP) ||
 		(shaderindex == MQOSHADER_TOON_SHADOWMAP)) {
-		rc->SetDescriptorHeap(m_shadowdescriptorHeap[currentrefposindex]);
+		rc->SetDescriptorHeap(m_shadowdescriptorHeap);
 	}
 	else {
-		rc->SetDescriptorHeap(m_descriptorHeap[currentrefposindex]);
+		rc->SetDescriptorHeap(m_descriptorHeap);
 	}
 }
 
@@ -3078,8 +3076,7 @@ void CMQOMaterial::InstancingBeginRender(RenderContext* rc, myRenderer::RENDEROB
 		}
 	}
 
-	rc->SetDescriptorHeap(m_descriptorHeap[0]);
-
+	rc->SetDescriptorHeap(m_descriptorHeap);
 
 }
 
@@ -3287,66 +3284,62 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 			int srvNo = 0;
 			int cbNo = 0;
 			//ディスクリプタヒープにディスクリプタを登録していく。
+			m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());	//アルベドに乗算するテクスチャ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
+
+			srvNo += NUM_SRV_ONE_MATERIAL;
+
 			int refposindex;
 			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-				m_descriptorHeap[refposindex].RegistShaderResource(srvNo, GetDiffuseMap());	//アルベドに乗算するテクスチャ。
-				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
-				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
-				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
-				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
-				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
-
-				srvNo += NUM_SRV_ONE_MATERIAL;
-
-
-				m_descriptorHeap[refposindex].RegistConstantBuffer(cbNo, m_commonConstantBuffer[refposindex]);
+				m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer[refposindex]);
 				if (m_expandConstantBuffer[refposindex].IsValid()) {
-					m_descriptorHeap[refposindex].RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer[refposindex]);//BoneMatrix
+					m_descriptorHeap.RegistConstantBuffer(cbNo + 1, m_expandConstantBuffer[refposindex]);//BoneMatrix
 				}
 				if (m_expandConstantBuffer2[refposindex].IsValid()) {
-					m_descriptorHeap[refposindex].RegistConstantBuffer(cbNo + 2, m_expandConstantBuffer2[refposindex]);//Shadow
+					m_descriptorHeap.RegistConstantBuffer(cbNo + 2, m_expandConstantBuffer2[refposindex]);//Shadow
 				}
 
-
 				cbNo += NUM_CBV_ONE_MATERIAL;
-
-
-				m_descriptorHeap[refposindex].Commit();
 			}
+			m_descriptorHeap.Commit();
+
 		}
 
 		{
 			int srvNo = 0;
 			int cbNo = 0;
 			//ディスクリプタヒープにディスクリプタを登録していく。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());//アルベドに乗算するテクスチャ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
+
+			srvNo += NUM_SRV_ONE_MATERIAL;
+
+
 			int refposindex;
 			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
 				//ディスクリプタヒープにディスクリプタを登録していく。
-				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo, GetDiffuseMap());//アルベドに乗算するテクスチャ。
-				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
-				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
-				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
-				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
-				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
-
-				srvNo += NUM_SRV_ONE_MATERIAL;
-
-
-				m_shadowdescriptorHeap[refposindex].RegistConstantBuffer(cbNo, m_shadowcommonConstantBuffer[refposindex]);
-				if (m_expandConstantBuffer[refposindex].IsValid()) {
-					m_shadowdescriptorHeap[refposindex].RegistConstantBuffer(cbNo + 1, m_shadowexpandConstantBuffer[refposindex]);//BoneMatrix
+					m_shadowdescriptorHeap.RegistConstantBuffer(cbNo, m_shadowcommonConstantBuffer[refposindex]);
+				if (m_shadowexpandConstantBuffer[refposindex].IsValid()) {
+					m_shadowdescriptorHeap.RegistConstantBuffer(cbNo + 1, m_shadowexpandConstantBuffer[refposindex]);//BoneMatrix
 				}
-				if (m_expandConstantBuffer2[refposindex].IsValid()) {
-					m_shadowdescriptorHeap[refposindex].RegistConstantBuffer(cbNo + 2, m_shadowexpandConstantBuffer2[refposindex]);//Shadow
+				if (m_shadowexpandConstantBuffer2[refposindex].IsValid()) {
+					m_shadowdescriptorHeap.RegistConstantBuffer(cbNo + 2, m_shadowexpandConstantBuffer2[refposindex]);//Shadow
 				}
 
 				cbNo += NUM_CBV_ONE_MATERIAL;
 
 				m_createdescriptorflag = true;
-
-
-				m_shadowdescriptorHeap[refposindex].Commit();
 			}
+			m_shadowdescriptorHeap.Commit();
+
 		}
 
 		m_createdescriptorflag = true;
@@ -3358,51 +3351,48 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 			int cbNo = 0;
 			//ディスクリプタヒープにディスクリプタを登録していく。
 
+			m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());	//アルベドに乗算するテクスチャ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
+			//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+
+			srvNo += NUM_SRV_ONE_MATERIAL;
+
+
 			int refposindex;
 			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-				m_descriptorHeap[refposindex].RegistShaderResource(srvNo, GetDiffuseMap());	//アルベドに乗算するテクスチャ。
-				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
-				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
-				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
-				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
-				m_descriptorHeap[refposindex].RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
-				//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
-
-				srvNo += NUM_SRV_ONE_MATERIAL;
-
-
-				m_descriptorHeap[refposindex].RegistConstantBuffer(cbNo, m_commonConstantBuffer[refposindex]);
+				m_descriptorHeap.RegistConstantBuffer(cbNo, m_commonConstantBuffer[refposindex]);
 
 				cbNo += NUM_CBV_ONE_MATERIAL;
-
-
-				m_descriptorHeap[refposindex].Commit();
 			}
+			m_descriptorHeap.Commit();
 		}
 
 		{
 			int srvNo = 0;
 			int cbNo = 0;
 			//ディスクリプタヒープにディスクリプタを登録していく。
-				//ディスクリプタヒープにディスクリプタを登録していく。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());//アルベドに乗算するテクスチャ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
+			//m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+
+			srvNo += NUM_SRV_ONE_MATERIAL;
+			
+			//ディスクリプタヒープにディスクリプタを登録していく。
 			int refposindex;
 			for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo, GetDiffuseMap());//アルベドに乗算するテクスチャ。
-				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
-				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
-				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
-				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
-				m_shadowdescriptorHeap[refposindex].RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
-				//m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
-
-				srvNo += NUM_SRV_ONE_MATERIAL;
-			
-				m_shadowdescriptorHeap[refposindex].RegistConstantBuffer(cbNo, m_shadowcommonConstantBuffer[refposindex]);
+				m_shadowdescriptorHeap.RegistConstantBuffer(cbNo, m_shadowcommonConstantBuffer[refposindex]);
 
 				cbNo += NUM_CBV_ONE_MATERIAL;
-
-				m_shadowdescriptorHeap[refposindex].Commit();
 			}
+			m_shadowdescriptorHeap.Commit();
 		}
 
 		m_createdescriptorflag = true;

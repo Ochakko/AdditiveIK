@@ -1073,7 +1073,7 @@ void ChaScene::WaitForUpdateMatrixModels()
 
 }
 
-int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
+int ChaScene::RenderOneModel(bool calcslotflag, CModel* srcmodel, bool forcewithalpha,
 	myRenderer::RenderingEngine* renderingEngine, 
 	int lightflag, ChaVector4 diffusemult, int btflag, 
 	bool zcmpalways, bool zenable,
@@ -1097,8 +1097,8 @@ int ChaScene::RenderOneModel(CModel* srcmodel, bool forcewithalpha,
 	CModel* curmodel = srcmodel;
 
 
-	bool calcslotflag;
-	calcslotflag = false;
+	//bool calcslotflag;
+	//calcslotflag = false;
 
 
 	//####################################################################################
@@ -1436,7 +1436,8 @@ int ChaScene::AddToRefPos(CModel* srcmodel, bool forcewithalpha, myRenderer::Ren
 
 
 	bool calcslotflag;
-	calcslotflag = false;
+	//calcslotflag = false;
+	calcslotflag = true;
 
 	vector<myRenderer::RENDEROBJ> rendervec;
 
@@ -1539,17 +1540,22 @@ int ChaScene::AddToRefPos(CModel* srcmodel, bool forcewithalpha, myRenderer::Ren
 
 							//2025/12/20 UpdateMatrixModels()で使用したのと同じmatWorkd, matView, matProjを渡すように.
 							int renderslot = (m_updateslot == 0) ? 1 : 0;
+
 							MATRIXCALLING curmc = GetMatrixCalling(curmodel);
-							if (curmc.initflag[renderslot]) {
-								renderobj.mWorld = curmc.GetMatWorldForRender(m_updateslot).TKMatrix();
-								renderobj.mView = curmc.GetMatViewForRender(m_updateslot).TKMatrix();
-								renderobj.mProj = curmc.GetMatProjForRender(m_updateslot).TKMatrix();
-							}
-							else {
+							//if (curmc.initflag[renderslot]) {
+							////if (curmc.initflag[m_updateslot]) {
+							//	//renderobj.mWorld = curmc.GetMatWorldForRender(m_updateslot).TKMatrix();
+							//	//renderobj.mView = curmc.GetMatViewForRender(m_updateslot).TKMatrix();
+							//	//renderobj.mProj = curmc.GetMatProjForRender(m_updateslot).TKMatrix();
+							//	renderobj.mWorld = curmc.GetMatWorldForRender(renderslot).TKMatrix();
+							//	renderobj.mView = curmc.GetMatViewForRender(renderslot).TKMatrix();
+							//	renderobj.mProj = curmc.GetMatProjForRender(renderslot).TKMatrix();
+							//}
+							//else {
 								renderobj.mWorld = curmodel->GetWorldMat().TKMatrix();
 								renderobj.mView = curmodel->GetViewMat().TKMatrix();
 								renderobj.mProj = curmodel->GetProjMat().TKMatrix();
-							}
+							//}
 
 							renderobj.renderkind = RENDERKIND_NORMAL;
 							renderobj.refposindex = refposindex;//2024/02/06
