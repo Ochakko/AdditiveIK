@@ -310,17 +310,9 @@ Smooth平滑化<br>
 # Explaining Movie
 [Movie About New Feature](https://youtu.be/oKGY62YosSg "About New Feature1")<br>
 
-[ジャンプ中にくるりと回ります 2024/04/26](https://youtu.be/6wveLqMbsYA "Usage example1")<br>
-
-[限界越えたら0.1倍速で動きます 2024/05/04](https://youtu.be/ufPtA-CxVKU "Usage example2")<br>
-
-[クリック位置に草が生えるんです 2024/05/13](https://youtu.be/_-YDEyL16G8 "Usage example3")<br>
-
 [モーキャプ編集+fbxカメラ編集 2024/06/09](https://youtu.be/_G4wev5w-4g "Usage example4")<br>
 
 [空の色は何色ですか？ 2024/06/17](https://youtu.be/0LkwVw9eubg "Usage example5")<br>
-
-[屋根の上に飛べますか？ 2024/06/20](https://youtu.be/YLJxziIqBsQ "Usage example6")<br>
 
 [fbxカメラ基本編集機能の修正と確認 2024/08/02](https://youtu.be/rb1UI_p5Acc "Usage example7")<br>
 
@@ -328,20 +320,13 @@ Smooth平滑化<br>
 
 [OXの風景 2024/08/26](https://youtu.be/HZxVflJui40 "Usage example9")<br>
 
-[FootRigで接地して歩く 2024/09/04](https://youtu.be/TJjTwD0gioI "Usage example10")<br>
-
-[リアルタイムFootRig 1.2.0 at AdditiveIK 2024/10/17](https://youtu.be/VH21YgC-jvA "Usage example11")<br>
-
 [MOA2.0 2025/01/13](https://youtu.be/GFEmF8dnV_M "Usage example12")<br>
-
-[SonyDualSenseでリアルタイム階段接地 2025/02/11](https://youtu.be/WTpdyVGKlcs "Usage example13")<br>
-
-[ちょっと前のAdditiveIKのオペ画面 2025/05/06](https://youtu.be/40jmur2J2CY "Usage example14")<br>
 
 [FootRigの曲げ具合調整パラメータ 2025/10/12](https://youtu.be/tSSufCXFsdk "Usage example15")<br>
 
 [モデルをカメラの子供に設定 2025/11/29](https://youtu.be/PL3fJrAVSS0 "Usage example16")<br>
-<br>
+
+[４次元スイッチがはいったとき 2026/05/05](https://youtu.be/XokYKf-hWGY "Usage example17")<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")

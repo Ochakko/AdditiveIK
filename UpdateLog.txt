@@ -13,6 +13,10 @@ https://github.com/Ochakko/AdditiveIK
 　　ボーンが入っていない背景などのモデルに対してもRefPosが機能するように.
 　　　表示数の指定の仕方は上記と同じ
 　　　
+　ショートムービー
+　　【AdditiveIK】４次元スイッチがはいったとき【10067開発中】
+　　　https://youtu.be/XokYKf-hWGY
+　　
 　　
 2026/05/04
 　DescriptorHeap作成を最適化
