@@ -845,6 +845,7 @@ int g_dspushedR3 = 0;
 
 //static int s_dsmousewait = 0;
 
+static bool s_underoperationundo = false;
 
 static HWND s_mqodlghwnd = 0;
 static bool s_underframecopydlg = false;
@@ -3850,6 +3851,8 @@ void InitApp()
 	s_LButtonDown = false;
 	s_RButtonDown = false;
 
+	s_underoperationundo = false;
+
 	s_callingUpdateFlag = false;
 	s_camdistOnFPS = 1.0f;
 
@@ -6732,6 +6735,11 @@ void CalcFps(double fTime)
 
 void PrepairUndo_BlendShape(CBlendShapeElem srcblendshapeelem)
 {
+	if (s_underoperationundo) {
+		//2026/05/06 Undo中処理は　Undo対象にしない
+		return;
+	}
+
 	if (!srcblendshapeelem.validflag || !srcblendshapeelem.model || !srcblendshapeelem.mqoobj ||
 		(srcblendshapeelem.channelindex < 0)) {
 		return;
@@ -6775,6 +6783,11 @@ void PrepairUndo_BlendShape(CBlendShapeElem srcblendshapeelem)
 
 void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel)
 {
+	if (s_underoperationundo) {
+		//2026/05/06 Undo中処理は　Undo対象にしない
+		return;
+	}
+
 	if (befmodel == nextmodel) {
 		//選択モデルに変化が無い場合はすぐにリターン
 		return;
@@ -6871,6 +6884,11 @@ void PrepairUndo_SelectModel(CModel* befmodel, CModel* nextmodel)
 
 void PrepairUndo()
 {
+	if (s_underoperationundo) {
+		//2026/05/06 Undo中処理は　Undo対象にしない
+		return;
+	}
+
 	if (!GetCurrentModel()) {
 		return;
 	}
@@ -15570,7 +15588,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.66\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.67\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -29051,15 +29069,14 @@ int OnFrameStartPreview(double curtime)
 
 int OnSpriteUndo()
 {
-	static bool s_underoperation = false;//再入禁止用
-	if (s_underoperation == true) {
+	if (s_underoperationundo == true) {
 		return 0;
 	}
-	s_underoperation = true;
+	s_underoperationundo = true;
 
 	if (!g_chascene) {
 		_ASSERT(0);
-		s_underoperation = false;
+		s_underoperationundo = false;
 		return 1;
 	}
 
@@ -29132,7 +29149,7 @@ int OnSpriteUndo()
 	}
 
 	if (!undodoneflag) {
-		s_underoperation = false;
+		s_underoperationundo = false;
 		return 0;
 	}
 
@@ -29421,7 +29438,7 @@ int OnSpriteUndo()
 
 
 
-	s_underoperation = false;
+	s_underoperationundo = false;
 	return 0;
 
 }
