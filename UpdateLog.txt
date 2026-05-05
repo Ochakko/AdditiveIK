@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2026/05/06
-　AdditiveIK 1.0.0.67 RC1(リリース候補1)
+　AdditiveIK 1.0.0.67 release
 　　1.0.0.66からの変更点
 　　　FbxSdk2020.3.9に対応
 　　　　Maya2026.3のデフォルトのfbxバージョン
