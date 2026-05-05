@@ -7,7 +7,10 @@ DirectX12対応. fbx入出力. BulletPhysics対応.<br>
 MITランセンス.<br>
 <br>
 # ScreenShot
-![TopFig20260101](ScreenShots/SS_202601/AdditiveIK_10057_BlendShape_1_Trim1.png "トップ絵20260101")<br>
+![TopFig20260505](ScreenShots/SS_For10067/SS_RefPos4D_01_01_50per.png "トップ絵20260505")<br>
+Fig. ver 1.0.0.67開発中 RefPos4D ４次元スイッチが入った時【UnityAsset】ithapyFantasy, CosmoDragonGirl, FantasyAnimal読込.<br>
+<br>
+![TopFig20260101](ScreenShots/SS_202601/AdditiveIK_10057_BlendShape_1_Trim1.png "絵20260101")<br>
 Fig. ver 1.0.0.57 BlendShape機能修正【UnityAsset】Humanoid 3D character_smP02_REN. Japan Countryside (Anime Environment)..<br>
 <br>
 ![TopFig0](ScreenShots/0_AdditiveIK_1003_IndexOfMovie_0_W800.png "トップ絵0")<br>
