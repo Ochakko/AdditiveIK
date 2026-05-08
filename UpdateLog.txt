@@ -1,7 +1,15 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
-
+2026/05/09
+　RefPos4Dのアップデート
+　　カメラアニメを設定しなくてもRefPos4D表示可能に.
+　　　MOA2.0再生中にもRefPos4D表示可能に.
+　　　
+　MOA2.0のMocapWalkLoop機能修正
+　　ループで最初のフレームに戻るときに位置が飛んでいたのを修正
+　
+　
 2026/05/06
 　AdditiveIK 1.0.0.67 release
 　　1.0.0.66からの変更点

@@ -25321,16 +25321,18 @@ ChaMatrix CModel::Move2HipsPos(CFootRigDlg* srcfootrigdlg, int nextmotid, double
 		return wm;
 	}
 
-	ChaMatrix currenthipswm = hipsbone->GetCurMp().GetWorldMat();
-	//ChaMatrix currenthipswm = hipsbone->GetCurMp().GetAnimMat();//2025/08/31
+	ChaMatrix currenthipswm = hipsbone->GetCurMp().GetAnimMat();
 	ChaVector3 currenthipspos = ChaMatrixTraVec(currenthipswm);
-	ChaMatrix nexthipsanimmat = hipsbone->GetWorldMat(g_limitdegflag, nextmotid, nextframe, nullptr) * m_matWorld;
+	ChaMatrix nexthipsanimmat = hipsbone->GetWorldMat(g_limitdegflag, nextmotid, nextframe, nullptr);
 	ChaVector3 nexthipsanimpos = ChaMatrixTraVec(nexthipsanimmat);
 
-	ChaVector3 diffpos, newpos;
-	//diffpos = nexthipsanimpos - currenthipspos;
-	diffpos = currenthipspos - nexthipsanimpos;
-	newpos = savepos + diffpos;
+	ChaVector3 diffvec, newpos;
+	diffvec = currenthipspos - nexthipsanimpos;//ターゲット位置 - 調整前の次の位置
+	ChaMatrix currentRotMat = ChaMatrixRot(m_matWorld);
+	ChaVector3 rotateddiffvec;
+	ChaVector3TransformCoord(&rotateddiffvec, &diffvec, &currentRotMat);//アニメーションの差分ベクトルに　m_matWorldの回転分を掛ける
+
+	newpos = ChaMatrixTraVec(m_matWorld) + rotateddiffvec;//m_matWorldの新しい移動分
 	newpos.y = savepos.y;
 	SetModelPosition(newpos);
 
