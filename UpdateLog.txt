@@ -9,6 +9,10 @@ https://github.com/Ochakko/AdditiveIK
 　MOA2.0のMocapWalkLoop機能修正
 　　ループで最初のフレームに戻るときに位置が飛んでいたのを修正
 　
+　ショートムービー
+　　【4次元びゅー】RefPosView4D【定まらない世界】
+　　　https://youtu.be/oIB0kjHKH-U
+　
 　
 2026/05/06
 　AdditiveIK 1.0.0.67 release
