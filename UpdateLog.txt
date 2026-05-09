@@ -2,8 +2,8 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2026/05/06
-　AdditiveIK 1.0.0.68 RC1(リリース候補1)
+2026/05/09
+　AdditiveIK 1.0.0.68 release
 　　1.0.0.67からの変更点
 　　　RefPos4Dのアップデート
 　　　　カメラアニメを設定しなくてもRefPos4D表示可能に.
@@ -18,6 +18,8 @@ https://github.com/Ochakko/AdditiveIK
 　　【4次元びゅー】RefPosView4D【定まらない世界】
 　　　https://youtu.be/oIB0kjHKH-U
 　
+　　【過去半分】リファレンスポーズで動きを確認【未来半分】
+　　　https://youtu.be/juaX22jhXIw
 　
 2026/05/06
 　AdditiveIK 1.0.0.67 release

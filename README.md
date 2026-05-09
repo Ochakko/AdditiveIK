@@ -327,6 +327,8 @@ Smooth平滑化<br>
 [モデルをカメラの子供に設定 2025/11/29](https://youtu.be/PL3fJrAVSS0 "Usage example16")<br>
 
 [【4次元びゅー】RefPosView4D【定まらない世界】 2026/05/09](https://youtu.be/oIB0kjHKH-U "Usage example17")<br>
+
+[【過去半分】リファレンスポーズで動きを確認【未来半分】 2026/05/09](https://youtu.be/juaX22jhXIw "Usage example18")<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
