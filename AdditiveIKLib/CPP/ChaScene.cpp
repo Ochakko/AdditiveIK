@@ -2824,5 +2824,24 @@ void ChaScene::ChangeIKStopAllOFF()
 	}
 }
 
+int ChaScene::AddModelElem(MODELELEM srcmodelelem)
+{
+	if (srcmodelelem.modelptr) {
+		m_modelindex.push_back(srcmodelelem);
+
+		CreateMotion2BtThreads();
+		CreateSetBtMotionThreads();
+		CreateRenderModelsThread();
+
+		g_chacamera.AddRefPosViewBuf(srcmodelelem.modelptr);
+
+		return 0;
+	}
+	else {
+		_ASSERT(0);
+		return 1;
+	}
+};
+
 
 

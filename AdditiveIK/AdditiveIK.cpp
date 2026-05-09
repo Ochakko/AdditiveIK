@@ -3518,11 +3518,6 @@ INT WINAPI wWinMain(
 				int loopstartflag = 0;
 				OnFrameProcessTime(difftime, &nextframe, &endflag, &loopstartflag);
 
-//######################
-//RefPos4D用のカメラを更新
-//######################
-				g_chacamera.ProcessRefPosView();
-
 //####################################################
 //リアルタイムレンダリング
 //(スレッド実行)
@@ -3542,6 +3537,12 @@ INT WINAPI wWinMain(
 					//よって、2026/01/12の呼び出し方に戻した　Execute()とEndScene()だけをスレッド実行する
 					OnFrameRender(&renderingEngine, &renderContext, s_fTime);
 				}
+
+//######################
+//RefPos4D用のカメラを更新
+//######################
+				g_chacamera.ProcessRefPosView();
+
 
 //#####################################
 //モーション変化
@@ -8170,6 +8171,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				picklodflag = PickSpRefPosSW(ptCursor);
 				if (picklodflag == 1) {
 					s_sprefpos.state = !s_sprefpos.state;
+					g_chacamera.ResetRefPosViewFlag();
 					pickflag = true;
 				}
 			}
@@ -15595,7 +15597,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.67\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.68\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -29004,6 +29006,9 @@ int OnFrameStartPreview(double curtime)
 		//	DispProgressCalcLimitedWM();
 		//}
 		//else if (InterlockedAdd(&g_calclimitedwmflag, 0) == 2) {//confirm threadfunc finished
+
+		g_chacamera.ResetRefPosViewFlag();
+
 		s_calclimitedwmState = 0;
 		g_previewFlag = 1;//!!!!!!
 		InterlockedExchange(&g_calclimitedwmflag, (LONG)0);
@@ -29038,6 +29043,9 @@ int OnFrameStartPreview(double curtime)
 
 	//bullet simulation start
 	if (s_calclimitedwmState == 107) {
+
+		g_chacamera.ResetRefPosViewFlag();
+
 		s_calclimitedwmState = 0;
 		StartBt(GetCurrentModel(), TRUE, 0, 1);
 		//*psavetime = curtime;
@@ -31702,8 +31710,6 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 //モーションがあるモデルの場合
 //############################
 
-				int curmotid = curmodel->GetCurrentMotID();
-				currentframe = curmodel->GetCurrentFrame();//モーションがある場合はモデルのフレームで上書き
 				CBone* curbone = curmodel->GetBoneByID(s_curboneno);
 				
 
@@ -31711,7 +31717,11 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 				vecbonepos.clear();
 				ChaVector3 curbonepos;
 
+
 				ChaMatrix modelwm = curmodel->GetWorldMat();
+				int savemotid = curmodel->GetCurrentMotID();
+				double savemotframe = curmodel->GetCurrentFrame();
+
 
 				int refposindex = 0;
 				double renderleng = roundingendframe - roundingstartframe;
@@ -31728,11 +31738,16 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					//###############################################
 					//refframeのポーズを表示
 					int btflag1 = 0;
-					curmodel->SetMotionFrame(roundingendframe);
+				
+					CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, (REFPOSMAXNUM - 1));//過去データ
+					int curmotid = mfv.GetMotId();
+					double renderframe = mfv.GetFrame();
+					curmodel->SetCurrentMotion(curmotid);
+					curmodel->SetMotionFrame(renderframe);
 
-					ChaMatrix refposView = g_chacamera.GetRefPosView(REFPOSMAXNUM - 1);
-					ChaMatrix effectView = s_matView * (refposView * ChaMatrixInv(s_matView));
-					//ChaMatrix effectView = currentViewMat;
+					ChaMatrix refposView = mfv.GetMatView();//!!!!!!
+					//ChaMatrix effectView = s_matView * (refposView * ChaMatrixInv(s_matView));
+					ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
 
 					g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 						roundingendframe, refposindex);
@@ -31774,8 +31789,18 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 
 					bool addcurrentjointpos = false;
 					double renderframe, roundingrenderframe;
+					//int befmotid;
+					//double befframe;
 					for (refposindex = divnum; refposindex > 0; refposindex--) {
+
+						CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, refposindex);//過去データ
+						if (!mfv.GetValidFlag()) {
+							continue;
+						}
+
+						int curmotid;
 						if (renderleng > 0) {
+							curmotid = curmodel->GetCurrentMotID();
 							MOTINFO currentmi = curmodel->GetCurMotInfo();
 							renderframe = roundingstartframe + renderstep * divnum - renderstep * (double)refposindex;//過去半分　未来半分
 							if (renderframe > currentmi.frameleng) {
@@ -31787,9 +31812,9 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 							roundingrenderframe = RoundingTime(renderframe);
 						}
 						else {
-							MOTINFO currentmi = curmodel->GetCurMotInfo();
-							double startframe = currentframe;
-							renderframe = startframe - (double)refposindex;
+							curmotid = mfv.GetMotId();
+							MOTINFO currentmi = curmodel->GetMotInfo(mfv.GetMotId());
+							renderframe = mfv.GetFrame();//!!!!!!!!
 							if (renderframe > currentmi.frameleng) {
 								continue;//!!!!!!!!!!!!!!!
 							}
@@ -31797,7 +31822,27 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 								continue;//!!!!!!!!!!!!!!!
 							}
 							roundingrenderframe = RoundingTime(renderframe);
+
+							curmodel->SetCurrentMotion(curmotid);//!!!!!!!!!!!
+							currentframe = renderframe;//モーションがある場合はモデルのフレームで上書き
 						}
+
+						//2026/05/09
+						//カメラアニメがオンの場合に　再生モーションがループすると　モーションの最初のフレームの残像が斜めに表示される
+						//いろいろ試したが　気にしないことに
+						//if (refposindex != divnum) {
+						//	if ((curmotid == befmotid) && (renderframe < befframe)) {
+						//		//同じモーションIDでループを検出した場合
+						//		//g_chacamera.ResetRefPosViewFlag(curmodel);
+
+						//		//ここではbefは更新しない
+						//		//befmotid = curmotid;
+						//		//befframe = renderframe;
+						//		break;
+						//	}
+						//}
+						//befmotid = curmotid;
+						//befframe = renderframe;
 
 						if (curbone != nullptr) {
 							if ((addcurrentjointpos == false) && (roundingrenderframe >= currentframe)) {
@@ -31818,12 +31863,12 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 
 						//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
 
-						ChaMatrix refposView = g_chacamera.GetRefPosView(refposindex);
+						ChaMatrix refposView = mfv.GetMatView();//!!!!!!!!!!!
 						ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
+						//ChaMatrix effectView = refposView;
 
 						//refframeのポーズを表示
 						int btflag1 = 0;
-						curmodel->SetMotionFrame(roundingrenderframe);
 						g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 							roundingrenderframe, refposindex);
 						curmodel->SetShaderConst(btflag1, calcslotflag);
@@ -31835,13 +31880,6 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 						double renderalpha0 = 1.0 - (double)refposindex / (double)curmodel->GetRefPosMaxNum();
 						////2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
 						double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
-						////renderalpha = fmax(0.1f, renderalpha);
-						//ChaVector4 refdiffusemult;
-						//refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)renderalpha);
-						//const double refstartalpha = (double)g_refalpha * 0.01f;
-						//ChaVector4 refdiffusemult;
-						//refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)refstartalpha);
-						//double renderalpha = renderalpha0 * renderalpha0 * renderalpha0;
 						ChaVector4 refdiffusemult;
 						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)renderalpha);
 
@@ -31864,10 +31902,11 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 						////カレントフレームをレンダー
 						int btflag1 = 0;
 
-						curmodel->SetMotionFrame(currentframe);
+						curmodel->SetCurrentMotion(savemotid);
+						curmodel->SetMotionFrame(savemotframe);
 
 						g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &s_matView, &s_matProj,
-							currentframe, refposindex);
+							savemotframe, refposindex);
 						curmodel->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
 						curmodel->SetRefPosFl4x4ToDispObj(refposindex);
 						//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
@@ -31927,11 +31966,12 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					//###############################################
 					//refframeのポーズを表示
 					int btflag1 = 0;
-					curmodel->SetMotionFrame(roundingendframe);
+					//curmodel->SetMotionFrame(roundingendframe);
 
-					ChaMatrix refposView = g_chacamera.GetRefPosView(REFPOSMAXNUM - 1);
+					CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, (REFPOSMAXNUM - 1));//過去データ
+					ChaMatrix refposView = mfv.GetMatView();
 					ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
-					//ChaMatrix effectView = s_matView;
+					//ChaMatrix effectView = refposView;
 
 					g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 						roundingendframe, refposindex);
@@ -31968,8 +32008,10 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					for (refposindex = divnum; refposindex > 0; refposindex--) {
 						//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
 
-						ChaMatrix refposView = g_chacamera.GetRefPosView(refposindex);
+						CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, refposindex);//過去データ
+						ChaMatrix refposView = mfv.GetMatView();//!!!!!!!
 						ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
+						//ChaMatrix effectView = refposView;
 
 						//refframeのポーズを表示
 						int btflag1 = 0;
@@ -31986,8 +32028,6 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 						double renderalpha0 = 1.0 - (double)refposindex / (double)curmodel->GetRefPosMaxNum();
 						////2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
 						double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
-						//renderalpha = fmax(0.1f, renderalpha);
-						//double renderalpha = renderalpha0 * renderalpha0 * renderalpha0;
 						ChaVector4 refdiffusemult;
 						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)renderalpha);
 

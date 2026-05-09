@@ -2,7 +2,7 @@
 <CHA>
   <FileInfo>
     <kind>AdditiveIK_ProjectFile</kind>
-    <version>1015</version>
+    <version>1017</version>
     <type>0</type>
   </FileInfo>
   <ProjectInfo>
@@ -42,6 +42,8 @@
     <ModelFile>VRoid202406.fbx</ModelFile>
     <ModelMult>1.000000</ModelMult>
     <ModelDisp>1</ModelDisp>
+    <ObjBoundingBlockNum>40</ObjBoundingBlockNum>
+    <RefPosMaxNum>10</RefPosMaxNum>
     <GrassFlag>0</GrassFlag>
     <ModelPositionX>0.000000</ModelPositionX>
     <ModelPositionY>0.000000</ModelPositionY>

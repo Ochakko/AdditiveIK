@@ -13,6 +13,107 @@ class CMotionPoint;
 class CModel;
 class ChaScene;
 
+class CModelFrameView
+{
+public:
+	CModelFrameView() {
+		InitParams();
+	};
+	~CModelFrameView() {};
+
+	void InitParams() {
+		m_validflag = false;
+		m_matView.SetIdentity();
+		m_motid = 0;
+		m_frame = 1.0;
+	};
+
+	CModelFrameView operator= (CModelFrameView mfv) {
+		m_validflag = mfv.m_validflag;
+		m_matView = mfv.m_matView;
+		m_frame = mfv.m_frame;
+		m_motid = mfv.m_motid;
+		return *this;
+	};
+
+	void SetParams(CModel* srcmodel, ChaMatrix srcmatView, int srcmotid, double srcframe)
+	{
+		if (srcmodel != nullptr) {
+			m_matView = srcmatView;
+			m_motid = srcmotid;
+			m_frame = srcframe;
+
+			m_validflag = true;
+		}
+	};
+	void SetParams(ChaMatrix srcmatView, int srcmotid, double srcframe)
+	{
+		m_matView = srcmatView;
+		m_motid = srcmotid;
+		m_frame = srcframe;
+
+		m_validflag = true;
+	};
+	void ResetValidFlag() {
+		m_validflag = false;
+	};
+	bool GetValidFlag() {
+		return m_validflag;
+	};
+	ChaMatrix GetMatView() {
+		return m_matView;
+	};
+	int GetMotId() {
+		return m_motid;
+	};
+	double GetFrame() {
+		return m_frame;
+	};
+
+private:
+	bool m_validflag;
+	ChaMatrix m_matView;
+	int m_motid;
+	double m_frame;
+};
+
+class CModelFrameViewRingBuf
+{
+public:
+	CModelFrameViewRingBuf() {
+		InitParams();
+	};
+	~CModelFrameViewRingBuf() {};
+
+	void InitParams() {
+		m_model = nullptr;
+
+		for (int refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+			m_ringbuf->InitParams();
+			m_refposStartIndex = REFPOSMAXNUM;//リングバッファ保存位置　初回のProcessRefPosView()で0になるように初期化
+			m_refposRecordCount = -1;//30フレームごとにm_refposViewを更新するためのカウンタ
+		}
+	};
+
+	void ProcessRefPosView(CModel* srcmodel);
+	CModelFrameView GetRefPosView(CModel* srcmodel, int srcrefposindex);
+	void ResetValidFlag();
+
+	void SetModel(CModel* srcmodel) {
+		m_model = srcmodel;
+	};
+	CModel* GetModel() {
+		return m_model;
+	};
+
+private:
+	CModel* m_model;
+	CModelFrameView m_ringbuf[REFPOSMAXNUM];
+	int m_refposStartIndex;
+	int m_refposRecordCount;
+};
+
+
 class ChaCamera
 {
 public:
@@ -33,11 +134,17 @@ public:
 
 	void SetCamera6Angle(int srcangleid);
 
+
+	//for RefPosView
+	bool AddRefPosViewBuf(CModel* srcmodel);
 	void ProcessRefPosView();
-	ChaMatrix GetRefPosView(int srcrefposindex);
+	CModelFrameView GetRefPosView(CModel* srcmodel, int srcrefposindex);
+	void ResetRefPosViewFlag();
+	void ResetRefPosViewFlag(CModel* srcmodel);
 
 private:
 	void DestroyObjs();
+	int FindModelFrameViewRingBufIndex(CModel* srcmodel);
 
 public:
 	void SetCamEye(ChaVector3 srcval) {
@@ -236,9 +343,8 @@ private:
 	bool m_cameradollyFlag;
 	float m_cammvstep;
 
-	ChaMatrix m_refposView[REFPOSMAXNUM];
-	int m_refposStartIndex;
-	int m_refposRecordCount;
+	int m_ringbufIndexCache;
+	std::vector<CModelFrameViewRingBuf> m_modelframeviewRingBuf;
 };
 
 

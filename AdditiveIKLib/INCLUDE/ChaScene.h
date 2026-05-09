@@ -95,22 +95,7 @@ public:
 	{
 		m_modelindex.clear();
 	};
-	int AddModelElem(MODELELEM srcmodelelem)
-	{
-		if (srcmodelelem.modelptr) {
-			m_modelindex.push_back(srcmodelelem);
-
-			CreateMotion2BtThreads();
-			CreateSetBtMotionThreads();
-			CreateRenderModelsThread();
-
-			return 0;
-		}
-		else {
-			_ASSERT(0);
-			return 1;
-		}
-	};
+	int AddModelElem(MODELELEM srcmodelelem);
 	//int AddToModelVec(CModel* srcmodel)
 	//{
 	//	if (srcmodel) {

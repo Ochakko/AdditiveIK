@@ -27,7 +27,67 @@ using namespace std;
 extern ChaScene* g_chascene;
 
 
-ChaCamera::ChaCamera()
+void CModelFrameViewRingBuf::ProcessRefPosView(CModel* srcmodel)
+{
+	if ((srcmodel != nullptr) && (srcmodel == m_model)) {
+		m_refposRecordCount++;
+		if (m_refposRecordCount >= REFPOSRECORDINTERVAL) {
+			//30フレームに1回だけ更新する
+			m_refposRecordCount = 0;
+
+			m_refposStartIndex++;
+			if (m_refposStartIndex >= REFPOSMAXNUM) {
+				m_refposStartIndex = 0;
+			}
+
+			int modelindex = g_chascene->FindModelIndex(srcmodel);
+			if (modelindex >= 0) {
+				//モデルが削除されていないことを確認してから処理
+				int currentmotid = srcmodel->GetCurrentMotID();
+				double currentframe = srcmodel->GetCurrentFrame();
+				m_ringbuf[m_refposStartIndex].SetParams(g_camera3D->GetViewMatrix(false), currentmotid, currentframe);
+			}
+		}
+	}
+	else {
+		_ASSERT(0);
+	}
+}
+CModelFrameView CModelFrameViewRingBuf::GetRefPosView(CModel* srcmodel, int srcrefposindex)
+{
+	if ((srcmodel == nullptr) || (srcrefposindex < 0) || (srcrefposindex >= REFPOSMAXNUM)) {
+		CModelFrameView dummymfv;
+		dummymfv.InitParams();
+		return dummymfv;
+	}
+
+	int viewindex = m_refposStartIndex - srcrefposindex;
+	if (viewindex >= REFPOSMAXNUM) {
+		viewindex -= REFPOSMAXNUM;
+	}
+	if (viewindex < 0) {
+		viewindex += REFPOSMAXNUM;
+	}
+
+	if (srcmodel == m_model) {
+		return m_ringbuf[viewindex];
+	}
+	else {
+		_ASSERT(0);
+		CModelFrameView dummymfv;
+		dummymfv.InitParams();
+		return dummymfv;
+	}
+}
+
+void CModelFrameViewRingBuf::ResetValidFlag() 
+{
+	for (int refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+		m_ringbuf[refposindex].ResetValidFlag();
+	}
+}
+
+ChaCamera::ChaCamera() : m_modelframeviewRingBuf()
 {
 	InitParams();
 }
@@ -38,6 +98,8 @@ ChaCamera::~ChaCamera()
 
 void ChaCamera::InitParams()
 {
+	m_ringbufIndexCache = -1;
+
 	m_camEye = ChaVector3(0.0f, 0.0f, 0.0f);
 	m_camtargetpos = ChaVector3(0.0f, 0.0f, 0.0f);
 	m_befcamEye = ChaVector3(0.0f, 0.0f, 0.0f);
@@ -73,11 +135,7 @@ void ChaCamera::InitParams()
 
 	m_cammvstep = 500.0f;
 
-	for (int refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-		m_refposView[refposindex].SetIdentity();
-	}
-	m_refposStartIndex = REFPOSMAXNUM;//リングバッファ保存位置　初回のProcessRefPosView()で0になるように初期化
-	m_refposRecordCount = -1;//30フレームごとにm_refposViewを更新するためのカウンタ
+	m_modelframeviewRingBuf.clear();
 }
 
 void ChaCamera::DestroyObjs()
@@ -348,36 +406,121 @@ void ChaCamera::OnCameraAnimMouseMoveDist()
 	}
 }
 
+
+int ChaCamera::FindModelFrameViewRingBufIndex(CModel* srcmodel)
+{
+	if (srcmodel == nullptr) {
+		_ASSERT(0);
+		return -1;
+	}
+
+	int findindex = -1;
+	int ringbufsize = (int)m_modelframeviewRingBuf.size();
+	if (ringbufsize > 0) {
+
+		//まずはcacheを探す
+		int cacheindex = m_ringbufIndexCache;//!!!!!!!!
+		if (cacheindex >= 0) {
+			//cache
+			for (int bufindex = cacheindex; bufindex < ringbufsize; bufindex++) {
+				CModel* chkmodel = m_modelframeviewRingBuf[bufindex].GetModel();
+				if ((chkmodel != nullptr) && (chkmodel == srcmodel)) {
+					findindex = bufindex;
+					m_ringbufIndexCache = findindex;//!!!!!
+				}
+			}
+		}
+		
+		//cacheに無かった場合
+		if (findindex < 0) {
+			for (int bufindex = 0; bufindex < ringbufsize; bufindex++) {
+				CModel* chkmodel = m_modelframeviewRingBuf[bufindex].GetModel();
+				if ((chkmodel != nullptr) && (chkmodel == srcmodel)) {
+					findindex = bufindex;
+					m_ringbufIndexCache = findindex;//!!!!!
+				}
+			}
+		}
+
+		return findindex;
+	}
+	else {
+		return -1;
+	}
+}
+
+
+bool ChaCamera::AddRefPosViewBuf(CModel* srcmodel)
+{
+	if (srcmodel != nullptr) {
+		int findindex = FindModelFrameViewRingBufIndex(srcmodel);
+		if (findindex >= 0) {
+			//既に存在するので何もしないでリターン
+			return true;
+		}
+		else {
+			CModelFrameViewRingBuf newmfvbuf;
+			newmfvbuf.InitParams();
+			newmfvbuf.SetModel(srcmodel);
+			m_modelframeviewRingBuf.push_back(newmfvbuf);
+
+			return true;
+		}
+	}
+	else {
+		return false;
+	}
+}
+
 void ChaCamera::ProcessRefPosView()
 {
-	m_refposRecordCount++;
-	if (m_refposRecordCount >= REFPOSRECORDINTERVAL) {
-		//30フレームに1回だけ更新する
-		m_refposRecordCount = 0;
-
-		m_refposStartIndex++;
-		if (m_refposStartIndex >= REFPOSMAXNUM) {
-			m_refposStartIndex = 0;
+	int ringbufsize = (int)m_modelframeviewRingBuf.size();
+	if (ringbufsize > 0) {
+		for (int bufindex = 0; bufindex < ringbufsize; bufindex++) {
+			CModel* currentmodel = m_modelframeviewRingBuf[bufindex].GetModel();
+			if (currentmodel != nullptr) {
+				m_modelframeviewRingBuf[bufindex].ProcessRefPosView(currentmodel);
+			}
 		}
-		m_refposView[m_refposStartIndex].SetParams(g_camera3D->GetViewMatrix(false));
 	}
-
 }
-ChaMatrix ChaCamera::GetRefPosView(int srcrefposindex)
+CModelFrameView ChaCamera::GetRefPosView(CModel* srcmodel, int srcrefposindex)
 {
-	if ((srcrefposindex < 0) || (srcrefposindex >= REFPOSMAXNUM)) {
-		ChaMatrix dummy;
-		dummy.SetIdentity();
-		return dummy;
-	}
+	CModelFrameView dummymfv;
+	dummymfv.InitParams();
 
-	int viewindex = m_refposStartIndex - srcrefposindex;
-	if (viewindex >= REFPOSMAXNUM) {
-		viewindex -= REFPOSMAXNUM;
+	if (srcmodel != nullptr) {
+		int findindex = FindModelFrameViewRingBufIndex(srcmodel);
+		if (findindex >= 0) {
+			CModelFrameView retmfv = m_modelframeviewRingBuf[findindex].GetRefPosView(srcmodel, srcrefposindex);
+			return retmfv;
+		}
+		else {
+			//モデルに対するデータが存在しない場合
+			return dummymfv;
+		}
 	}
-	if (viewindex < 0) {
-		viewindex += REFPOSMAXNUM;
+	else {
+		return dummymfv;
 	}
-
-	return m_refposView[viewindex];
 }
+void ChaCamera::ResetRefPosViewFlag()
+{
+	int ringbufsize = (int)m_modelframeviewRingBuf.size();
+	if (ringbufsize > 0) {
+		for (int bufindex = 0; bufindex < ringbufsize; bufindex++) {
+			CModel* currentmodel = m_modelframeviewRingBuf[bufindex].GetModel();
+			if (currentmodel != nullptr) {
+				m_modelframeviewRingBuf[bufindex].ResetValidFlag();
+			}
+		}
+	}
+}
+void ChaCamera::ResetRefPosViewFlag(CModel* srcmodel)
+{
+	int findindex = FindModelFrameViewRingBufIndex(srcmodel);
+	if (findindex >= 0) {
+		m_modelframeviewRingBuf[findindex].ResetValidFlag();
+	}
+}
+
