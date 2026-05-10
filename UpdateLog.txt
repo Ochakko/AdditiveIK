@@ -2,6 +2,11 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2026/05/10
+　ショートムービー
+　　FANTASTIC Sporty Boy 04
+　　https://youtu.be/T6Ggd-7u_F0
+
 2026/05/09
 　AdditiveIK 1.0.0.68 release
 　　1.0.0.67からの変更点

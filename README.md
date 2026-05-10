@@ -329,6 +329,8 @@ Smooth平滑化<br>
 [【4次元びゅー】RefPosView4D【定まらない世界】 2026/05/09](https://youtu.be/oIB0kjHKH-U "Usage example17")<br>
 
 [【過去半分】リファレンスポーズで動きを確認【未来半分】 2026/05/09](https://youtu.be/juaX22jhXIw "Usage example18")<br>
+
+[FANTASTIC Sporty Boy 04 2026/05/10](https://youtu.be/T6Ggd-7u_F0 "Usage example19")<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
