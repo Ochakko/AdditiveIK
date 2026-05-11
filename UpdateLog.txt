@@ -1,7 +1,12 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
-
+2026/05/12
+　ニューデバイス注文と予定
+　　【Amazon.co.jp限定】Elgato Stream Deck XL エルガトストリームデックXL【32キー配列】
+　　上記の３２個のカスタムボタンで モード切替 モード選択 設定数値アップダウン などをワンタッチ化する予定
+　
+　
 2026/05/10
 　ショートムービー(It's Retaked (like a game?).)
 　【観測者が】４次元RefPosボクサー【ダークマター】
@@ -12,7 +17,7 @@ https://github.com/Ochakko/AdditiveIK
 　ショートムービー(削除しました　It's Deleted by me.)
 　　FANTASTIC Sporty Boy 04
 　　https://youtu.be/T6Ggd-7u_F0 (It's Deleted by me.)
-
+　
 2026/05/09
 　AdditiveIK 1.0.0.68 release
 　　1.0.0.67からの変更点
