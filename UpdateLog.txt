@@ -1,6 +1,15 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+
+2026/05/16
+　RefPos機能のアップデート
+　　カレントフレームのビュー修正
+　　
+　　カメラアニメがループした際に
+　　モデルが横になるくらい異なる残像が出るので　カメラループ時には残像をリセットするように
+　　
+　　
 2026/05/12
 　ニューデバイス注文と予定
 　　【Amazon.co.jp限定】Elgato Stream Deck XL エルガトストリームデックXL【32キー配列】

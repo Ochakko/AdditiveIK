@@ -6149,6 +6149,11 @@ void OnUserFrameMove(double fTime, float fElapsedTime, double difftime, int endf
 				int cameraloopstartflag = 0;
 				OnFrameProcessCameraTime(difftime, &cameranextframe, &cameraendflag, &cameraloopstartflag);
 			}
+
+			//2026/05/16
+			//カメラがループした場合には　残像をリセットする
+			//ループ時の残像は　ビューが違いすぎて　残像が横に寝たり　不自然な残像になるため
+			g_chacamera.ResetRefPosViewFlag();
 		}
 		else {
 			//####################
@@ -6577,12 +6582,16 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 				int modelcount;
 				for (modelcount = 0; modelcount < modelnum; modelcount++) {
 					CModel* curmodel = g_chascene->GetModel(modelcount);
-					if ((curmodel != nullptr) && (curmodel->GetRefPosMaxNum() >= 2)) {
+					//if ((curmodel != nullptr) && (curmodel->GetRefPosMaxNum() >= 2)) {
+					//	curmodel->SetRefPosFlag(true);
+					//	OnRenderRefPos(re, curmodel, s_owpLTimeline->getCurrentTime());
+					//}
+					//else if(curmodel != nullptr) {
+					//	curmodel->SetRefPosFlag(false);
+					//}
+					if (curmodel != nullptr) {
 						curmodel->SetRefPosFlag(true);
 						OnRenderRefPos(re, curmodel, s_owpLTimeline->getCurrentTime());
-					}
-					else if(curmodel != nullptr) {
-						curmodel->SetRefPosFlag(false);
 					}
 				}
 			}
@@ -31739,14 +31748,13 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					//refframeのポーズを表示
 					int btflag1 = 0;
 				
-					CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, (REFPOSMAXNUM - 1));//過去データ
+					CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, 0);//過去データ
 					int curmotid = mfv.GetMotId();
 					double renderframe = mfv.GetFrame();
 					curmodel->SetCurrentMotion(curmotid);
 					curmodel->SetMotionFrame(renderframe);
 
-					ChaMatrix refposView = mfv.GetMatView();//!!!!!!
-					//ChaMatrix effectView = s_matView * (refposView * ChaMatrixInv(s_matView));
+					ChaMatrix refposView = mfv.GetMatView();//!!!!!!!
 					ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
 
 					g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
@@ -31863,9 +31871,8 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 
 						//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
 
-						ChaMatrix refposView = mfv.GetMatView();//!!!!!!!!!!!
+						ChaMatrix refposView = mfv.GetMatView();//!!!!!!!
 						ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
-						//ChaMatrix effectView = refposView;
 
 						//refframeのポーズを表示
 						int btflag1 = 0;
@@ -31905,14 +31912,18 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 						curmodel->SetCurrentMotion(savemotid);
 						curmodel->SetMotionFrame(savemotframe);
 
-						g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &s_matView, &s_matProj,
+						CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, refposindex);//過去データ
+						ChaMatrix refposView = mfv.GetMatView();//!!!!!!!
+						ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
+
+						g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 							savemotframe, refposindex);
 						curmodel->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
 						curmodel->SetRefPosFl4x4ToDispObj(refposindex);
 						//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
 
 						ChaVector4 refdiffusemult;
-						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
+						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.5f);
 
 						int lightflag = -1;
 						bool forcewithalpha = true;
@@ -31968,10 +31979,9 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					int btflag1 = 0;
 					//curmodel->SetMotionFrame(roundingendframe);
 
-					CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, (REFPOSMAXNUM - 1));//過去データ
-					ChaMatrix refposView = mfv.GetMatView();
+					CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, 0);//過去データ
+					ChaMatrix refposView = mfv.GetMatView();//!!!!!!!
 					ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
-					//ChaMatrix effectView = refposView;
 
 					g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 						roundingendframe, refposindex);
@@ -31981,7 +31991,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					//カレントフレームから離れるほど　透明度を薄くする
 					const double refstartalpha = 0.80f;
 					ChaVector4 refdiffusemult;
-					refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
+					refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.5f);
 					refdiffusemult *= refdiffusemult;
 
 					int lightflag = 0;
@@ -32009,6 +32019,9 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 						//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
 
 						CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, refposindex);//過去データ
+						if (!mfv.GetValidFlag()) {
+							continue;
+						}
 						ChaMatrix refposView = mfv.GetMatView();//!!!!!!!
 						ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
 						//ChaMatrix effectView = refposView;
@@ -32055,7 +32068,11 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 
 						//curmodel->SetMotionFrame(currentframe);
 
-						g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &s_matView, &s_matProj,
+						CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, refposindex);//過去データ
+						ChaMatrix refposView = mfv.GetMatView();//!!!!!!!
+						ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
+
+						g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 							currentframe, refposindex);
 						//curmodel->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
 						//curmodel->SetRefPosFl4x4ToDispObj(refposindex);
@@ -36185,7 +36202,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.68 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.69 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -39742,7 +39759,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.68 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.69 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {
