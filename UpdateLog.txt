@@ -3,7 +3,7 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2026/05/16
-　AdditiveIK 1.0.0.69 RC1(リリース候補1)
+　AdditiveIK 1.0.0.69 release
 　　1.0.0.68からの変更点
 　　　RefPos機能のアップデート
 　　　　カレントフレームのビュー修正
@@ -11,7 +11,7 @@ https://github.com/Ochakko/AdditiveIK
 　　　　　　モデルが横になるくらい異なる残像が出るので
 　　　　　　カメラループ時には残像をリセットするように
 　　
-　　　物理デバイス：Elgato Stream Deck XL 32キー配列に対応
+　　　物理デバイス：Elgato Stream Deck XL 32キー配列(https://www.elgato.com/jp/ja)に対応
 　　　　プレートメニューのセレクトが1ボタンで.
 　　　　その他セレクト処理、モード切替、コピーペースト、アンドゥリドゥなど１ボタンで.
 　　

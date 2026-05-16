@@ -105,3 +105,14 @@ TourBox_Preset
 　TourBox操作説明を起動時に表示されるショートカット一覧ウインドウに記述(スクロールバー付きで).
 　
 　
+STREAM_DECK_XL_Profile
+　物理デバイス：Elgato Stream Deck XL 32キー配列(https://www.elgato.com/jp/ja)の設定ファイル
+　　プレートメニューのセレクトが1ボタンで.
+　　その他セレクト処理、モード切替、コピーペースト、アンドゥリドゥなど１ボタンで.
+　　
+　　プロファイル(設定ファイル)を次の場所に置きました
+　　　Test\STREAM_DECK_XL_Profile\AdditiveIK Profile.streamDeckProfile
+　　プロファイルを読み込んで　歯車マークのアイコンから設定を呼び出し　アプリケーションでAdditiveIK.exeを指定します
+　　プログラム名だけではなく　プログラムのパスで関連付けされるので　AdditiveIK.exeのフルパスがあっている必要があります
+　
+　

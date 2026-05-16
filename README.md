@@ -217,9 +217,12 @@ Smooth平滑化<br>
 <br>
 <br>
 　開発環境(2026/05/02時点)の変更点。<br>
-　FBXSDKは2020.3.9(VC2022) https://www.autodesk.com/products/fbx/ <br>
+　FBXSDKは2020.3.9(VC2022)<br>
+　https://www.autodesk.com/products/fbx/ <br>
 　Unity3D 6000系の最新<br>
-　プロが作ったアセットをUnityAssetStoreでゲットしてUnity3Dでfbx出力 https://assetstore.unity.com/?locale=ja-JP <br>
+　プロが作ったアセットをUnityAssetStoreでゲットしてUnity3Dでfbx出力<br>
+　https://assetstore.unity.com/?locale=ja-JP <br>
+　AdditiveIKでfbxを読み込んでモーション編集<br>
 　その際にfbxに変換するよりも、もともとfbxで入っているものをMayaで調整する方が状態が良い<br>
 <br>
 <br>
@@ -228,8 +231,11 @@ Smooth平滑化<br>
 　VisualStudio2022Pro(VisualStudioSubscription)<br>
 　MayaIndie(Subscription FBXの確認はMayaでする)<br>
 　Unity3D 2022LTS(2022.3.30)<br>
-　プロが作ったアセットをUnityAssetStoreでゲットしてUnity3Dでfbx出力 https://assetstore.unity.com/?locale=ja-JP <br>
-　FBXSDKは2020.3.4(VC2022) https://www.autodesk.com/products/fbx/ <br>
+　プロが作ったアセットをUnityAssetStoreでゲットしてUnity3Dでfbx出力<br>
+　AdditiveIKでfbxを読み込んでモーション編集<br>
+　https://assetstore.unity.com/?locale=ja-JP <br>
+　FBXSDKは2020.3.4(VC2022)<br>
+　https://www.autodesk.com/products/fbx/ <br>
 　Microsoft MultiThreadLibrary PPL.<br>
 <br>
 　DirectX12 (githubのMicrosoftのDirectXTK12)<br>
@@ -238,10 +244,12 @@ Smooth平滑化<br>
 　DirectXTex (githubのMicrosoftのDirectXTex)<br>
 　DirectXTexのライセンスは3rd_LICENSE/DirectXTex_LICENSE<br>
 <br>
-　githubのbullet physics ver2.89 https://pybullet.org/wordpress/ <br>
+　githubのbullet physics ver2.89<br>
+　https://pybullet.org/wordpress/ <br>
 　bullet physicsのライセンスは3rd_LICENSE/bulletPhysics_license.txt<br>
 <br>
-　HLSLシェーダーの魔導書のMiniEngine https://github.com/shoeisha-books/hlsl-grimoire-sample <br>
+　HLSLシェーダーの魔導書のMiniEngine<br>
+　https://github.com/shoeisha-books/hlsl-grimoire-sample <br>
 　魔導書コードのライセンスは3rd_LICENSE/hlsl-grimoire_LICENSE<br>
 <br>
 　DirectX12の魔導書のサンプルを使用<br>
@@ -249,11 +257,13 @@ Smooth平滑化<br>
 <br>
 　MicrosoftのDXUT11のDXUTTimerを使っています.<br>
 <br>
-　gltf(vrm)の読み込みにtinygltfを使用 https://github.com/syoyo/tinygltf<br>
+　gltf(vrm)の読み込みにtinygltfを使用<br>
+　https://github.com/syoyo/tinygltf<br>
 　ライセンスは3rd_LICENSE/tinygltf_LICENSE<br>
 <br>
 　SonyPlayStation用のゲームパッドDualSenseを使用するために
-　sonichopeさんのDS4HidInputを使用　https://github.com/sonichope/DS4HidInput<br>
+　sonichopeさんのDS4HidInputを使用<br>
+　https://github.com/sonichope/DS4HidInput<br>
 　ライセンスは3rd_LICENSE/DS4HidInput_LICENSE<br>
 <br>
 　Testディレクトリのモデル作成にVRoidStudioを使用します<br>
@@ -265,6 +275,7 @@ Smooth平滑化<br>
 <br>
 2026/5/12<br>
 　　【Amazon.co.jp限定】Elgato Stream Deck XL エルガトストリームデックXL【32キー配列】を注文<br>
+　　https://www.elgato.com/jp/ja<br>
  　　上記の３２個のカスタムボタンで <br>
 　　モード切替 モード選択 設定数値アップダウン などをワンタッチ化する予定<br>
 2026/1/31からの環境<br>
@@ -282,7 +293,8 @@ Smooth平滑化<br>
 　　Buffalo個人用NAS 実質4TB　追加<br>
 　　UPS無停電電源追加　正弦波　サージ<br>
 2025/4からの環境<br>
-　　TourBoxNEO追加 左手用デバイス https://www.tourboxtech.com/jp/<br>
+　　TourBoxNEO追加 左手用デバイス<br>
+　　https://www.tourboxtech.com/jp/<br>
 2025/3/1からの環境<br>
 　一世代前のIntelCPU 20コア 28スレッド<br>
 　　GeForce RTX 4070 12GB<br>
