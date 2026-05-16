@@ -15606,7 +15606,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.68\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.69\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -25194,7 +25194,310 @@ int OnFrameKeyboard()
 		}
 
 
-		//TourBox
+		//########################
+		//STREAM DECK XL(32ボタン)
+		//########################
+		bool shiftdoneflag = false;
+		{
+			if (g_controlkey && (g_keybuf[VK_F19] & 0x80) && ((g_savekeybuf[VK_F19] & 0x80) == 0)) {
+				g_preciseRotation = !g_preciseRotation;
+			}
+
+			if (g_controlkey && (g_keybuf[VK_F13] & 0x80) && ((g_savekeybuf[VK_F13] & 0x80) == 0)) {
+				g_ikkind = IKKIND_ROTATE;
+				OnChangeIKKind(false);
+			}
+			if (g_controlkey && (g_keybuf[VK_F14] & 0x80) && ((g_savekeybuf[VK_F14] & 0x80) == 0)) {
+				g_ikkind = IKKIND_MOVE;
+				OnChangeIKKind(false);
+			}
+			if (g_controlkey && (g_keybuf[VK_F15] & 0x80) && ((g_savekeybuf[VK_F15] & 0x80) == 0)) {
+				g_ikkind = IKKIND_SCALE;
+				OnChangeIKKind(false);
+			}
+
+
+			if (g_controlkey && (g_keybuf[VK_F20] & 0x80) && ((g_savekeybuf[VK_F20] & 0x80) == 0)) {
+				//Toggle CameraAnimSwitch
+				ChangeCameraMode(0);
+			}
+			
+			
+			if (g_controlkey && (g_keybuf[VK_F21] & 0x80) && ((g_savekeybuf[VK_F21] & 0x80) == 0)) {
+				//bt start
+				if (GetCurrentModel()) {
+					s_calclimitedwmState = 101;
+				}
+			}
+			if (g_controlkey && (g_keybuf[VK_F22] & 0x80) && ((g_savekeybuf[VK_F22] & 0x80) == 0)) {
+				//play
+				if (GetCurrentModel()) {
+					s_calclimitedwmState = 1; s_LstartFlag = true; s_LcursorFlag = true;
+					//s_LtimelineWnd->setDoneFlag(1);
+				}
+			}
+			if (g_controlkey && (g_keybuf[VK_F23] & 0x80) && ((g_savekeybuf[VK_F23] & 0x80) == 0)) {
+				//reset
+				if (GetCurrentModel()) {
+					if (s_owpLTimeline) {
+						s_LstopFlag = true;
+						g_previewFlag = 0;
+						s_LcursorFlag = true;
+					}
+				}
+			}
+
+			if (g_controlkey && (g_keybuf[VK_F24] & 0x80) && ((g_savekeybuf[VK_F24] & 0x80) == 0)) {
+				//Play Moa with Bt
+				if (GetCurrentModel()) {
+					BOOL dummyhandled = true;
+					s_motchangedlg.OnPlayWithBt(0, 0, nullptr, dummyhandled);
+				}
+			}
+			if (g_altkey && (g_keybuf[VK_F13] & 0x80) && ((g_savekeybuf[VK_F13] & 0x80) == 0)) {
+				//Play Moa
+				if (GetCurrentModel()) {
+					BOOL dummyhandled = true;
+					s_motchangedlg.OnPlay(0, 0, nullptr, dummyhandled);
+				}
+			}
+			if (g_altkey && (g_keybuf[VK_F14] & 0x80) && ((g_savekeybuf[VK_F14] & 0x80) == 0)) {
+				//Stop Moa
+				if (GetCurrentModel()) {
+					BOOL dummyhandled = true;
+					s_motchangedlg.OnStop(0, 0, nullptr, dummyhandled);
+				}
+			}
+
+
+
+			if (g_altkey && (g_keybuf[VK_F15] & 0x80) && ((g_savekeybuf[VK_F15] & 0x80) == 0)) {
+				//Copy
+				if (GetCurrentModel()) {
+					if (s_copyFlag == false) {
+						s_copyFlag = true;
+						s_spcopy.ButtonDown();
+						s_SpriteButtonDown = true;
+					}
+				}
+			}
+			if (g_altkey && (g_keybuf[VK_F16] & 0x80) && ((g_savekeybuf[VK_F16] & 0x80) == 0)) {
+				//Paste
+				if (GetCurrentModel()) {
+					if (s_pasteFlag == false) {
+						s_pasteFlag = true;
+						s_sppaste.ButtonDown();
+						s_SpriteButtonDown = true;
+					}
+				}
+			}
+			if (g_altkey && (g_keybuf[VK_F17] & 0x80) && ((g_savekeybuf[VK_F17] & 0x80) == 0)) {
+				//Camera Copy
+				if (GetCurrentModel()) {
+					if (s_copycameraFlag == false) {
+						s_copycameraFlag = true;
+						s_spcopy_camera.ButtonDown();
+						s_SpriteButtonDown = true;
+					}
+				}
+			}
+			if (g_altkey && (g_keybuf[VK_F18] & 0x80) && ((g_savekeybuf[VK_F18] & 0x80) == 0)) {
+				//Camera Paste
+				if (GetCurrentModel()) {
+					if (s_pastecameraFlag == false) {
+						s_pastecameraFlag = true;
+						s_sppaste_camera.ButtonDown();
+						s_SpriteButtonDown = true;
+					}
+				}
+			}
+			if (g_altkey && (g_keybuf[VK_F19] & 0x80) && ((g_savekeybuf[VK_F19] & 0x80) == 0)) {
+				//Copy History
+				if (GetCurrentModel()) {
+					if (s_selCopyHisotryFlag == false) {
+						s_selCopyHisotryFlag = true;
+						s_spcopyhistory.ButtonDown();
+						s_SpriteButtonDown = true;
+					}
+				}
+			}
+
+
+			if (g_altkey && (g_keybuf[VK_F22] & 0x80) && ((g_savekeybuf[VK_F22] & 0x80) == 0)) {
+				//Green Frog Button for change EditTarget
+				s_spret2prev.ButtonDown();
+				s_SpriteButtonDown = true;
+
+				int srcmenukind = s_platemenukind;
+				int nextmenukind = SPPLATEMENUKIND_DISP;
+				int nextplateno = 1;
+
+				if (srcmenukind == SPPLATEMENUKIND_DISP) {
+					nextmenukind = SPPLATEMENUKIND_RIGID;
+					nextplateno = 1;//最初のプレート
+				}
+				else if (srcmenukind == SPPLATEMENUKIND_RIGID) {
+					nextmenukind = SPPLATEMENUKIND_RETARGET;
+					nextplateno = 1;//最初のプレート
+				}
+				else if (srcmenukind == SPPLATEMENUKIND_RETARGET) {
+					nextmenukind = SPPLATEMENUKIND_EFFECT;
+					nextplateno = 1;//最初のプレート
+				}
+				else if (srcmenukind == SPPLATEMENUKIND_EFFECT) {
+					nextmenukind = SPPLATEMENUKIND_DISP;
+					nextplateno = 1;//最初のプレート
+				}
+
+				s_guiswflag = false;
+				//s_guiswplateno = 1;
+
+				//２段目プレートクリック時には　１段目のCameraAndIK以外の選択状態をオフにする
+				int plateno;
+				for (plateno = SPGUISW_DISP_AND_LIMITS; plateno < SPGUISWNUM; plateno++) {
+					s_spguisw[plateno].state = false;
+				}
+
+				//２段目を変更
+				GUIMenuSetVisible(nextmenukind, nextplateno);
+			}
+			if (g_altkey && (g_keybuf[VK_F23] & 0x80) && ((g_savekeybuf[VK_F23] & 0x80) == 0)) {
+				//Blue Frog Button for change EditTarget
+				if (GetCurrentModel()) {
+					s_spret2prev2.ButtonDown();
+					s_SpriteButtonDown = true;
+					ChangeToolSpriteMode();
+				}
+			}
+			if (g_altkey && (g_keybuf[VK_F24] & 0x80) && ((g_savekeybuf[VK_F24] & 0x80) == 0)) {
+				//Red Frog Button for change EditTarget
+				if (GetCurrentModel()) {
+					s_LchangeTargetFlag = true;
+				}
+			}
+
+
+			if (g_shiftkey && (g_keybuf[VK_F20] & 0x80) && ((g_savekeybuf[VK_F20] & 0x80) == 0)) {
+				s_cameradollyFlag = true;
+				shiftdoneflag = true;
+			}
+			if (g_shiftkey && (g_keybuf[VK_F21] & 0x80) && ((g_savekeybuf[VK_F21] & 0x80) == 0)) {
+				s_modelworldmatFlag = true;
+				shiftdoneflag = true;
+			}
+			if (g_shiftkey && (g_keybuf[VK_F22] & 0x80) && ((g_savekeybuf[VK_F22] & 0x80) == 0)) {
+				s_motpropFlag = true;
+				shiftdoneflag = true;
+			}
+			if (g_shiftkey && (g_keybuf[VK_F23] & 0x80) && ((g_savekeybuf[VK_F23] & 0x80) == 0)) {
+				s_sprefpos.state = !s_sprefpos.state;
+				g_chacamera.ResetRefPosViewFlag();
+				shiftdoneflag = true;
+			}
+
+			if (!g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F13] & 0x80) && ((g_savekeybuf[VK_F13] & 0x80) == 0)) {
+				//GUISetVisible_CameraAndIK();//toggle disp GUI
+				s_guiswflag = true;
+				s_guiswplateno = SPGUISW_CAMERA_AND_IK + 2;
+				GUIMenuSetVisible(s_guiswplateno, s_guiswplateno);
+			}
+			if (!g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F14] & 0x80) && ((g_savekeybuf[VK_F14] & 0x80) == 0)) {
+				s_guiswflag = true;
+				s_guiswplateno = SPGUISW_DISP_AND_LIMITS + 2;
+				GUIMenuSetVisible(s_guiswplateno, s_guiswplateno);
+			}
+			if (!g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F15] & 0x80) && ((g_savekeybuf[VK_F15] & 0x80) == 0)) {
+				s_guiswflag = true;
+				s_guiswplateno = SPGUISW_BULLETPHYSICS + 2;
+				GUIMenuSetVisible(s_guiswplateno, s_guiswplateno);
+			}
+			if (!g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F16] & 0x80) && ((g_savekeybuf[VK_F16] & 0x80) == 0)) {
+				s_guiswflag = true;
+				s_guiswplateno = SPGUISW_PROJ_AND_LOD + 2;
+				GUIMenuSetVisible(s_guiswplateno, s_guiswplateno);
+			}
+			if (!g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F17] & 0x80) && ((g_savekeybuf[VK_F17] & 0x80) == 0)) {
+				s_guiswflag = true;
+				s_guiswplateno = SPGUISW_BLENDSHAPE + 2;
+				GUIMenuSetVisible(s_guiswplateno, s_guiswplateno);
+			}
+
+
+			if (!g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F18] & 0x80) && ((g_savekeybuf[VK_F18] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_DISP, SPDISPSW_LIGHTS + 1);
+			}
+			if (!g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F19] & 0x80) && ((g_savekeybuf[VK_F19] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_DISP, SPDISPSW_DISPGROUP + 1);
+			}
+			if (!g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F20] & 0x80) && ((g_savekeybuf[VK_F20] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_DISP, SPDISPSW_LATERTRANSPARENT + 1);
+			}
+			if (!g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F21] & 0x80) && ((g_savekeybuf[VK_F21] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_DISP, SPDISPSW_SHADERTYPE + 1);
+			}
+			if (!g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F22] & 0x80) && ((g_savekeybuf[VK_F22] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_DISP, SPDISPSW_SHADOWPARAMS + 1);
+			}
+
+
+			if (!g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F23] & 0x80) && ((g_savekeybuf[VK_F23] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_RIGID, SPRIGIDSW_RIGIDPARAMS + 1);
+			}
+
+
+			if (!g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F24] & 0x80) && ((g_savekeybuf[VK_F24] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_RETARGET, SPRETARGETSW_RETARGET + 1);
+			}
+			if (g_shiftkey && !g_controlkey && (g_keybuf[VK_F13] & 0x80) && ((g_savekeybuf[VK_F13] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_RETARGET, SPRETARGETSW_LIMITEULER + 1);
+				shiftdoneflag = true;
+			}
+			if (g_shiftkey && !g_controlkey && (g_keybuf[VK_F14] & 0x80) && ((g_savekeybuf[VK_F14] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_RETARGET, SPRETARGETSW_THRESHOLD + 1);
+				shiftdoneflag = true;
+			}
+			if (g_shiftkey && !g_controlkey && (g_keybuf[VK_F15] & 0x80) && ((g_savekeybuf[VK_F15] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_RETARGET, SPRETARGETSW_FOOTRIG + 1);
+				shiftdoneflag = true;
+			}
+			if (g_shiftkey && !g_controlkey && (g_keybuf[VK_F16] & 0x80) && ((g_savekeybuf[VK_F16] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_RETARGET, SPRETARGETSW_MOA + 1);
+				shiftdoneflag = true;
+			}
+
+
+			if (g_shiftkey && !g_controlkey && (g_keybuf[VK_F17] & 0x80) && ((g_savekeybuf[VK_F17] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_EFFECT, SPEFFECTSW_SKY + 1);
+				shiftdoneflag = true;
+			}
+			if (g_shiftkey && !g_controlkey && (g_keybuf[VK_F18] & 0x80) && ((g_savekeybuf[VK_F18] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_EFFECT, SPEFFECTSW_FOG + 1);
+				shiftdoneflag = true;
+			}
+			if (g_shiftkey && !g_controlkey && (g_keybuf[VK_F19] & 0x80) && ((g_savekeybuf[VK_F19] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_EFFECT, SPEFFECTSW_DOF + 1);
+				shiftdoneflag = true;
+			}
+		}
+
+
+//##########
+//TourBox
+//##########
 		if (!g_controlkey && (g_keybuf['U'] & 0x80) && ((g_savekeybuf['U'] & 0x80) == 0)) {//TourBox 左矢印ボタン　アンドゥデータ作成
 			PrepairUndo();
 		}
@@ -25333,7 +25636,7 @@ int OnFrameKeyboard()
 		//}
 
 
-		if ((g_keybuf[VK_SHIFT] & 0x80) && ((g_savekeybuf[VK_SHIFT] & 0x80) == 0)) {//TourBox 上ボタン押す度に IKKINDを変更
+		if (!shiftdoneflag && (g_keybuf[VK_SHIFT] & 0x80) && ((g_savekeybuf[VK_SHIFT] & 0x80) == 0)) {//TourBox 上ボタン押す度に IKKINDを変更
 			g_ikkind++;
 			if (g_ikkind >= IKKIND_MAX) {
 				g_ikkind = IKKIND_ROTATE;
@@ -25505,7 +25808,6 @@ int OnFrameKeyboard()
 			}
 		}
 		
-
 
 		/*
 		if (g_controlkey == false){
