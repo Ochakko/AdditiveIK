@@ -2,6 +2,12 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+
+2026/05/17
+　カスタム３２ボタンデバイス　STREAM_DECK_XL_32Keysのキーマッピングについてのドキュメント
+ 　　Documents/TroubleShooting/0_STREAM_DECK_XL_32Keys_Settings.docx
+　　
+　　
 2026/05/16
 　AdditiveIK 1.0.0.69 release
 　　1.0.0.68からの変更点
