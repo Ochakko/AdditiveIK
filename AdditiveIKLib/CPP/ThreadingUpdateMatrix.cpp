@@ -235,7 +235,7 @@ void CThreadingUpdateMatrix::UpdateMatrix(bool limitdegflag, int srcmotid, doubl
 		return;
 	}
 
-	if ((refposindex < 0) || (refposindex >= m_model->GetRefPosMaxNum())) {
+	if ((refposindex < 0) || (refposindex >= m_model->GetRefPosNum())) {
 		_ASSERT(0);
 		return;
 	}

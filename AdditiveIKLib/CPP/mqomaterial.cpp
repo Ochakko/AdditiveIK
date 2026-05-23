@@ -2915,7 +2915,7 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 
 
 	int currentrefposindex;
-	if ((refposindex < 0) || (refposindex >= GetRefPosMaxNum())) {
+	if ((refposindex < 0) || (refposindex >= renderobj.pmodel->GetRefPosNum())) {
 		currentrefposindex = 0;
 	}
 	else {
@@ -2995,7 +2995,7 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 //
 //
 //	int currentrefposindex;
-//	if ((refposindex < 0) || (refposindex >= GetRefPosMaxNum())) {
+//	if ((refposindex < 0) || (refposindex >= GetRefPosNum())) {
 //		currentrefposindex = 0;
 //	}
 //	else {
@@ -3703,7 +3703,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	}
 
 	int currentrefposindex;
-	if ((refposindex < 0) || (refposindex >= GetRefPosMaxNum())) {
+	if ((refposindex < 0) || (refposindex >= renderobj.pmodel->GetRefPosNum())) {
 		currentrefposindex = 0;
 	}
 	else {

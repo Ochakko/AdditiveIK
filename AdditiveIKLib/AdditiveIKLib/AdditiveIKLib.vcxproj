@@ -255,6 +255,7 @@
     <ClCompile Include="..\CPP\polymesh4.cpp" />
     <ClCompile Include="..\CPP\PostureChildFile.cpp" />
     <ClCompile Include="..\CPP\ProjLodDlg.cpp" />
+    <ClCompile Include="..\CPP\RefPosDlg.cpp" />
     <ClCompile Include="..\CPP\RetargetDlg.cpp" />
     <ClCompile Include="..\CPP\RetargetFile.cpp" />
     <ClCompile Include="..\CPP\RigFile.cpp" />
@@ -686,6 +687,7 @@
     <ClInclude Include="..\INCLUDE\polymesh4.h" />
     <ClInclude Include="..\INCLUDE\PostureChildFile.h" />
     <ClInclude Include="..\INCLUDE\ProjLodDlg.h" />
+    <ClInclude Include="..\INCLUDE\RefPosDlg.h" />
     <ClInclude Include="..\INCLUDE\RetargetDlg.h" />
     <ClInclude Include="..\INCLUDE\RetargetFile.h" />
     <ClInclude Include="..\INCLUDE\RigFile.h" />

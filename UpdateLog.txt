@@ -1,8 +1,17 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
-
-
+2026/05/23
+　RefPosプレートメニュー追加
+　　RefPosの色をモジュレートするためのスライダー
+　　RefPosレインボーモード追加
+　　色のモジュレートとレインボーは併用可能
+　　プロジェクト保存時に、プロジェクトファイルに保存
+　　
+　Stream Deck XL 32ボタンの設定ファイルを更新
+　　RefPosプレートメニュー選択は１ページ目、RefPos実行ボタンは２ページ目
+　　
+　　
 2026/05/17
 　カスタム３２ボタンデバイス　STREAM_DECK_XL_32Keysのキーマッピングについてのドキュメント
  　　Documents/TroubleShooting/0_STREAM_DECK_XL_32Keys_Settings.docx

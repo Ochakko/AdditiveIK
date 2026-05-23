@@ -3444,7 +3444,7 @@ int CMQOObject::ChkInView(ChaMatrix matWorld, ChaMatrix matVP, int refposindex)
 	//##############################################
 
 
-	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) ||
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosNum()) ||
 		(refposindex >= m_frustum.size())) {
 		_ASSERT(0);
 		return 1;
@@ -3544,7 +3544,7 @@ bool CMQOObject::GetVisible(int refposindex)
 	}
 
 
-	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) || 
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosNum()) || 
 		(refposindex >= m_frustum.size())) {
 		_ASSERT(0);
 		return false;
@@ -3566,7 +3566,7 @@ bool CMQOObject::GetInView(int refposindex)
 	}
 
 
-	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) || 
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosNum()) || 
 		(refposindex >= m_frustum.size())) {
 		_ASSERT(0);
 		return false;
@@ -3581,7 +3581,7 @@ bool CMQOObject::GetInShadow(int refposindex)
 		return false;
 	}
 
-	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) || 
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosNum()) || 
 		(refposindex >= m_frustum.size())) {
 		_ASSERT(0);
 		return false;
@@ -3603,7 +3603,7 @@ void CMQOObject::SetInView(bool srcflag, int refposindex)
 		return;
 	}
 
-	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) || 
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosNum()) || 
 		(refposindex >= m_frustum.size())) {
 		_ASSERT(0);
 		return;
@@ -3618,7 +3618,7 @@ void CMQOObject::SetInShadow(bool srcflag, int refposindex)
 		return;
 	}
 
-	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) || 
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosNum()) || 
 		(refposindex >= m_frustum.size())) {
 		_ASSERT(0);
 		return;
@@ -3995,7 +3995,7 @@ void CMQOObject::SetDistFromCamera(float srcval, int refposindex)
 		_ASSERT(0);
 		return;
 	}
-	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) ||
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosNum()) ||
 		(m_frustum.size() <= 0) || (refposindex >= m_frustum.size())) {
 		_ASSERT(0);
 		return;
@@ -4008,7 +4008,7 @@ double CMQOObject::GetDistFromCamera(int refposindex)
 		_ASSERT(0);
 		return FLT_MAX;
 	}
-	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosMaxNum()) ||
+	if ((refposindex < 0) || (refposindex >= GetParentModel()->GetRefPosNum()) ||
 		(m_frustum.size() <= 0) || (refposindex >= m_frustum.size())) {
 		_ASSERT(0);
 		return FLT_MAX;

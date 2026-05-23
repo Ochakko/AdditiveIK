@@ -1249,7 +1249,7 @@ public:
 	ChaMatrix RotMocapWalk(CFootRigDlg* srcfootrigdlg, double srcrot);
 
 private:
-	int InitParams(int srcrefposmaxnum);
+	int InitParams(int srcrefposnum);
 	int DestroyObjs();
 
 	void CreateRigidElemReq(CBone* curbone, int reflag, std::string rename, int impflag, std::string impname);
@@ -3403,19 +3403,35 @@ public: //accesser
 	{
 		return m_refposflag;
 	}
-	void SetRefPosMaxNum(int srcval) 
+	void SetRefPosNum(int srcval) 
 	{
 		if ((srcval >= 1) && (srcval <= REFPOSMAXNUM)) {
-			m_refpos_maxnum = srcval;
+			m_refpos_num = srcval;
 		}
 		else {
 			_ASSERT(0);
-			m_refpos_maxnum = 0;
+			m_refpos_num = 0;
 		}
+	}
+	int GetRefPosNum() {
+		return m_refpos_num;
 	}
 	int GetRefPosMaxNum() {
 		return m_refpos_maxnum;
 	}
+	void SetRefPosDiffuseRate(ChaVector4 srcval) {
+		m_refpos_diffuserate = srcval;
+	}
+	ChaVector4 GetRefPosDiffuseRate() {
+		return m_refpos_diffuserate;
+	}
+	void SetRefPosRainbowMode(bool srcval) {
+		m_refpos_rainbowmode = srcval;
+	}
+	bool GetRefPosRainbowMode() {
+		return m_refpos_rainbowmode;
+	}
+
 
 	void SetGrassFlag(bool srcflag)
 	{
@@ -4022,7 +4038,10 @@ private:
 	INSTANCINGPARAMS m_instancingparams[RIGMULTINDEXMAX];
 
 	bool m_refposflag;
-	int m_refpos_maxnum;//*.chaファイル内でモデルごとに指定
+	int m_refpos_maxnum;//REFPOSMAXNUM
+	int m_refpos_num;//*.chaファイル内でモデルごとに指定
+	ChaVector4 m_refpos_diffuserate;
+	bool m_refpos_rainbowmode;
 
 	bool m_skyflag;
 	bool m_groundflag;

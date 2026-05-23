@@ -290,7 +290,9 @@ int CChaFile::WriteFileInfo()
 	//version 1016 : 2026/04/25 1.0.0.66へ向けて  ChaCameraの不足分追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1016</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1017 : 2026/04/25 1.0.0.67へ向けて  RefPosMaxNum追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1017</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1017</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1018 : 2026/05/23 1.0.0.70へ向けて  RefPosDiffuseRate*, RefPosRainbow追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1018</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -327,7 +329,18 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 	CallF(Write2File("    <ModelMult>%f</ModelMult>\r\n", curmodel->GetLoadMult() ), return 1 );
 	CallF(Write2File("    <ModelDisp>%d</ModelDisp>\r\n", (curmodel->GetModelDisp() ? 1 : 0)), return 1);
 	CallF(Write2File("    <ObjBoundingBlockNum>%d</ObjBoundingBlockNum>\r\n", curmodel->GetObjBoundingBlockNum()), return 1);
-	CallF(Write2File("    <RefPosMaxNum>%d</RefPosMaxNum>\r\n", curmodel->GetRefPosMaxNum()), return 1);
+
+	CallF(Write2File("    <RefPosMaxNum>%d</RefPosMaxNum>\r\n", curmodel->GetRefPosNum()), return 1);
+	CallF(Write2File("    <RefPosDiffuseRateR>%f</RefPosDiffuseRateR>\r\n", curmodel->GetRefPosDiffuseRate().x), return 1);
+	CallF(Write2File("    <RefPosDiffuseRateG>%f</RefPosDiffuseRateG>\r\n", curmodel->GetRefPosDiffuseRate().y), return 1);
+	CallF(Write2File("    <RefPosDiffuseRateB>%f</RefPosDiffuseRateB>\r\n", curmodel->GetRefPosDiffuseRate().z), return 1);
+	CallF(Write2File("    <RefPosDiffuseRateA>%f</RefPosDiffuseRateA>\r\n", curmodel->GetRefPosDiffuseRate().w), return 1);
+	if (curmodel->GetRefPosRainbowMode()) {
+		CallF(Write2File("    <RefPosRainbow>1</RefPosRainbow>\r\n"), return 1);
+	}
+	else {
+		CallF(Write2File("    <RefPosRainbow>0</RefPosRainbow>\r\n"), return 1);
+	}
 
 	if (curmodel->GetGrassFlag() && srcgrasselem) {
 		CallF(Write2File("    <GrassFlag>1</GrassFlag>\r\n"), return 1);
@@ -1215,6 +1228,16 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 
 	int getrefposmaxnum = 0;
 	int refposmaxnum = 1;
+	int getrefposdiffuseR = 0;
+	float refposdiffuseR = 1.0f;
+	int getrefposdiffuseG = 0;
+	float refposdiffuseG = 1.0f;
+	int getrefposdiffuseB = 0;
+	float refposdiffuseB = 1.0f;
+	int getrefposdiffuseA = 0;
+	float refposdiffuseA = 1.0f;
+	int getrefposrainbow = 0;
+	int refposrainbow = 0;
 
 	int refnum = 0;
 	int impnum = 0;
@@ -1237,7 +1260,13 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	getmodeldisp = Read_Int(xmlbuf, "<ModelDisp>", "</ModelDisp>", &modeldisp);
 
 	getobjboundingblocknum = Read_Int(xmlbuf, "<ObjBoundingBlockNum>", "</ObjBoundingBlockNum>", &objboundingblocknum);
+
 	getrefposmaxnum = Read_Int(xmlbuf, "<RefPosMaxNum>", "</RefPosMaxNum>", &refposmaxnum);
+	getrefposdiffuseR = Read_Float(xmlbuf, "<RefPosDiffuseRateR>", "</RefPosDiffuseRateR>", &refposdiffuseR);
+	getrefposdiffuseG = Read_Float(xmlbuf, "<RefPosDiffuseRateG>", "</RefPosDiffuseRateG>", &refposdiffuseG);
+	getrefposdiffuseB = Read_Float(xmlbuf, "<RefPosDiffuseRateB>", "</RefPosDiffuseRateB>", &refposdiffuseB);
+	getrefposdiffuseA = Read_Float(xmlbuf, "<RefPosDiffuseRateA>", "</RefPosDiffuseRateA>", &refposdiffuseA);
+	getrefposrainbow = Read_Int(xmlbuf, "<RefPosRainbow>", "</RefPosRainbow>", &refposrainbow);
 
 
 	int grassflag = 0;
@@ -1406,7 +1435,27 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 		return 1;
 	}
 
-	
+	ChaVector4 refposdiffuse = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	if ((getrefposdiffuseR == 0) && (refposdiffuseR >= 0.0f) && (refposdiffuseR <= 8.0f)) {
+		refposdiffuse.x = refposdiffuseR;
+	}
+	if ((getrefposdiffuseG == 0) && (refposdiffuseG >= 0.0f) && (refposdiffuseG <= 8.0f)) {
+		refposdiffuse.y = refposdiffuseG;
+	}
+	if ((getrefposdiffuseB == 0) && (refposdiffuseB >= 0.0f) && (refposdiffuseB <= 8.0f)) {
+		refposdiffuse.z = refposdiffuseB;
+	}
+	if ((getrefposdiffuseA == 0) && (refposdiffuseA >= 0.0f) && (refposdiffuseA <= 1.0f)) {
+		refposdiffuse.w = refposdiffuseA;
+	}
+	bool refposrainbowmode = false;
+	if (getrefposrainbow == 0) {
+		refposrainbowmode = (refposrainbow == 1) ? true : false;
+	}
+	newmodel->SetRefPosDiffuseRate(refposdiffuse);
+	newmodel->SetRefPosRainbowMode(refposrainbowmode);
+
+
 	//newmodel->m_tmpmotspeed = m_motspeed;
 	if (grassflag == 1) {
 		CGrassElem* newgrasselem = new CGrassElem(newmodel);

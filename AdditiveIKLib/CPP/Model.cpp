@@ -520,18 +520,21 @@ CModel::~CModel()
 
 	DestroyObjs();
 }
-int CModel::InitParams(int srcrefposmaxnum)
+int CModel::InitParams(int srcrefposnum)
 {
 	m_selectedboneno = 0;
 
 	m_objBounding_BlockNum = 25;
 
-	if ((srcrefposmaxnum >= 1) && (srcrefposmaxnum <= REFPOSMAXNUM)) {
-		m_refpos_maxnum = srcrefposmaxnum;
+	if ((srcrefposnum >= 1) && (srcrefposnum <= REFPOSMAXNUM)) {
+		m_refpos_num = srcrefposnum;
 	}
 	else {
-		m_refpos_maxnum = 1;
+		m_refpos_num = 1;
 	}
+	m_refpos_maxnum = REFPOSMAXNUM;
+	m_refpos_diffuserate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	m_refpos_rainbowmode = false;
 
 	int index1;
 	for (index1 = 0; index1 < m_refpos_maxnum; index1++) {
@@ -24723,7 +24726,7 @@ int CModel::RemakeHSVToonTexture(CMQOMaterial* srcmqomat)
 
 void CModel::SetDistChkInView(float srcval, int refposindex)
 {
-	if ((refposindex < 0) || (refposindex >= GetRefPosMaxNum())) {
+	if ((refposindex < 0) || (refposindex >= GetRefPosNum())) {
 		return;
 	}
 	else {
