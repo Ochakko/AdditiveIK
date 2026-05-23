@@ -3431,6 +3431,18 @@ public: //accesser
 	bool GetRefPosRainbowMode() {
 		return m_refpos_rainbowmode;
 	}
+	void SetRefPosRainbowInv(bool srcval) {
+		m_refpos_rainbowInv = srcval;
+	}
+	bool GetRefPosRainbowInv() {
+		return m_refpos_rainbowInv;
+	}
+	void SetRefPosRainbowTime(bool srcval) {
+		m_refpos_rainbowTime = srcval;
+	}
+	bool GetRefPosRainbowTime() {
+		return m_refpos_rainbowTime;
+	}
 
 
 	void SetGrassFlag(bool srcflag)
@@ -4042,6 +4054,8 @@ private:
 	int m_refpos_num;//*.chaファイル内でモデルごとに指定
 	ChaVector4 m_refpos_diffuserate;
 	bool m_refpos_rainbowmode;
+	bool m_refpos_rainbowInv;
+	bool m_refpos_rainbowTime;
 
 	bool m_skyflag;
 	bool m_groundflag;

@@ -292,7 +292,9 @@ int CChaFile::WriteFileInfo()
 	//version 1017 : 2026/04/25 1.0.0.67へ向けて  RefPosMaxNum追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1017</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1018 : 2026/05/23 1.0.0.70へ向けて  RefPosDiffuseRate*, RefPosRainbow追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1018</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1018</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1019 : 2026/05/24 1.0.0.70へ向けて  RefPosRainbowInv, RefPosRainbowTime追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1019</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -341,6 +343,19 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 	else {
 		CallF(Write2File("    <RefPosRainbow>0</RefPosRainbow>\r\n"), return 1);
 	}
+	if (curmodel->GetRefPosRainbowInv()) {
+		CallF(Write2File("    <RefPosRainbowInv>1</RefPosRainbowInv>\r\n"), return 1);
+	}
+	else {
+		CallF(Write2File("    <RefPosRainbowInv>0</RefPosRainbowInv>\r\n"), return 1);
+	}
+	if (curmodel->GetRefPosRainbowTime()) {
+		CallF(Write2File("    <RefPosRainbowTime>1</RefPosRainbowTime>\r\n"), return 1);
+	}
+	else {
+		CallF(Write2File("    <RefPosRainbowTime>0</RefPosRainbowTime>\r\n"), return 1);
+	}
+
 
 	if (curmodel->GetGrassFlag() && srcgrasselem) {
 		CallF(Write2File("    <GrassFlag>1</GrassFlag>\r\n"), return 1);
@@ -1238,6 +1253,10 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	float refposdiffuseA = 1.0f;
 	int getrefposrainbow = 0;
 	int refposrainbow = 0;
+	int getrefposrainbowInv = 0;
+	int refposrainbowInv = 0;
+	int getrefposrainbowTime = 0;
+	int refposrainbowTime = 0;
 
 	int refnum = 0;
 	int impnum = 0;
@@ -1267,6 +1286,8 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	getrefposdiffuseB = Read_Float(xmlbuf, "<RefPosDiffuseRateB>", "</RefPosDiffuseRateB>", &refposdiffuseB);
 	getrefposdiffuseA = Read_Float(xmlbuf, "<RefPosDiffuseRateA>", "</RefPosDiffuseRateA>", &refposdiffuseA);
 	getrefposrainbow = Read_Int(xmlbuf, "<RefPosRainbow>", "</RefPosRainbow>", &refposrainbow);
+	getrefposrainbowInv = Read_Int(xmlbuf, "<RefPosRainbowInv>", "</RefPosRainbowInv>", &refposrainbowInv);
+	getrefposrainbowTime = Read_Int(xmlbuf, "<RefPosRainbowTime>", "</RefPosRainbowTime>", &refposrainbowTime);
 
 
 	int grassflag = 0;
@@ -1452,8 +1473,18 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	if (getrefposrainbow == 0) {
 		refposrainbowmode = (refposrainbow == 1) ? true : false;
 	}
+	bool setrefposrainbowInv = false;
+	if (getrefposrainbowInv == 0) {
+		setrefposrainbowInv = (refposrainbowInv == 1) ? true : false;
+	}
+	bool setrefposrainbowTime = false;
+	if (getrefposrainbowTime == 0) {
+		setrefposrainbowTime = (refposrainbowTime == 1) ? true : false;
+	}
 	newmodel->SetRefPosDiffuseRate(refposdiffuse);
 	newmodel->SetRefPosRainbowMode(refposrainbowmode);
+	newmodel->SetRefPosRainbowInv(setrefposrainbowInv);
+	newmodel->SetRefPosRainbowTime(setrefposrainbowTime);
 
 
 	//newmodel->m_tmpmotspeed = m_motspeed;

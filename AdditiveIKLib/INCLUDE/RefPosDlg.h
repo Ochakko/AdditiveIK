@@ -49,7 +49,7 @@ public:
 	void ListenMouse(bool srcflag);
 	void CallRewrite();
 
-	int Dlg2Params();
+	//int Dlg2Params();
 
 private:
 	int CreateRefPosWnd();
@@ -116,6 +116,20 @@ private:
 	OrgWinGUI::OWP_Separator* m_rainbowsp;
 	OrgWinGUI::OWP_Label* m_rainbowLabel;
 	OrgWinGUI::OWP_CheckBoxA* m_rainbowcheck;
+
+	OrgWinGUI::OWP_Separator* m_rainbowinvsp;
+	OrgWinGUI::OWP_Label* m_rainbowinvLabel;
+	OrgWinGUI::OWP_CheckBoxA* m_rainbowinvcheck;
+
+	OrgWinGUI::OWP_Separator* m_rainbowtimesp;
+	OrgWinGUI::OWP_Label* m_rainbowtimeLabel;
+	OrgWinGUI::OWP_CheckBoxA* m_rainbowtimecheck;
+
+
+	OrgWinGUI::OWP_Label* m_nameLabel;
+	OrgWinGUI::OWP_Label* m_space01Label;
+	OrgWinGUI::OWP_Label* m_space02Label;
+	OrgWinGUI::OWP_Label* m_space03Label;
 
 	//void (*m_PrepairUndo)();
 	//int (*m_UpdateAfterEditAngleLimit)(int limit2boneflag, bool setcursorflag);//default : setcursorflag = true

@@ -120,7 +120,49 @@ int CRefPosDlg::DestroyObjs()
 		m_rainbowsp = nullptr;
 	}
 
+	if (m_rainbowinvLabel) {
+		delete m_rainbowinvLabel;
+		m_rainbowinvLabel = nullptr;
+	}
+	if (m_rainbowinvcheck) {
+		delete m_rainbowinvcheck;
+		m_rainbowinvcheck = nullptr;
+	}
+	if (m_rainbowinvsp) {
+		delete m_rainbowinvsp;
+		m_rainbowinvsp = nullptr;
+	}
 
+	if (m_rainbowtimeLabel) {
+		delete m_rainbowtimeLabel;
+		m_rainbowtimeLabel = nullptr;
+	}
+	if (m_rainbowtimecheck) {
+		delete m_rainbowtimecheck;
+		m_rainbowtimecheck = nullptr;
+	}
+	if (m_rainbowtimesp) {
+		delete m_rainbowtimesp;
+		m_rainbowtimesp = nullptr;
+	}
+
+
+	if (m_nameLabel) {
+		delete m_nameLabel;
+		m_nameLabel = nullptr;
+	}
+	if (m_space01Label) {
+		delete m_space01Label;
+		m_space01Label = nullptr;
+	}
+	if (m_space02Label) {
+		delete m_space02Label;
+		m_space02Label = nullptr;
+	}
+	if (m_space03Label) {
+		delete m_space03Label;
+		m_space03Label = nullptr;
+	}
 
 	if (m_dlgWnd) {
 		delete m_dlgWnd;
@@ -175,6 +217,20 @@ void CRefPosDlg::InitParams()
 	m_rainbowsp = nullptr;
 	m_rainbowLabel = nullptr;
 	m_rainbowcheck = nullptr;
+
+	m_rainbowinvsp = nullptr;
+	m_rainbowinvLabel = nullptr;
+	m_rainbowinvcheck = nullptr;
+
+	m_rainbowtimesp = nullptr;
+	m_rainbowtimeLabel = nullptr;
+	m_rainbowtimecheck = nullptr;
+
+	m_nameLabel = nullptr;
+	m_space01Label = nullptr;
+	m_space02Label = nullptr;
+	m_space03Label = nullptr;
+
 }
 
 int CRefPosDlg::SetPosAndSize(int srcposx, int srcposy, int srcsizex, int srcsizey)
@@ -282,12 +338,17 @@ int CRefPosDlg::CreateRefPosWnd()
 		true);					//サイズ変更の可否
 
 	int labelheight;
+	int labelheightL;
 	if (g_4kresolution) {
 		labelheight = 28;
+		labelheightL = 36;
 	}
 	else {
 		labelheight = 20;
+		labelheightL = 28;
 	}
+
+
 
 	if (m_dlgWnd) {
 		m_dlgWnd->setListenMouse(true);
@@ -295,6 +356,28 @@ int CRefPosDlg::CreateRefPosWnd()
 		double rate1 = 0.350;
 		double rate50 = 0.50;
 		double diffuseratemax = 8.0;
+
+		m_nameLabel = new OWP_Label(m_model->GetFileName(), labelheightL);
+		if (!m_nameLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_space01Label = new OWP_Label(L"  ", labelheightL);
+		if (!m_space01Label) {
+			_ASSERT(0);
+			abort();
+		}
+		m_space02Label = new OWP_Label(L"  ", labelheightL);
+		if (!m_space02Label) {
+			_ASSERT(0);
+			abort();
+		}
+		m_space03Label = new OWP_Label(L"  ", labelheightL);
+		if (!m_space03Label) {
+			_ASSERT(0);
+			abort();
+		}
+
 
 		m_refposnumLabel = new OWP_Label(L"RefPos Num", labelheight);
 		if (!m_refposnumLabel) {
@@ -386,16 +469,52 @@ int CRefPosDlg::CreateRefPosWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_rainbowcheck = new OWP_CheckBoxA(L"Rainbow", false, labelheight, false);
+		m_rainbowcheck = new OWP_CheckBoxA(L"RainbowMode", m_model->GetRefPosRainbowMode(), labelheight, false);
 		if (!m_rainbowcheck) {
 			_ASSERT(0);
 			abort();
 		}
 
+		m_rainbowinvLabel = new OWP_Label(L"Rainbow Inverse", labelheight);
+		if (!m_rainbowinvLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_rainbowinvsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_rainbowinvsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_rainbowinvcheck = new OWP_CheckBoxA(L"Rainbow Inverse", m_model->GetRefPosRainbowInv(), labelheight, false);
+		if (!m_rainbowinvcheck) {
+			_ASSERT(0);
+			abort();
+		}
+
+
+		m_rainbowtimeLabel = new OWP_Label(L"Rainbow TimeProc", labelheight);
+		if (!m_rainbowtimeLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_rainbowtimesp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_rainbowtimesp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_rainbowtimecheck = new OWP_CheckBoxA(L"Rainbow TimeProc", m_model->GetRefPosRainbowTime(), labelheight, false);
+		if (!m_rainbowtimecheck) {
+			_ASSERT(0);
+			abort();
+		}
+
+		m_dlgWnd->addParts(*m_nameLabel);
+		m_dlgWnd->addParts(*m_space01Label);
 
 		m_dlgWnd->addParts(*m_refposnumsp);
 		m_refposnumsp->addParts1(*m_refposnumLabel);
 		m_refposnumsp->addParts2(*m_refposnumSlider);
+		m_dlgWnd->addParts(*m_space02Label);
 
 		m_dlgWnd->addParts(*m_diffuseRsp);
 		m_diffuseRsp->addParts1(*m_diffuseRLabel);
@@ -413,9 +532,20 @@ int CRefPosDlg::CreateRefPosWnd()
 		m_diffuseAsp->addParts1(*m_diffuseALabel);
 		m_diffuseAsp->addParts2(*m_diffuseASlider);
 
+		m_dlgWnd->addParts(*m_space03Label);
+
 		m_dlgWnd->addParts(*m_rainbowsp);
 		m_rainbowsp->addParts1(*m_rainbowLabel);
 		m_rainbowsp->addParts2(*m_rainbowcheck);
+
+		m_dlgWnd->addParts(*m_rainbowinvsp);
+		m_rainbowsp->addParts1(*m_rainbowinvLabel);
+		m_rainbowsp->addParts2(*m_rainbowinvcheck);
+
+		m_dlgWnd->addParts(*m_rainbowtimesp);
+		m_rainbowsp->addParts1(*m_rainbowtimeLabel);
+		m_rainbowsp->addParts2(*m_rainbowtimecheck);
+
 
 		//##########
 		//Slider
@@ -475,6 +605,18 @@ int CRefPosDlg::CreateRefPosWnd()
 				m_model->SetRefPosRainbowMode(value);
 			}
 			});
+		m_rainbowinvcheck->setButtonListener([=, this]() {
+			bool value = m_rainbowinvcheck->getValue();
+			if (m_model != nullptr) {
+				m_model->SetRefPosRainbowInv(value);
+			}
+			});
+		m_rainbowtimecheck->setButtonListener([=, this]() {
+			bool value = m_rainbowtimecheck->getValue();
+			if (m_model != nullptr) {
+				m_model->SetRefPosRainbowTime(value);
+			}
+			});
 
 
 		m_dlgWnd->setSize(WindowSize(m_sizex, m_sizey));
@@ -499,6 +641,10 @@ int CRefPosDlg::CreateRefPosWnd()
 int CRefPosDlg::Params2Dlg()
 {
 	if ((m_dlgWnd != nullptr) && (m_model != nullptr)) {
+		if (m_nameLabel) {
+			m_nameLabel->setName(m_model->GetFileName());
+		}
+
 		int refposnum = m_model->GetRefPosNum();
 		if (m_refposnumSlider != nullptr) {
 			int setvalue = (int)(refposnum + 0.0001);
@@ -522,6 +668,14 @@ int CRefPosDlg::Params2Dlg()
 		bool rainbowmode = m_model->GetRefPosRainbowMode();
 		if (m_rainbowcheck != nullptr) {
 			m_rainbowcheck->setValue(rainbowmode, false);
+		}
+		bool rainbowinv = m_model->GetRefPosRainbowInv();
+		if (m_rainbowinvcheck != nullptr) {
+			m_rainbowinvcheck->setValue(rainbowinv, false);
+		}
+		bool rainbowtime = m_model->GetRefPosRainbowTime();
+		if (m_rainbowtimecheck != nullptr) {
+			m_rainbowtimecheck->setValue(rainbowtime, false);
 		}
 
 		m_dlgWnd->callRewrite();

@@ -6580,6 +6580,10 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 					CModel* curmodel = g_chascene->GetModel(modelcount);
 					if ((curmodel != nullptr) && 
 						((!curmodel->GetNoBoneFlag() && curmodel->ExistCurrentMotion()) || (curmodel->GetRefPosNum() >= 2))) {
+						//#### 注意 2026/05/24 ####
+						//ボーン入りモーション有モデルの場合：RefPosNum >= 1のときにOnRenderRefPos()を呼ぶ
+						//背景モデルの場合：RefPosNum >= 2のときにOnRenderRefPos()を呼ぶ
+						//上記のようにしないと　RefPosNum == 1のときに　背景がライティングされない
 						curmodel->SetRefPosFlag(true);
 						OnRenderRefPos(re, curmodel, s_owpLTimeline->getCurrentTime());
 					}
@@ -15599,7 +15603,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.69\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.70\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -31999,6 +32003,11 @@ s_layerWnd->setVisible(false);
 
 int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double currentframe)
 {
+	//#### 注意 2026/05/24 ####
+	//ボーン入りモーション有モデルの場合：RefPosNum >= 1のときに呼ばれる
+	//背景モデルの場合：RefPosNum >= 2のときに呼ばれる
+	//上記のようにしないと　RefPosNum == 1のときに　背景がライティングされない
+
 	if (!re || !curmodel || !g_chascene) {
 		return 0;
 	}
@@ -32036,13 +32045,26 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 	//R148 G0 B211
 	//#9400D3
 	ChaVector4 colRainbow[8];
-	colRainbow[0] = ChaVector4(1.0f, 0.0f, 0.0f, 1.0f);
-	colRainbow[1] = ChaVector4(1.0f, 0.5f, 0.0f, 1.0f);
-	colRainbow[2] = ChaVector4(1.0f, 1.0f, 0.0f, 1.0f);
-	colRainbow[3] = ChaVector4(0.0f, 1.0f, 0.0f, 1.0f);
-	colRainbow[4] = ChaVector4(0.0f, 0.0f, 1.0f, 1.0f);
-	colRainbow[5] = ChaVector4((75.0f / 255.0f), 0.0f, (130.0f / 255.0f), 1.0f);
-	colRainbow[6] = ChaVector4((148.0f / 255.0f), 0.0f, (211.0f / 255.0f), 1.0f);
+	if (!curmodel->GetRefPosRainbowInv()) {
+		colRainbow[0] = ChaVector4(1.0f, 0.0f, 0.0f, 1.0f);
+		colRainbow[1] = ChaVector4(1.0f, 0.5f, 0.0f, 1.0f);
+		colRainbow[2] = ChaVector4(1.0f, 1.0f, 0.0f, 1.0f);
+		colRainbow[3] = ChaVector4(0.0f, 1.0f, 0.0f, 1.0f);
+		colRainbow[4] = ChaVector4(0.0f, 0.0f, 1.0f, 1.0f);
+		colRainbow[5] = ChaVector4((75.0f / 255.0f), 0.0f, (130.0f / 255.0f), 1.0f);
+		colRainbow[6] = ChaVector4((148.0f / 255.0f), 0.0f, (211.0f / 255.0f), 1.0f);
+	}
+	else {
+		//Invフラグが立っていたら　色の順番を逆にする
+		colRainbow[6] = ChaVector4(1.0f, 0.0f, 0.0f, 1.0f);
+		colRainbow[5] = ChaVector4(1.0f, 0.5f, 0.0f, 1.0f);
+		colRainbow[4] = ChaVector4(1.0f, 1.0f, 0.0f, 1.0f);
+		colRainbow[3] = ChaVector4(0.0f, 1.0f, 0.0f, 1.0f);
+		colRainbow[2] = ChaVector4(0.0f, 0.0f, 1.0f, 1.0f);
+		colRainbow[1] = ChaVector4((75.0f / 255.0f), 0.0f, (130.0f / 255.0f), 1.0f);
+		colRainbow[0] = ChaVector4((148.0f / 255.0f), 0.0f, (211.0f / 255.0f), 1.0f);
+	}
+
 
 	static int s_callcount = -1;
 	s_callcount++;
@@ -32123,7 +32145,15 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					const double refstartalpha = 0.80f;
 					ChaVector4 refdiffusemult;
 					if (curmodel->GetRefPosRainbowMode()) {
-						refdiffusemult = colRainbow[rainbowindex0];
+						if (!curmodel->GetRefPosRainbowTime()) {
+							refdiffusemult = colRainbow[6];
+						}
+						else {
+							ChaVector4 befrainbow = colRainbow[max(0, (rainbowindex0 - 1))];
+							ChaVector4 currentrainbow = colRainbow[rainbowindex0];
+							refdiffusemult = befrainbow * ((float)rainbowrestindex0 / (float)max(1, blockcount)) +
+								currentrainbow * (1.0f - (float)rainbowrestindex0 / (float)max(1, blockcount));
+						}
 						refdiffusemult.w = (float)refstartalpha;
 					}
 					else {
@@ -32236,20 +32266,23 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 						double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
 						ChaVector4 refdiffusemult;
 						if (curmodel->GetRefPosRainbowMode()) {
-							//ChaVector4 befrainbow = colRainbow[max(0, (rainbowindex0 - 1))];
-							//ChaVector4 currentrainbow = colRainbow[rainbowindex0];
-							//refdiffusemult = befrainbow * ((float)rainbowrestindex0 / (float)max(1, blockcount)) + 
-							//	currentrainbow * (1.0f - (float)rainbowrestindex0 / (float)max(1, blockcount));
-							float befrainvalue = (float)max(0, (refposindex - 1)) / (float)curmodel->GetRefPosNum() * 7.0f;
-							float aftrainvalue = (float)refposindex / (float)curmodel->GetRefPosNum() * 7.0f;
-							int befrainindex = max(0, min(7, (int)(befrainvalue + 0.1f)));
-							int aftrainindex = max(0, min(7, (int)(aftrainvalue + 0.1f)));
-							float midrate = (aftrainvalue - befrainvalue) / (float)max(1, (int)(aftrainvalue - befrainvalue));
+							if (!curmodel->GetRefPosRainbowTime()) {
+								float befrainvalue = (float)max(0, (refposindex - 1)) / (float)curmodel->GetRefPosNum() * 7.0f;
+								float aftrainvalue = (float)refposindex / (float)curmodel->GetRefPosNum() * 7.0f;
+								int befrainindex = max(0, min(7, (int)(befrainvalue + 0.1f)));
+								int aftrainindex = max(0, min(7, (int)(aftrainvalue + 0.1f)));
+								float midrate = (aftrainvalue - befrainvalue) / (float)max(1, (int)(aftrainvalue - befrainvalue));
 
-							ChaVector4 befrainbow = colRainbow[befrainindex];
-							ChaVector4 currentrainbow = colRainbow[aftrainindex];
-							refdiffusemult = befrainbow * (1.0f - midrate) + currentrainbow * midrate;
-
+								ChaVector4 befrainbow = colRainbow[befrainindex];
+								ChaVector4 currentrainbow = colRainbow[aftrainindex];
+								refdiffusemult = befrainbow * (1.0f - midrate) + currentrainbow * midrate;
+							}
+							else {
+								ChaVector4 befrainbow = colRainbow[max(0, (rainbowindex0 - 1))];
+								ChaVector4 currentrainbow = colRainbow[rainbowindex0];
+								refdiffusemult = befrainbow * ((float)rainbowrestindex0 / (float)max(1, blockcount)) + 
+									currentrainbow * (1.0f - (float)rainbowrestindex0 / (float)max(1, blockcount));
+							}
 							refdiffusemult.w = (float)renderalpha;
 						}
 						else {
@@ -32369,11 +32402,19 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					const double refstartalpha = 0.80f;
 					ChaVector4 refdiffusemult;
 					if (curmodel->GetRefPosRainbowMode()) {
-						refdiffusemult = colRainbow[rainbowindex0];
-						refdiffusemult.w = 0.5f;
+						if (!curmodel->GetRefPosRainbowTime()) {
+							refdiffusemult = colRainbow[6];
+						}
+						else {
+							ChaVector4 befrainbow = colRainbow[max(0, (rainbowindex0 - 1))];
+							ChaVector4 currentrainbow = colRainbow[rainbowindex0];
+							refdiffusemult = befrainbow * ((float)rainbowrestindex0 / (float)max(1, blockcount)) +
+								currentrainbow * (1.0f - (float)rainbowrestindex0 / (float)max(1, blockcount));
+						}
+						refdiffusemult.w = (float)refstartalpha;
 					}
 					else {
-						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.5f);
+						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)refstartalpha);
 					}
 					refdiffusemult *= curmodel->GetRefPosDiffuseRate();
 
@@ -32425,20 +32466,23 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 						double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
 						ChaVector4 refdiffusemult;
 						if (curmodel->GetRefPosRainbowMode()) {
-							//ChaVector4 befrainbow = colRainbow[max(0, (rainbowindex0 - 1))];
-							//ChaVector4 currentrainbow = colRainbow[rainbowindex0];
-							//refdiffusemult = befrainbow * ((float)rainbowrestindex0 / (float)max(1, blockcount)) + 
-							//	currentrainbow * (1.0f - (float)rainbowrestindex0 / (float)max(1, blockcount));
-							float befrainvalue = (float)max(0, (refposindex - 1)) / (float)curmodel->GetRefPosNum() * 7.0f;
-							float aftrainvalue = (float)refposindex / (float)curmodel->GetRefPosNum() * 7.0f;
-							int befrainindex = max(0, min(7, (int)(befrainvalue + 0.1f)));
-							int aftrainindex = max(0, min(7, (int)(aftrainvalue + 0.1f)));
-							float midrate = (aftrainvalue - befrainvalue) / (float)max(1, (int)(aftrainvalue - befrainvalue));
+							if (!curmodel->GetRefPosRainbowTime()) {
+								float befrainvalue = (float)max(0, (refposindex - 1)) / (float)curmodel->GetRefPosNum() * 7.0f;
+								float aftrainvalue = (float)refposindex / (float)curmodel->GetRefPosNum() * 7.0f;
+								int befrainindex = max(0, min(7, (int)(befrainvalue + 0.1f)));
+								int aftrainindex = max(0, min(7, (int)(aftrainvalue + 0.1f)));
+								float midrate = (aftrainvalue - befrainvalue) / (float)max(1, (int)(aftrainvalue - befrainvalue));
 
-							ChaVector4 befrainbow = colRainbow[befrainindex];
-							ChaVector4 currentrainbow = colRainbow[aftrainindex];
-							refdiffusemult = befrainbow * (1.0f - midrate) + currentrainbow * midrate;
-
+								ChaVector4 befrainbow = colRainbow[befrainindex];
+								ChaVector4 currentrainbow = colRainbow[aftrainindex];
+								refdiffusemult = befrainbow * (1.0f - midrate) + currentrainbow * midrate;
+							}
+							else {
+								ChaVector4 befrainbow = colRainbow[max(0, (rainbowindex0 - 1))];
+								ChaVector4 currentrainbow = colRainbow[rainbowindex0];
+								refdiffusemult = befrainbow * ((float)rainbowrestindex0 / (float)max(1, blockcount)) +
+									currentrainbow * (1.0f - (float)rainbowrestindex0 / (float)max(1, blockcount));
+							}
 							refdiffusemult.w = (float)renderalpha;
 						}
 						else {
