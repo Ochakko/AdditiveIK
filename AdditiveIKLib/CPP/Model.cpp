@@ -1332,7 +1332,18 @@ int CModel::LoadFBX(int skipdefref, ID3D12Device* pdev, const WCHAR* wfile, cons
 
 		}
 		else {
-			SetNoBoneFlag(false);
+			bool boneflag = false;
+			for (int index0 = 0; index0 < chklistsize; index0++) {
+				CBone* chkbone = m_bonelist[index0];
+				if ((chkbone != nullptr) && (chkbone->IsSkeleton())) {
+					SetNoBoneFlag(false);
+					boneflag = true;
+					break;
+				}
+			}
+			if (!boneflag) {
+				SetNoBoneFlag(true);
+			}
 		}
 	//}
 

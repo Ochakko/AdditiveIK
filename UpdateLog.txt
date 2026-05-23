@@ -1,6 +1,12 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/05/24
+　RefPos修正
+　　RefPosNumを1に設定している背景モデルは、残像無しでライティングを有効にして描画
+　　RefPosRainbowで青が透明度が小さすぎて消えていたので修正
+　　RefPos残像数の最大値を36に変更(変更前は100)
+　　
 2026/05/23
 　RefPosプレートメニュー追加
 　　RefPosの色をモジュレートするためのスライダー

@@ -236,7 +236,9 @@ enum {
 
 //2026/05/04 REFPOSMAXNUMは *.chaファイルの<RefPosMaxNum>で　1から100を指定することに.
 //その際に指定可能な最大数として次の定義を残す
-#define REFPOSMAXNUM 100
+//#define REFPOSMAXNUM 100
+//#define REFPOSMAXNUM 50
+#define REFPOSMAXNUM 36
 //2026/05/04 DescriptorHeap作成の最適化により、REFPOSMAXNUMを 少し 大きくしてもエラーにならなくなった
 //2024/02/10 大きいfbx(TheHuntCity)+VRoidを読み込んでもメモリ不足にならない程度にREFPOSMAXNUMを小さくした
 //#define REFPOSMAXNUM	10

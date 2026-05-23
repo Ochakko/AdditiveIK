@@ -6230,7 +6230,6 @@ void OnUserFrameMove(double fTime, float fElapsedTime, double difftime, int endf
 		else {
 			OnFramePreviewStop();
 		}
-		
 
 		if (GetCurrentModel()) {
 			if (GetCurrentModel()->GetBefInView(0) != GetCurrentModel()->GetInView(0)) {
@@ -6571,47 +6570,29 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 			else {
 				btflag = 1;
 			}
-
-			if (GetCurrentModel()) {
-				if (s_sprefpos.state) {
-					//GetCurrentModel()->SetRefPosFlag(true);
-					g_chascene->SetRefPosFlag(GetCurrentModel());//s_modelにtrue, 他のモデルにfalse
-					g_refposflag = true;
-				}
-				else {
-					//GetCurrentModel()->SetRefPosFlag(false);
-					g_chascene->SetRefPosFlag(nullptr);
-					g_refposflag = false;
-				}
-			}
 			bool calcslotflag = false;
-			//bool calcslotflag = true;
-			g_chascene->SetBoneMatrixForShader(btflag, calcslotflag);
 			g_chascene->ResetRefPos();
 			if (GetCurrentModel() && s_sprefpos.state) {
+				g_refposflag = true;
 				int modelnum = g_chascene->GetModelNum();
 				int modelcount;
 				for (modelcount = 0; modelcount < modelnum; modelcount++) {
 					CModel* curmodel = g_chascene->GetModel(modelcount);
-					//if ((curmodel != nullptr) && (curmodel->GetRefPosNum() >= 2)) {
-					//	curmodel->SetRefPosFlag(true);
-					//	OnRenderRefPos(re, curmodel, s_owpLTimeline->getCurrentTime());
-					//}
-					//else if(curmodel != nullptr) {
-					//	curmodel->SetRefPosFlag(false);
-					//}
-					if (curmodel != nullptr) {
+					if ((curmodel != nullptr) && 
+						((!curmodel->GetNoBoneFlag() && curmodel->ExistCurrentMotion()) || (curmodel->GetRefPosNum() >= 2))) {
 						curmodel->SetRefPosFlag(true);
 						OnRenderRefPos(re, curmodel, s_owpLTimeline->getCurrentTime());
+					}
+					else {
+						curmodel->SetRefPosFlag(false);
 					}
 				}
 			}
 			else {
+				g_refposflag = false;
 				g_chascene->SetRefPosFlag(nullptr);
+				g_chascene->SetBoneMatrixForShader(btflag, calcslotflag);
 			}
-			//if (GetCurrentModel() && s_sprefpos.state) {
-			//	OnRenderRefPos(re, GetCurrentModel());
-			//}
 			g_chascene->RenderModels(re, lightflag, diffusemult, btflag);
 
 
@@ -25336,6 +25317,13 @@ int OnFrameKeyboard()
 			}
 
 
+			if (g_altkey && (g_keybuf[VK_F21] & 0x80) && ((g_savekeybuf[VK_F21] & 0x80) == 0)) {
+				if (s_sidemenu_sellock != nullptr) {
+					bool value = s_sidemenu_sellock->getValue();
+					s_sidemenu_sellock->setValue(!value, true);
+				}
+			}
+
 			if (g_altkey && (g_keybuf[VK_F22] & 0x80) && ((g_savekeybuf[VK_F22] & 0x80) == 0)) {
 				//Green Frog Button for change EditTarget
 				s_spret2prev.ButtonDown();
@@ -25390,19 +25378,19 @@ int OnFrameKeyboard()
 			}
 
 
-			if (g_shiftkey && (g_keybuf[VK_F20] & 0x80) && ((g_savekeybuf[VK_F20] & 0x80) == 0)) {
+			if (g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F20] & 0x80) && ((g_savekeybuf[VK_F20] & 0x80) == 0)) {
 				s_cameradollyFlag = true;
 				shiftdoneflag = true;
 			}
-			if (g_shiftkey && (g_keybuf[VK_F21] & 0x80) && ((g_savekeybuf[VK_F21] & 0x80) == 0)) {
+			if (g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F21] & 0x80) && ((g_savekeybuf[VK_F21] & 0x80) == 0)) {
 				s_modelworldmatFlag = true;
 				shiftdoneflag = true;
 			}
-			if (g_shiftkey && (g_keybuf[VK_F22] & 0x80) && ((g_savekeybuf[VK_F22] & 0x80) == 0)) {
+			if (g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F22] & 0x80) && ((g_savekeybuf[VK_F22] & 0x80) == 0)) {
 				s_motpropFlag = true;
 				shiftdoneflag = true;
 			}
-			if (g_shiftkey && (g_keybuf[VK_F23] & 0x80) && ((g_savekeybuf[VK_F23] & 0x80) == 0)) {
+			if (g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F23] & 0x80) && ((g_savekeybuf[VK_F23] & 0x80) == 0)) {
 				s_sprefpos.state = !s_sprefpos.state;
 				g_chacamera.ResetRefPosViewFlag();
 				shiftdoneflag = true;
@@ -25653,13 +25641,13 @@ int OnFrameKeyboard()
 		//}
 
 
-		if (!shiftdoneflag && (g_keybuf[VK_SHIFT] & 0x80) && ((g_savekeybuf[VK_SHIFT] & 0x80) == 0)) {//TourBox 上ボタン押す度に IKKINDを変更
-			g_ikkind++;
-			if (g_ikkind >= IKKIND_MAX) {
-				g_ikkind = IKKIND_ROTATE;
-			}
-			OnChangeIKKind(false);
-		}
+		//if (!shiftdoneflag && (g_keybuf[VK_SHIFT] & 0x80) && ((g_savekeybuf[VK_SHIFT] & 0x80) == 0)) {//TourBox 上ボタン押す度に IKKINDを変更
+		//	g_ikkind++;
+		//	if (g_ikkind >= IKKIND_MAX) {
+		//		g_ikkind = IKKIND_ROTATE;
+		//	}
+		//	OnChangeIKKind(false);
+		//}
 		
 		//TourBox
 		if ((g_keybuf['T'] & 0x80) && ((g_savekeybuf['T'] & 0x80) == 0)) {//TourBox ノブボタンを押す
@@ -26477,6 +26465,7 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 
 	return 0;
 }
+
 
 int StopBtRec()
 {
@@ -32014,6 +32003,14 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 		return 0;
 	}
 
+	int btflag;
+	if ((g_previewFlag != 4) && (g_previewFlag != 5)) {
+		btflag = 0;
+	}
+	else {
+		btflag = 1;
+	}
+
 	//############
 	//Rainbow RGB
 	//############
@@ -32107,9 +32104,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					//###############################################
 					//選択フレームの最後のフレームに残像　＋　カレントフレーム
 					//###############################################
-					//refframeのポーズを表示
-					int btflag1 = 0;
-				
+					//refframeのポーズを表示				
 					CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, 0);//過去データ
 					int curmotid = mfv.GetMotId();
 					double renderframe = mfv.GetFrame();
@@ -32121,7 +32116,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 
 					g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 						roundingendframe, refposindex);
-					curmodel->SetShaderConst(btflag1, calcslotflag);
+					curmodel->SetShaderConst(btflag, calcslotflag);
 					curmodel->SetRefPosFl4x4ToDispObj(refposindex);
 
 					//カレントフレームから離れるほど　透明度を薄くする
@@ -32136,15 +32131,14 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					}
 					refdiffusemult *= curmodel->GetRefPosDiffuseRate();
 
-					int lightflag = 0;
+					int lightflag = -1;
 					bool forcewithalpha = true;
-					int btflag = 0;
 					bool zcmpalways = true;
 					bool zenable = true;
 					g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
 						lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, effectView);
 
-					refposindex++;
+					//refposindex++;
 
 				}
 				else if (curmodel->GetRefPosNum() >= 3) {
@@ -32228,18 +32222,18 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 						ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
 
 						//refframeのポーズを表示
-						int btflag1 = 0;
 						g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 							roundingrenderframe, refposindex);
-						curmodel->SetShaderConst(btflag1, calcslotflag);
+						curmodel->SetShaderConst(btflag, calcslotflag);
 						curmodel->SetRefPosFl4x4ToDispObj(refposindex);
-						//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
+						//g_chascene->SetBoneMatrixForShader(btflag, calcslotflag);
 
 						//カレントフレームから離れるほど　透明度を薄くする
 						const double refstartalpha = 0.80f;
 						double renderalpha0 = 1.0 - (double)refposindex / (double)curmodel->GetRefPosNum();
 						////2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
-						double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
+						//double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
+						double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
 						ChaVector4 refdiffusemult;
 						if (curmodel->GetRefPosRainbowMode()) {
 							//ChaVector4 befrainbow = colRainbow[max(0, (rainbowindex0 - 1))];
@@ -32263,9 +32257,9 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 						}
 						refdiffusemult *= curmodel->GetRefPosDiffuseRate();
 
-						int lightflag = 0;
+						//int lightflag = 0;
+						int lightflag = -1;
 						bool forcewithalpha = true;
-						int btflag = 0;
 						bool zcmpalways = true;
 						bool zenable = true;
 						g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
@@ -32280,7 +32274,6 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 				{
 					if ((refposindex >= 0) && (refposindex < curmodel->GetRefPosNum())) {
 						////カレントフレームをレンダー
-						int btflag1 = 0;
 
 						curmodel->SetCurrentMotion(savemotid);
 						curmodel->SetMotionFrame(savemotframe);
@@ -32291,23 +32284,35 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 
 						g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 							savemotframe, refposindex);
-						curmodel->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
+						curmodel->SetShaderConst(btflag, calcslotflag);//calcslotflag = true !!!!
 						curmodel->SetRefPosFl4x4ToDispObj(refposindex);
-						//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
+						//g_chascene->SetBoneMatrixForShader(btflag, calcslotflag);
 
 						ChaVector4 refdiffusemult;
 						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.5f);
 
-						int lightflag = -1;
-						bool forcewithalpha = true;
-						int btflag = 0;
-						//bool zcmpalways = false;
-						bool zcmpalways = g_zalways;//2024/02/08 DispAndLimitsプレートメニューのチェックボックス
-						bool zenable = true;
-						g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
-							lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, s_matView);
+						//if (curmodel->GetRefPosNum() > 1) {
+						//	refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.5f);
+						//	int lightflag = 0;
+						//	bool forcewithalpha = true;
+						//	bool zcmpalways = g_zalways;//2024/02/08 DispAndLimitsプレートメニューのチェックボックス
+						//	bool zenable = true;
+						//	g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
+						//		lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, s_matView);
+						//}
+						//else 
+						{
+							//RefPosNum == 1の場合は　ライティング有　暗くできるように
+							//refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.9f);
+							int lightflag = -1;
+							bool forcewithalpha = true;
+							bool zcmpalways = true;
+							bool zenable = true;
+							g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
+								lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, s_matView);
+						}
 
-						refposindex++;
+						//refposindex++;
 					}
 				}
 
@@ -32327,8 +32332,8 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 						//	pRenderContext, s_bcircle, s_curboneno);
 					}
 				}
-				g_chascene->RenderRefPos(re, true);
-				g_chascene->RenderRefPos(re, false);
+				//g_chascene->RenderRefPos(re, true);
+				//g_chascene->RenderRefPos(re, false);
 			}
 			else {
 //#######################
@@ -32349,7 +32354,6 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					//選択フレームの最後のフレームに残像　＋　カレントフレーム
 					//###############################################
 					//refframeのポーズを表示
-					int btflag1 = 0;
 					//curmodel->SetMotionFrame(roundingendframe);
 
 					CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, 0);//過去データ
@@ -32358,7 +32362,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 
 					g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 						roundingendframe, refposindex);
-					curmodel->SetShaderConst(btflag1, calcslotflag);
+					curmodel->SetShaderConst(btflag, calcslotflag);
 					curmodel->SetRefPosFl4x4ToDispObj(refposindex);
 
 					//カレントフレームから離れるほど　透明度を薄くする
@@ -32373,15 +32377,14 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					}
 					refdiffusemult *= curmodel->GetRefPosDiffuseRate();
 
-					int lightflag = 0;
+					int lightflag = -1;
 					bool forcewithalpha = true;
-					int btflag = 0;
 					bool zcmpalways = true;
 					bool zenable = true;
 					g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
 						lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, effectView);
 
-					refposindex++;
+					//refposindex++;
 
 				}
 				else if (curmodel->GetRefPosNum() >= 3) {
@@ -32406,20 +32409,20 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 						//ChaMatrix effectView = refposView;
 
 						//refframeのポーズを表示
-						int btflag1 = 0;
 						//curmodel->SetMotionFrame(roundingrenderframe);
 						g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 							currentframe, refposindex);
-						//curmodel->SetShaderConst(btflag1, calcslotflag);
+						//curmodel->SetShaderConst(btflag, calcslotflag);
 						//curmodel->SetRefPosFl4x4ToDispObj(refposindex);
-						//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
+						//g_chascene->SetBoneMatrixForShader(btflag, calcslotflag);
 
 						//カレントフレームから離れるほど　透明度を薄くする
 						//const double refstartalpha = 0.10f;
 						const double refstartalpha = 0.80f;
 						double renderalpha0 = 1.0 - (double)refposindex / (double)curmodel->GetRefPosNum();
 						////2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
-						double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
+						//double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
+						double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
 						ChaVector4 refdiffusemult;
 						if (curmodel->GetRefPosRainbowMode()) {
 							//ChaVector4 befrainbow = colRainbow[max(0, (rainbowindex0 - 1))];
@@ -32443,13 +32446,9 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 						}
 						refdiffusemult *= curmodel->GetRefPosDiffuseRate();
 
-						int lightflag = 0;
-						//int lightflag = 1;
+						int lightflag = -1;
 						bool forcewithalpha = true;
-						//bool forcewithalpha = false;
-						int btflag = 0;
 						bool zcmpalways = true;
-						//bool zcmpalways = false;
 						bool zenable = true;
 						g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
 							lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, effectView);
@@ -32463,7 +32462,6 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 				{
 					if ((refposindex >= 0) && (refposindex < curmodel->GetRefPosNum())) {
 						////カレントフレームをレンダー
-						int btflag1 = 0;
 
 						//curmodel->SetMotionFrame(currentframe);
 
@@ -32473,30 +32471,38 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 
 						g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 							currentframe, refposindex);
-						//curmodel->SetShaderConst(btflag1, calcslotflag);//calcslotflag = true !!!!
-						//curmodel->SetRefPosFl4x4ToDispObj(refposindex);
-						//g_chascene->SetBoneMatrixForShader(btflag1, calcslotflag);
+						curmodel->SetShaderConst(btflag, calcslotflag);//calcslotflag = true !!!!
+						curmodel->SetRefPosFl4x4ToDispObj(refposindex);
+
 
 						ChaVector4 refdiffusemult;
-						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.5f);
+						//if (curmodel->GetRefPosNum() > 1) {
+						//	refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.5f);
+						//	int lightflag = 0;
+						//	bool forcewithalpha = true;
+						//	bool zcmpalways = g_zalways;//2024/02/08 DispAndLimitsプレートメニューのチェックボックス
+						//	bool zenable = true;
+						//	g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
+						//		lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, s_matView);
+						//}
+						//else 
+						{
+							//RefPosNum == 1の場合は　ライティング有　暗くできるように
+							refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.5f);
+							int lightflag = -1;
+							bool forcewithalpha = true;
+							bool zcmpalways = true;
+							bool zenable = true;
+							g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
+								lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, s_matView);
+						}
 
-						int lightflag = 0;
-						//int lightflag = 1;
-						bool forcewithalpha = true;
-						//bool forcewithalpha = false;
-						int btflag = 0;
-						//bool zcmpalways = false;
-						bool zcmpalways = g_zalways;//2024/02/08 DispAndLimitsプレートメニューのチェックボックス
-						bool zenable = true;
-						g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
-							lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, s_matView);
-
-						refposindex++;
+						//refposindex++;
 					}
 				}
 
-				g_chascene->RenderRefPos(re, true);
-				g_chascene->RenderRefPos(re, false);
+				//g_chascene->RenderRefPos(re, true);
+				//g_chascene->RenderRefPos(re, false);
 			}
 		}
 	}

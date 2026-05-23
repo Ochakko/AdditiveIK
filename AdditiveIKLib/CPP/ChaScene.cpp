@@ -947,7 +947,7 @@ int ChaScene::RenderModels(myRenderer::RenderingEngine* renderingEngine, int lig
 
 			}
 
-			//RenderRefPos(renderingEngine, (renderindex == 0));//2024/03/24
+			RenderRefPos(renderingEngine, (renderindex == 0));//2024/03/24
 		}
 
 		//#########################################################################################################################
@@ -2626,8 +2626,8 @@ int ChaScene::SetRefPosFlag(CModel* srcmodel)
 	vector<MODELELEM>::iterator itrmodel;
 	for (itrmodel = m_modelindex.begin(); itrmodel != m_modelindex.end(); itrmodel++) {
 		CModel* curmodel = itrmodel->modelptr;
-		if (curmodel) {
-			if (srcmodel && (curmodel == srcmodel)) {
+		if (curmodel != nullptr) {
+			if ((srcmodel != nullptr) && (curmodel == srcmodel)) {
 				curmodel->SetRefPosFlag(true);
 			}
 			else {
