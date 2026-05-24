@@ -2,6 +2,10 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2026/05/24
+　RefPosNumスライダー修正
+　
+　
+2026/05/24
 　ショートムービー
 　　れふぽすれいんぼー(できた)
 　　https://youtu.be/ZI95mG1aQRE

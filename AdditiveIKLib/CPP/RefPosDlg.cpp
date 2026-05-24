@@ -389,7 +389,7 @@ int CRefPosDlg::CreateRefPosWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_refposnumSlider = new OWP_Slider((double)m_model->GetRefPosNum(), 100.0, 1.0);
+		m_refposnumSlider = new OWP_Slider((double)m_model->GetRefPosNum(), REFPOSMAXNUM, 1.0);
 		if (!m_refposnumSlider) {
 			_ASSERT(0);
 			abort();
@@ -648,6 +648,8 @@ int CRefPosDlg::Params2Dlg()
 		int refposnum = m_model->GetRefPosNum();
 		if (m_refposnumSlider != nullptr) {
 			int setvalue = (int)(refposnum + 0.0001);
+			setvalue = min(REFPOSMAXNUM, setvalue);
+			setvalue = max(1, setvalue);
 			m_refposnumSlider->setValue((double)setvalue, false);//intに丸めてセットし直し
 		}
 
