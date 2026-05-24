@@ -2,6 +2,12 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2026/05/24
+　ショートムービー
+　　れふぽすれいんぼー(できた)
+　　https://youtu.be/ZI95mG1aQRE
+　　
+　　
+2026/05/24
 　AdditiveIK 1.0.0.70 release
 　　1.0.0.69からの変更点
 　　　RefPosプレートメニュー追加

@@ -347,6 +347,8 @@ Smooth平滑化<br>
 [【過去半分】リファレンスポーズで動きを確認【未来半分】 2026/05/09](https://youtu.be/juaX22jhXIw "Usage example18")<br>
 
 [【観測者が】４次元RefPosボクサー【ダークマター】 2026/05/10](https://youtu.be/AIgPOpzXTtU "Usage example19")<br>
+
+[れふぽすれいんぼー(できた) 2026/05/24](https://youtu.be/ZI95mG1aQRE "Usage example20")<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
