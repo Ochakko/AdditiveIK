@@ -2,7 +2,7 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2026/05/24
-　AdditiveIK 1.0.0.70 RC1(リリース候補1)
+　AdditiveIK 1.0.0.70 release
 　　1.0.0.69からの変更点
 　　　RefPosプレートメニュー追加
 　　　　RefPos残像数の最大値を36に変更(変更前は100)、１から３６の間でアプリ実行中に変更可能に.
