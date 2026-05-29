@@ -1608,6 +1608,21 @@ int ChaScene::RenderRefPos(myRenderer::RenderingEngine* renderingEngine, bool op
 	return 0;
 }
 
+int ChaScene::SaveRefPosMat(int srcdataindex)
+{
+	int modelnum = (int)m_modelindex.size();
+	if (!m_modelindex.empty()) {
+		int modelindex;
+		for (modelindex = 0; modelindex < modelnum; modelindex++) {
+			CModel* curmodel = m_modelindex[modelindex].modelptr;
+			if (curmodel) {
+				curmodel->SaveRefPosMat(srcdataindex);
+			}
+		}
+	}
+	return 0;
+}
+
 int ChaScene::WaitForUpdateBlendShapeModels()
 {
 	int modelnum = (int)m_modelindex.size();

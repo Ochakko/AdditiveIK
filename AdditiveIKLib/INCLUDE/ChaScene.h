@@ -144,7 +144,7 @@ public:
 		bool zcmpalways, bool zenable,
 		int refposindex, ChaMatrix currentMatView);
 	int RenderRefPos(myRenderer::RenderingEngine* renderingEngine, bool opaqueflag);
-
+	int SaveRefPosMat(int dataindex);
 
 	CModel* GetTheLastCameraModel();
 	int CalcTotalModelBound();

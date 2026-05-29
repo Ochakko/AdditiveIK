@@ -26,6 +26,7 @@ public:
 		m_matView.SetIdentity();
 		m_motid = 0;
 		m_frame = 1.0;
+		m_dataindex = REFPOSMAXNUM;
 	};
 
 	CModelFrameView operator= (CModelFrameView mfv) {
@@ -33,24 +34,27 @@ public:
 		m_matView = mfv.m_matView;
 		m_frame = mfv.m_frame;
 		m_motid = mfv.m_motid;
+		m_dataindex = mfv.m_dataindex;
 		return *this;
 	};
 
-	void SetParams(CModel* srcmodel, ChaMatrix srcmatView, int srcmotid, double srcframe)
+	void SetParams(CModel* srcmodel, ChaMatrix srcmatView, int srcmotid, double srcframe, int srcdataindex)
 	{
 		if (srcmodel != nullptr) {
 			m_matView = srcmatView;
 			m_motid = srcmotid;
 			m_frame = srcframe;
+			m_dataindex = srcdataindex;
 
 			m_validflag = true;
 		}
 	};
-	void SetParams(ChaMatrix srcmatView, int srcmotid, double srcframe)
+	void SetParams(ChaMatrix srcmatView, int srcmotid, double srcframe, int srcdataindex)
 	{
 		m_matView = srcmatView;
 		m_motid = srcmotid;
 		m_frame = srcframe;
+		m_dataindex = srcdataindex;
 
 		m_validflag = true;
 	};
@@ -69,12 +73,15 @@ public:
 	double GetFrame() {
 		return m_frame;
 	};
-
+	int GetDataIndex() {
+		return m_dataindex;
+	};
 private:
 	bool m_validflag;
 	ChaMatrix m_matView;
 	int m_motid;
 	double m_frame;
+	int m_dataindex;
 };
 
 class CModelFrameViewRingBuf

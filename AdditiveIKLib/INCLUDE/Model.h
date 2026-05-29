@@ -511,7 +511,10 @@ public:
  * @breaf シェーダーの定数をセットする。アニメーション、ライト、テクスチャなどのシェーダー定数をDirect3Dの描画命令を呼び出す前にセットしておく。
  * @return 成功したら０。
  */
-	int SetShaderConst(int btflag = 0, bool calcslotflag = false);
+	int SetShaderConst(int btflag, bool calcslotflag);//refposindex, 0, false
+
+	int SaveRefPosMat(int srcdataindex);
+	int SetShaderConstRefPos(int dataindex);
 
 /**
  * @fn
@@ -1213,7 +1216,7 @@ public:
 	int CreateMaterialTexture();
 
 	int SetRefPosFlag(bool srcflag);
-	int SetRefPosFl4x4ToDispObj(int refposindex);
+	int SetRefPosFl4x4ToDispObj(int refposindex, int dataindex);
 
 
 	void SetSphrateDataReq(int gid, int rgdindex, CBone* srcbone, float srcval);

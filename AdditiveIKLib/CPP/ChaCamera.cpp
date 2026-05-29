@@ -45,7 +45,11 @@ void CModelFrameViewRingBuf::ProcessRefPosView(CModel* srcmodel)
 				//モデルが削除されていないことを確認してから処理
 				int currentmotid = srcmodel->GetCurrentMotID();
 				double currentframe = srcmodel->GetCurrentFrame();
-				m_ringbuf[m_refposStartIndex].SetParams(g_camera3D->GetViewMatrix(false), currentmotid, currentframe);
+				m_ringbuf[m_refposStartIndex].SetParams(g_camera3D->GetViewMatrix(false), currentmotid, currentframe, m_refposStartIndex);
+
+				if (g_chascene != nullptr) {
+					g_chascene->SaveRefPosMat(m_refposStartIndex);
+				}
 			}
 		}
 	}

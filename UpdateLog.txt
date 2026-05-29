@@ -1,9 +1,13 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/05/30
+　RefPos機能アップデート
+　　物理シミュを反映
+　　モデル全体位置も反映
+
 2026/05/24
 　RefPosNumスライダー修正
-　
 　
 2026/05/24
 　ショートムービー

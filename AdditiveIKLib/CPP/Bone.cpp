@@ -524,6 +524,11 @@ int CBone::InitParams()
 	//m_ikrotrec_u.clear();
 	//m_ikrotrec_v.clear();
 
+	int m_refposringindex = -1;
+	for (int refposringindex = 0; refposringindex < REFPOSMAXNUM; refposringindex++) {
+		m_refposmat[refposringindex].SetIdentity();
+	}
+
 	m_lastvalid_translate = FbxDouble3(0.0, 0.0, 0.0);
 	m_lastvalid_rotate = FbxDouble3(0.0, 0.0, 0.0);
 	m_lastvalid_scale = FbxDouble3(1.0, 1.0, 1.0);

@@ -1912,6 +1912,43 @@ public: //accesser
 
 	void CalcPostureChildWorldMat(int limitdegflag, int srcmotid, double roundingframe);
 
+	void SetRefPosMat(int refposindex, ChaMatrix srcmat) {
+		//m_refposringindex++;
+		//if (m_refposringindex >= REFPOSMAXNUM) {
+		//	m_refposringindex = 0;
+		//}
+		//m_refposmat[m_refposringindex] = srcmat;
+
+		m_refposringindex = refposindex;
+
+		if ((refposindex >= 0) && (refposindex < REFPOSMAXNUM)) {
+			m_refposmat[refposindex] = srcmat;
+		}
+		else {
+			_ASSERT(0);
+		}
+	}
+	ChaMatrix GetRefPosMat(int dataindex) {
+		if (GetParModel() != nullptr) {
+			//int dataindex = m_refposringindex - GetParModel()->GetRefPosNum() + refposindex;
+			if ((dataindex >= 0) && (dataindex < REFPOSMAXNUM)) {
+				return m_refposmat[dataindex];
+			}
+			else {
+				_ASSERT(0);
+				ChaMatrix inimat;
+				inimat.SetIdentity();
+				return inimat;
+			}
+		}
+		else {
+			_ASSERT(0);
+			ChaMatrix inimat;
+			inimat.SetIdentity();
+			return inimat;
+		}
+	}
+
 public:
 	CRITICAL_SECTION m_CritSection_GetBefNext;
 	//CRITICAL_SECTION m_CritSection_GetBefNext2;
@@ -2112,6 +2149,11 @@ private:
 	FbxDouble3 m_lastvalid_rotate;
 	FbxDouble3 m_lastvalid_scale;
 
+
+	//RefPos機能用にworldmatを保存する
+	//リングバッファとして使用する
+	int m_refposringindex;
+	ChaMatrix m_refposmat[REFPOSMAXNUM];
 
 
 	CBone* m_parent;

@@ -2680,6 +2680,9 @@ int CModel::UpdateMatrix(bool limitdegflag,
 		}
 	}
 
+	if (GetRefPosFlag() && (refposindex != 0)) {
+		return 0;
+	}
 
 	//morphアニメがあるかもしれないので、ボーンが無くてもリターンしない
 	//if (GetBoneForMotionSize() <= 0) {
@@ -3540,6 +3543,156 @@ int CModel::SetShaderConst(int btflag, bool calcslotflag)
 
 	return 0;
 }
+
+int CModel::SaveRefPosMat(int srcdataindex)
+{
+	//ボーンが無くても　非スキンメッシュを表示することはある
+	//g_hmWorld->SetMatrix(m_matWorld.GetDataPtr());
+
+	if (!GetTopBone()) {
+		//_ASSERT(0);
+		return 0;//!!!!!!!!!!!
+	}
+	if (GetNoBoneFlag() == true) {
+		return 0;
+	}
+
+	MOTINFO* curmi = 0;
+	int curmotid;
+	double opeframe;
+	if (!ExistCurrentMotion()) {
+		//_ASSERT(0);
+		return 0;
+	}
+
+	bool calcslotflag = false;//!!!!!!!!
+
+	curmotid = GetCurrentMotID();
+	opeframe = GetOpeFrame(calcslotflag);
+
+
+	int setclcnt = 0;
+
+	std::unordered_map<int, CBone*>::iterator itrbone;
+	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
+		CBone* curbone = itrbone->second;
+		if (curbone && curbone->IsSkeleton()) {
+			bool currentlimitdegflag = g_limitdegflag;
+			CMotionPoint curmp = curbone->GetCurMp(calcslotflag);
+
+			ChaMatrix clustermat;
+			clustermat.SetIdentity();
+
+			int matrixindex = curbone->GetMatrixIndex();
+			if (matrixindex >= 0) {
+
+				if (setclcnt >= MAXBONENUM) {
+					_ASSERT(0);
+					::MessageBox(NULL, L"Bone num overflow error. Exit the app.", GetFileName(),
+						MB_OK | MB_ICONERROR);
+					abort();
+				}
+				else {
+					//CMotionPoint tmpmp = curbone->GetCurMp();
+					if (GetBtCnt() == 0) {
+						//set4x4[matrixindex] = tmpmp.GetWorldMat();
+						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, opeframe, &curmp);
+						//MoveMemory(&(m_setfl4x4[16 * matrixindex]),
+						//	clustermat.GetDataPtr(), sizeof(float) * 16);
+					}
+					else if (GetBtCnt() != 0) {
+						//物理シミュ
+						//set4x4[matrixindex] = curbone->GetBtMat();
+						clustermat = curbone->GetBtMat(calcslotflag);
+						//MoveMemory(&(m_setfl4x4[16 * matrixindex]),
+						//	clustermat.GetDataPtr(), sizeof(float) * 16);
+					}
+					//else if (btflag == 2) {
+					//	//物理IK
+					//	//set4x4[matrixindex] = curbone->GetBtMat();
+					//	clustermat = curbone->GetBtMat(calcslotflag);
+					//	MoveMemory(&(m_setfl4x4[16 * matrixindex]),
+					//		clustermat.GetDataPtr(), sizeof(float) * 16);
+					//}
+					else {
+						//set4x4[matrixindex] = tmpmp.GetWorldMat();
+						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, opeframe, &curmp);
+						//MoveMemory(&(m_setfl4x4[16 * matrixindex]),
+						//	clustermat.GetDataPtr(), sizeof(float) * 16);
+					}
+
+					curbone->SetRefPosMat(srcdataindex, clustermat);
+
+					setclcnt++;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+int CModel::SetShaderConstRefPos(int dataindex)
+{
+	//ボーンが無くても　非スキンメッシュを表示することはある
+	//g_hmWorld->SetMatrix(m_matWorld.GetDataPtr());
+
+	if (!GetTopBone()) {
+		//_ASSERT(0);
+		return 0;//!!!!!!!!!!!
+	}
+	if (GetNoBoneFlag() == true) {
+		return 0;
+	}
+
+	MOTINFO* curmi = 0;
+	//int curmotid;
+	//double opeframe;
+	if (!ExistCurrentMotion()) {
+		//_ASSERT(0);
+		return 0;
+	}
+
+	//curmotid = GetCurrentMotID();
+	//opeframe = GetOpeFrame(calcslotflag);
+
+	int setclcnt = 0;
+
+	std::unordered_map<int, CBone*>::iterator itrbone;
+	for (itrbone = m_bonelist.begin(); itrbone != m_bonelist.end(); itrbone++) {
+		CBone* curbone = itrbone->second;
+		if (curbone && curbone->IsSkeleton()) {
+			bool currentlimitdegflag = g_limitdegflag;
+			//CMotionPoint curmp = curbone->GetCurMp(calcslotflag);
+
+			ChaMatrix clustermat;
+			clustermat.SetIdentity();
+
+			int matrixindex = curbone->GetMatrixIndex();
+			if (matrixindex >= 0) {
+				if (setclcnt >= MAXBONENUM) {
+					_ASSERT(0);
+					::MessageBox(NULL, L"Bone num overflow error. Exit the app.", GetFileName(),
+						MB_OK | MB_ICONERROR);
+					abort();
+				}
+				else {
+					clustermat = curbone->GetRefPosMat(dataindex);
+					MoveMemory(&(m_setfl4x4[16 * matrixindex]),
+						clustermat.GetDataPtr(), sizeof(float) * 16);
+
+					setclcnt++;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+
+
+
 
 int CModel::FillTimeLineOne(CBone* curbone, int lineno,
 	OrgWinGUI::OWP_Timeline& timeline, 
@@ -24688,7 +24841,7 @@ void CModel::ResetRefPosMarkInstanceScale()
 	ResetDispObjScale();
 }
 
-int CModel::SetRefPosFl4x4ToDispObj(int refposindex)
+int CModel::SetRefPosFl4x4ToDispObj(int refposindex, int dataindex)
 {
 	int materialnum = GetMQOMaterialSize();
 	int matindex;
