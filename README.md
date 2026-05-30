@@ -348,7 +348,7 @@ Smooth平滑化<br>
 
 [【観測者が】４次元RefPosボクサー【ダークマター】 2026/05/10](https://youtu.be/AIgPOpzXTtU "Usage example19")<br>
 
-[れふぽすれいんぼー(できた) 2026/05/24](https://youtu.be/ZI95mG1aQRE "Usage example20")<br>
+[れふぽす改 2026/05/31](https://youtu.be/NQ4_wUQcEtA "Usage example20")<br>
 <br>
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
