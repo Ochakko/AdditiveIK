@@ -1437,6 +1437,8 @@ int ChaScene::AddToRefPos(CModel* srcmodel, bool forcewithalpha, myRenderer::Ren
 	//calcslotflag = false;
 	calcslotflag = true;
 
+	int refposindex_for_chkinview = 0;
+
 	vector<myRenderer::RENDEROBJ> rendervec;
 
 	int renderindex;
@@ -1461,7 +1463,7 @@ int ChaScene::AddToRefPos(CModel* srcmodel, bool forcewithalpha, myRenderer::Ren
 
 			rendervec.clear();//!!!!!!!!!!!!!!!
 
-			if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView(refposindex)) {
+			if (curmodel && curmodel->GetModelDisp() && curmodel->GetInView(refposindex_for_chkinview)) {
 			//if (curmodel && curmodel->GetModelDisp()) {
 
 
@@ -1478,7 +1480,7 @@ int ChaScene::AddToRefPos(CModel* srcmodel, bool forcewithalpha, myRenderer::Ren
 						CMQOObject* curobj = curmodel->GetDispGroupMQOObject(groupindex, elemno);
 
 						if (curobj && !curobj->IsND() &&
-							(curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(refposindex)) {
+							(curobj->GetDispObj() || curobj->GetDispLine()) && curobj->GetVisible(refposindex_for_chkinview)) {
 							//if (curobj != nullptr) {
 
 
@@ -1615,7 +1617,8 @@ int ChaScene::SaveRefPosMat(int srcdataindex)
 		int modelindex;
 		for (modelindex = 0; modelindex < modelnum; modelindex++) {
 			CModel* curmodel = m_modelindex[modelindex].modelptr;
-			if (curmodel) {
+			if (curmodel && curmodel->GetRefPosFlag() &&  
+				!curmodel->GetNoBoneFlag() && curmodel->ExistCurrentMotion()) {
 				curmodel->SaveRefPosMat(srcdataindex);
 			}
 		}

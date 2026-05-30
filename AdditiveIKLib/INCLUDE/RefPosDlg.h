@@ -90,6 +90,7 @@ private:
 	int m_refposnum;
 	ChaVector4 m_diffuserate;
 	bool m_rainbowmode;
+	bool m_linedisp;
 
 	OrgWinGUI::OrgWindow* m_dlgWnd;
 
@@ -125,11 +126,20 @@ private:
 	OrgWinGUI::OWP_Label* m_rainbowtimeLabel;
 	OrgWinGUI::OWP_CheckBoxA* m_rainbowtimecheck;
 
+	OrgWinGUI::OWP_Separator* m_linesp;
+	OrgWinGUI::OWP_Label* m_lineLabel;
+	OrgWinGUI::OWP_CheckBoxA* m_linecheck;
 
 	OrgWinGUI::OWP_Label* m_nameLabel;
 	OrgWinGUI::OWP_Label* m_space01Label;
 	OrgWinGUI::OWP_Label* m_space02Label;
 	OrgWinGUI::OWP_Label* m_space03Label;
+	OrgWinGUI::OWP_Label* m_space04Label;
+	OrgWinGUI::OWP_Label* m_space05Label;
+
+	OrgWinGUI::OWP_Separator* m_intervalsp;
+	OrgWinGUI::OWP_Label* m_intervalLabel;
+	OrgWinGUI::OWP_Slider* m_intervalSlider;
 
 	//void (*m_PrepairUndo)();
 	//int (*m_UpdateAfterEditAngleLimit)(int limit2boneflag, bool setcursorflag);//default : setcursorflag = true

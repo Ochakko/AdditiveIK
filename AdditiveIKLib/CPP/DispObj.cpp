@@ -1320,7 +1320,17 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 	////定数バッファの設定、更新など描画の共通処理を実行する。
 	//DrawCommon(rc, renderobj, mView, mProj);
 	
-	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	if (renderobj.refposindex == 0) {
+		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	}
+	else {
+		if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp()) {
+			rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+		}
+		else {
+			rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		}
+	}
 
 
 	//##################################################################################
@@ -1678,7 +1688,17 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	//DrawCommon(rc, renderobj, mView, mProj);
 	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()より後で呼ばないとエラー
 
-	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	if (renderobj.refposindex == 0) {
+		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	}
+	else {
+		if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp()) {
+			rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+		}
+		else {
+			rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		}
+	}
 
 
 
@@ -2094,10 +2114,10 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 
 	//HRESULT hr;
 	int blno;
-	//for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
+	for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
 
 
-		blno = 0;//先頭マテリアルで一括描画 //!!!!!!!!!!!!!!!
+		//blno = 0;//先頭マテリアルで一括描画 //!!!!!!!!!!!!!!!
 
 
 		MATERIALBLOCK* currb = m_pm3->GetMatBlock() + blno;
@@ -2110,10 +2130,10 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 		}
 
 		int curtrinum;
-		//curtrinum = currb->endface - currb->startface + 1;
-		//int curoffset = currb->startface * 3;
+		curtrinum = currb->endface - currb->startface + 1;
+		int curoffset = currb->startface * 3;
 
-		curtrinum = m_pm3->GetFaceNum() * 3;//!!!!!!!!!!!!!!!
+		//curtrinum = m_pm3->GetFaceNum() * 3;//!!!!!!!!!!!!!!!
 
 		ChaVector4 diffuse;
 		ChaVector4 curdif4f = curmat->GetDif4F();
@@ -2169,10 +2189,10 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 
 		//4. ドローコールを実行。
 		//rc->DrawIndexedInstanced(curtrinum * 3, renderobj.pmodel->GetInstancingDrawNum());
-		rc->DrawIndexedInstanced(curtrinum, renderobj.pmodel->GetInstancingDrawNum());//2024/03/07 curtrinumには既に3を掛けてある
+		rc->DrawIndexedInstanced(curtrinum * 3, renderobj.pmodel->GetInstancingDrawNum());
 
 
-	//}
+	}
 
 	return 0;
 }

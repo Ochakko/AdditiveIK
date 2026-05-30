@@ -2288,7 +2288,7 @@ int ChaCalcFunc::SetWorldMat(CBone* srcbone, bool limitdegflag, int wallscraping
 	ChaMatrix saveworldmat;
 	ChaVector3 saveeul;
 	if (srcbone->GetParModel() && srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
-		saveworldmat = srcbone->GetFootRigMat(limitdegflag, srcmotid, roundingframe);
+		saveworldmat = srcbone->GetFootRigMat(limitdegflag, srcmotid, roundingframe, curmp);
 		saveeul = srcbone->GetFootRigEul(limitdegflag, srcmotid, roundingframe);
 	}
 	else {
@@ -3075,7 +3075,7 @@ ChaMatrix ChaCalcFunc::GetWorldMat(CBone* srcbone, bool limitdegflag,
 
 	if (srcbone->GetParModel()->GetUnderFootRig() && srcbone->GetFootRigUpdated()) {
 		//2025/12/14 FootRig計算中 かつ　FootRig対象ボーンの場合
-		curmat = srcbone->GetFootRigMat(limitdegflag, srcmotid, srcframe);
+		curmat = srcbone->GetFootRigMat(limitdegflag, srcmotid, srcframe, srcmp);
 	}
 
 	//2023/04/28
@@ -3924,7 +3924,7 @@ void ChaCalcFunc::UpdateParentFootRigWMReq(CBone* srcbone, bool limitdegflag,
 
 	if (srcbone->GetFootRigUpdated()) {
 		{//btSimuの際にも必要な処理
-			currentbefwm = srcbone->GetFootRigMat(limitdegflag, srcmotid, roundingframe);
+			currentbefwm = srcbone->GetFootRigMat(limitdegflag, srcmotid, roundingframe, nullptr);
 			currentnewwm = currentbefwm * ChaMatrixInv(oldparentwm) * newparentwm;
 
 			bool setfirstflag = false;

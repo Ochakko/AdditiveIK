@@ -1348,25 +1348,35 @@ public: //accesser
 		return m_btdiffmat;
 	};
 
-	ChaMatrix GetFootRigMat(int limitdegflag, int srcmotid, double srcframe) {
+	ChaMatrix GetFootRigMat(int limitdegflag, int srcmotid, double srcframe, CMotionPoint* srcmp) {
 		double roundingframe = RoundingTime(srcframe);
 		if (IsEqualRoundingTime(roundingframe, m_footrigtime)) {
 			return m_footrigmat;
 		}
 		else {//applyframeのworldmatなどはこちらを通る
-			CMotionPoint* curmp = GetMotionPoint(srcmotid, roundingframe);
-			if (curmp) {
-				if (limitdegflag == 0) {
-					return curmp->GetWorldMat();
+			if (srcmp) {
+				if (limitdegflag == false) {
+					return srcmp->GetWorldMat();
 				}
 				else {
-					return curmp->GetLimitedWM();
+					return srcmp->GetLimitedWM();
 				}
 			}
 			else {
-				ChaMatrix inimat;
-				inimat.SetIdentity();
-				return inimat;
+				CMotionPoint* curmp = GetMotionPoint(srcmotid, roundingframe);
+				if (curmp) {
+					if (limitdegflag == 0) {
+						return curmp->GetWorldMat();
+					}
+					else {
+						return curmp->GetLimitedWM();
+					}
+				}
+				else {
+					ChaMatrix inimat;
+					inimat.SetIdentity();
+					return inimat;
+				}
 			}
 		}
 	};
@@ -1912,17 +1922,12 @@ public: //accesser
 
 	void CalcPostureChildWorldMat(int limitdegflag, int srcmotid, double roundingframe);
 
-	void SetRefPosMat(int refposindex, ChaMatrix srcmat) {
-		//m_refposringindex++;
-		//if (m_refposringindex >= REFPOSMAXNUM) {
-		//	m_refposringindex = 0;
-		//}
-		//m_refposmat[m_refposringindex] = srcmat;
+	void SetRefPosMat(int dataindex, ChaMatrix srcmat) {
 
-		m_refposringindex = refposindex;
+		m_refposringindex = dataindex;
 
-		if ((refposindex >= 0) && (refposindex < REFPOSMAXNUM)) {
-			m_refposmat[refposindex] = srcmat;
+		if ((dataindex >= 0) && (dataindex < REFPOSMAXNUM)) {
+			m_refposmat[dataindex] = srcmat;
 		}
 		else {
 			_ASSERT(0);
@@ -1930,7 +1935,6 @@ public: //accesser
 	}
 	ChaMatrix GetRefPosMat(int dataindex) {
 		if (GetParModel() != nullptr) {
-			//int dataindex = m_refposringindex - GetParModel()->GetRefPosNum() + refposindex;
 			if ((dataindex >= 0) && (dataindex < REFPOSMAXNUM)) {
 				return m_refposmat[dataindex];
 			}

@@ -245,9 +245,12 @@ enum {
 //#define REFPOSMAXNUM	4
 //#define REFPOSMAXNUM	6
 
-//2026/05/09 refposを何フレームごとに更新するか
-#define REFPOSRECORDINTERVAL 5
 
+//2026/05/30 g_RefPosRecordIntervalに移動
+//2026/05/09 refposを何フレームごとに更新するか
+//#define REFPOSRECORDINTERVAL 5
+#define MIN_REFPOSRECORDINTERVAL 1.0
+#define MAX_REFPOSRECORDINTERVAL 20.0
 // * 100だとOpenFile()関数のスタックサイズが大きすぎて警告が出るので * 32に変更
 //#define MULTIPATH	(MAX_PATH * 100)
 #define MULTIPATH	(MAX_PATH * 32)

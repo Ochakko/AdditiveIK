@@ -2798,7 +2798,7 @@ ChaMatrix CFootRigDlg::GetJointWM(bool limitdegflag, CModel* srcmodel, CBone* sr
 	int curmotid = srcmodel->GetCurrentMotID();
 	double curframe = RoundingTime(srcmodel->GetCurrentFrame());
 	//ChaMatrix curwm = srcbone->GetWorldMat(limitdegflag, curmotid, curframe, 0);
-	ChaMatrix curwm = srcbone->GetFootRigMat(limitdegflag, curmotid, curframe);
+	ChaMatrix curwm = srcbone->GetFootRigMat(limitdegflag, curmotid, curframe, nullptr);
 	ChaMatrix modelwm = srcmodel->GetWorldMat();
 	if (multmodelwm) {
 		retmat = curwm * modelwm;

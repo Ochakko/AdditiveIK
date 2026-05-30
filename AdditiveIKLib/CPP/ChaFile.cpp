@@ -227,9 +227,9 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 
 	int ikstopalloff = (g_ikstop_alloff == true) ? 1 : 0;
 	CallF(Write2File("  <IKStopAllOFF>%d</IKStopAllOFF>\r\n", ikstopalloff), return 1);
+	CallF(Write2File("  <RefPosInterval>%d</RefPosInterval>\r\n", g_RefPosRecordInterval), return 1);
 
-	
-	
+
 	int modelnum = (int)m_modelindex.size();
 	int modelcnt;
 	for( modelcnt = 0; modelcnt < modelnum; modelcnt++ ){
@@ -294,7 +294,11 @@ int CChaFile::WriteFileInfo()
 	//version 1018 : 2026/05/23 1.0.0.70へ向けて  RefPosDiffuseRate*, RefPosRainbow追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1018</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1019 : 2026/05/24 1.0.0.70へ向けて  RefPosRainbowInv, RefPosRainbowTime追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1019</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1019</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1020 : 2026/05/30 1.0.0.71へ向けて  RefPosInterval追加
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1020</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1021 : 2026/05/31 1.0.0.71へ向けて  RefPosLineDisp追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1021</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -354,6 +358,12 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 	}
 	else {
 		CallF(Write2File("    <RefPosRainbowTime>0</RefPosRainbowTime>\r\n"), return 1);
+	}
+	if (curmodel->GetRefPosLineDisp()) {
+		CallF(Write2File("    <RefPosLineDisp>1</RefPosLineDisp>\r\n"), return 1);
+	}
+	else {
+		CallF(Write2File("    <RefPosLineDisp>0</RefPosLineDisp>\r\n"), return 1);
 	}
 
 
@@ -1062,6 +1072,11 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	if (result == 0) {
 		g_ikstop_alloff = (tempalloff == 1) ? true : false;
 	}
+	int temprefposinterval = 0;
+	result = Read_Int(&m_xmliobuf, "<RefPosInterval>", "</RefPosInterval>", &temprefposinterval);
+	if (result == 0) {
+		g_RefPosRecordInterval = temprefposinterval;
+	}
 
 
 	m_xmliobuf.pos = 0;
@@ -1257,6 +1272,8 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	int refposrainbowInv = 0;
 	int getrefposrainbowTime = 0;
 	int refposrainbowTime = 0;
+	int getrefposLineDisp = 0;
+	int refposLineDisp = 0;
 
 	int refnum = 0;
 	int impnum = 0;
@@ -1288,6 +1305,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	getrefposrainbow = Read_Int(xmlbuf, "<RefPosRainbow>", "</RefPosRainbow>", &refposrainbow);
 	getrefposrainbowInv = Read_Int(xmlbuf, "<RefPosRainbowInv>", "</RefPosRainbowInv>", &refposrainbowInv);
 	getrefposrainbowTime = Read_Int(xmlbuf, "<RefPosRainbowTime>", "</RefPosRainbowTime>", &refposrainbowTime);
+	getrefposLineDisp = Read_Int(xmlbuf, "<RefPosLineDisp>", "</RefPosLineDisp>", &refposLineDisp);
 
 
 	int grassflag = 0;
@@ -1481,10 +1499,15 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	if (getrefposrainbowTime == 0) {
 		setrefposrainbowTime = (refposrainbowTime == 1) ? true : false;
 	}
+	bool setrefposLineDisp = false;
+	if (getrefposLineDisp == 0) {
+		setrefposLineDisp = (refposLineDisp == 1) ? true : false;
+	}
 	newmodel->SetRefPosDiffuseRate(refposdiffuse);
 	newmodel->SetRefPosRainbowMode(refposrainbowmode);
 	newmodel->SetRefPosRainbowInv(setrefposrainbowInv);
 	newmodel->SetRefPosRainbowTime(setrefposrainbowTime);
+	newmodel->SetRefPosLineDisp(setrefposLineDisp);
 
 
 	//newmodel->m_tmpmotspeed = m_motspeed;

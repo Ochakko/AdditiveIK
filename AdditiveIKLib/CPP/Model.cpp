@@ -3593,32 +3593,13 @@ int CModel::SaveRefPosMat(int srcdataindex)
 					abort();
 				}
 				else {
-					//CMotionPoint tmpmp = curbone->GetCurMp();
 					if (GetBtCnt() == 0) {
-						//set4x4[matrixindex] = tmpmp.GetWorldMat();
 						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, opeframe, &curmp);
-						//MoveMemory(&(m_setfl4x4[16 * matrixindex]),
-						//	clustermat.GetDataPtr(), sizeof(float) * 16);
 					}
-					else if (GetBtCnt() != 0) {
+					else
+					{
 						//物理シミュ
-						//set4x4[matrixindex] = curbone->GetBtMat();
 						clustermat = curbone->GetBtMat(calcslotflag);
-						//MoveMemory(&(m_setfl4x4[16 * matrixindex]),
-						//	clustermat.GetDataPtr(), sizeof(float) * 16);
-					}
-					//else if (btflag == 2) {
-					//	//物理IK
-					//	//set4x4[matrixindex] = curbone->GetBtMat();
-					//	clustermat = curbone->GetBtMat(calcslotflag);
-					//	MoveMemory(&(m_setfl4x4[16 * matrixindex]),
-					//		clustermat.GetDataPtr(), sizeof(float) * 16);
-					//}
-					else {
-						//set4x4[matrixindex] = tmpmp.GetWorldMat();
-						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, opeframe, &curmp);
-						//MoveMemory(&(m_setfl4x4[16 * matrixindex]),
-						//	clustermat.GetDataPtr(), sizeof(float) * 16);
 					}
 
 					curbone->SetRefPosMat(srcdataindex, clustermat);

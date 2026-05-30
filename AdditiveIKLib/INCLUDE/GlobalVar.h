@@ -58,6 +58,7 @@ class CInfoWindow;
 
 #ifdef ADDITIVEIKLIBGLOBALVAR
 
+int g_RefPosRecordInterval = 5;
 bool g_ikstop_alloff = false;
 int g_edittarget = EDITTARGET_BONE;
 int g_curmodelmenuindex = -1;
@@ -366,6 +367,7 @@ double g_playingend = 1.0;
 
 
 #else
+extern int g_RefPosRecordInterval;
 extern bool g_ikstop_alloff;
 extern int g_edittarget;
 extern int g_curmodelmenuindex;

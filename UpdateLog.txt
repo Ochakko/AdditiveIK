@@ -1,6 +1,15 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/05/31
+　AdditiveIK 1.0.0.71 release
+　　1.0.0.70からの変更点
+　　　RefPos機能のアップデート
+　　　　物理シミュと併用可能に.
+　　　　モデルの全体位置を残像に反映するように.
+　　　　モデルごとに残像を線表示にするオプション追加(みやすくなり、軽くなります).
+　　
+　　
 2026/05/30
 　RefPos機能アップデート
 　　物理シミュを反映

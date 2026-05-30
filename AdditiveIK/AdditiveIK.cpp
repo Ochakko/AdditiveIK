@@ -3860,6 +3860,7 @@ void InitApp()
 
 	InitCommonControls();
 
+	g_RefPosRecordInterval = 5;
 	g_chacamera.InitParams();
 
 	s_cancelLButtonDown = false;
@@ -15603,7 +15604,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.70\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.71\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -32117,6 +32118,43 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 			double renderleng = roundingendframe - roundingstartframe;
 
 
+			{
+				////カレントフレームをレンダー
+				//ChkInViewのためのUpdateMatrixOneModel()を1回最初に呼び出すために　カレントフレーム描画を先にする
+				refposindex = 0;
+
+				curmodel->SetCurrentMotion(savemotid);
+				curmodel->SetMotionFrame(savemotframe);
+
+				CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, refposindex);//過去データ
+				int dataindex = mfv.GetDataIndex();
+				ChaMatrix refposView = mfv.GetMatView();//!!!!!!!
+				ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
+
+				g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
+					savemotframe, refposindex);
+				if (hasmotion) {
+					curmodel->SetShaderConstRefPos(dataindex);
+					curmodel->SetRefPosFl4x4ToDispObj(refposindex, dataindex);
+				}
+
+				ChaVector4 refdiffusemult;
+				refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.5f);
+				{
+					int lightflag = -1;
+					bool forcewithalpha = true;
+					bool zcmpalways = true;
+					bool zenable = true;
+					g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
+						lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, s_matView);
+				}
+
+				
+
+				//refposindex++;
+			}
+
+
 			if (curmodel->GetRefPosNum() == 1) {
 				//##########################
 				//残像無し　カレントフレームだけ
@@ -32139,8 +32177,8 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 				ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
 				//ChaMatrix effectView = refposView;
 
-				g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
-					renderframe, refposindex);
+				//g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
+				//	renderframe, refposindex);
 				if (hasmotion) {
 					curmodel->SetShaderConstRefPos(dataindex);
 					curmodel->SetRefPosFl4x4ToDispObj(refposindex, dataindex);
@@ -32184,19 +32222,9 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 				//2024/02/08 選択ジョイントの位置の軌跡を表示する際に補間無しのGetWorldMatで済ませたいのでRoundingTimeしてキーの位置限定にする
 				int divnum;
 				double renderstep;
-				if (renderleng > 0) {
-					divnum = min((int)renderleng, (curmodel->GetRefPosNum() - 2));//選択フレーム長より多くは分割しない
-					renderstep = fmax(1.0, (renderleng / (double)divnum));//renderstep = 0は無限ループになる
-				}
-				else {
-					divnum = curmodel->GetRefPosNum() - 2;
-					renderstep = 1.0;
-				}
+				divnum = curmodel->GetRefPosNum() - 1;
+				renderstep = 1.0;
 
-				bool addcurrentjointpos = false;
-				double renderframe, roundingrenderframe;
-				//int befmotid;
-				//double befframe;
 				for (refposindex = divnum; refposindex > 0; refposindex--) {
 
 					CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, refposindex);//過去データ
@@ -32207,83 +32235,31 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					ChaMatrix refposView = mfv.GetMatView();//!!!!!!!
 					ChaMatrix effectView;
 
-					int curmotid;
-					//if (renderleng > 0) {
-					//	curmotid = curmodel->GetCurrentMotID();
-					//	MOTINFO currentmi = curmodel->GetCurMotInfo();
-					//	renderframe = roundingstartframe + renderstep * divnum - renderstep * (double)refposindex;//過去半分　未来半分
-					//	if (renderframe > currentmi.frameleng) {
-					//		continue;//!!!!!!!!!!!!!!!
-					//	}
-					//	if (renderframe < 1.0) {
-					//		renderframe = 1.0;//!!!!!!!!!!!!!!!
-					//	}
-					//	roundingrenderframe = RoundingTime(renderframe);
-
-					//	//refframeのポーズを表示
-					//	effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
-					//	if (hasmotion) {
-					//		curmodel->SetShaderConst(btflag, calcslotflag);
-					//		curmodel->SetRefPosFl4x4ToDispObj(dataindex);
-					//	}
-					//	else {
-					//		g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
-					//			roundingrenderframe, refposindex);
-					//	}
-					//}
-					//else {
-						curmotid = mfv.GetMotId();
-						MOTINFO currentmi = curmodel->GetMotInfo(mfv.GetMotId());
-						renderframe = mfv.GetFrame();//!!!!!!!!
-						if (renderframe > currentmi.frameleng) {
-							continue;//!!!!!!!!!!!!!!!
-						}
-						if (renderframe < 1.0) {
-							continue;//!!!!!!!!!!!!!!!
-						}
-						roundingrenderframe = RoundingTime(renderframe);
-
-						curmodel->SetCurrentMotion(curmotid);//!!!!!!!!!!!
-						currentframe = renderframe;//モーションがある場合はモデルのフレームで上書き
-
-						//refframeのポーズを表示
-						//effectView = refposView;
-						effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
+					//refframeのポーズを表示
+					//effectView = refposView;
+					effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
+					if (hasmotion) {
+						//骨入りモデルは　refposindex == 0の時の ChkInView(UpdateMatrixOneModel())の結果を使用する
+						curmodel->SetShaderConstRefPos(dataindex);
+						curmodel->SetRefPosFl4x4ToDispObj(refposindex, dataindex);
+					}
+					else {
+						//背景だけ　ChkInViewで視野外クリッピングするために　毎回UpdateMatrixOneModel()を呼ぶ
 						g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
-							roundingrenderframe, refposindex);
-						if (hasmotion) {
-							curmodel->SetShaderConstRefPos(dataindex);
-							curmodel->SetRefPosFl4x4ToDispObj(refposindex, dataindex);
-						}
-					//}
-
-
-					if (curbone != nullptr) {
-						if ((addcurrentjointpos == false) && (roundingrenderframe >= currentframe)) {
-							double roundingcurrentframe = RoundingTime(currentframe);
-							curmodel->SetMotionFrame(roundingcurrentframe);
-							ChaVector3 tmpfpos = curbone->GetJointFPos();
-							ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingcurrentframe, 0) * modelwm;
-							ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
-							vecbonepos.push_back(curbonepos);
-							addcurrentjointpos = true;
-						}
-						curmodel->SetMotionFrame(roundingrenderframe);
-						ChaVector3 tmpfpos = curbone->GetJointFPos();
-						ChaMatrix tmpcurwm = curbone->GetWorldMat(g_limitdegflag, curmotid, roundingrenderframe, 0) * modelwm;
-						ChaVector3TransformCoord(&curbonepos, &tmpfpos, &tmpcurwm);
-						vecbonepos.push_back(curbonepos);
+							savemotframe, refposindex);
 					}
 
-					//int lightflag = 0;//!!!!!!!透けるために必要!!!!!!!!!
-
-
+					if (curbone != nullptr) {
+						//移動矢印マークのAddは　過去-->現在の向きにpush_backしていく
+						ChaMatrix markwm = curbone->GetRefPosMat(dataindex);
+						ChaVector3 tmpfpos = curbone->GetJointFPos();
+						ChaVector3TransformCoord(&curbonepos, &tmpfpos, &markwm);
+						vecbonepos.push_back(curbonepos);
+					}
 
 					//カレントフレームから離れるほど　透明度を薄くする
 					const double refstartalpha = 0.80f;
 					double renderalpha0 = 1.0 - (double)refposindex / (double)curmodel->GetRefPosNum();
-					////2024/02/08 int g_refalpha (0から100) : DispAndLimitsプレートメニューのRefPosAlphaスライダー
-					//double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
 					double renderalpha = refstartalpha * renderalpha0 * renderalpha0 * (double)g_refalpha * 0.01f;
 					ChaVector4 refdiffusemult;
 					if (curmodel->GetRefPosRainbowMode()) {
@@ -32325,37 +32301,17 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 				return 1;
 			}
 					
-			{
-				if ((refposindex >= 0) && (refposindex < curmodel->GetRefPosNum())) {
-					////カレントフレームをレンダー
-
-					curmodel->SetCurrentMotion(savemotid);
-					curmodel->SetMotionFrame(savemotframe);
-
-					CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, refposindex);//過去データ
+			if (curbone != nullptr) {
+				//移動矢印マーク　カレントフレーム
+				//移動矢印マークのAddは　過去-->現在の向きにpush_backしていく
+				refposindex = 0;
+				CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, refposindex);//過去データ
+				if (mfv.GetValidFlag()) {
 					int dataindex = mfv.GetDataIndex();
-					ChaMatrix refposView = mfv.GetMatView();//!!!!!!!
-					ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
-
-					g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
-						savemotframe, refposindex);
-					if (hasmotion) {
-						curmodel->SetShaderConstRefPos(dataindex);
-						curmodel->SetRefPosFl4x4ToDispObj(refposindex, dataindex);
-					}
-
-					ChaVector4 refdiffusemult;
-					refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.5f);
-					{
-						int lightflag = -1;
-						bool forcewithalpha = true;
-						bool zcmpalways = true;
-						bool zenable = true;
-						g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
-							lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, s_matView);
-					}
-
-					//refposindex++;
+					ChaMatrix markwm = curbone->GetRefPosMat(dataindex);
+					ChaVector3 tmpfpos = curbone->GetJointFPos();
+					ChaVector3TransformCoord(&curbonepos, &tmpfpos, &markwm);
+					vecbonepos.push_back(curbonepos);
 				}
 			}
 
@@ -32363,14 +32319,14 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 				//render arrow : selected bone : befpos --> aftpos arrow
 				CBone* childbone = curbone->GetChild(false);
 				if (childbone && childbone->IsSkeleton() && curbone->GetRefPosMark()) {
-					//ChaVector4 arrowdiffusemult.SetParams(1.0f, 0.5f, 0.5f, 0.85f);
 					ChaVector4 arrowdiffusemult;
 					arrowdiffusemult.SetParams(1.0f, 0.5f, 0.5f, 0.5f);
 
 					curbone->GetRefPosMark()->RenderRefArrow(g_limitdegflag,
-						re, g_chascene, s_matVP, curbone, arrowdiffusemult, 1, vecbonepos);
-					//curmodel->RenderBoneCircleOne(g_limitdegflag,
-					//	pRenderContext, s_bcircle, s_curboneno);
+						re, g_chascene, s_matVP, curbone, arrowdiffusemult, 
+						//1,
+						3.0f,
+						vecbonepos);
 				}
 			}
 			//g_chascene->RenderRefPos(re, true);

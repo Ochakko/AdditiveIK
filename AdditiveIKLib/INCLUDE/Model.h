@@ -3446,6 +3446,12 @@ public: //accesser
 	bool GetRefPosRainbowTime() {
 		return m_refpos_rainbowTime;
 	}
+	void SetRefPosLineDisp(bool srcval) {
+		m_refpos_linedisp = srcval;
+	}
+	bool GetRefPosLineDisp() {
+		return m_refpos_linedisp;
+	}
 
 
 	void SetGrassFlag(bool srcflag)
@@ -4059,6 +4065,7 @@ private:
 	bool m_refpos_rainbowmode;
 	bool m_refpos_rainbowInv;
 	bool m_refpos_rainbowTime;
+	bool m_refpos_linedisp;
 
 	bool m_skyflag;
 	bool m_groundflag;

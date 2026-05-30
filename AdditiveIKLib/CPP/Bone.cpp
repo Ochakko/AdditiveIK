@@ -1070,7 +1070,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 				// 
 				//2024/09/06
 				//newworldmat = GetWorldMat(limitdegflag, srcmotid, roundingframe, 0);
-				newworldmat = GetFootRigMat(limitdegflag, srcmotid, roundingframe);
+				newworldmat = GetFootRigMat(limitdegflag, srcmotid, roundingframe, &(m_curmp[m_updateslot]));
 			}
 			else {
 				//###################################
@@ -6323,7 +6323,7 @@ ChaMatrix CBone::GetCurrentWorldMat(bool multmodelwm, bool calcslotflag)
 				//	}
 				//}
 
-				newworldmat = GetFootRigMat(currentlimitdegflag, curmotid, curframe);
+				newworldmat = GetFootRigMat(currentlimitdegflag, curmotid, curframe, nullptr);
 				if (multmodelwm == true) {
 					newworldmat = newworldmat * GetParModel()->GetWorldMat();
 				}

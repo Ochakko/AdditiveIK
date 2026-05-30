@@ -146,6 +146,33 @@ int CRefPosDlg::DestroyObjs()
 		m_rainbowtimesp = nullptr;
 	}
 
+	if (m_lineLabel) {
+		delete m_lineLabel;
+		m_lineLabel = nullptr;
+	}
+	if (m_linecheck) {
+		delete m_linecheck;
+		m_linecheck = nullptr;
+	}
+	if (m_linesp) {
+		delete m_linesp;
+		m_linesp = nullptr;
+	}
+
+
+	if (m_intervalLabel) {
+		delete m_intervalLabel;
+		m_intervalLabel = nullptr;
+	}
+	if (m_intervalSlider) {
+		delete m_intervalSlider;
+		m_intervalSlider = nullptr;
+	}
+	if (m_intervalsp) {
+		delete m_intervalsp;
+		m_intervalsp = nullptr;
+	}
+
 
 	if (m_nameLabel) {
 		delete m_nameLabel;
@@ -162,6 +189,14 @@ int CRefPosDlg::DestroyObjs()
 	if (m_space03Label) {
 		delete m_space03Label;
 		m_space03Label = nullptr;
+	}
+	if (m_space04Label) {
+		delete m_space04Label;
+		m_space04Label = nullptr;
+	}
+	if (m_space05Label) {
+		delete m_space05Label;
+		m_space05Label = nullptr;
 	}
 
 	if (m_dlgWnd) {
@@ -191,6 +226,7 @@ void CRefPosDlg::InitParams()
 	m_refposnum = 1;
 	m_diffuserate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	m_rainbowmode = false;
+	m_linedisp = false;
 
 	m_dlgWnd = nullptr;
 
@@ -226,10 +262,20 @@ void CRefPosDlg::InitParams()
 	m_rainbowtimeLabel = nullptr;
 	m_rainbowtimecheck = nullptr;
 
+	m_linesp = nullptr;
+	m_lineLabel = nullptr;
+	m_linecheck = nullptr;
+
 	m_nameLabel = nullptr;
 	m_space01Label = nullptr;
 	m_space02Label = nullptr;
 	m_space03Label = nullptr;
+	m_space04Label = nullptr;
+	m_space05Label = nullptr;
+
+	m_intervalsp = nullptr;
+	m_intervalLabel = nullptr;
+	m_intervalSlider = nullptr;
 
 }
 
@@ -377,6 +423,16 @@ int CRefPosDlg::CreateRefPosWnd()
 			_ASSERT(0);
 			abort();
 		}
+		m_space04Label = new OWP_Label(L"  ", labelheightL);
+		if (!m_space04Label) {
+			_ASSERT(0);
+			abort();
+		}
+		m_space05Label = new OWP_Label(L"--- Common Settings Below ---", labelheightL);
+		if (!m_space05Label) {
+			_ASSERT(0);
+			abort();
+		}
 
 
 		m_refposnumLabel = new OWP_Label(L"RefPos Num", labelheight);
@@ -508,6 +564,39 @@ int CRefPosDlg::CreateRefPosWnd()
 			abort();
 		}
 
+		m_lineLabel = new OWP_Label(L"Disp Mode", labelheight);
+		if (!m_lineLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_linesp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_linesp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_linecheck = new OWP_CheckBoxA(L"Line", m_model->GetRefPosLineDisp(), labelheight, false);
+		if (!m_linecheck) {
+			_ASSERT(0);
+			abort();
+		}
+
+		m_intervalLabel = new OWP_Label(L"TimesPerImage", labelheight);
+		if (!m_intervalLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_intervalsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_intervalsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_intervalSlider = new OWP_Slider((double)g_RefPosRecordInterval, MAX_REFPOSRECORDINTERVAL, MIN_REFPOSRECORDINTERVAL);
+		if (!m_intervalSlider) {
+			_ASSERT(0);
+			abort();
+		}
+
+
 		m_dlgWnd->addParts(*m_nameLabel);
 		m_dlgWnd->addParts(*m_space01Label);
 
@@ -546,6 +635,17 @@ int CRefPosDlg::CreateRefPosWnd()
 		m_rainbowsp->addParts1(*m_rainbowtimeLabel);
 		m_rainbowsp->addParts2(*m_rainbowtimecheck);
 
+		m_dlgWnd->addParts(*m_linesp);
+		m_linesp->addParts1(*m_lineLabel);
+		m_linesp->addParts2(*m_linecheck);
+
+		m_dlgWnd->addParts(*m_space04Label);
+		m_dlgWnd->addParts(*m_space05Label);
+
+		m_dlgWnd->addParts(*m_intervalsp);
+		m_intervalsp->addParts1(*m_intervalLabel);
+		m_intervalsp->addParts2(*m_intervalSlider);
+
 
 		//##########
 		//Slider
@@ -557,6 +657,12 @@ int CRefPosDlg::CreateRefPosWnd()
 				m_model->SetRefPosNum(setvalue);
 			}
 			m_refposnumSlider->setValue((double)setvalue, false);//intに丸めてセットし直し
+			});
+		m_intervalSlider->setCursorListener([=, this]() {
+			double value = m_intervalSlider->getValue();
+			int setvalue = (int)(value + 0.0001);
+			g_RefPosRecordInterval = setvalue;
+			m_intervalSlider->setValue((double)setvalue, false);//intに丸めてセットし直し
 			});
 
 		m_diffuseRSlider->setCursorListener([=, this]() {
@@ -617,6 +723,12 @@ int CRefPosDlg::CreateRefPosWnd()
 				m_model->SetRefPosRainbowTime(value);
 			}
 			});
+		m_linecheck->setButtonListener([=, this]() {
+			bool value = m_linecheck->getValue();
+			if (m_model != nullptr) {
+				m_model->SetRefPosLineDisp(value);
+			}
+			});
 
 
 		m_dlgWnd->setSize(WindowSize(m_sizex, m_sizey));
@@ -653,6 +765,13 @@ int CRefPosDlg::Params2Dlg()
 			m_refposnumSlider->setValue((double)setvalue, false);//intに丸めてセットし直し
 		}
 
+		if (m_intervalSlider != nullptr) {
+			int setvalue = (int)(g_RefPosRecordInterval + 0.0001);
+			setvalue = min((int)MAX_REFPOSRECORDINTERVAL, setvalue);
+			setvalue = max((int)MIN_REFPOSRECORDINTERVAL, setvalue);
+			m_intervalSlider->setValue((double)setvalue, false);//intに丸めてセットし直し
+		}
+
 		ChaVector4 diffuserate = m_model->GetRefPosDiffuseRate();
 		if (m_diffuseRSlider != nullptr) {
 			m_diffuseRSlider->setValue((double)diffuserate.x, false);
@@ -678,6 +797,10 @@ int CRefPosDlg::Params2Dlg()
 		bool rainbowtime = m_model->GetRefPosRainbowTime();
 		if (m_rainbowtimecheck != nullptr) {
 			m_rainbowtimecheck->setValue(rainbowtime, false);
+		}
+		bool linedisp = m_model->GetRefPosLineDisp();
+		if (m_linecheck != nullptr) {
+			m_linecheck->setValue(linedisp, false);
 		}
 
 		m_dlgWnd->callRewrite();

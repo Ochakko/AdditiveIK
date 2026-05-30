@@ -31,8 +31,8 @@ void CModelFrameViewRingBuf::ProcessRefPosView(CModel* srcmodel)
 {
 	if ((srcmodel != nullptr) && (srcmodel == m_model)) {
 		m_refposRecordCount++;
-		if (m_refposRecordCount >= REFPOSRECORDINTERVAL) {
-			//30フレームに1回だけ更新する
+		if (m_refposRecordCount >= g_RefPosRecordInterval) {
+			//g_RefPosRecordIntervalフレームに1回だけ更新する
 			m_refposRecordCount = 0;
 
 			m_refposStartIndex++;
@@ -47,7 +47,7 @@ void CModelFrameViewRingBuf::ProcessRefPosView(CModel* srcmodel)
 				double currentframe = srcmodel->GetCurrentFrame();
 				m_ringbuf[m_refposStartIndex].SetParams(g_camera3D->GetViewMatrix(false), currentmotid, currentframe, m_refposStartIndex);
 
-				if (g_chascene != nullptr) {
+				if ((g_chascene != nullptr) && g_refposflag) {
 					g_chascene->SaveRefPosMat(m_refposStartIndex);
 				}
 			}
