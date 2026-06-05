@@ -6,6 +6,10 @@ https://github.com/Ochakko/AdditiveIK
 　　RefPosプレートメニューにMonoチェックボックス
 　　ボーンが無い背景モデルに対してのみ有効
 　　
+　ショートムービー
+　　残像MONOれいんぼー
+　　https://youtu.be/ej3Uui98bcg
+　　
 2026/05/31
 　AdditiveIK 1.0.0.71 release
 　　1.0.0.70からの変更点
