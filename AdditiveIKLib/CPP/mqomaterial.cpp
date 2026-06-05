@@ -3757,6 +3757,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
 		m_cb[currentrefposindex].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
+		m_cb[currentrefposindex].Flags2[1] = (renderobj.pmodel->GetMonoFlag()) ? 1 : 0;
 		if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
@@ -3825,6 +3826,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
 		m_cb[currentrefposindex].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
+		m_cb[currentrefposindex].Flags2[1] = (renderobj.pmodel->GetMonoFlag()) ? 1 : 0;
 		if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
@@ -3890,27 +3892,28 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].metalcoef.SetParams(GetMetalCoef(), GetSmoothCoef(), GetMetalAdd(), GetSpecularCoef());
 		m_cb[currentrefposindex].materialdisprate = renderobj.pmodel->GetMaterialDispRate();
 
-		float shadowfar = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
-		float divshadowfar;
-		if (fabs(shadowfar) >= 1e-4) {
-			divshadowfar = 1.0f / shadowfar;
-		}
-		else {
-			divshadowfar = 0.0f;
-		}
-		m_cb[currentrefposindex].shadowmaxz.SetParams(
-			divshadowfar,
-			g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
+			float shadowfar = g_shadowmap_far[g_shadowmap_slotno] * g_shadowmap_projscale[g_shadowmap_slotno];
+			float divshadowfar;
+			if (fabs(shadowfar) >= 1e-4) {
+				divshadowfar = 1.0f / shadowfar;
+			}
+			else {
+				divshadowfar = 0.0f;
+			}
+			m_cb[currentrefposindex].shadowmaxz.SetParams(
+				divshadowfar,
+				g_shadowmap_bias[g_shadowmap_slotno], g_shadowmap_color[g_shadowmap_slotno], 0.0f);
 
-		m_cb[currentrefposindex].UVs[0] = g_uvset;
-		m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
-		m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
-		m_cb[currentrefposindex].UVs[3] = (GetDistortionFlag()) ? 1 : 0;
-		m_cb[currentrefposindex].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
-		m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
-		m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
-		m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
-		m_cb[currentrefposindex].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
+			m_cb[currentrefposindex].UVs[0] = g_uvset;
+			m_cb[currentrefposindex].UVs[1] = (int)(GetUVScale().x + 0.0001);
+			m_cb[currentrefposindex].UVs[2] = (int)(GetUVScale().y + 0.0001);
+			m_cb[currentrefposindex].UVs[3] = (GetDistortionFlag()) ? 1 : 0;
+			m_cb[currentrefposindex].Flags[0] = renderobj.pmodel->GetSkyFlag() ? 1 : 0;
+			m_cb[currentrefposindex].Flags[1] = renderobj.pmodel->GetGroundFlag() ? 1 : 0;
+			m_cb[currentrefposindex].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
+			m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
+			m_cb[currentrefposindex].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
+			m_cb[currentrefposindex].Flags2[1] = (renderobj.pmodel->GetMonoFlag()) ? 1 : 0;
 		if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
@@ -4044,6 +4047,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[0].Flags[3] = g_VSMflag ? 1 : 0;
 		m_cb[0].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
+		m_cb[0].Flags2[1] = (renderobj.pmodel->GetMonoFlag()) ? 1 : 0;
 		if (DXUTGetGlobalTimer()) {
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
@@ -4104,6 +4108,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[0].Flags[3] = g_VSMflag ? 1 : 0;
 		m_cb[0].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
+		m_cb[0].Flags2[1] = (renderobj.pmodel->GetMonoFlag()) ? 1 : 0;
 		if (DXUTGetGlobalTimer()) {
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
@@ -4178,6 +4183,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].Flags[2] = g_skydofflag[g_dofindex] ? 1 : 0;
 		m_cb[0].Flags[3] = g_VSMflag ? 1 : 0;
 		m_cb[0].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
+		m_cb[0].Flags2[1] = (renderobj.pmodel->GetMonoFlag()) ? 1 : 0;
 		if (DXUTGetGlobalTimer()) {
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}

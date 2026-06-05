@@ -1,6 +1,11 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/06/06
+　モノクロ表示オプション追加
+　　RefPosプレートメニューにMonoチェックボックス
+　　ボーンが無い背景モデルに対してのみ有効
+　　
 2026/05/31
 　AdditiveIK 1.0.0.71 release
 　　1.0.0.70からの変更点

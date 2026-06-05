@@ -91,6 +91,7 @@ private:
 	ChaVector4 m_diffuserate;
 	bool m_rainbowmode;
 	bool m_linedisp;
+	bool m_monoflag;
 
 	OrgWinGUI::OrgWindow* m_dlgWnd;
 
@@ -129,6 +130,10 @@ private:
 	OrgWinGUI::OWP_Separator* m_linesp;
 	OrgWinGUI::OWP_Label* m_lineLabel;
 	OrgWinGUI::OWP_CheckBoxA* m_linecheck;
+
+	OrgWinGUI::OWP_Separator* m_monosp;
+	OrgWinGUI::OWP_Label* m_monoLabel;
+	OrgWinGUI::OWP_CheckBoxA* m_monocheck;
 
 	OrgWinGUI::OWP_Label* m_nameLabel;
 	OrgWinGUI::OWP_Label* m_space01Label;

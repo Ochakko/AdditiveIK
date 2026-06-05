@@ -3454,6 +3454,14 @@ public: //accesser
 	}
 
 
+	void SetMonoFlag(bool srcflag)
+	{
+		m_monoflag = srcflag;
+	}
+	bool GetMonoFlag()
+	{
+		return m_monoflag;
+	}
 	void SetGrassFlag(bool srcflag)
 	{
 		m_grassflag = srcflag;
@@ -4070,6 +4078,7 @@ private:
 	bool m_skyflag;
 	bool m_groundflag;
 	bool m_grassflag;
+	bool m_monoflag;
 
 	int m_updateslot;
 

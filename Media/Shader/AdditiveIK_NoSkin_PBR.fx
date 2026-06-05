@@ -38,7 +38,7 @@ struct SPSIn
     float2 uv : TEXCOORD0; // uv座標
     float4 worldPos : TEXCOORD1; // ワールド空間でのピクセルの座標
     float4 diffusemult : TEXCOORD2;
-    float4 FogAndOther : TEXCOORD3; //x:Fog
+    float4 FogAndOther : TEXCOORD3; //x:Fog, y:Mono
     float4 depth : TEXCOORD4;
 };
 
@@ -105,7 +105,7 @@ cbuffer ModelCb : register(b0)
     float4 shadowmaxz;//x:(1/shadowfar), y:shadowbias
     int4 UVs; //x:UVSet, y:TilingU, z:TilingV, w:distortionFlag   
     int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag, w:VSM
-    int4 Flags2; //x:grassflag    
+    int4 Flags2; //x:grassflag, y:monoflag    
     float4 time1; //2024/04/27
     float4 bbsize; //2024/05/11 size of bourndary        
     int4 distortiontype; //[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)
@@ -182,17 +182,25 @@ float CalcVSFog(float4 worldpos)
     float fog = (vFog.w < 1.1f) ? (vFog.z * (length(fogpos.xyz) - vFog.y) * vFog.x) : (vFog.z - vFog.z * fogy * fogy);
     return fog;
 }
-float4 CalcPSFog(float4 pscol, float fog)
+float4 CalcPSFog(float4 pscol, float fog, float monoflag)
 {
     float3 fogcolor = vFogColor.xyz;
     float fograte = max(0.0f, min(1.0f, fog));
-    float3 outcolor = lerp(pscol.xyz, fogcolor, fograte);
+    float3 outcolor = (monoflag == 0.0f) ? lerp(pscol.xyz, fogcolor, fograte) : dot(float3(0.3f, 0.6f, 0.1f), lerp(pscol.xyz, fogcolor, fograte));
     return float4(outcolor, pscol.w);
 }
 
+float4 CalcMono(float4 srccol)
+{
+    float4 monocol;
+    monocol.rgb = (Flags2.y == 1) ? (0.3f * srccol.r + 0.6f * srccol.g + 0.1 * srccol.b) : srccol.rgb;
+    monocol.a = srccol.a;
+    //（0.3R＋0.6G＋0.1B） ÷ 255
+    return monocol;
+}
 
 
-float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
+float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir, float monoflag)
 {
     float3 normaly0 = (lightsnum.w == 1) ? normalize(float3(meshnormal.x, 0.0f, meshnormal.z)) : meshnormal;
     float3 lighty0 = (lightsnum.w == 1) ? normalize(float3(lightdir.x, 0.0f, lightdir.z)) : lightdir;
@@ -201,7 +209,8 @@ float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
     float toonh = (nl + 1.0f) * 0.5f * multiplecoef;
     float2 diffuseuv = { 0.5f, toonh };
     float4 diffusecol = g_diffusetex.Sample(g_sampler_clamp, diffuseuv) * materialdisprate.x;
-    
+    diffusecol.rgb = (monoflag == 0.0f) ? diffusecol.rgb : (0.3f * diffusecol.r + 0.6f * diffusecol.g + 0.1 * diffusecol.b);
+
     return diffusecol;
 }
 
@@ -446,6 +455,7 @@ SPSIn VSMainNoSkinPBR(SVSInWithoutBone vsIn, uniform bool hasSkin)
     psIn.depth.w = 1.0f; //自動的にwで割られても良いように
     
     psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
+    psIn.FogAndOther.y = (Flags2.y == 0) ? 0.0f : 1.0f;
     psIn.worldPos = psIn.pos;    
     psIn.pos = mul(mView, psIn.pos);    // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos);    // カメラ座標系からスクリーン座標系に変換
@@ -505,6 +515,7 @@ SPSInShadowReciever VSMainNoSkinPBRShadowReciever(SVSInWithoutBone vsIn, uniform
     psIn.depth.w = 1.0f; //自動的にwで割られても良いように
     
     psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
+    psIn.FogAndOther.y = (Flags2.y == 0) ? 0.0f : 1.0f;
     psIn.worldPos = psIn.pos / psIn.pos.w;    
     psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
@@ -625,7 +636,7 @@ SPSOut2 PSMainNoSkinPBR(SPSIn psIn) : SV_Target
         //float NdotL = saturate(dot(normal, directionalLight[ligNo].direction.xyz));
         //float3 lambertDiffuse = directionalLight[ligNo].color.xyz * NdotL / PI;
         float multiplecoef = diffuseFromFresnel * materialdisprate.x;
-        float4 lambertDiffuse0 = CalcDiffuseColor(multiplecoef, normal.xyz, directionalLight[ligNo].direction.xyz);
+        float4 lambertDiffuse0 = CalcDiffuseColor(multiplecoef, normal.xyz, directionalLight[ligNo].direction.xyz, psIn.FogAndOther.y);
         float3 lambertDiffuse1 = lambertDiffuse0.xyz * directionalLight[ligNo].color.xyz;
         
         // 最終的な拡散反射光を計算する
@@ -662,7 +673,7 @@ SPSOut2 PSMainNoSkinPBR(SPSIn psIn) : SV_Target
     //finalColor.w = ((finalColor.w - ambient0.w) > 0.0f) ? finalColor.w : 0.0f;
     
     SPSOut2 psOut;
-    psOut.color_0 = CalcPSFog(finalColor, psIn.FogAndOther.x);
+    psOut.color_0 = CalcPSFog(finalColor, psIn.FogAndOther.x, psIn.FogAndOther.y);
     psOut.color_1 = psIn.depth;
     return psOut;
     
@@ -754,7 +765,7 @@ SPSOut2 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target
         //float NdotL = saturate(dot(normal, directionalLight[ligNo].direction.xyz));
         //float3 lambertDiffuse = directionalLight[ligNo].color.xyz * NdotL / PI;
         float multiplecoef = diffuseFromFresnel * materialdisprate.x;
-        float4 lambertDiffuse0 = CalcDiffuseColor(multiplecoef, normal.xyz, directionalLight[ligNo].direction.xyz);
+        float4 lambertDiffuse0 = CalcDiffuseColor(multiplecoef, normal.xyz, directionalLight[ligNo].direction.xyz, psIn.FogAndOther.y);
         float3 lambertDiffuse1 = lambertDiffuse0.xyz * directionalLight[ligNo].color.xyz;
         
         // 最終的な拡散反射光を計算する
@@ -843,7 +854,7 @@ SPSOut2 PSMainNoSkinPBRShadowReciever(SPSInShadowReciever psIn) : SV_Target
 
     
     SPSOut2 psOut;
-    psOut.color_0 = CalcPSFog(finalColor, psIn.FogAndOther.x);
+    psOut.color_0 = CalcPSFog(finalColor, psIn.FogAndOther.x, psIn.FogAndOther.y);
     psOut.color_1 = psIn.depth;
     return psOut;
 }

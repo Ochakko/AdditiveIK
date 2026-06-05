@@ -298,7 +298,9 @@ int CChaFile::WriteFileInfo()
 	//version 1020 : 2026/05/30 1.0.0.71へ向けて  RefPosInterval追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1020</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1021 : 2026/05/31 1.0.0.71へ向けて  RefPosLineDisp追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1021</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1021</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1022 : 2026/06/06 1.0.0.72へ向けて  MonoDisp追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1022</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -364,6 +366,12 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 	}
 	else {
 		CallF(Write2File("    <RefPosLineDisp>0</RefPosLineDisp>\r\n"), return 1);
+	}
+	if (curmodel->GetMonoFlag()) {
+		CallF(Write2File("    <MonoDisp>1</MonoDisp>\r\n"), return 1);
+	}
+	else {
+		CallF(Write2File("    <MonoDisp>0</MonoDisp>\r\n"), return 1);
 	}
 
 
@@ -1274,6 +1282,8 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	int refposrainbowTime = 0;
 	int getrefposLineDisp = 0;
 	int refposLineDisp = 0;
+	int getmonoDisp = 0;
+	int monoDisp = 0;
 
 	int refnum = 0;
 	int impnum = 0;
@@ -1306,6 +1316,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	getrefposrainbowInv = Read_Int(xmlbuf, "<RefPosRainbowInv>", "</RefPosRainbowInv>", &refposrainbowInv);
 	getrefposrainbowTime = Read_Int(xmlbuf, "<RefPosRainbowTime>", "</RefPosRainbowTime>", &refposrainbowTime);
 	getrefposLineDisp = Read_Int(xmlbuf, "<RefPosLineDisp>", "</RefPosLineDisp>", &refposLineDisp);
+	getmonoDisp = Read_Int(xmlbuf, "<MonoDisp>", "</MonoDisp>", &monoDisp);
 
 
 	int grassflag = 0;
@@ -1503,11 +1514,16 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	if (getrefposLineDisp == 0) {
 		setrefposLineDisp = (refposLineDisp == 1) ? true : false;
 	}
+	bool setmonoDisp = false;
+	if (getmonoDisp == 0) {
+		setmonoDisp = (monoDisp == 1) ? true : false;
+	}
 	newmodel->SetRefPosDiffuseRate(refposdiffuse);
 	newmodel->SetRefPosRainbowMode(refposrainbowmode);
 	newmodel->SetRefPosRainbowInv(setrefposrainbowInv);
 	newmodel->SetRefPosRainbowTime(setrefposrainbowTime);
 	newmodel->SetRefPosLineDisp(setrefposLineDisp);
+	newmodel->SetMonoFlag(setmonoDisp);
 
 
 	//newmodel->m_tmpmotspeed = m_motspeed;

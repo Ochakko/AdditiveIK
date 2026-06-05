@@ -85,7 +85,7 @@ struct SConstantBuffer {
 	ChaVector4 shadowmaxz;
 	int UVs[4];//[0]:UVSet, [1]:TilingU, [2]:TilingV, [3]:distortionFlag
 	int Flags[4];//[0]:skyflag, [1]:groundflag, [2]:skydofflag, [3]:VarianceShadowMaps
-	int Flags2[4];//[0]:grassflag
+	int Flags2[4];//[0]:grassflag, [1]:monoflag
 	ChaVector4 time;//2024/04/27
 	ChaVector4 bbsize;//2024/05/11 size of boundary
 	int distortiontype[4];//[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)

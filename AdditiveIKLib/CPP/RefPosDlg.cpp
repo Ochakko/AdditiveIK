@@ -159,6 +159,18 @@ int CRefPosDlg::DestroyObjs()
 		m_linesp = nullptr;
 	}
 
+	if (m_monoLabel) {
+		delete m_monoLabel;
+		m_monoLabel = nullptr;
+	}
+	if (m_monocheck) {
+		delete m_monocheck;
+		m_monocheck = nullptr;
+	}
+	if (m_monosp) {
+		delete m_monosp;
+		m_monosp = nullptr;
+	}
 
 	if (m_intervalLabel) {
 		delete m_intervalLabel;
@@ -265,6 +277,10 @@ void CRefPosDlg::InitParams()
 	m_linesp = nullptr;
 	m_lineLabel = nullptr;
 	m_linecheck = nullptr;
+
+	m_monosp = nullptr;
+	m_monoLabel = nullptr;
+	m_monocheck = nullptr;
 
 	m_nameLabel = nullptr;
 	m_space01Label = nullptr;
@@ -580,6 +596,22 @@ int CRefPosDlg::CreateRefPosWnd()
 			abort();
 		}
 
+		m_monoLabel = new OWP_Label(L"Mono Disp", labelheight);
+		if (!m_monoLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_monosp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_monosp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_monocheck = new OWP_CheckBoxA(L"Mono", m_model->GetMonoFlag(), labelheight, false);
+		if (!m_monocheck) {
+			_ASSERT(0);
+			abort();
+		}
+
 		m_intervalLabel = new OWP_Label(L"TimesPerImage", labelheight);
 		if (!m_intervalLabel) {
 			_ASSERT(0);
@@ -638,6 +670,10 @@ int CRefPosDlg::CreateRefPosWnd()
 		m_dlgWnd->addParts(*m_linesp);
 		m_linesp->addParts1(*m_lineLabel);
 		m_linesp->addParts2(*m_linecheck);
+
+		m_dlgWnd->addParts(*m_monosp);
+		m_monosp->addParts1(*m_monoLabel);
+		m_monosp->addParts2(*m_monocheck);
 
 		m_dlgWnd->addParts(*m_space04Label);
 		m_dlgWnd->addParts(*m_space05Label);
@@ -729,6 +765,12 @@ int CRefPosDlg::CreateRefPosWnd()
 				m_model->SetRefPosLineDisp(value);
 			}
 			});
+		m_monocheck->setButtonListener([=, this]() {
+			bool value = m_monocheck->getValue();
+			if (m_model != nullptr) {
+				m_model->SetMonoFlag(value);
+			}
+			});
 
 
 		m_dlgWnd->setSize(WindowSize(m_sizex, m_sizey));
@@ -801,6 +843,10 @@ int CRefPosDlg::Params2Dlg()
 		bool linedisp = m_model->GetRefPosLineDisp();
 		if (m_linecheck != nullptr) {
 			m_linecheck->setValue(linedisp, false);
+		}
+		bool monoflag = m_model->GetMonoFlag();
+		if (m_monocheck != nullptr) {
+			m_monocheck->setValue(monoflag, false);
 		}
 
 		m_dlgWnd->callRewrite();

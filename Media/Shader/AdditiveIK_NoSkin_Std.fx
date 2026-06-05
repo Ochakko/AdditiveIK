@@ -34,7 +34,7 @@ struct SPSIn
     float4 normal       : NORMAL;
     float2 uv           : TEXCOORD0;
     float4 diffusemult  : TEXCOORD1;
-    float4 FogAndOther : TEXCOORD2; //x:Fog
+    float4 FogAndOther : TEXCOORD2; //x:Fog, y:Mono
     float4 depth : TEXCOORD3;
 };
 
@@ -107,7 +107,7 @@ cbuffer ModelCb : register(b0)
     float4 shadowmaxz; //x:(1/shadowfar), y:shadowbias
     int4 UVs; //x:UVSet, y:TilingU, z:TilingV, w:distortionFlag   
     int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag, w:VSM
-    int4 Flags2; //x:grassflag    
+    int4 Flags2; //x:grassflag, y:monoflag   
     float4 time1; //2024/04/27
     float4 bbsize; //2024/05/11 size of bourndary    
     int4 distortiontype; //[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)
@@ -164,7 +164,6 @@ sampler g_sampler_metal : register(s3);
 sampler g_sampler_clamp : register(s4);//2024/02/14
 sampler g_sampler_shadow : register(s5);
 
-
 float CalcVSFog(float4 worldpos)
 {
     worldpos /= worldpos.w;
@@ -173,15 +172,22 @@ float CalcVSFog(float4 worldpos)
     float fog = (vFog.w < 1.1f) ? (vFog.z * (length(fogpos.xyz) - vFog.y) * vFog.x) : (vFog.z - vFog.z * fogy * fogy);
     return fog;
 }
-float4 CalcPSFog(float4 pscol, float fog)
+float4 CalcPSFog(float4 pscol, float fog, float monoflag)
 {
     float3 fogcolor = vFogColor.xyz;
     float fograte = max(0.0f, min(1.0f, fog));
-    float3 outcolor = lerp(pscol.xyz, fogcolor, fograte);
+    float3 outcolor = (monoflag == 0.0f) ? lerp(pscol.xyz, fogcolor, fograte) : dot(float3(0.3f, 0.6f, 0.1f), lerp(pscol.xyz, fogcolor, fograte));
     return float4(outcolor, pscol.w);
 }
 
-
+float4 CalcMono(float4 srccol)
+{
+    float4 monocol;
+    monocol.rgb = (0.3f * srccol.r + 0.6f * srccol.g + 0.1 * srccol.b);
+    monocol.a = srccol.a;
+    //（0.3R＋0.6G＋0.1B） ÷ 255
+    return monocol;
+}
 
 float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
 {
@@ -218,6 +224,7 @@ SPSIn VSMainNoSkinStd(SVSInWithoutBone vsIn, uniform bool hasSkin)
     psIn.depth.w = 1.0f; //自動的にwで割られても良いように
     
     psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
+    psIn.FogAndOther.y = (Flags2.y == 0) ? 0.0f : 1.0f;
     psIn.pos = mul(mView, psIn.pos);    // ワールド座標系からカメラ座標系に変換
     psIn.pos = mul(mProj, psIn.pos);    // カメラ座標系からスクリーン座標系に変換
 
@@ -273,6 +280,7 @@ SPSInShadowReciever VSMainNoSkinStdShadowReciever(SVSInWithoutBone vsIn, uniform
     psIn.depth.w = 1.0f; //自動的にwで割られても良いように
     
     psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(worldPos) : 0.0f;
+    psIn.FogAndOther.y = (Flags2.y == 0) ? 0.0f : 1.0f;
     psIn.pos = mul(mView, worldPos);
     psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
     
@@ -356,7 +364,7 @@ SPSOut2 PSMainNoSkinStd(SPSIn psIn) : SV_Target
 
     
     SPSOut2 psOut;
-    psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x);
+    psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x, psIn.FogAndOther.y);
     psOut.color_1 = psIn.depth;    
     return psOut;
 }
@@ -459,7 +467,7 @@ SPSOut2 PSMainNoSkinStdShadowReciever(SPSInShadowReciever psIn) : SV_Target
     //return pscol;    
     
     SPSOut2 psOut;
-    psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x);
+    psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x, psIn.FogAndOther.y);
     psOut.color_1 = psIn.depth;
     return psOut;
 }
@@ -478,7 +486,7 @@ SPSOut2 PSMainNoSkinNoLight(SPSIn psIn) : SV_Target
     
     
     SPSOut2 psOut;
-    psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x);
+    psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x, psIn.FogAndOther.y);
     psOut.color_1 = psIn.depth;
     return psOut;
 }
@@ -542,7 +550,7 @@ SPSOut2 PSMainNoSkinNoLightShadowReciever(SPSInShadowReciever psIn)
     clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
     
     SPSOut2 psOut;
-    psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x);
+    psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x, psIn.FogAndOther.y);
     psOut.color_1 = psIn.depth;    
     return psOut;
 }
