@@ -309,14 +309,8 @@ Smooth平滑化<br>
 <br>
 <br>
 # 設定(ビデオカード)<br>
-　　Windowsとビデオカードドライバをアップデートしたら画面が真っ暗の件<br>
-　　NVIDIAコントロールパネルの設定で解決<br>
- 　　こちらで試した設定は以下(最適かどうかは環境によると思います。必須と印をつけた項目を記述のように変えたら絵が出ました。)<br>
-　　　(必須)アンチエイリアシング-FXAA オフ<br>
-　　　(必須)スレッドした最適化　オン<br>
-　　　優先的に使用するリフレッシュレート(TVデバイス名)　利用可能な最高値<br>
-　　　垂直同期　オフ<br>
-　　　最大フレームレート　120FPS<br>
+![Fig.Settings01](ScreenShots/Settings_NVIDIA_App_20260606.png "設定01")<br>
+Fig.Settings of NVIDIA App (Select Native as upper fig so faster display.)
 <br>
 <br>
 # Description
@@ -349,7 +343,10 @@ Smooth平滑化<br>
 [【観測者が】４次元RefPosボクサー【ダークマター】 2026/05/10](https://youtu.be/AIgPOpzXTtU "Usage example19")<br>
 
 [れふぽす改 2026/05/31](https://youtu.be/NQ4_wUQcEtA "Usage example20")<br>
+
+[残像MONOれいんぼー 2026/06/06](https://youtu.be/ej3Uui98bcg "Usage example21")<br>
 <br>
+
 # Site
 [OchakkoLAB](https://ochakkolab.jp/ "OchakkoLAB")
 <br>
