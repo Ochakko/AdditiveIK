@@ -204,6 +204,9 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 		wcscpy_s(wname2, MAX_PATH, g_chacamera.GetCameraGModel()->GetFileName());
 		WideCharToMultiByte(CP_ACP, 0, wname2, -1, mbname2, MAX_PATH, NULL, NULL);
 		CallF(Write2File("  <CameraGModelName>%s</CameraGModelName>\r\n", mbname2), return 1);
+
+		int cameraanimmode = g_chacamera.GetCameraAnimMode();
+		CallF(Write2File("  <CameraAnimMode>%d</CameraAnimMode>\r\n", cameraanimmode), return 1);
 	}
 
 
@@ -300,7 +303,9 @@ int CChaFile::WriteFileInfo()
 	//version 1021 : 2026/05/31 1.0.0.71へ向けて  RefPosLineDisp追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1021</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1022 : 2026/06/06 1.0.0.72へ向けて  MonoDisp追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1022</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1022</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1023 : 2026/06/06 1.0.0.72へ向けて  MonoDisp追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1023</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -1017,6 +1022,13 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	if (result == 0) {
 		getcameragmodelname = true;
 	}
+	bool getcameraanimmode = false;
+	int tempcameraanimmode = -1;
+	result = Read_Int(&m_xmliobuf, "<CameraAnimMode>", "</CameraAnimMode>", &tempcameraanimmode);
+	if (result == 0) {
+		//g_chacamera.SetCamMoveEyePos(((tempmoveeye == 1) ? true : false));
+		getcameraanimmode = true;
+	}
 
 
 
@@ -1168,6 +1180,14 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 			}
 		}
 	}
+	if (getcameraanimmode) {
+		dstdistparams->cameraanimmode = tempcameraanimmode;
+	}
+	else {
+		dstdistparams->cameraanimmode = -1;//未設定
+	}
+
+
 
 	if (getakscale) {
 		g_akscale = tempakscale;

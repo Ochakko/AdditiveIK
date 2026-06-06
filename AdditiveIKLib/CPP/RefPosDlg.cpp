@@ -596,7 +596,7 @@ int CRefPosDlg::CreateRefPosWnd()
 			abort();
 		}
 
-		m_monoLabel = new OWP_Label(L"Mono Disp", labelheight);
+		m_monoLabel = new OWP_Label(L"NonSkinOnly", labelheight);
 		if (!m_monoLabel) {
 			_ASSERT(0);
 			abort();
@@ -847,6 +847,15 @@ int CRefPosDlg::Params2Dlg()
 		bool monoflag = m_model->GetMonoFlag();
 		if (m_monocheck != nullptr) {
 			m_monocheck->setValue(monoflag, false);
+
+			//シェーダーの対応具合：非スキンモデルだけMonoDispモードに対応
+			if (m_model->GetNoBoneFlag() || !m_model->ExistCurrentMotion()) {
+				m_monocheck->setActive(true);
+			}
+			else {
+				//スキンモデルの場合は　Monoチェックボックスを非アクティブにする
+				m_monocheck->setActive(false);
+			}
 		}
 
 		m_dlgWnd->callRewrite();

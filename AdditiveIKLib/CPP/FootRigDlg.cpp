@@ -2857,8 +2857,8 @@ int CFootRigDlg::GetGroundPos(CFootInfo* srcfootinfo, CModel* groundmodel, ChaVe
 		srcfootinfo->SetFirstPosOnGroundCount(chkcount + 1);
 
 		//ステージに接地した直後など　長いRayが必要
-		ChaVector3 startglobal2 = basepos + ChaVector3(0.0f, 2000.0f, 0.0f);//2000.0
-		ChaVector3 endglobal2 = basepos - ChaVector3(0.0f, 2000.0f, 0.0f);//2000.0
+		ChaVector3 startglobal2 = basepos + ChaVector3(0.0f, 4000.0f, 0.0f);//2000.0
+		ChaVector3 endglobal2 = basepos - ChaVector3(0.0f, 4000.0f, 0.0f);//2000.0
 
 		bool chkoutofview = true;//####### ステージ接地直後は視野外の場合もある
 

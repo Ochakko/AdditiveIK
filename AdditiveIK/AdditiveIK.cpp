@@ -10664,10 +10664,12 @@ int SetCameraModel()
 	}
 
 
-	//モデル読み込み中　かつ　カメラモデルがある場合　カメラアニメスイッチを強制オン
-	if (s_nowloading && (g_chacamera.GetCameraAnimModel() != nullptr) && (g_chacamera.GetCameraAnimMode() == 0)) {
-		ChangeCameraMode(2);
-	}
+	//2026/06/07chaファイルでCameraAnimModeを保存読み込みすることにしたので　強制オンはやめる
+	//
+	////モデル読み込み中　かつ　カメラモデルがある場合　カメラアニメスイッチを強制オン
+	//if (s_nowloading && (g_chacamera.GetCameraAnimModel() != nullptr) && (g_chacamera.GetCameraAnimMode() == 0)) {
+	//	ChangeCameraMode(2);
+	//}
 
 
 	//2024/06/23
@@ -15604,7 +15606,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.71\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.72\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -19585,6 +19587,24 @@ int OpenChaFile()
 	g_chacamera.SetCameraHeightFlag(distparams.heightflag);
 	g_chacamera.SetCameraHeight(distparams.height);
 	g_chacamera.SetCameraGModel(distparams.gmodel);
+	if (distparams.cameraanimmode > 0) {
+		ChangeCameraMode(2);//forcemode 反転をセット:0 強制オフ時:1 【強制オン時:2】
+		SetCamera3DFromEyePos();
+	}
+	else if(distparams.cameraanimmode == 0) {
+		ChangeCameraMode(1);//forcemode 反転をセット:0 【強制オフ時:1】 強制オン時:2
+	}
+	else {
+		//chaファイルでCameraAnimModeを未設定の場合
+		if (distparams.gmodel != nullptr) {
+			ChangeCameraMode(2);//forcemode 反転をセット:0 強制オフ時:1 【強制オン時:2】
+			SetCamera3DFromEyePos();
+		}
+		else {
+			ChangeCameraMode(1);//forcemode 反転をセット:0 【強制オフ時:1】 強制オン時:2
+		}
+	}
+
 
 	PostOpenChaFile();//2024/04/17 常駐スライダーなどにchaファイル読込値を反映する
 

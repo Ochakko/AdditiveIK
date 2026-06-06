@@ -147,6 +147,7 @@ typedef struct tag_cameradistparams
 	int heightflag;
 	float height;
 	CModel* gmodel;
+	int cameraanimmode;
 
 	void Init() {
 		cameradist = g_chacamera.GetCamDist();
@@ -155,6 +156,7 @@ typedef struct tag_cameradistparams
 		heightflag = g_chacamera.GetCameraHeightFlag();
 		height = g_chacamera.GetCameraHeight();
 		gmodel = g_chacamera.GetCameraGModel();
+		cameraanimmode = 0;
 	};
 
 	tag_cameradistparams() {
