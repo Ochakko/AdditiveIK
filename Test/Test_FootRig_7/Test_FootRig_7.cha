@@ -21,6 +21,9 @@
   <CameraTarget>181.577, 50.939, 14.522</CameraTarget>
   <CameraUpVec>0.007, 0.945, -0.326</CameraUpVec>
   <CameraDist>782.310</CameraDist>
+  <CameraGModelFolder>VRoid202406_1</CameraGModelFolder>
+  <CameraGModelName>VRoid202406.fbx</CameraGModelName>
+  <CameraAnimMode>1</CameraAnimMode>  
   <AKScale>1.000</AKScale>
   <BtVScaleOnLimitEul>0.200</BtVScaleOnLimitEul>
   <BoneAxis>0</BoneAxis>
