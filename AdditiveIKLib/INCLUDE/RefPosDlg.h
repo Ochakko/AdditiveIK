@@ -92,6 +92,7 @@ private:
 	bool m_rainbowmode;
 	bool m_linedisp;
 	bool m_monoflag;
+	bool m_parallaxeffect;
 
 	OrgWinGUI::OrgWindow* m_dlgWnd;
 
@@ -134,6 +135,10 @@ private:
 	OrgWinGUI::OWP_Separator* m_monosp;
 	OrgWinGUI::OWP_Label* m_monoLabel;
 	OrgWinGUI::OWP_CheckBoxA* m_monocheck;
+
+	OrgWinGUI::OWP_Separator* m_parallaxeffectsp;
+	OrgWinGUI::OWP_Label* m_parallaxeffectLabel;
+	OrgWinGUI::OWP_CheckBoxA* m_parallaxeffectcheck;
 
 	OrgWinGUI::OWP_Label* m_nameLabel;
 	OrgWinGUI::OWP_Label* m_space01Label;

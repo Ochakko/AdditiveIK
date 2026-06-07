@@ -305,7 +305,9 @@ int CChaFile::WriteFileInfo()
 	//version 1022 : 2026/06/06 1.0.0.72へ向けて  MonoDisp追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1022</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1023 : 2026/06/06 1.0.0.72へ向けて  MonoDisp追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1023</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1023</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1024 : 2026/06/08 1.0.0.73へ向けて  RefPosParallaxEffect追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1024</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -377,6 +379,12 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 	}
 	else {
 		CallF(Write2File("    <MonoDisp>0</MonoDisp>\r\n"), return 1);
+	}
+	if (curmodel->GetMonoFlag()) {
+		CallF(Write2File("    <RefPosParallaxEffect>1</RefPosParallaxEffect>\r\n"), return 1);
+	}
+	else {
+		CallF(Write2File("    <RefPosParallaxEffect>0</RefPosParallaxEffect>\r\n"), return 1);
 	}
 
 
@@ -1304,6 +1312,8 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	int refposLineDisp = 0;
 	int getmonoDisp = 0;
 	int monoDisp = 0;
+	int getparallaxeffect = 0;
+	int parallaxeffect = 0;
 
 	int refnum = 0;
 	int impnum = 0;
@@ -1337,6 +1347,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	getrefposrainbowTime = Read_Int(xmlbuf, "<RefPosRainbowTime>", "</RefPosRainbowTime>", &refposrainbowTime);
 	getrefposLineDisp = Read_Int(xmlbuf, "<RefPosLineDisp>", "</RefPosLineDisp>", &refposLineDisp);
 	getmonoDisp = Read_Int(xmlbuf, "<MonoDisp>", "</MonoDisp>", &monoDisp);
+	getparallaxeffect = Read_Int(xmlbuf, "<RefPosParallaxEffect>", "</RefPosParallaxEffect>", &parallaxeffect);
 
 
 	int grassflag = 0;
@@ -1538,12 +1549,21 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	if (getmonoDisp == 0) {
 		setmonoDisp = (monoDisp == 1) ? true : false;
 	}
+	bool setparallaxeffect = false;
+	if (getparallaxeffect == 0) {
+		setparallaxeffect = (parallaxeffect == 1) ? true : false;
+	}
+	else {
+		//記述が無い古いバージョンの場合　trueに.
+		setparallaxeffect = true;
+	}
 	newmodel->SetRefPosDiffuseRate(refposdiffuse);
 	newmodel->SetRefPosRainbowMode(refposrainbowmode);
 	newmodel->SetRefPosRainbowInv(setrefposrainbowInv);
 	newmodel->SetRefPosRainbowTime(setrefposrainbowTime);
 	newmodel->SetRefPosLineDisp(setrefposLineDisp);
 	newmodel->SetMonoFlag(setmonoDisp);
+	newmodel->SetRefPosParallaxEffect(setparallaxeffect);
 
 
 	//newmodel->m_tmpmotspeed = m_motspeed;

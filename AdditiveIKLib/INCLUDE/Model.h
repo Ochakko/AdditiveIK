@@ -3452,7 +3452,12 @@ public: //accesser
 	bool GetRefPosLineDisp() {
 		return m_refpos_linedisp;
 	}
-
+	void SetRefPosParallaxEffect(bool srcval) {
+		m_refpos_parallax_effect = srcval;
+	}
+	bool GetRefPosParallaxEffect() {
+		return m_refpos_parallax_effect;
+	}
 
 	void SetMonoFlag(bool srcflag)
 	{
@@ -4074,6 +4079,7 @@ private:
 	bool m_refpos_rainbowInv;
 	bool m_refpos_rainbowTime;
 	bool m_refpos_linedisp;
+	bool m_refpos_parallax_effect;
 
 	bool m_skyflag;
 	bool m_groundflag;

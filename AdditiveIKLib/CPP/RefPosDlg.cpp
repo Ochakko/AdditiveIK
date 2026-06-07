@@ -172,6 +172,20 @@ int CRefPosDlg::DestroyObjs()
 		m_monosp = nullptr;
 	}
 
+	if (m_parallaxeffectLabel) {
+		delete m_parallaxeffectLabel;
+		m_parallaxeffectLabel = nullptr;
+	}
+	if (m_parallaxeffectcheck) {
+		delete m_parallaxeffectcheck;
+		m_parallaxeffectcheck = nullptr;
+	}
+	if (m_parallaxeffectsp) {
+		delete m_parallaxeffectsp;
+		m_parallaxeffectsp = nullptr;
+	}
+
+
 	if (m_intervalLabel) {
 		delete m_intervalLabel;
 		m_intervalLabel = nullptr;
@@ -281,6 +295,10 @@ void CRefPosDlg::InitParams()
 	m_monosp = nullptr;
 	m_monoLabel = nullptr;
 	m_monocheck = nullptr;
+
+	m_parallaxeffectsp = nullptr;
+	m_parallaxeffectLabel = nullptr;
+	m_parallaxeffectcheck = nullptr;
 
 	m_nameLabel = nullptr;
 	m_space01Label = nullptr;
@@ -612,6 +630,23 @@ int CRefPosDlg::CreateRefPosWnd()
 			abort();
 		}
 
+		m_parallaxeffectLabel = new OWP_Label(L"視差エフェクト", labelheight);
+		if (!m_parallaxeffectLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_parallaxeffectsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_parallaxeffectsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_parallaxeffectcheck = new OWP_CheckBoxA(L"ParallaxEffect", m_model->GetRefPosParallaxEffect(), labelheight, false);
+		if (!m_parallaxeffectcheck) {
+			_ASSERT(0);
+			abort();
+		}
+
+
 		m_intervalLabel = new OWP_Label(L"TimesPerImage", labelheight);
 		if (!m_intervalLabel) {
 			_ASSERT(0);
@@ -674,6 +709,11 @@ int CRefPosDlg::CreateRefPosWnd()
 		m_dlgWnd->addParts(*m_monosp);
 		m_monosp->addParts1(*m_monoLabel);
 		m_monosp->addParts2(*m_monocheck);
+
+		m_dlgWnd->addParts(*m_parallaxeffectsp);
+		m_parallaxeffectsp->addParts1(*m_parallaxeffectLabel);
+		m_parallaxeffectsp->addParts2(*m_parallaxeffectcheck);
+
 
 		m_dlgWnd->addParts(*m_space04Label);
 		m_dlgWnd->addParts(*m_space05Label);
@@ -771,6 +811,12 @@ int CRefPosDlg::CreateRefPosWnd()
 				m_model->SetMonoFlag(value);
 			}
 			});
+		m_parallaxeffectcheck->setButtonListener([=, this]() {
+			bool value = m_parallaxeffectcheck->getValue();
+			if (m_model != nullptr) {
+				m_model->SetRefPosParallaxEffect(value);
+			}
+			});
 
 
 		m_dlgWnd->setSize(WindowSize(m_sizex, m_sizey));
@@ -856,6 +902,10 @@ int CRefPosDlg::Params2Dlg()
 				//スキンモデルの場合は　Monoチェックボックスを非アクティブにする
 				m_monocheck->setActive(false);
 			}
+		}
+		bool parallaxeffectflag = m_model->GetRefPosParallaxEffect();
+		if (m_parallaxeffectcheck != nullptr) {
+			m_parallaxeffectcheck->setValue(parallaxeffectflag, false);
 		}
 
 		m_dlgWnd->callRewrite();

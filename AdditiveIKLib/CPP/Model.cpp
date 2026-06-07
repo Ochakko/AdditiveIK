@@ -536,6 +536,7 @@ int CModel::InitParams(int srcrefposnum)
 	m_refpos_diffuserate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	m_refpos_rainbowmode = false;
 	m_refpos_linedisp = false;
+	m_refpos_parallax_effect = true;
 	m_monoflag = false;
 
 	int index1;

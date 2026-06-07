@@ -32149,7 +32149,14 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 				CModelFrameView mfv = g_chacamera.GetRefPosView(curmodel, refposindex);//過去データ
 				int dataindex = mfv.GetDataIndex();
 				ChaMatrix refposView = mfv.GetMatView();//!!!!!!!
-				ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
+				ChaMatrix effectView;
+				if (curmodel->GetRefPosParallaxEffect()) {
+					effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
+				}
+				else {
+					effectView = s_matView;
+				}
+
 
 				g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 					savemotframe, refposindex);
@@ -32194,8 +32201,13 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 				curmodel->SetMotionFrame(renderframe);
 
 				ChaMatrix refposView = mfv.GetMatView();//!!!!!!!
-				ChaMatrix effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
-				//ChaMatrix effectView = refposView;
+				ChaMatrix effectView;
+				if (curmodel->GetRefPosParallaxEffect()) {
+					effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
+				}
+				else {
+					effectView = s_matView;
+				}
 
 				//g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 				//	renderframe, refposindex);
@@ -32254,10 +32266,13 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					int dataindex = mfv.GetDataIndex();
 					ChaMatrix refposView = mfv.GetMatView();//!!!!!!!
 					ChaMatrix effectView;
+					if (curmodel->GetRefPosParallaxEffect()) {
+						effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
+					}
+					else {
+						effectView = s_matView;
+					}
 
-					//refframeのポーズを表示
-					//effectView = refposView;
-					effectView = s_matView * ChaMatrixInv(refposView) * s_matView;
 					if (hasmotion) {
 						//骨入りモデルは　refposindex == 0の時の ChkInView(UpdateMatrixOneModel())の結果を使用する
 						curmodel->SetShaderConstRefPos(dataindex);
@@ -36454,7 +36469,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.72 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.73 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -40018,7 +40033,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.72 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.73 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {
