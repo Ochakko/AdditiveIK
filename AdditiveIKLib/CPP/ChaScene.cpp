@@ -411,7 +411,7 @@ int ChaScene::UpdateMatrixOneModel(CModel* srcmodel, bool limitdegflag,
 		srcmodel->UpdateMatrix(limitdegflag, wmat, vmat, pmat, needwaitflag, refposindex);// , m_updateslot);
 	}
 	else {
-		//モーションが無い場合にもChkInViewを呼ぶためにUpdateMatrix呼び出しは必要
+		//モーションが無い場合にもChkInView()を呼ぶためにUpdateMatrix呼び出しは必要
 		srcmodel->UpdateMatrix(limitdegflag, wmat, vmat, pmat, needwaitflag, refposindex);//, m_updateslot);
 	}
 

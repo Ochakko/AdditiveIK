@@ -2,6 +2,10 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2026/06/13
+　UpdateMatrix()を修正
+　　ChkInView呼び出し部の条件を修正
+
 2026/06/08
 　RefPosの設定画面にParallaxEffectチェックボックスを追加
 　　今までデフォルトでオンでしたがオフにできるように.

@@ -2670,22 +2670,26 @@ int CModel::UpdateMatrix(bool limitdegflag,
 	m_matView = *vmat;
 	m_matProj = *pmat;
 	m_matVP = m_matView * m_matProj;
-	
 
 
-	ChkInView(refposindex);//2023/08/25 //2024/03/24
-	if(!ExistCurrentMotion() || GetNoBoneFlag()){//2026/05/05
-		return 0;//!!!!!!!!!!!!
-	}
-	else {
-		if (GetInView(refposindex) == false) {
-			return 0;
-		}
+	if (!GetRefPosFlag() || (refposindex == 0)) {
+		//RefPos時以外の場合のChkInView()
+		//RefPos時もrefposindex==0のときはChkInView()が必要
+		//RefPos時のrefposindex!=0のInView情報はrefposindex==0のInView情報を使用する
+		ChkInView(refposindex);//2023/08/25 //2024/03/24
 	}
 
-	if (GetRefPosFlag() && (refposindex != 0)) {
+	if (!ExistCurrentMotion() || GetNoBoneFlag()) {//2026/05/05
+		//モーションが無いモデルに対しては　ChkInView()をしただけでリターンする
 		return 0;
 	}
+	
+	if (GetInView(refposindex) == false) {
+		//モデル全体が視野外の場合は　ここでリターンする
+		return 0;
+	}
+
+
 
 	//morphアニメがあるかもしれないので、ボーンが無くてもリターンしない
 	//if (GetBoneForMotionSize() <= 0) {

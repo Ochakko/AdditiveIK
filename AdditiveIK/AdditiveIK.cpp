@@ -32279,7 +32279,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 						curmodel->SetRefPosFl4x4ToDispObj(refposindex, dataindex);
 					}
 					else {
-						//背景だけ　ChkInViewで視野外クリッピングするために　毎回UpdateMatrixOneModel()を呼ぶ
+						//背景だけ　ModelViewProjをセットするために　毎回UpdateMatrixOneModel()を呼ぶ
 						g_chascene->UpdateMatrixOneModel(curmodel, g_limitdegflag, &modelwm, &effectView, &s_matProj,
 							savemotframe, refposindex);
 					}
