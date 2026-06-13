@@ -2,6 +2,16 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
+2026/06/14
+　ShadowのColorスライダーの最大値を10から50へ.
+　
+　ShaderのEmissiveスライダーの最大値を50へ.
+　
+　ショートムービー
+　　Sky and Emissive
+　　https://youtu.be/OELB_PhbZJw
+　　
+　　
 2026/06/13
 　UpdateMatrix()を修正
 　　ChkInView呼び出し部の条件を修正

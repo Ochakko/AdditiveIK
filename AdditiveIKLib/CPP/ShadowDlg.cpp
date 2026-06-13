@@ -692,7 +692,8 @@ int CShadowDlg::CreateShadowWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_shadowothercolorSlider = new OWP_Slider(g_shadowmap_color[g_shadowmap_slotno], 2.0, 0.0, labelheight);
+		//m_shadowothercolorSlider = new OWP_Slider(g_shadowmap_color[g_shadowmap_slotno], 2.0, 0.0, labelheight);
+		m_shadowothercolorSlider = new OWP_Slider(g_shadowmap_color[g_shadowmap_slotno], 50.0, 0.0, labelheight);//2026/06/14 max30.0
 		if (!m_shadowothercolorSlider) {
 			_ASSERT(0);
 			abort();

@@ -1110,7 +1110,7 @@ int CShaderParamsDlg::CreateShaderParamsWnd()
 			return 1;
 		}
 		//m_st_emissionslider = new OWP_Slider(0.0, 1.0, 0.0);
-		m_st_emissionslider = new OWP_Slider(0.0, 10.0, 0.0, labelheight);//2024/06/23 max 10.0
+		m_st_emissionslider = new OWP_Slider(0.0, 50.0, 0.0, labelheight);//2024/06/23 max 10.0, 2026/06/14 max 50.0
 		if (!m_st_emissionslider) {
 			_ASSERT(0);
 			return 1;
