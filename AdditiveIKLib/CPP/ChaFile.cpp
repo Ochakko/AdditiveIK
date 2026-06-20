@@ -309,7 +309,9 @@ int CChaFile::WriteFileInfo()
 	//version 1024 : 2026/06/08 1.0.0.73へ向けて  RefPosParallaxEffect追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1024</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1025 : 2026/06/20 1.0.0.74へ向けて  RefPosSolidDisp, RefPosPointDisp追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1025</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1025</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1026 : 2026/06/21 1.0.0.74へ向けて  RefPosCurrentDiffuseRate*追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1026</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -352,6 +354,10 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 	CallF(Write2File("    <RefPosDiffuseRateG>%f</RefPosDiffuseRateG>\r\n", curmodel->GetRefPosDiffuseRate().y), return 1);
 	CallF(Write2File("    <RefPosDiffuseRateB>%f</RefPosDiffuseRateB>\r\n", curmodel->GetRefPosDiffuseRate().z), return 1);
 	CallF(Write2File("    <RefPosDiffuseRateA>%f</RefPosDiffuseRateA>\r\n", curmodel->GetRefPosDiffuseRate().w), return 1);
+	CallF(Write2File("    <RefPosCurrentDiffuseRateR>%f</RefPosCurrentDiffuseRateR>\r\n", curmodel->GetRefPosCurrentDiffuseRate().x), return 1);
+	CallF(Write2File("    <RefPosCurrentDiffuseRateG>%f</RefPosCurrentDiffuseRateG>\r\n", curmodel->GetRefPosCurrentDiffuseRate().y), return 1);
+	CallF(Write2File("    <RefPosCurrentDiffuseRateB>%f</RefPosCurrentDiffuseRateB>\r\n", curmodel->GetRefPosCurrentDiffuseRate().z), return 1);
+	CallF(Write2File("    <RefPosCurrentDiffuseRateA>%f</RefPosCurrentDiffuseRateA>\r\n", curmodel->GetRefPosCurrentDiffuseRate().w), return 1);
 	if (curmodel->GetRefPosRainbowMode()) {
 		CallF(Write2File("    <RefPosRainbow>1</RefPosRainbow>\r\n"), return 1);
 	}
@@ -1316,6 +1322,14 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	float refposdiffuseB = 1.0f;
 	int getrefposdiffuseA = 0;
 	float refposdiffuseA = 1.0f;
+	int getrefposCurrentDiffuseR = 0;
+	float refposCurrentDiffuseR = 1.0f;
+	int getrefposCurrentDiffuseG = 0;
+	float refposCurrentDiffuseG = 1.0f;
+	int getrefposCurrentDiffuseB = 0;
+	float refposCurrentDiffuseB = 1.0f;
+	int getrefposCurrentDiffuseA = 0;
+	float refposCurrentDiffuseA = 1.0f;
 	int getrefposrainbow = 0;
 	int refposrainbow = 0;
 	int getrefposrainbowInv = 0;
@@ -1360,6 +1374,10 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	getrefposdiffuseG = Read_Float(xmlbuf, "<RefPosDiffuseRateG>", "</RefPosDiffuseRateG>", &refposdiffuseG);
 	getrefposdiffuseB = Read_Float(xmlbuf, "<RefPosDiffuseRateB>", "</RefPosDiffuseRateB>", &refposdiffuseB);
 	getrefposdiffuseA = Read_Float(xmlbuf, "<RefPosDiffuseRateA>", "</RefPosDiffuseRateA>", &refposdiffuseA);
+	getrefposCurrentDiffuseR = Read_Float(xmlbuf, "<RefPosCurrentDiffuseRateR>", "</RefPosCurrentDiffuseRateR>", &refposCurrentDiffuseR);
+	getrefposCurrentDiffuseG = Read_Float(xmlbuf, "<RefPosCurrentDiffuseRateG>", "</RefPosCurrentDiffuseRateG>", &refposCurrentDiffuseG);
+	getrefposCurrentDiffuseB = Read_Float(xmlbuf, "<RefPosCurrentDiffuseRateB>", "</RefPosCurrentDiffuseRateB>", &refposCurrentDiffuseB);
+	getrefposCurrentDiffuseA = Read_Float(xmlbuf, "<RefPosCurrentDiffuseRateA>", "</RefPosCurrentDiffuseRateA>", &refposCurrentDiffuseA);
 	getrefposrainbow = Read_Int(xmlbuf, "<RefPosRainbow>", "</RefPosRainbow>", &refposrainbow);
 	getrefposrainbowInv = Read_Int(xmlbuf, "<RefPosRainbowInv>", "</RefPosRainbowInv>", &refposrainbowInv);
 	getrefposrainbowTime = Read_Int(xmlbuf, "<RefPosRainbowTime>", "</RefPosRainbowTime>", &refposrainbowTime);
@@ -1549,6 +1567,21 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	if ((getrefposdiffuseA == 0) && (refposdiffuseA >= 0.0f) && (refposdiffuseA <= 1.0f)) {
 		refposdiffuse.w = refposdiffuseA;
 	}
+
+	ChaVector4 refposCurrentDiffuse = ChaVector4(1.0f, 1.0f, 1.0f, 0.5f);
+	if ((getrefposCurrentDiffuseR == 0) && (refposCurrentDiffuseR >= 0.0f) && (refposCurrentDiffuseR <= 8.0f)) {
+		refposCurrentDiffuse.x = refposCurrentDiffuseR;
+	}
+	if ((getrefposCurrentDiffuseG == 0) && (refposCurrentDiffuseG >= 0.0f) && (refposCurrentDiffuseG <= 8.0f)) {
+		refposCurrentDiffuse.y = refposCurrentDiffuseG;
+	}
+	if ((getrefposCurrentDiffuseB == 0) && (refposCurrentDiffuseB >= 0.0f) && (refposCurrentDiffuseB <= 8.0f)) {
+		refposCurrentDiffuse.z = refposCurrentDiffuseB;
+	}
+	if ((getrefposCurrentDiffuseA == 0) && (refposCurrentDiffuseA >= 0.0f) && (refposCurrentDiffuseA <= 1.0f)) {
+		refposCurrentDiffuse.w = refposCurrentDiffuseA;
+	}
+
 	bool refposrainbowmode = false;
 	if (getrefposrainbow == 0) {
 		refposrainbowmode = (refposrainbow == 1) ? true : false;
@@ -1586,6 +1619,7 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 		setparallaxeffect = true;
 	}
 	newmodel->SetRefPosDiffuseRate(refposdiffuse);
+	newmodel->SetRefPosCurrentDiffuseRate(refposCurrentDiffuse);
 	newmodel->SetRefPosRainbowMode(refposrainbowmode);
 	newmodel->SetRefPosRainbowInv(setrefposrainbowInv);
 	newmodel->SetRefPosRainbowTime(setrefposrainbowTime);

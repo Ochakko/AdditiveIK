@@ -55,6 +55,11 @@ int CRefPosDlg::DestroyObjs()
 	}
 
 
+
+	if (m_diffuseLabel) {
+		delete m_diffuseLabel;
+		m_diffuseLabel = nullptr;
+	}
 	if (m_diffuseRLabel) {
 		delete m_diffuseRLabel;
 		m_diffuseRLabel = nullptr;
@@ -67,7 +72,6 @@ int CRefPosDlg::DestroyObjs()
 		delete m_diffuseRsp;
 		m_diffuseRsp = nullptr;
 	}
-
 	if (m_diffuseGLabel) {
 		delete m_diffuseGLabel;
 		m_diffuseGLabel = nullptr;
@@ -80,7 +84,6 @@ int CRefPosDlg::DestroyObjs()
 		delete m_diffuseGsp;
 		m_diffuseGsp = nullptr;
 	}
-
 	if (m_diffuseBLabel) {
 		delete m_diffuseBLabel;
 		m_diffuseBLabel = nullptr;
@@ -93,7 +96,6 @@ int CRefPosDlg::DestroyObjs()
 		delete m_diffuseBsp;
 		m_diffuseBsp = nullptr;
 	}
-
 	if (m_diffuseALabel) {
 		delete m_diffuseALabel;
 		m_diffuseALabel = nullptr;
@@ -106,6 +108,62 @@ int CRefPosDlg::DestroyObjs()
 		delete m_diffuseAsp;
 		m_diffuseAsp = nullptr;
 	}
+
+
+
+	if (m_current_diffuseLabel) {
+		delete m_current_diffuseLabel;
+		m_current_diffuseLabel = nullptr;
+	}
+	if (m_current_diffuseRLabel) {
+		delete m_current_diffuseRLabel;
+		m_current_diffuseRLabel = nullptr;
+	}
+	if (m_current_diffuseRSlider) {
+		delete m_current_diffuseRSlider;
+		m_current_diffuseRSlider = nullptr;
+	}
+	if (m_current_diffuseRsp) {
+		delete m_current_diffuseRsp;
+		m_current_diffuseRsp = nullptr;
+	}
+	if (m_current_diffuseGLabel) {
+		delete m_current_diffuseGLabel;
+		m_current_diffuseGLabel = nullptr;
+	}
+	if (m_current_diffuseGSlider) {
+		delete m_current_diffuseGSlider;
+		m_current_diffuseGSlider = nullptr;
+	}
+	if (m_current_diffuseGsp) {
+		delete m_current_diffuseGsp;
+		m_current_diffuseGsp = nullptr;
+	}
+	if (m_current_diffuseBLabel) {
+		delete m_current_diffuseBLabel;
+		m_current_diffuseBLabel = nullptr;
+	}
+	if (m_current_diffuseBSlider) {
+		delete m_current_diffuseBSlider;
+		m_current_diffuseBSlider = nullptr;
+	}
+	if (m_current_diffuseBsp) {
+		delete m_current_diffuseBsp;
+		m_current_diffuseBsp = nullptr;
+	}
+	if (m_current_diffuseALabel) {
+		delete m_current_diffuseALabel;
+		m_current_diffuseALabel = nullptr;
+	}
+	if (m_current_diffuseASlider) {
+		delete m_current_diffuseASlider;
+		m_current_diffuseASlider = nullptr;
+	}
+	if (m_current_diffuseAsp) {
+		delete m_current_diffuseAsp;
+		m_current_diffuseAsp = nullptr;
+	}
+
 
 	if (m_rainbowLabel) {
 		delete m_rainbowLabel;
@@ -253,6 +311,10 @@ int CRefPosDlg::DestroyObjs()
 		delete m_space06Label;
 		m_space06Label = nullptr;
 	}
+	if (m_space07Label) {
+		delete m_space07Label;
+		m_space07Label = nullptr;
+	}
 
 	if (m_dlgWnd) {
 		delete m_dlgWnd;
@@ -289,21 +351,35 @@ void CRefPosDlg::InitParams()
 	m_refposnumLabel = nullptr;
 	m_refposnumSlider = nullptr;
 
+	m_diffuseLabel = nullptr;
 	m_diffuseRsp = nullptr;
 	m_diffuseRLabel = nullptr;
 	m_diffuseRSlider = nullptr;
-
 	m_diffuseGsp = nullptr;
 	m_diffuseGLabel = nullptr;
 	m_diffuseGSlider = nullptr;
-
 	m_diffuseBsp = nullptr;
 	m_diffuseBLabel = nullptr;
 	m_diffuseBSlider = nullptr;
-
 	m_diffuseAsp = nullptr;
 	m_diffuseALabel = nullptr;
 	m_diffuseASlider = nullptr;
+
+	m_current_diffuseLabel = nullptr;
+	m_current_diffuseRsp = nullptr;
+	m_current_diffuseRLabel = nullptr;
+	m_current_diffuseRSlider = nullptr;
+	m_current_diffuseGsp = nullptr;
+	m_current_diffuseGLabel = nullptr;
+	m_current_diffuseGSlider = nullptr;
+	m_current_diffuseBsp = nullptr;
+	m_current_diffuseBLabel = nullptr;
+	m_current_diffuseBSlider = nullptr;
+	m_current_diffuseAsp = nullptr;
+	m_current_diffuseALabel = nullptr;
+	m_current_diffuseASlider = nullptr;
+
+
 
 	m_rainbowsp = nullptr;
 	m_rainbowLabel = nullptr;
@@ -339,6 +415,7 @@ void CRefPosDlg::InitParams()
 	m_space04Label = nullptr;
 	m_space05Label = nullptr;
 	m_space06Label = nullptr;
+	m_space07Label = nullptr;
 
 	m_intervalsp = nullptr;
 	m_intervalLabel = nullptr;
@@ -505,6 +582,11 @@ int CRefPosDlg::CreateRefPosWnd()
 			_ASSERT(0);
 			abort();
 		}
+		m_space07Label = new OWP_Label(L"  ", labelheightL);
+		if (!m_space07Label) {
+			_ASSERT(0);
+			abort();
+		}
 
 
 		m_refposnumLabel = new OWP_Label(L"RefPos Num", labelheight);
@@ -523,6 +605,12 @@ int CRefPosDlg::CreateRefPosWnd()
 			abort();
 		}
 
+
+		m_diffuseLabel = new OWP_Label(L"DiffuseRate of RefPos", labelheightL);
+		if (!m_diffuseLabel) {
+			_ASSERT(0);
+			abort();
+		}
 		m_diffuseRLabel = new OWP_Label(L"Red rate", labelheight);
 		if (!m_diffuseRLabel) {
 			_ASSERT(0);
@@ -538,7 +626,6 @@ int CRefPosDlg::CreateRefPosWnd()
 			_ASSERT(0);
 			abort();
 		}
-
 		m_diffuseGLabel = new OWP_Label(L"Green rate", labelheight);
 		if (!m_diffuseGLabel) {
 			_ASSERT(0);
@@ -554,7 +641,6 @@ int CRefPosDlg::CreateRefPosWnd()
 			_ASSERT(0);
 			abort();
 		}
-
 		m_diffuseBLabel = new OWP_Label(L"Blue rate", labelheight);
 		if (!m_diffuseBLabel) {
 			_ASSERT(0);
@@ -570,7 +656,6 @@ int CRefPosDlg::CreateRefPosWnd()
 			_ASSERT(0);
 			abort();
 		}
-
 		m_diffuseALabel = new OWP_Label(L"Alpha rate", labelheight);
 		if (!m_diffuseALabel) {
 			_ASSERT(0);
@@ -586,6 +671,75 @@ int CRefPosDlg::CreateRefPosWnd()
 			_ASSERT(0);
 			abort();
 		}
+
+
+		m_current_diffuseLabel = new OWP_Label(L"DiffuseRate of CurrentFrame", labelheightL);
+		if (!m_current_diffuseLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_current_diffuseRLabel = new OWP_Label(L"Red rate", labelheight);
+		if (!m_current_diffuseRLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_current_diffuseRsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_current_diffuseRsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_current_diffuseRSlider = new OWP_Slider((double)m_model->GetRefPosCurrentDiffuseRate().x, diffuseratemax, 0.0);
+		if (!m_current_diffuseRSlider) {
+			_ASSERT(0);
+			abort();
+		}
+		m_current_diffuseGLabel = new OWP_Label(L"Green rate", labelheight);
+		if (!m_current_diffuseGLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_current_diffuseGsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_current_diffuseGsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_current_diffuseGSlider = new OWP_Slider((double)m_model->GetRefPosCurrentDiffuseRate().y, diffuseratemax, 0.0);
+		if (!m_current_diffuseGSlider) {
+			_ASSERT(0);
+			abort();
+		}
+		m_current_diffuseBLabel = new OWP_Label(L"Blue rate", labelheight);
+		if (!m_current_diffuseBLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_current_diffuseBsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_current_diffuseBsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_current_diffuseBSlider = new OWP_Slider((double)m_model->GetRefPosCurrentDiffuseRate().z, diffuseratemax, 0.0);
+		if (!m_current_diffuseBSlider) {
+			_ASSERT(0);
+			abort();
+		}
+		m_current_diffuseALabel = new OWP_Label(L"Alpha rate", labelheight);
+		if (!m_current_diffuseALabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_current_diffuseAsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_current_diffuseAsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_current_diffuseASlider = new OWP_Slider((double)m_model->GetRefPosCurrentDiffuseRate().w, 1.0, 0.0);
+		if (!m_current_diffuseASlider) {
+			_ASSERT(0);
+			abort();
+		}
+
+
 
 		m_rainbowLabel = new OWP_Label(L"RainbowMode", labelheight);
 		if (!m_rainbowLabel) {
@@ -725,23 +879,38 @@ int CRefPosDlg::CreateRefPosWnd()
 		m_refposnumsp->addParts2(*m_refposnumSlider);
 		m_dlgWnd->addParts(*m_space02Label);
 
+		m_dlgWnd->addParts(*m_diffuseLabel);
 		m_dlgWnd->addParts(*m_diffuseRsp);
 		m_diffuseRsp->addParts1(*m_diffuseRLabel);
 		m_diffuseRsp->addParts2(*m_diffuseRSlider);
-
 		m_dlgWnd->addParts(*m_diffuseGsp);
 		m_diffuseGsp->addParts1(*m_diffuseGLabel);
 		m_diffuseGsp->addParts2(*m_diffuseGSlider);
-
 		m_dlgWnd->addParts(*m_diffuseBsp);
 		m_diffuseBsp->addParts1(*m_diffuseBLabel);
 		m_diffuseBsp->addParts2(*m_diffuseBSlider);
-
 		m_dlgWnd->addParts(*m_diffuseAsp);
 		m_diffuseAsp->addParts1(*m_diffuseALabel);
 		m_diffuseAsp->addParts2(*m_diffuseASlider);
 
 		m_dlgWnd->addParts(*m_space06Label);
+
+		m_dlgWnd->addParts(*m_current_diffuseLabel);
+		m_dlgWnd->addParts(*m_current_diffuseRsp);
+		m_current_diffuseRsp->addParts1(*m_current_diffuseRLabel);
+		m_current_diffuseRsp->addParts2(*m_current_diffuseRSlider);
+		m_dlgWnd->addParts(*m_current_diffuseGsp);
+		m_current_diffuseGsp->addParts1(*m_current_diffuseGLabel);
+		m_current_diffuseGsp->addParts2(*m_current_diffuseGSlider);
+		m_dlgWnd->addParts(*m_current_diffuseBsp);
+		m_current_diffuseBsp->addParts1(*m_current_diffuseBLabel);
+		m_current_diffuseBsp->addParts2(*m_current_diffuseBSlider);
+		m_dlgWnd->addParts(*m_current_diffuseAsp);
+		m_current_diffuseAsp->addParts1(*m_current_diffuseALabel);
+		m_current_diffuseAsp->addParts2(*m_current_diffuseASlider);
+
+		m_dlgWnd->addParts(*m_space07Label);
+
 
 		m_dlgWnd->addParts(*m_solidcheck);
 		m_dlgWnd->addParts(*m_linecheck);
@@ -835,6 +1004,45 @@ int CRefPosDlg::CreateRefPosWnd()
 				m_model->SetRefPosDiffuseRate(newrate);
 			}
 			});
+
+		m_current_diffuseRSlider->setCursorListener([=, this]() {
+			double value = m_current_diffuseRSlider->getValue();
+			if (m_model != nullptr) {
+				ChaVector4 currentrate = m_model->GetRefPosCurrentDiffuseRate();
+				ChaVector4 newrate = currentrate;
+				newrate.x = (float)value;
+				m_model->SetRefPosCurrentDiffuseRate(newrate);
+			}
+			});
+		m_current_diffuseGSlider->setCursorListener([=, this]() {
+			double value = m_current_diffuseGSlider->getValue();
+			if (m_model != nullptr) {
+				ChaVector4 currentrate = m_model->GetRefPosCurrentDiffuseRate();
+				ChaVector4 newrate = currentrate;
+				newrate.y = (float)value;
+				m_model->SetRefPosCurrentDiffuseRate(newrate);
+			}
+			});
+		m_current_diffuseBSlider->setCursorListener([=, this]() {
+			double value = m_current_diffuseBSlider->getValue();
+			if (m_model != nullptr) {
+				ChaVector4 currentrate = m_model->GetRefPosCurrentDiffuseRate();
+				ChaVector4 newrate = currentrate;
+				newrate.z = (float)value;
+				m_model->SetRefPosCurrentDiffuseRate(newrate);
+			}
+			});
+		m_current_diffuseASlider->setCursorListener([=, this]() {
+			double value = m_current_diffuseASlider->getValue();
+			if (m_model != nullptr) {
+				ChaVector4 currentrate = m_model->GetRefPosCurrentDiffuseRate();
+				ChaVector4 newrate = currentrate;
+				newrate.w = (float)value;
+				m_model->SetRefPosCurrentDiffuseRate(newrate);
+			}
+			});
+
+
 		m_pointsizeSlider->setCursorListener([=, this]() {
 			double value = m_pointsizeSlider->getValue();
 			int setvalue = (int)(value + 0.0001);
@@ -953,6 +1161,22 @@ int CRefPosDlg::Params2Dlg()
 		if (m_diffuseASlider != nullptr) {
 			m_diffuseASlider->setValue((double)diffuserate.w, false);
 		}
+
+
+		ChaVector4 current_diffuserate = m_model->GetRefPosCurrentDiffuseRate();
+		if (m_current_diffuseRSlider != nullptr) {
+			m_current_diffuseRSlider->setValue((double)current_diffuserate.x, false);
+		}
+		if (m_current_diffuseGSlider != nullptr) {
+			m_current_diffuseGSlider->setValue((double)current_diffuserate.y, false);
+		}
+		if (m_current_diffuseBSlider != nullptr) {
+			m_current_diffuseBSlider->setValue((double)current_diffuserate.z, false);
+		}
+		if (m_current_diffuseASlider != nullptr) {
+			m_current_diffuseASlider->setValue((double)current_diffuserate.w, false);
+		}
+
 
 		bool rainbowmode = m_model->GetRefPosRainbowMode();
 		if (m_rainbowcheck != nullptr) {

@@ -3428,6 +3428,12 @@ public: //accesser
 	ChaVector4 GetRefPosDiffuseRate() {
 		return m_refpos_diffuserate;
 	}
+	void SetRefPosCurrentDiffuseRate(ChaVector4 srcval) {
+		m_refpos_current_diffuserate = srcval;
+	}
+	ChaVector4 GetRefPosCurrentDiffuseRate() {
+		return m_refpos_current_diffuserate;
+	}
 	void SetRefPosRainbowMode(bool srcval) {
 		m_refpos_rainbowmode = srcval;
 	}
@@ -4093,6 +4099,7 @@ private:
 	int m_refpos_maxnum;//REFPOSMAXNUM
 	int m_refpos_num;//*.chaファイル内でモデルごとに指定
 	ChaVector4 m_refpos_diffuserate;
+	ChaVector4 m_refpos_current_diffuserate;
 	bool m_refpos_rainbowmode;
 	bool m_refpos_rainbowInv;
 	bool m_refpos_rainbowTime;

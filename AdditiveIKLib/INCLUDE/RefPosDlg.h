@@ -100,6 +100,8 @@ private:
 	OrgWinGUI::OWP_Label* m_refposnumLabel;
 	OrgWinGUI::OWP_Slider* m_refposnumSlider;
 
+	
+	OrgWinGUI::OWP_Label* m_diffuseLabel;
 	OrgWinGUI::OWP_Separator* m_diffuseRsp;
 	OrgWinGUI::OWP_Label* m_diffuseRLabel;
 	OrgWinGUI::OWP_Slider* m_diffuseRSlider;
@@ -115,6 +117,27 @@ private:
 	OrgWinGUI::OWP_Separator* m_diffuseAsp;
 	OrgWinGUI::OWP_Label* m_diffuseALabel;
 	OrgWinGUI::OWP_Slider* m_diffuseASlider;
+
+
+	OrgWinGUI::OWP_Label* m_current_diffuseLabel;
+	OrgWinGUI::OWP_Separator* m_current_diffuseRsp;
+	OrgWinGUI::OWP_Label* m_current_diffuseRLabel;
+	OrgWinGUI::OWP_Slider* m_current_diffuseRSlider;
+
+	OrgWinGUI::OWP_Separator* m_current_diffuseGsp;
+	OrgWinGUI::OWP_Label* m_current_diffuseGLabel;
+	OrgWinGUI::OWP_Slider* m_current_diffuseGSlider;
+
+	OrgWinGUI::OWP_Separator* m_current_diffuseBsp;
+	OrgWinGUI::OWP_Label* m_current_diffuseBLabel;
+	OrgWinGUI::OWP_Slider* m_current_diffuseBSlider;
+
+	OrgWinGUI::OWP_Separator* m_current_diffuseAsp;
+	OrgWinGUI::OWP_Label* m_current_diffuseALabel;
+	OrgWinGUI::OWP_Slider* m_current_diffuseASlider;
+
+
+
 
 	OrgWinGUI::OWP_Separator* m_rainbowsp;
 	OrgWinGUI::OWP_Label* m_rainbowLabel;
@@ -151,6 +174,7 @@ private:
 	OrgWinGUI::OWP_Label* m_space04Label;
 	OrgWinGUI::OWP_Label* m_space05Label;
 	OrgWinGUI::OWP_Label* m_space06Label;
+	OrgWinGUI::OWP_Label* m_space07Label;
 
 	OrgWinGUI::OWP_Separator* m_intervalsp;
 	OrgWinGUI::OWP_Label* m_intervalLabel;

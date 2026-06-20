@@ -32165,13 +32165,16 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					curmodel->SetRefPosFl4x4ToDispObj(refposindex, dataindex);
 				}
 
-				ChaVector4 refdiffusemult;
-				refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.5f);
+				ChaVector4 refdiffusemult = curmodel->GetRefPosCurrentDiffuseRate();//2026/06/26
+				//refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.5f);
 				{
 					int lightflag = -1;
 					bool forcewithalpha = true;
 					bool zcmpalways = true;
 					bool zenable = true;
+					if (hasmotion && (refdiffusemult.w >= 0.99999f)) {
+						zcmpalways = false;
+					}
 					g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
 						lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, s_matView);
 				}
@@ -32240,6 +32243,10 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 				bool forcewithalpha = true;
 				bool zcmpalways = true;
 				bool zenable = true;
+				if (hasmotion) {
+					zcmpalways = false;
+					zenable = false;
+				}
 				g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
 					lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, effectView);
 
@@ -32327,6 +32334,10 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					bool forcewithalpha = true;
 					bool zcmpalways = true;
 					bool zenable = true;
+					if (hasmotion) {
+						zcmpalways = false;
+						zenable = false;
+					}
 					g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
 						lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, effectView);
 				}
