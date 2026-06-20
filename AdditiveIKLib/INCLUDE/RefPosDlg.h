@@ -128,10 +128,6 @@ private:
 	OrgWinGUI::OWP_Label* m_rainbowtimeLabel;
 	OrgWinGUI::OWP_CheckBoxA* m_rainbowtimecheck;
 
-	OrgWinGUI::OWP_Separator* m_linesp;
-	OrgWinGUI::OWP_Label* m_lineLabel;
-	OrgWinGUI::OWP_CheckBoxA* m_linecheck;
-
 	OrgWinGUI::OWP_Separator* m_monosp;
 	OrgWinGUI::OWP_Label* m_monoLabel;
 	OrgWinGUI::OWP_CheckBoxA* m_monocheck;
@@ -140,12 +136,21 @@ private:
 	OrgWinGUI::OWP_Label* m_parallaxeffectLabel;
 	OrgWinGUI::OWP_CheckBoxA* m_parallaxeffectcheck;
 
+	OrgWinGUI::OWP_GroupBox* m_groupbox1;
+	OrgWinGUI::OWP_CheckBoxA* m_solidcheck;
+	OrgWinGUI::OWP_CheckBoxA* m_linecheck;
+	OrgWinGUI::OWP_CheckBoxA* m_pointcheck;
+	OrgWinGUI::OWP_Separator* m_pointsizesp;
+	OrgWinGUI::OWP_Label* m_pointsizeLabel;
+	OrgWinGUI::OWP_Slider* m_pointsizeSlider;
+
 	OrgWinGUI::OWP_Label* m_nameLabel;
 	OrgWinGUI::OWP_Label* m_space01Label;
 	OrgWinGUI::OWP_Label* m_space02Label;
 	OrgWinGUI::OWP_Label* m_space03Label;
 	OrgWinGUI::OWP_Label* m_space04Label;
 	OrgWinGUI::OWP_Label* m_space05Label;
+	OrgWinGUI::OWP_Label* m_space06Label;
 
 	OrgWinGUI::OWP_Separator* m_intervalsp;
 	OrgWinGUI::OWP_Label* m_intervalLabel;

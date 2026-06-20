@@ -307,7 +307,9 @@ int CChaFile::WriteFileInfo()
 	//version 1023 : 2026/06/06 1.0.0.72へ向けて  MonoDisp追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1023</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1024 : 2026/06/08 1.0.0.73へ向けて  RefPosParallaxEffect追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1024</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1024</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1025 : 2026/06/20 1.0.0.74へ向けて  RefPosSolidDisp, RefPosPointDisp追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1025</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -368,11 +370,23 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 	else {
 		CallF(Write2File("    <RefPosRainbowTime>0</RefPosRainbowTime>\r\n"), return 1);
 	}
+	if (curmodel->GetRefPosSolidDisp()) {
+		CallF(Write2File("    <RefPosSolidDisp>1</RefPosSolidDisp>\r\n"), return 1);
+	}
+	else {
+		CallF(Write2File("    <RefPosSolidDisp>0</RefPosSolidDisp>\r\n"), return 1);
+	}
 	if (curmodel->GetRefPosLineDisp()) {
 		CallF(Write2File("    <RefPosLineDisp>1</RefPosLineDisp>\r\n"), return 1);
 	}
 	else {
 		CallF(Write2File("    <RefPosLineDisp>0</RefPosLineDisp>\r\n"), return 1);
+	}
+	if (curmodel->GetRefPosPointDisp()) {
+		CallF(Write2File("    <RefPosPointDisp>1</RefPosPointDisp>\r\n"), return 1);
+	}
+	else {
+		CallF(Write2File("    <RefPosPointDisp>0</RefPosPointDisp>\r\n"), return 1);
 	}
 	if (curmodel->GetMonoFlag()) {
 		CallF(Write2File("    <MonoDisp>1</MonoDisp>\r\n"), return 1);
@@ -1308,8 +1322,12 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	int refposrainbowInv = 0;
 	int getrefposrainbowTime = 0;
 	int refposrainbowTime = 0;
+	int getrefposSolidDisp = 0;
+	int refposSolidDisp = 0;
 	int getrefposLineDisp = 0;
 	int refposLineDisp = 0;
+	int getrefposPointDisp = 0;
+	int refposPointDisp = 0;
 	int getmonoDisp = 0;
 	int monoDisp = 0;
 	int getparallaxeffect = 0;
@@ -1345,7 +1363,9 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	getrefposrainbow = Read_Int(xmlbuf, "<RefPosRainbow>", "</RefPosRainbow>", &refposrainbow);
 	getrefposrainbowInv = Read_Int(xmlbuf, "<RefPosRainbowInv>", "</RefPosRainbowInv>", &refposrainbowInv);
 	getrefposrainbowTime = Read_Int(xmlbuf, "<RefPosRainbowTime>", "</RefPosRainbowTime>", &refposrainbowTime);
+	getrefposSolidDisp = Read_Int(xmlbuf, "<RefPosSolidDisp>", "</RefPosSolidDisp>", &refposSolidDisp);
 	getrefposLineDisp = Read_Int(xmlbuf, "<RefPosLineDisp>", "</RefPosLineDisp>", &refposLineDisp);
+	getrefposPointDisp = Read_Int(xmlbuf, "<RefPosPointDisp>", "</RefPosPointDisp>", &refposPointDisp);
 	getmonoDisp = Read_Int(xmlbuf, "<MonoDisp>", "</MonoDisp>", &monoDisp);
 	getparallaxeffect = Read_Int(xmlbuf, "<RefPosParallaxEffect>", "</RefPosParallaxEffect>", &parallaxeffect);
 
@@ -1541,9 +1561,17 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	if (getrefposrainbowTime == 0) {
 		setrefposrainbowTime = (refposrainbowTime == 1) ? true : false;
 	}
+	bool setrefposSolidDisp = true;//!!!!
+	if (getrefposSolidDisp == 0) {
+		setrefposSolidDisp = (refposSolidDisp == 1) ? true : false;
+	}
 	bool setrefposLineDisp = false;
 	if (getrefposLineDisp == 0) {
 		setrefposLineDisp = (refposLineDisp == 1) ? true : false;
+	}
+	bool setrefposPointDisp = false;
+	if (getrefposPointDisp == 0) {
+		setrefposPointDisp = (refposPointDisp == 1) ? true : false;
 	}
 	bool setmonoDisp = false;
 	if (getmonoDisp == 0) {
@@ -1561,7 +1589,9 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	newmodel->SetRefPosRainbowMode(refposrainbowmode);
 	newmodel->SetRefPosRainbowInv(setrefposrainbowInv);
 	newmodel->SetRefPosRainbowTime(setrefposrainbowTime);
+	newmodel->SetRefPosSolidDisp(setrefposSolidDisp);
 	newmodel->SetRefPosLineDisp(setrefposLineDisp);
+	newmodel->SetRefPosPointDisp(setrefposPointDisp);
 	newmodel->SetMonoFlag(setmonoDisp);
 	newmodel->SetRefPosParallaxEffect(setparallaxeffect);
 

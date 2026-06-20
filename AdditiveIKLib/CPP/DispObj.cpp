@@ -1320,17 +1320,17 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 	////定数バッファの設定、更新など描画の共通処理を実行する。
 	//DrawCommon(rc, renderobj, mView, mProj);
 	
-	if (renderobj.refposindex == 0) {
-		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	}
-	else {
-		if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp()) {
-			rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-		}
-		else {
-			rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		}
-	}
+	//if (renderobj.refposindex == 0) {
+	//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//}
+	//else {
+	//	if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp()) {
+	//		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	//	}
+	//	else {
+	//		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//	}
+	//}
 
 
 	//##################################################################################
@@ -1346,49 +1346,94 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 	//3. インデックスバッファを設定。
 	rc->SetIndexBuffer(m_indexBufferView);
 
+	int topoindex;
+	for (topoindex = 0; topoindex < 3; topoindex++) {
+		switch (topoindex) {
+		case 0:
+			if (renderobj.pmodel && 
+				(renderobj.pmodel->GetRefPosSolidDisp() || (renderobj.refposindex == 0))) {
+				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			}
+			else {
+				continue;
+			}
+			break;
+		case 1:
+			if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp()) {
+				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+			}
+			else {
+				continue;
+			}
+			break;
+		case 2:
+			if (renderobj.pmodel && renderobj.pmodel->GetRefPosPointDisp()) {
+				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+			}
+			else {
+				return 0;
+			}
+			break;
+		default:
+			return 0;
+			break;
+		}
 
-	if (renderobj.renderkind == -1) {
-		renderobj.renderkind = RENDERKIND_NORMAL;//2023/12/11
-	}
-	
 
-	bool isfirstmaterial = true;
-	int materialcnt;
-	for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
-		CMQOMaterial* curmat = NULL;
-		int curoffset = 0;
-		int curtrinum = 0;
-		int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
-		if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0) &&
-			((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (curmat->GetShadowCasterFlag()))) {
-			bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
+		if (renderobj.renderkind == -1) {
+			renderobj.renderkind = RENDERKIND_NORMAL;//2023/12/11
+		}
 
-			if (laterflag == false) {
-				bool laterflag2 = false;
-				RenderNormalMaterial(rc, renderobj, laterflag2,
-					curmat, curoffset, curtrinum, isfirstmaterial);
-				isfirstmaterial = false;
+		bool isfirstmaterial = true;
+		int materialcnt;
+		for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
+			CMQOMaterial* curmat = NULL;
+			int curoffset = 0;
+			int curtrinum = 0;
+			int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
+			if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0) &&
+				((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (curmat->GetShadowCasterFlag()))) {
+				bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
+
+				if (laterflag == false) {
+					bool laterflag2 = false;
+					RenderNormalMaterial(rc, renderobj, laterflag2,
+						curmat, curoffset, curtrinum, isfirstmaterial);
+					isfirstmaterial = false;
+				}
+			}
+		}
+
+		int latermatnum = renderobj.mqoobj->GetLaterMaterialNum();
+		if ((renderobj.forcewithalpha || renderobj.withalpha) && (latermatnum > 0)) {
+			//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
+			int laterindex;
+			for (laterindex = 0; laterindex < latermatnum; laterindex++) {
+				LATERMATERIAL latermaterial = renderobj.mqoobj->GetLaterMaterial(laterindex);
+				if (latermaterial.pmaterial &&
+					((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (latermaterial.pmaterial->GetShadowCasterFlag()))) {
+					bool laterflag2 = true;
+					RenderNormalMaterial(rc, renderobj,
+						laterflag2,
+						latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum,
+						isfirstmaterial);
+					isfirstmaterial = false;
+				}
 			}
 		}
 	}
 
-	int latermatnum = renderobj.mqoobj->GetLaterMaterialNum();
-	if ((renderobj.forcewithalpha || renderobj.withalpha) && (latermatnum > 0)) {
-		//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
-		int laterindex;
-		for (laterindex = 0; laterindex < latermatnum; laterindex++) {
-			LATERMATERIAL latermaterial = renderobj.mqoobj->GetLaterMaterial(laterindex);
-			if (latermaterial.pmaterial &&
-				((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (latermaterial.pmaterial->GetShadowCasterFlag()))) {
-				bool laterflag2 = true;
-				RenderNormalMaterial(rc, renderobj, 
-					laterflag2,
-					latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum,
-					isfirstmaterial);
-				isfirstmaterial = false;
-			}
-		}
-	}
+	//if (renderobj.refposindex == 0) {
+	//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//}
+	//else {
+	//	if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp()) {
+	//		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	//	}
+	//	else {
+	//		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//	}
+	//}
 	
 	return 0;
 }
@@ -1681,25 +1726,24 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	//	return 0;
 	//}
 
-	//Matrix mView, mProj;
-	//mView = g_camera3D->GetViewMatrix(false);
-	//mProj = g_camera3D->GetProjectionMatrix();
-	////定数バッファの設定、更新など描画の共通処理を実行する。
-	//DrawCommon(rc, renderobj, mView, mProj);
-	//rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()より後で呼ばないとエラー
+	////Matrix mView, mProj;
+	////mView = g_camera3D->GetViewMatrix(false);
+	////mProj = g_camera3D->GetProjectionMatrix();
+	//////定数バッファの設定、更新など描画の共通処理を実行する。
+	////DrawCommon(rc, renderobj, mView, mProj);
+	////rc.SetDescriptorHeap(m_descriptorHeap);//BeginRender()より後で呼ばないとエラー
 
-	if (renderobj.refposindex == 0) {
-		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	}
-	else {
-		if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp()) {
-			rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-		}
-		else {
-			rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		}
-	}
-
+	//if (renderobj.refposindex == 0) {
+	//	rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//}
+	//else {
+	//	if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp()) {
+	//		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	//	}
+	//	else {
+	//		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//	}
+	//}
 
 
 	//##################################################################################
@@ -1715,53 +1759,89 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	//3. インデックスバッファを設定。
 	rc->SetIndexBuffer(m_indexBufferView);
 
-	if (renderobj.renderkind == -1) {
-		renderobj.renderkind = RENDERKIND_NORMAL;//2023/12/11
-	}
 
-	//マテリアルごとにドロー。
-
-	//HRESULT hr;
-	int blno;
-	for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
-		MATERIALBLOCK* currb = m_pm3->GetMatBlock() + blno;
-
-		CMQOMaterial* curmat;
-		curmat = currb->mqomat;
-		if (!curmat) {
-			//_ASSERT(0);
-			return 1;
+	int topoindex;
+	for (topoindex = 0; topoindex < 3; topoindex++) {
+		switch (topoindex) {
+		case 0:
+			if (renderobj.pmodel &&
+				(renderobj.pmodel->GetRefPosSolidDisp() || (renderobj.refposindex == 0))) {
+				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			}
+			else {
+				continue;
+			}
+			break;
+		case 1:
+			if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp()) {
+				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+			}
+			else {
+				continue;
+			}
+			break;
+		case 2:
+			if (renderobj.pmodel && renderobj.pmodel->GetRefPosPointDisp()) {
+				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+			}
+			else {
+				return 0;
+			}
+			break;
+		default:
+			return 0;
+			break;
 		}
 
-		if ((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (curmat->GetShadowCasterFlag())) {
-			int curnumprim;
-			curnumprim = currb->endface - currb->startface + 1;
 
-			bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
-			if (laterflag == false) {
-				bool laterflag2 = false;
-				int result = RenderNormalPM3Material(
-					rc, renderobj,
-					laterflag2, curmat, currb->startface * 3, curnumprim);
+		if (renderobj.renderkind == -1) {
+			renderobj.renderkind = RENDERKIND_NORMAL;//2023/12/11
+		}
+
+		//マテリアルごとにドロー。
+
+		//HRESULT hr;
+		int blno;
+		for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
+			MATERIALBLOCK* currb = m_pm3->GetMatBlock() + blno;
+
+			CMQOMaterial* curmat;
+			curmat = currb->mqomat;
+			if (!curmat) {
+				//_ASSERT(0);
+				return 1;
+			}
+
+			if ((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (curmat->GetShadowCasterFlag())) {
+				int curnumprim;
+				curnumprim = currb->endface - currb->startface + 1;
+
+				bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
+				if (laterflag == false) {
+					bool laterflag2 = false;
+					int result = RenderNormalPM3Material(
+						rc, renderobj,
+						laterflag2, curmat, currb->startface * 3, curnumprim);
+				}
 			}
 		}
-	}
 
 
 
-	int latermatnum = renderobj.mqoobj->GetLaterMaterialNum();
-	if ((renderobj.forcewithalpha || renderobj.withalpha) && (latermatnum > 0)) {
-		//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
-		int laterindex;
-		for (laterindex = 0; laterindex < latermatnum; laterindex++) {
-			LATERMATERIAL latermaterial = renderobj.mqoobj->GetLaterMaterial(laterindex);
-			if (latermaterial.pmaterial && 
-				((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (latermaterial.pmaterial->GetShadowCasterFlag()))) {
-				bool laterflag2 = true;
-				RenderNormalPM3Material(
-					rc, renderobj,
-					laterflag2,
-					latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum);
+		int latermatnum = renderobj.mqoobj->GetLaterMaterialNum();
+		if ((renderobj.forcewithalpha || renderobj.withalpha) && (latermatnum > 0)) {
+			//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
+			int laterindex;
+			for (laterindex = 0; laterindex < latermatnum; laterindex++) {
+				LATERMATERIAL latermaterial = renderobj.mqoobj->GetLaterMaterial(laterindex);
+				if (latermaterial.pmaterial &&
+					((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (latermaterial.pmaterial->GetShadowCasterFlag()))) {
+					bool laterflag2 = true;
+					RenderNormalPM3Material(
+						rc, renderobj,
+						laterflag2,
+						latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum);
+				}
 			}
 		}
 	}

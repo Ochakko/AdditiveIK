@@ -146,17 +146,9 @@ int CRefPosDlg::DestroyObjs()
 		m_rainbowtimesp = nullptr;
 	}
 
-	if (m_lineLabel) {
-		delete m_lineLabel;
-		m_lineLabel = nullptr;
-	}
 	if (m_linecheck) {
 		delete m_linecheck;
 		m_linecheck = nullptr;
-	}
-	if (m_linesp) {
-		delete m_linesp;
-		m_linesp = nullptr;
 	}
 
 	if (m_monoLabel) {
@@ -199,6 +191,39 @@ int CRefPosDlg::DestroyObjs()
 		m_intervalsp = nullptr;
 	}
 
+	if (m_solidcheck) {
+		delete m_solidcheck;
+		m_solidcheck = nullptr;
+	}
+	if (m_linecheck) {
+		delete m_linecheck;
+		m_linecheck = nullptr;
+	}
+	if (m_pointcheck) {
+		delete m_pointcheck;
+		m_pointcheck = nullptr;
+	}
+	if (m_pointsizesp) {
+		delete m_pointsizesp;
+		m_pointsizesp = nullptr;
+	}
+	if (m_pointsizeLabel) {
+		delete m_pointsizeLabel;
+		m_pointsizeLabel = nullptr;
+	}
+	if (m_pointsizeSlider) {
+		delete m_pointsizeSlider;
+		m_pointsizeSlider = nullptr;
+	}
+
+	if (m_linecheck) {
+		delete m_linecheck;
+		m_linecheck = nullptr;
+	}
+
+
+
+
 
 	if (m_nameLabel) {
 		delete m_nameLabel;
@@ -223,6 +248,10 @@ int CRefPosDlg::DestroyObjs()
 	if (m_space05Label) {
 		delete m_space05Label;
 		m_space05Label = nullptr;
+	}
+	if (m_space06Label) {
+		delete m_space06Label;
+		m_space06Label = nullptr;
 	}
 
 	if (m_dlgWnd) {
@@ -288,10 +317,6 @@ void CRefPosDlg::InitParams()
 	m_rainbowtimeLabel = nullptr;
 	m_rainbowtimecheck = nullptr;
 
-	m_linesp = nullptr;
-	m_lineLabel = nullptr;
-	m_linecheck = nullptr;
-
 	m_monosp = nullptr;
 	m_monoLabel = nullptr;
 	m_monocheck = nullptr;
@@ -300,12 +325,20 @@ void CRefPosDlg::InitParams()
 	m_parallaxeffectLabel = nullptr;
 	m_parallaxeffectcheck = nullptr;
 
+	m_solidcheck = nullptr;
+	m_linecheck = nullptr;
+	m_pointcheck = nullptr;
+	m_pointsizesp = nullptr;
+	m_pointsizeLabel = nullptr;
+	m_pointsizeSlider = nullptr;
+
 	m_nameLabel = nullptr;
 	m_space01Label = nullptr;
 	m_space02Label = nullptr;
 	m_space03Label = nullptr;
 	m_space04Label = nullptr;
 	m_space05Label = nullptr;
+	m_space06Label = nullptr;
 
 	m_intervalsp = nullptr;
 	m_intervalLabel = nullptr;
@@ -467,6 +500,11 @@ int CRefPosDlg::CreateRefPosWnd()
 			_ASSERT(0);
 			abort();
 		}
+		m_space06Label = new OWP_Label(L"  ", labelheightL);
+		if (!m_space06Label) {
+			_ASSERT(0);
+			abort();
+		}
 
 
 		m_refposnumLabel = new OWP_Label(L"RefPos Num", labelheight);
@@ -598,22 +636,6 @@ int CRefPosDlg::CreateRefPosWnd()
 			abort();
 		}
 
-		m_lineLabel = new OWP_Label(L"Disp Mode", labelheight);
-		if (!m_lineLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		m_linesp = new OWP_Separator(m_dlgWnd, true, rate1, true);
-		if (!m_linesp) {
-			_ASSERT(0);
-			abort();
-		}
-		m_linecheck = new OWP_CheckBoxA(L"Line", m_model->GetRefPosLineDisp(), labelheight, false);
-		if (!m_linecheck) {
-			_ASSERT(0);
-			abort();
-		}
-
 		m_monoLabel = new OWP_Label(L"NonSkinOnly", labelheight);
 		if (!m_monoLabel) {
 			_ASSERT(0);
@@ -664,6 +686,37 @@ int CRefPosDlg::CreateRefPosWnd()
 		}
 
 
+		m_solidcheck = new OWP_CheckBoxA(L"Solid", m_model->GetRefPosSolidDisp(), labelheight, false);
+		if (!m_solidcheck) {
+			_ASSERT(0);
+			abort();
+		}
+		m_linecheck = new OWP_CheckBoxA(L"Line", m_model->GetRefPosLineDisp(), labelheight, false);
+		if (!m_linecheck) {
+			_ASSERT(0);
+			abort();
+		}
+		m_pointcheck = new OWP_CheckBoxA(L"Point", m_model->GetRefPosPointDisp(), labelheight, false);
+		if (!m_pointcheck) {
+			_ASSERT(0);
+			abort();
+		}
+		m_pointsizeLabel = new OWP_Label(L"PointSize", labelheight);
+		if (!m_pointsizeLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_pointsizesp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_pointsizesp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_pointsizeSlider = new OWP_Slider((double)m_model->GetRefPosPointSize(), 1, 50);
+		if (!m_pointsizeSlider) {
+			_ASSERT(0);
+			abort();
+		}
+
 		m_dlgWnd->addParts(*m_nameLabel);
 		m_dlgWnd->addParts(*m_space01Label);
 
@@ -688,6 +741,15 @@ int CRefPosDlg::CreateRefPosWnd()
 		m_diffuseAsp->addParts1(*m_diffuseALabel);
 		m_diffuseAsp->addParts2(*m_diffuseASlider);
 
+		m_dlgWnd->addParts(*m_space06Label);
+
+		m_dlgWnd->addParts(*m_solidcheck);
+		m_dlgWnd->addParts(*m_linecheck);
+		m_dlgWnd->addParts(*m_pointcheck);
+		m_dlgWnd->addParts(*m_pointsizesp);
+		m_pointsizesp->addParts1(*m_pointsizeLabel);
+		m_pointsizesp->addParts2(*m_pointsizeSlider);
+
 		m_dlgWnd->addParts(*m_space03Label);
 
 		m_dlgWnd->addParts(*m_rainbowsp);
@@ -701,10 +763,6 @@ int CRefPosDlg::CreateRefPosWnd()
 		m_dlgWnd->addParts(*m_rainbowtimesp);
 		m_rainbowsp->addParts1(*m_rainbowtimeLabel);
 		m_rainbowsp->addParts2(*m_rainbowtimecheck);
-
-		m_dlgWnd->addParts(*m_linesp);
-		m_linesp->addParts1(*m_lineLabel);
-		m_linesp->addParts2(*m_linecheck);
 
 		m_dlgWnd->addParts(*m_monosp);
 		m_monosp->addParts1(*m_monoLabel);
@@ -777,6 +835,14 @@ int CRefPosDlg::CreateRefPosWnd()
 				m_model->SetRefPosDiffuseRate(newrate);
 			}
 			});
+		m_pointsizeSlider->setCursorListener([=, this]() {
+			double value = m_pointsizeSlider->getValue();
+			int setvalue = (int)(value + 0.0001);
+			if (m_model != nullptr) {
+				m_model->SetRefPosPointSize(setvalue);
+				m_pointsizeSlider->setValue((double)setvalue, false);//intに丸めてセットし直し
+			}
+			});
 
 		//########
 		//Check
@@ -799,12 +865,6 @@ int CRefPosDlg::CreateRefPosWnd()
 				m_model->SetRefPosRainbowTime(value);
 			}
 			});
-		m_linecheck->setButtonListener([=, this]() {
-			bool value = m_linecheck->getValue();
-			if (m_model != nullptr) {
-				m_model->SetRefPosLineDisp(value);
-			}
-			});
 		m_monocheck->setButtonListener([=, this]() {
 			bool value = m_monocheck->getValue();
 			if (m_model != nullptr) {
@@ -815,6 +875,26 @@ int CRefPosDlg::CreateRefPosWnd()
 			bool value = m_parallaxeffectcheck->getValue();
 			if (m_model != nullptr) {
 				m_model->SetRefPosParallaxEffect(value);
+			}
+			});
+
+
+		m_solidcheck->setButtonListener([=, this]() {
+			bool value = m_solidcheck->getValue();
+			if (m_model != nullptr) {
+				m_model->SetRefPosSolidDisp(value);
+			}
+			});
+		m_linecheck->setButtonListener([=, this]() {
+			bool value = m_linecheck->getValue();
+			if (m_model != nullptr) {
+				m_model->SetRefPosLineDisp(value);
+			}
+			});
+		m_pointcheck->setButtonListener([=, this]() {
+			bool value = m_pointcheck->getValue();
+			if (m_model != nullptr) {
+				m_model->SetRefPosPointDisp(value);
 			}
 			});
 
@@ -886,10 +966,6 @@ int CRefPosDlg::Params2Dlg()
 		if (m_rainbowtimecheck != nullptr) {
 			m_rainbowtimecheck->setValue(rainbowtime, false);
 		}
-		bool linedisp = m_model->GetRefPosLineDisp();
-		if (m_linecheck != nullptr) {
-			m_linecheck->setValue(linedisp, false);
-		}
 		bool monoflag = m_model->GetMonoFlag();
 		if (m_monocheck != nullptr) {
 			m_monocheck->setValue(monoflag, false);
@@ -907,6 +983,21 @@ int CRefPosDlg::Params2Dlg()
 		if (m_parallaxeffectcheck != nullptr) {
 			m_parallaxeffectcheck->setValue(parallaxeffectflag, false);
 		}
+
+
+		bool soliddisp = m_model->GetRefPosSolidDisp();
+		if (m_solidcheck != nullptr) {
+			m_solidcheck->setValue(soliddisp, false);
+		}
+		bool linedisp = m_model->GetRefPosLineDisp();
+		if (m_linecheck != nullptr) {
+			m_linecheck->setValue(linedisp, false);
+		}
+		bool pointdisp = m_model->GetRefPosPointDisp();
+		if (m_pointcheck != nullptr) {
+			m_pointcheck->setValue(pointdisp, false);
+		}
+
 
 		m_dlgWnd->callRewrite();
 	}

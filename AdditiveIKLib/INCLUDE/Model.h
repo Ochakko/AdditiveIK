@@ -3446,11 +3446,29 @@ public: //accesser
 	bool GetRefPosRainbowTime() {
 		return m_refpos_rainbowTime;
 	}
+	void SetRefPosSolidDisp(bool srcval) {
+		m_refpos_soliddisp = srcval;
+	}
+	bool GetRefPosSolidDisp() {
+		return m_refpos_soliddisp;
+	}
 	void SetRefPosLineDisp(bool srcval) {
 		m_refpos_linedisp = srcval;
 	}
 	bool GetRefPosLineDisp() {
 		return m_refpos_linedisp;
+	}
+	void SetRefPosPointDisp(bool srcval) {
+		m_refpos_pointdisp = srcval;
+	}
+	bool GetRefPosPointDisp() {
+		return m_refpos_pointdisp;
+	}
+	void SetRefPosPointSize(int srcval) {
+		m_refpos_pointsize = srcval;
+	}
+	int GetRefPosPointSize() {
+		return m_refpos_pointsize;
 	}
 	void SetRefPosParallaxEffect(bool srcval) {
 		m_refpos_parallax_effect = srcval;
@@ -4078,7 +4096,10 @@ private:
 	bool m_refpos_rainbowmode;
 	bool m_refpos_rainbowInv;
 	bool m_refpos_rainbowTime;
+	bool m_refpos_soliddisp;
 	bool m_refpos_linedisp;
+	bool m_refpos_pointdisp;
+	int m_refpos_pointsize;
 	bool m_refpos_parallax_effect;
 
 	bool m_skyflag;
