@@ -2,16 +2,25 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2026/06/20
-　RefPos設定にSolid, Line, Pointのチェックボックスを追加
-　　残像に対して適用
-　　組み合わせ可能
-　　ただし現時点においては、ポイントサイズの設定は機能していない
+2026/06/21
+　AdditiveIK 1.0.0.74 RC1(リリース候補1)
+　　1.0.0.73からの変更点
+　　　RefPos設定にSolid, Line, Pointのチェックボックスを追加
+　　　　残像に対して適用
+　　　　それぞれ面表示、線表示、点表示
+　　　　組み合わせ可能
+　　　　ただし現時点においては、ポイントサイズの設定は機能していない
 　　
-　RefPosのDiffuseRate設定項目修正
-　　RefPos用のDiffuseRateとカレントフレーム用のDiffuseRateの項目を分けました
-　　服が透けるのが嫌な人は、カレントフレーム用のDiffuseRateのAlphaを1.0に.
+　　　RefPosのDiffuseRate設定項目修正
+　　　　RefPos用のDiffuseRateとカレントフレーム用のDiffuseRateの項目を分けました
+　　　　服が透けないように配慮するには、
+　　　　　カレントフレーム用のDiffuseRateのAlphaを1.0にするか、RGBスライダーのどれかをMax値にして単色化します.
 　　
+　　　ショートムービー
+　　　　残像カレントアルファ
+　　　　https://youtube.com/shorts/d8pJtKrL3Dg?feature=share
+　　　
+　　　
 2026/06/14
 　AdditiveIK 1.0.0.73 release
 　　1.0.0.72からの変更点

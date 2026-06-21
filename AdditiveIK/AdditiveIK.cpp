@@ -15606,7 +15606,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.73\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.74\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -32087,6 +32087,9 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 	}
 
 
+	ChaVector4 current_diffusemult = curmodel->GetRefPosCurrentDiffuseRate();//2026/06/26
+	ChaVector4 refpos_diffusemult = curmodel->GetRefPosDiffuseRate();
+
 	static int s_callcount = -1;
 	s_callcount++;
 	int blockcount = 60;
@@ -32165,18 +32168,17 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					curmodel->SetRefPosFl4x4ToDispObj(refposindex, dataindex);
 				}
 
-				ChaVector4 refdiffusemult = curmodel->GetRefPosCurrentDiffuseRate();//2026/06/26
 				//refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, 0.5f);
 				{
 					int lightflag = -1;
 					bool forcewithalpha = true;
 					bool zcmpalways = true;
 					bool zenable = true;
-					if (hasmotion && (refdiffusemult.w >= 0.99999f)) {
+					if (hasmotion && (current_diffusemult.w >= 0.99999f)) {
 						zcmpalways = false;
 					}
 					g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
-						lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, s_matView);
+						lightflag, current_diffusemult, btflag, zcmpalways, zenable, refposindex, s_matView);
 				}
 
 				
@@ -32237,13 +32239,13 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 				else {
 					refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)refstartalpha);
 				}
-				refdiffusemult *= curmodel->GetRefPosDiffuseRate();
+				refdiffusemult *= refpos_diffusemult;
 
 				int lightflag = -1;
 				bool forcewithalpha = true;
 				bool zcmpalways = true;
 				bool zenable = true;
-				if (hasmotion) {
+				if (hasmotion && (current_diffusemult.w >= 0.99999f)) {
 					zcmpalways = false;
 					zenable = false;
 				}
@@ -32327,14 +32329,14 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					else {
 						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)renderalpha);
 					}
-					refdiffusemult *= curmodel->GetRefPosDiffuseRate();
+					refdiffusemult *= refpos_diffusemult;
 
 					//int lightflag = 0;
 					int lightflag = -1;
 					bool forcewithalpha = true;
 					bool zcmpalways = true;
 					bool zenable = true;
-					if (hasmotion) {
+					if (hasmotion && (current_diffusemult.w >= 0.99999f)) {
 						zcmpalways = false;
 						zenable = false;
 					}
@@ -32366,7 +32368,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 				CBone* childbone = curbone->GetChild(false);
 				if (childbone && childbone->IsSkeleton() && curbone->GetRefPosMark()) {
 					ChaVector4 arrowdiffusemult;
-					arrowdiffusemult.SetParams(1.0f, 0.5f, 0.5f, 0.5f);
+					arrowdiffusemult.SetParams(1.0f, 0.5f, 0.5f, 0.75f);
 
 					curbone->GetRefPosMark()->RenderRefArrow(g_limitdegflag,
 						re, g_chascene, s_matVP, curbone, arrowdiffusemult, 
