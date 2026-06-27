@@ -10,6 +10,7 @@
 namespace {
 	const char* g_vsShaderModelName = "vs_5_0";	//頂点シェーダーのシェーダーモデル名。
 	const char* g_psShaderModelName = "ps_5_0";	//ピクセルシェーダーのシェーダモデル名。
+	const char* g_gsShaderModelName = "gs_5_0";	//ジオメトリシェーダーのシェーダーモデル名。
 	const char* g_csShaderModelName = "cs_5_0";	//コンピュートシェーダーのシェーダーモデル名。
 }
 
@@ -83,6 +84,11 @@ int Shader::LoadVS(const char* filePath, const char* entryFuncName)
 {
 	SetCurrentDirectoryW(g_basedir);
 	return Load(filePath, entryFuncName, g_vsShaderModelName);
+}
+int Shader::LoadGS(const char* filePath, const char* entryFuncName)
+{
+	SetCurrentDirectoryW(g_basedir);
+	return Load(filePath, entryFuncName, g_gsShaderModelName);
 }
 int Shader::LoadCS(const char* filePath, const char* entryFuncName)
 {

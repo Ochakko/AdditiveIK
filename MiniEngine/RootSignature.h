@@ -31,6 +31,7 @@ public:
 	/// <param name="maxSrvDescriptor">シェーダーリソース用のディスクリプタの最大数</param>
 	/// <param name="maxUavDescritor">UAV用のディスクリプタの最大数</param>
 	bool Init(
+		bool useGS,
 		D3D12_FILTER samplerFilter,
 		D3D12_TEXTURE_ADDRESS_MODE textureAdressModeU,
 		D3D12_TEXTURE_ADDRESS_MODE textureAdressModeV,
@@ -49,6 +50,7 @@ public:
 	/// <param name="maxUavDescritor">UAV用のディスクリプタの最大数</param>
 	/// <returns></returns>
 	bool Init(
+		bool useGS,
 		D3D12_STATIC_SAMPLER_DESC* samplerDescArray,
 		int numSampler,
 		UINT maxCbvDescriptor = 8,

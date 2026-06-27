@@ -19,6 +19,14 @@ public:
 	void DestroySprites();
 	int DrawScreen(RenderContext* rc, int srcfps);
 
+	Texture* GetTexture(int srcindex) {
+		if ((srcindex >= 0) && (srcindex <= 10)) {
+			return m_texture[srcindex];
+		}
+		else {
+			return nullptr;
+		}
+	};
 private:
 	void InitParams();
 	void DestroyObjs();

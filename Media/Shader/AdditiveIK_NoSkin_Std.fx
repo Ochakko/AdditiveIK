@@ -38,6 +38,35 @@ struct SPSIn
     float4 depth : TEXCOORD3;
 };
 
+struct SGSIn
+{
+    float2 uv           : TEXCOORD0;
+    float4 diffusemult  : TEXCOORD1;
+    float4 FogAndOther : TEXCOORD2; //x:Fog, y:Mono, w:texid
+    float4 depth : TEXCOORD3;
+    float4 normal       : NORMAL;
+    float4 pos          : POSITION;
+};
+struct SGSOut
+{
+    float2 uv           : TEXCOORD0;
+    float4 diffusemult  : TEXCOORD1;
+    float4 FogAndOther : TEXCOORD2; //x:Fog, y:Mono, w:texid
+    float4 depth : TEXCOORD3;
+    float4 normal       : NORMAL;
+    float4 posrw          : POSITION;
+    float4 pos          : SV_POSITION;
+};
+struct SPSInFromGS
+{
+    float2 uv           : TEXCOORD0;
+    float4 diffusemult  : TEXCOORD1;
+    float4 FogAndOther : TEXCOORD2; //x:Fog, y:Mono, z:texid
+    float4 depth : TEXCOORD3;
+    float4 normal       : NORMAL;
+    float4 posrw          : POSITION;
+};
+
 
 struct SPSInShadowMap
 {
@@ -88,6 +117,24 @@ struct SPSOut2
 //    float4 zpredepth : COLOR1;
 //};
 
+cbuffer cbImmutable
+{
+    static float3 g_positions[4] =
+    {
+        float3(-1, 1, 0),
+        float3(1, 1, 0),
+        float3(-1, -1, 0),
+        float3(1, -1, 0)
+    };
+    
+    static float2 g_texcoords[4] =
+    {
+        float2(0, 0),
+        float2(1, 0),
+        float2(0, 1),
+        float2(1, 1)
+    };
+};
 
 
 ///////////////////////////////////////////
@@ -98,7 +145,9 @@ cbuffer ModelCb : register(b0)
 {
     float4x4 mWorld;
     float4x4 mView;
+    float4x4 minvView;
     float4x4 mProj;
+    float4x4 mViewProj;
     float4 diffusemult;
     float4 ambient0;//ambient0.wはAlphaTestの閾値
     float4 emission;
@@ -108,7 +157,7 @@ cbuffer ModelCb : register(b0)
     int4 UVs; //x:UVSet, y:TilingU, z:TilingV, w:distortionFlag   
     int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag, w:VSM
     int4 Flags2; //x:grassflag, y:monoflag   
-    float4 time1; //2024/04/27
+    float4 time1; //2024/04/27 y:refpos_pointsize
     float4 bbsize; //2024/05/11 size of bourndary    
     int4 distortiontype; //[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)
     float4 distortionscale; //x:distortionscale, y:riverflowrate
@@ -156,6 +205,11 @@ Texture2D<float4> g_normalMap : register(t2); // 法線マップ
 Texture2D<float4> g_metallicSmoothMap : register(t3); // メタリックスムースマップ。rにメタリック、aにスムース
 Texture2D<float4> g_emissiveMap : register(t4); // 自己照明マップ
 Texture2D<float4> g_shadowMap : register(t5);
+Texture2D<float4> g_numMap1 : register(t6);
+Texture2D<float4> g_numMap2 : register(t7);
+Texture2D<float4> g_numMap3 : register(t8);
+Texture2D<float4> g_numMap4 : register(t9);
+
 // サンプラーステート
 sampler g_sampler : register(s0);
 sampler g_sampler_albedo : register(s1);
@@ -163,6 +217,10 @@ sampler g_sampler_normal : register(s2);
 sampler g_sampler_metal : register(s3);
 sampler g_sampler_clamp : register(s4);//2024/02/14
 sampler g_sampler_shadow : register(s5);
+sampler g_sampler_num1 : register(s6);
+sampler g_sampler_num2 : register(s7);
+sampler g_sampler_num3 : register(s8);
+sampler g_sampler_num4 : register(s9);
 
 float CalcVSFog(float4 worldpos)
 {
@@ -202,6 +260,36 @@ float4 CalcDiffuseColor(float multiplecoef, float3 meshnormal, float3 lightdir)
     return diffusecol;
 }
 
+//float4 CalcDiffuseColorNum(int number, float multiplecoef, float3 meshnormal, float3 lightdir)
+//{
+//    float3 normaly0 = (lightsnum.w == 1) ? normalize(float3(meshnormal.x, 0.0f, meshnormal.z)) : meshnormal;
+//    float3 lighty0 = (lightsnum.w == 1) ? normalize(float3(lightdir.x, 0.0f, lightdir.z)) : lightdir;
+//    float nl;
+//    nl = dot(normaly0, lighty0);
+//    float toonh = (nl + 1.0f) * 0.5f * multiplecoef;
+//    float2 diffuseuv = { 0.5f, toonh };
+//    float4 diffusecol;
+//    switch (number)
+//    {
+//        case 0:
+//            diffusecol = g_numMap1.Sample(g_sampler_num1, diffuseuv) * materialdisprate.x;
+//            break;
+//        case 1:
+//            diffusecol = g_numMap2.Sample(g_sampler_num2, diffuseuv) * materialdisprate.x;
+//            break;
+//        case 2:
+//            diffusecol = g_numMap3.Sample(g_sampler_num3, diffuseuv) * materialdisprate.x;
+//            break;
+//        case 3:
+//            diffusecol = g_numMap4.Sample(g_sampler_num4, diffuseuv) * materialdisprate.x;
+//            break;
+//        default:
+//            diffusecol = g_numMap1.Sample(g_sampler_num1, diffuseuv) * materialdisprate.x;
+//            break;
+//    }
+//    return diffusecol;
+//}
+
 float4 GetEmissiveMap(float2 uv1)
 {
     float4 emimap = g_emissiveMap.Sample(g_sampler_albedo, uv1); //UVについてはalbedo,normal,metalをセットで切り替えるように
@@ -225,8 +313,7 @@ SPSIn VSMainNoSkinStd(SVSInWithoutBone vsIn, uniform bool hasSkin)
     
     psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
     psIn.FogAndOther.y = (Flags2.y == 0) ? 0.0f : 1.0f;
-    psIn.pos = mul(mView, psIn.pos);    // ワールド座標系からカメラ座標系に変換
-    psIn.pos = mul(mProj, psIn.pos);    // カメラ座標系からスクリーン座標系に変換
+    psIn.pos = mul(mViewProj, psIn.pos);    // ワールド座標系-->カメラ座標系ーー>スクリーン座標に変換
 
     float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
     psIn.uv.x = orguv.x * (float)UVs.y;
@@ -238,6 +325,36 @@ SPSIn VSMainNoSkinStd(SVSInWithoutBone vsIn, uniform bool hasSkin)
     
     return psIn;
 }
+
+SGSIn VSMainNoSkinStdForGS(SVSInWithoutBone vsIn, uniform bool hasSkin)
+{
+    SGSIn psIn;
+
+    psIn.pos = mul(mWorld, vsIn.pos);   // モデルの頂点をワールド座標系に変換
+    
+    float3 distvec = (psIn.pos.xyz / psIn.pos.w) - eyePos.xyz;
+    float skyvalue = (Flags1.z == 1) ? 490000.0f : 0.0f;//skydof ? skydofON : skydofOFF
+    psIn.depth.xyz = (Flags1.x == 0) ? length(distvec) : skyvalue;// !skymesh ? dist : skyvalue
+    psIn.depth.w = 1.0f; //自動的にwで割られても良いように
+    
+    psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
+    psIn.FogAndOther.y = (Flags2.y == 0) ? 0.0f : 1.0f;
+    psIn.FogAndOther.z = time1.y;
+    psIn.FogAndOther.w = 0.0f;
+    //psIn.pos = mul(mView, psIn.pos);    // ワールド座標系からカメラ座標系に変換
+    //psIn.pos = mul(mProj, psIn.pos);    // カメラ座標系からスクリーン座標系に変換
+
+    float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
+    psIn.uv.x = orguv.x * (float)UVs.y;
+    psIn.uv.y = orguv.y * (float)UVs.z;
+
+    psIn.diffusemult = diffusemult;
+    
+    psIn.normal = normalize(mul(mWorld, vsIn.normal));
+    
+    return psIn;
+}
+
 
 SPSInShadowMap VSMainNoSkinStdShadowMap(SVSInWithoutBone vsIn, uniform bool hasSkin)
 {
@@ -251,8 +368,8 @@ SPSInShadowMap VSMainNoSkinStdShadowMap(SVSInWithoutBone vsIn, uniform bool hasS
     //psIn.zpredepth.w = 1.0f; //自動的にwで割られても良いように
     
     //float4 worldPos = psIn.pos;
-    psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
-    psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
+    psIn.pos = mul(mViewProj, worldPos); // ワールド座標系-->カメラ座標系ーー>スクリーン座標に変換
+    //psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
     //psIn.uv = vsIn.uv.xy;
 
     psIn.depth.x = min(1.0f, (length(worldPos.xyz - lightPos.xyz) * shadowmaxz.x));
@@ -281,8 +398,8 @@ SPSInShadowReciever VSMainNoSkinStdShadowReciever(SVSInWithoutBone vsIn, uniform
     
     psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(worldPos) : 0.0f;
     psIn.FogAndOther.y = (Flags2.y == 0) ? 0.0f : 1.0f;
-    psIn.pos = mul(mView, worldPos);
-    psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
+    psIn.pos = mul(mViewProj, worldPos); // ワールド座標系-->カメラ座標系ーー>スクリーン座標に変換
+
     
     float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
     psIn.uv.x = orguv.x * (float)UVs.y;
@@ -311,12 +428,46 @@ SPSInExtLine VSMainExtLine(SVSInExtLine vsIn, uniform bool hasSkin)
     SPSInExtLine psIn;
 
     psIn.pos = mul(mWorld, vsIn.pos); // モデルの頂点をワールド座標系に変換
-    psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
-    psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
+    psIn.pos = mul(mViewProj, psIn.pos);
 
     psIn.diffusemult = diffusemult;
     
     return psIn;
+}
+
+
+
+//
+// GS for rendering point sprite particles.  Takes a point and turns 
+// it into 2 triangles.
+//
+[maxvertexcount(4)]
+void GSParticleDraw(point SGSIn input[1], inout TriangleStream<SGSOut> SpriteStream)
+{
+    SGSOut output;
+    
+    // Emit two new triangles.
+    for (int i = 0; i < 4; i++)
+    {
+        float3 position = g_positions[i] * input[0].FogAndOther.z; // x refpos_pointsize
+        position = mul((float3x3)minvView, position) + input[0].pos.xyz;
+        
+        //output.worldPos = float4(position, 1.0);
+        output.pos = float4(position, 1.0);
+        //output.pos = mul(mWorld, output.pos);
+        output.pos = mul(mViewProj, output.pos);
+        output.posrw = output.pos;
+        
+        output.uv = g_texcoords[i];//input[0].uv;
+        output.diffusemult = input[0].diffusemult;
+        output.FogAndOther = input[0].FogAndOther;
+        output.FogAndOther.w = i;
+        output.depth = input[0].depth;
+        output.normal = input[0].normal;
+
+        SpriteStream.Append(output);
+    }
+    SpriteStream.RestartStrip();
 }
 
 
@@ -328,7 +479,6 @@ SPSOut2 PSMainNoSkinStd(SPSIn psIn) : SV_Target
 {
     // 普通にテクスチャを
     float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-
      
     float3 wPos = psIn.pos.xyz / psIn.pos.w;
     
@@ -368,6 +518,54 @@ SPSOut2 PSMainNoSkinStd(SPSIn psIn) : SV_Target
     psOut.color_1 = psIn.depth;    
     return psOut;
 }
+
+SPSOut2 PSMainNoSkinStdFromGS(SPSInFromGS psIn) : SV_Target
+{
+    // 普通にテクスチャを
+    //float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv);
+    float4 albedoColor; // = g_numMap2.Sample(g_sampler_num2, psIn.uv);
+    albedoColor = (psIn.FogAndOther.w >= 2.9f) ? g_numMap4.Sample(g_sampler_num4, psIn.uv) : ((psIn.FogAndOther.w >= 1.9f) ? g_numMap3.Sample(g_sampler_num3, psIn.uv) : ((psIn.FogAndOther.w >= 0.9f) ? g_numMap2.Sample(g_sampler_num2, psIn.uv) : g_numMap1.Sample(g_sampler_num1, psIn.uv)));
+
+     
+    float3 wPos = psIn.posrw.xyz / psIn.posrw.w;
+    
+    float3 totaldiffuse = float3(0, 0, 0);
+    float3 totalspecular = float3(0, 0, 0);
+    float totalalpha = 0.0f;    
+    float calcpower = POW * 0.05f;//!!!!!!!!!!!
+    float3 lig = 0;
+    for (int ligNo = 0; ligNo < lightsnum.x; ligNo++)
+    {
+        float nl;
+        float3 h;
+        float nh;
+        float4 tmplight;
+		
+        nl = dot(psIn.normal.xyz, directionalLight[ligNo].direction.xyz);
+        h = normalize((directionalLight[ligNo].direction.xyz + eyePos.xyz - wPos) * 0.5f);
+        nh = dot(psIn.normal.xyz, h);
+    
+        float multiplecoef = materialdisprate.x;
+        float4 diffusecol = CalcDiffuseColor(multiplecoef, psIn.normal.xyz, directionalLight[ligNo].direction.xyz);
+        totaldiffuse += directionalLight[ligNo].color.xyz * diffusecol.xyz;
+        totalspecular += ((nl) < 0) || ((nh) < 0) ? 0 : ((nh) * calcpower);
+        totalalpha += diffusecol.w;
+    }
+    float4 totaldiffuse4 = float4(totaldiffuse, 1.0f);
+    totaldiffuse4.w = (lightsnum.x != 0) ? (totalalpha * divlights.x) : 1.0f;
+    float4 totalspecular4 = float4(totalspecular, 0.0f) * materialdisprate.y * metalcoef.w; //ライト８個で白飛びしないように応急処置1/8=0.125
+    float4 emimap = GetEmissiveMap(psIn.uv);
+    float4 pscol = emimap * emission * materialdisprate.z + albedoColor * psIn.diffusemult * totaldiffuse4 + totalspecular4;
+    clip(pscol.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
+    //pscol.w = ((pscol.w - ambient0.w) > 0.0f) ? pscol.w : 0.0f;
+
+    
+    SPSOut2 psOut;
+    psOut.color_0 = CalcPSFog(pscol, psIn.FogAndOther.x, psIn.FogAndOther.y);
+    psOut.color_1 = psIn.depth;    
+    return psOut;
+}
+
 
 SPSOut0 PSMainNoSkinStdShadowMap(SPSInShadowMap psIn) : SV_Target0
 {

@@ -569,6 +569,7 @@ IShaderResource* g_shadowmapforshader = nullptr;
 CColDlg g_coldlg;
 int g_ikkind = IKKIND_ROTATE;
 ChaCamera g_chacamera;
+CFpsSprite g_fpssprite;
 
 
 //staic
@@ -1737,7 +1738,7 @@ static CSpGUISW3 s_spcamerainherit;
 static InstancedSprite s_bcircle;
 static Sprite s_kinsprite;
 static CUndoSprite s_undosprite;
-static CFpsSprite s_fpssprite;
+//static CFpsSprite g_fpssprite;
 static CSpElem s_spupperbar;
 
 static CSpElem s_spcopy_camera;
@@ -4473,7 +4474,7 @@ void InitApp()
 	//s_totalmb.r = (float)ChaVector3LengthDbl(&s_totalmb.max);
 
 	//s_undosprite = 0;
-	//s_fpssprite = 0;
+	//g_fpssprite = 0;
 
 
 	g_wallscrapingikflag = 0;
@@ -5623,9 +5624,9 @@ void OnDestroyDevice()
 	//	delete s_undosprite;
 	//	s_undosprite = 0;
 	//}
-	//if (s_fpssprite) {
-	//	delete s_fpssprite;
-	//	s_fpssprite = 0;
+	//if (g_fpssprite) {
+	//	delete g_fpssprite;
+	//	g_fpssprite = 0;
 	//}
 
 
@@ -32834,11 +32835,11 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 
 	if (GetCurrentModel()) {
 		int dispfps = (int)(g_avrgfps + 0.5);
-		//s_fpssprite.DrawScreen(pRenderContext, dispfps);
+		//g_fpssprite.DrawScreen(pRenderContext, dispfps);
 
 		myRenderer::RENDERSPRITE rendersprite;
 		rendersprite.Init();
-		rendersprite.pfpssprite = &s_fpssprite;
+		rendersprite.pfpssprite = &g_fpssprite;
 		rendersprite.userint1 = dispfps;
 		g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 	}
@@ -36482,7 +36483,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.74 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.75 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -40046,7 +40047,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.74 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.75 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {
@@ -45260,7 +45261,9 @@ bool IsClickedSpriteButton()
 
 void InitRootSignature(RootSignature& rs)
 {
-	rs.Init(D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+	bool useGS = false;
+	rs.Init(useGS,
+		D3D12_FILTER_MIN_MAG_MIP_LINEAR,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
 		D3D12_TEXTURE_ADDRESS_MODE_WRAP);
@@ -45449,7 +45452,7 @@ int CreateSprites()
 
 
 	s_undosprite.CreateSprites(mpath);
-	s_fpssprite.CreateSprites(mpath);
+	g_fpssprite.CreateSprites(mpath);
 
 
 	strcpy_s(cfxpath, MAX_PATH, cpath);
@@ -47476,7 +47479,7 @@ void DestroySprites()
 	//static InstancedSprite s_bcircle;
 	s_kinsprite.DestroyObjs();
 	s_undosprite.DestroySprites();
-	s_fpssprite.DestroySprites();
+	g_fpssprite.DestroySprites();
 
 
 

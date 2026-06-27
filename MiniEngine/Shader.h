@@ -17,6 +17,9 @@ public:
 	/// <param name="filePath">ファイルパス</param>
 	/// <param name="entryFuncName">エントリーポイントの関数名。</param>
 	int LoadVS(const char* filePath, const char* entryFuncName);
+
+	int LoadGS(const char* filePath, const char* entryFuncName);
+
 	/// <summary>
 	/// コンピュートシェーダーをロード。
 	/// </summary>

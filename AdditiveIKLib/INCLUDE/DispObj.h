@@ -81,7 +81,7 @@ public:
 	 * @return 成功したら０。
 	 */
 	int RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
-	int RenderNormalMaterial(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
+	int RenderNormalMaterial(bool useGS, RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		bool laterflag, CMQOMaterial* rmaterial, int curoffset, int curtrinum, bool isfirstmaterial);
 
 
@@ -95,7 +95,7 @@ public:
 	 * @detail FBXデータは１オブジェクトにつき１マテリアル(材質)だが、メタセコイアデータは１オブジェクトに複数マテリアルが設定されていることが多い。
 	 */
 	int RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
-	int RenderNormalPM3Material(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
+	int RenderNormalPM3Material(bool useGS, RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		bool lasterflag, CMQOMaterial* rmaterial,
 		int curoffset, int curtrinum);
 

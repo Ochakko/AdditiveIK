@@ -11,6 +11,7 @@ enum {
 };
 
 bool RootSignature::Init(
+	bool useGS,
 	D3D12_STATIC_SAMPLER_DESC* samplerDescArray,
 	int numSampler,
 	UINT maxCbvDescriptor,
@@ -37,11 +38,20 @@ bool RootSignature::Init(
 	rootParameters[enDescriptorHeap_UAV].InitAsDescriptorTable(1, &ranges[enDescriptorHeap_UAV]);
 
 	// Allow input layout and deny uneccessary access to certain pipeline stages.
-	D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
-		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+	D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags;
+	if (useGS) {
+		rootSignatureFlags =
+			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;// |
+			//D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS;// |
+			//D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+	}
+	else {
+		rootSignatureFlags =
+			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+	}
 
 	if (numSampler == 4) {
 		int dbgflag1 = 1;
@@ -67,6 +77,7 @@ bool RootSignature::Init(
 	return true;
 }
 bool RootSignature::Init(
+	bool useGS,
 	D3D12_FILTER samplerFilter,
 	D3D12_TEXTURE_ADDRESS_MODE textureAdressModeU,
 	D3D12_TEXTURE_ADDRESS_MODE textureAdressModeV,
@@ -76,8 +87,6 @@ bool RootSignature::Init(
 	UINT maxUavDescritor
 )
 {
-	
-
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
 	sampler.Filter = samplerFilter;
 	sampler.AddressU = textureAdressModeU;
@@ -93,7 +102,7 @@ bool RootSignature::Init(
 	sampler.RegisterSpace = 0;
 	sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	return Init(&sampler, 1, maxCbvDescriptor, maxSrvDescriptor, maxUavDescritor);
+	return Init(useGS, &sampler, 1, maxCbvDescriptor, maxSrvDescriptor, maxUavDescritor);
 }
 
 bool RootSignature::Init(Shader& shader)

@@ -41,6 +41,8 @@ enum {
 	MQOSHADER_TOON_SHADOWMAP,
 	MQOSHADER_TOON_SHADOWRECIEVER,
 
+	MQOSHADER_POINTSPRITE,
+
 	MQOSHADER_MAX
 };
 
@@ -76,7 +78,9 @@ enum {//renderobj.renderkind
 struct SConstantBuffer {
 	Matrix mWorld;		//ワールド行列。
 	Matrix mView;		//ビュー行列。
+	Matrix minvView;
 	Matrix mProj;		//プロジェクション行列。
+	Matrix mViewProj;
 	ChaVector4 diffusemult;
 	ChaVector4 ambient;//2024/03/22 ambient.wはAlphaTestClipValとして使う
 	ChaVector4 emission;
@@ -95,7 +99,9 @@ struct SConstantBuffer {
 	void Init() {
 		mWorld.SetIdentity();
 		mView.SetIdentity();
+		minvView.SetIdentity();
 		mProj.SetIdentity();
+		mViewProj.SetIdentity();
 		diffusemult.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
 		ambient.SetParams(0.2f, 0.2f, 0.2f, 0.0f);
 		emission.SetParams(0.0f, 0.0f, 0.0f, 0.0f);
@@ -329,6 +335,8 @@ public:
 	void CreateDescriptorHeaps(int objecttype);
 
 	int InitShadersAndPipelines(
+		bool useGS,
+
 		int srcuvnum,
 		int vertextype,
 		const char* fxPBRPath,
@@ -359,6 +367,10 @@ public:
 		const char* psNoLightShadowMapFunc,
 		const char* psNoLightShadowRecieverFunc,
 		
+		const char* vsPointSpFunc,
+		const char* gsPointSpFunc,
+		const char* psPointSpFunc,
+
 		const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
 		int numSrv,
 		int numCbv,
@@ -366,8 +378,10 @@ public:
 		UINT offsetInDescriptorsFromTableStartSRV,
 		D3D12_FILTER samplerFilter);
 
-	void InitPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
+	void InitPipelineState(bool useGS, int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat);
 	int InitShaders(
+		bool useGS,
+
 		const char* fxPBRPath,
 		const char* fxStdPath,
 		const char* fxNoLightPath,
@@ -394,7 +408,11 @@ public:
 
 		const char* psNoLightFunc,
 		const char* psNoLightShadowMapFunc,
-		const char* psNoLightShadowRecieverFunc
+		const char* psNoLightShadowRecieverFunc,
+
+		const char* vsPointSpFunc,
+		const char* gsPointSpFunc,
+		const char* psPointSpFunc
 	);
 
 
@@ -435,16 +453,18 @@ public:
 
 
 
-	int DecideShaderIndex(myRenderer::RENDEROBJ renderobj);//2024/03/07
+	int DecideShaderIndex(bool useGS, myRenderer::RENDEROBJ renderobj);//2024/03/07
 	bool DecideLightFlag(myRenderer::RENDEROBJ renderobj);//2024/03/07
 	void SetFl4x4(myRenderer::RENDEROBJ renderobj, int refposindex);
 	int SetRefPosFl4x4(CModel* srcmodel, int refposindex);
 	void SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBufferLights* pcbLights);
 	void SetConstShadow(SConstantBufferShadow* pcbShadow);
-	void DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
+	void DrawCommon(bool useGS,
+		RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
 		int refposindex);
-	void BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj, 
+	void BeginRender(bool useGS,
+		RenderContext* rc, myRenderer::RENDEROBJ renderobj, 
 		int refposindex);
 	////void ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 	////	const Matrix& mView, const Matrix& mProj,
@@ -1276,7 +1296,8 @@ public:
 	//CreateDecl()内で　頂点フォーマットによって　定数を設定する
 	//###################################################
 	//拡張SRVが設定されるレジスタの開始番号。
-	int EXPAND_SRV_REG__START_NO = 6;//SetDecl()でセット
+	//int EXPAND_SRV_REG__START_NO = 6;//SetDecl()でセット
+	int EXPAND_SRV_REG__START_NO = 10;//SetDecl()でセット 2026/06/27
 	//１つのマテリアルで使用されるSRVの数。
 	int NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);//SetDecl()でセット
 	//１つのマテリアルで使用されるCBVの数。
@@ -1419,6 +1440,7 @@ private:
 
 
 	Shader* m_vsMQOShader[MQOSHADER_MAX];
+	Shader* m_gsMQOShader[MQOSHADER_MAX];
 	Shader* m_psMQOShader[MQOSHADER_MAX];
 
 	//PipelineState m_nonSkinModelPipelineState;		//スキンなしモデル用のパイプラインステート。

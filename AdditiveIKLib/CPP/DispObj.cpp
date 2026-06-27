@@ -142,7 +142,7 @@ int CDispObj::DestroyObjs()
 	}
 
 	if (m_vertexBuffer) {
-		m_vertexBuffer->Unmap(0, nullptr);
+		//m_vertexBuffer->Unmap(0, nullptr);
 		m_vertexBuffer->Release();
 	}
 	if (m_vertexSystem) {
@@ -184,7 +184,7 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 		DXGI_FORMAT_R32G32B32A32_FLOAT,//for SV_Target1
 		//DXGI_FORMAT_R8G8B8A8_UNORM,
 		//DXGI_FORMAT_UNKNOWN,
-		DXGI_FORMAT_UNKNOWN,
+		DXGI_FORMAT_R32G32B32A32_FLOAT,//for SV_Target2
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
@@ -206,8 +206,10 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 		if (curmat) {
 			curmat->CreateDecl(pdev, vertextype);
 
+			bool useGS = true;
 			int result1 = 0;
 			result1 = curmat->InitShadersAndPipelines(
+				useGS,
 				srcuvnum,
 				vertextype,
 				"../Media/Shader/AdditiveIK_NoSkin_PBR.fx",//fx NoSkin PBR
@@ -248,6 +250,12 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 				"PSMainNoSkinNoLight",
 				"PSMainNoSkinStdShadowMap",
 				"PSMainNoSkinNoLightShadowReciever",
+
+
+			//GS
+				"VSMainNoSkinStdForGS",
+				"GSParticleDraw",
+				"PSMainNoSkinStdFromGS",
 
 				colorBufferFormat,
 				curmat->NUM_SRV_ONE_MATERIAL,
@@ -393,7 +401,7 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, in
 		DXGI_FORMAT_R32G32B32A32_FLOAT,//for SV_Target1
 		//DXGI_FORMAT_R8G8B8A8_UNORM,
 		//DXGI_FORMAT_UNKNOWN,
-		DXGI_FORMAT_UNKNOWN,
+		DXGI_FORMAT_R32G32B32A32_FLOAT,//for SV_Target2
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
@@ -417,8 +425,10 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, in
 
 				curmat->CreateDecl(pdev, vertextype);
 
+				bool useGS = true;
 				int result1;
 				result1 = curmat->InitShadersAndPipelines(
+					useGS,
 					srcuvnum,
 					vertextype,
 					"../Media/Shader/AdditiveIK_Skin_PBR.fx",//fx Skin PBR
@@ -459,6 +469,12 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, in
 					"PSMainSkinNoLight",
 					"PSMainSkinStdShadowMap",
 					"PSMainSkinNoLightShadowReciever",
+
+
+					//GS
+					"VSMainSkinStdForGS",
+					"GSParticleDraw",
+					"PSMainSkinStdFromGS",
 
 					colorBufferFormat,
 					curmat->NUM_SRV_ONE_MATERIAL,
@@ -526,7 +542,7 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 		DXGI_FORMAT_R32G32B32A32_FLOAT,//for SV_Target1
 		//DXGI_FORMAT_R8G8B8A8_UNORM,
 		//DXGI_FORMAT_UNKNOWN,
-		DXGI_FORMAT_UNKNOWN,
+		DXGI_FORMAT_R32G32B32A32_FLOAT,//for SV_Target2
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN,
@@ -544,8 +560,10 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 
 		curmat->CreateDecl(pdev, vertextype);
 
+		bool useGS = false;
 		int result1;
 		result1 = curmat->InitShadersAndPipelines(
+			useGS,
 			0,
 			vertextype,
 			"../Media/Shader/AdditiveIK_NoSkin_Std.fx",
@@ -575,6 +593,10 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 
 			"PSMainExtLine",
 			"PSMainExtLine",
+			"PSMainExtLine",
+
+			"VSMainExtLine",
+			"GSParticleDraw",
 			"PSMainExtLine",
 
 			colorBufferFormat,
@@ -740,8 +762,15 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape)
 //###########
 	{
 		//auto d3dDevice = g_graphicsEngine->GetD3DDevice();
-		//auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_GPU_UPLOAD);//2026/02/28
+		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+		//auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_GPU_UPLOAD);//2026/02/28
+		//auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);//2026/06/27
+		//D3D12_HEAP_PROPERTIES heapProp{};
+		//heapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+		//heapProp.CreationNodeMask = 1;
+		//heapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+		//heapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//RWなので読み込みアクセスの可能性有(コンピュートシェーダで使用).　よってD3D12_HEAP_TYPE_GPU_UPLOADにはしない.
+		//heapProp.VisibleNodeMask = 1;
 		auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(vbsize);
 		HRESULT hrvb0 = pdev->CreateCommittedResource(
 			&heapProp,
@@ -769,10 +798,13 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape)
 
 
 		//頂点バッファをコピー.
-		//uint8_t* pData;
-		m_vertexBuffer->Map(0, nullptr, (void**)&m_vertexMap);
+		CD3DX12_RANGE readRange(0, 0);
+		m_vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_vertexMap));
+		////uint8_t* pData;
+		//m_vertexBuffer->Map(0, nullptr, (void**)&m_vertexMap);
 		if (m_pm3) {
 			memcpy(m_vertexMap, pm3v, m_vertexBufferView.SizeInBytes);
+			//memcpy((void*)m_vertexBuffer->GetGPUVirtualAddress(), pm3v, m_vertexBufferView.SizeInBytes);
 		}
 		else if (m_pm4) {
 			if (hasBlendShape) {
@@ -786,7 +818,8 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape)
 			DWORD vno;
 			for (vno = 0; vno < (DWORD)pmvleng; vno++) {
 				uint8_t* pdest = m_vertexMap + vno * (sizeof(BINORMALDISPV) + sizeof(PM3INF));
-				
+				//uint8_t* pdest = (uint8_t*)m_vertexBuffer->GetGPUVirtualAddress() + vno * (sizeof(BINORMALDISPV) + sizeof(PM3INF));
+
 				BINORMALDISPV* curv = pm4v + vno;
 				PM3INF* curinf = pmib + vno;
 
@@ -808,10 +841,10 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape)
 		}
 		else {
 			_ASSERT(0);
-			//m_vertexBuffer->Unmap(0, nullptr);
+			////m_vertexBuffer->Unmap(0, nullptr);
 			return 1;
 		}
-		//m_vertexBuffer->Unmap(0, nullptr);
+		////m_vertexBuffer->Unmap(0, nullptr);
 	}
 
 //###################
@@ -1346,39 +1379,44 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 	//3. インデックスバッファを設定。
 	rc->SetIndexBuffer(m_indexBufferView);
 
+	bool useGS = false;
 	int topoindex;
 	for (topoindex = 0; topoindex < 3; topoindex++) {
 		switch (topoindex) {
 		case 0:
-			if (renderobj.pmodel && 
-				(renderobj.pmodel->GetRefPosSolidDisp() || (renderobj.refposindex == 0))) {
+			if (renderobj.pmodel &&
+				(renderobj.pmodel->GetRefPosSolidDisp() || (renderobj.refposindex == 0) ||
+					(renderobj.renderkind == RENDERKIND_SHADOWMAP) || (renderobj.renderkind == RENDERKIND_SHADOWRECIEVER))) {
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+				useGS = false;
 			}
 			else {
 				continue;
 			}
 			break;
 		case 1:
-			if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp()) {
+			if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp() && renderobj.pmodel->GetRefPosFlag()) {
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+				useGS = false;
 			}
 			else {
 				continue;
 			}
 			break;
 		case 2:
-			if (renderobj.pmodel && renderobj.pmodel->GetRefPosPointDisp()) {
+			if (renderobj.pmodel && renderobj.pmodel->GetRefPosPointDisp() && renderobj.pmodel->GetRefPosFlag()) {
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+				useGS = true;
 			}
 			else {
 				return 0;
 			}
 			break;
 		default:
+			useGS = false;
 			return 0;
 			break;
 		}
-
 
 		if (renderobj.renderkind == -1) {
 			renderobj.renderkind = RENDERKIND_NORMAL;//2023/12/11
@@ -1395,10 +1433,19 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 				((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (curmat->GetShadowCasterFlag()))) {
 				bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
 
+				int curnumprim;
+				if (!useGS) {
+					curnumprim = curtrinum;
+				}
+				else {
+					curnumprim = curtrinum * 3;
+				}
+
+
 				if (laterflag == false) {
 					bool laterflag2 = false;
-					RenderNormalMaterial(rc, renderobj, laterflag2,
-						curmat, curoffset, curtrinum, isfirstmaterial);
+					RenderNormalMaterial(useGS, rc, renderobj, laterflag2,
+						curmat, curoffset, curnumprim, isfirstmaterial);
 					isfirstmaterial = false;
 				}
 			}
@@ -1413,9 +1460,18 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 				if (latermaterial.pmaterial &&
 					((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (latermaterial.pmaterial->GetShadowCasterFlag()))) {
 					bool laterflag2 = true;
-					RenderNormalMaterial(rc, renderobj,
+
+					int curnumprim;
+					if (!useGS) {
+						curnumprim = latermaterial.trinum;
+					}
+					else {
+						curnumprim = latermaterial.trinum * 3;
+					}
+
+					RenderNormalMaterial(useGS, rc, renderobj,
 						laterflag2,
-						latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum,
+						latermaterial.pmaterial, latermaterial.offset, curnumprim,
 						isfirstmaterial);
 					isfirstmaterial = false;
 				}
@@ -1439,7 +1495,8 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 }
 
 
-int CDispObj::RenderNormalMaterial(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
+int CDispObj::RenderNormalMaterial(bool useGS, 
+	RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 	bool laterflag, CMQOMaterial* curmat, int curoffset, int curtrinum, bool isfirstmaterial)
 {
 	if (!rc || !curmat) {
@@ -1577,11 +1634,10 @@ int CDispObj::RenderNormalMaterial(RenderContext* rc, myRenderer::RENDEROBJ rend
 	}
 	//定数バッファの設定、更新など描画の共通処理を実行する。
 
-
-	curmat->DrawCommon(rc, renderobj, mView, mProj, renderobj.refposindex);
+	curmat->DrawCommon(useGS, rc, renderobj, mView, mProj, renderobj.refposindex);
 	int hasskin = 1;
 	bool isline = false;
-	curmat->BeginRender(rc, renderobj, renderobj.refposindex);
+	curmat->BeginRender(useGS, rc, renderobj, renderobj.refposindex);
 	//4. ドローコールを実行。
 	rc->DrawIndexed(curtrinum * 3, curoffset);
 	//rc.DrawIndexed(m_pm4->GetFaceNum() * 3);
@@ -1759,30 +1815,34 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	//3. インデックスバッファを設定。
 	rc->SetIndexBuffer(m_indexBufferView);
 
-
+	bool useGS = false;
 	int topoindex;
 	for (topoindex = 0; topoindex < 3; topoindex++) {
 		switch (topoindex) {
 		case 0:
 			if (renderobj.pmodel &&
-				(renderobj.pmodel->GetRefPosSolidDisp() || (renderobj.refposindex == 0))) {
+				(renderobj.pmodel->GetRefPosSolidDisp() || (renderobj.refposindex == 0) || 
+					(renderobj.renderkind == RENDERKIND_SHADOWMAP) || (renderobj.renderkind == RENDERKIND_SHADOWRECIEVER))) {
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+				useGS = false;
 			}
 			else {
 				continue;
 			}
 			break;
 		case 1:
-			if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp()) {
+			if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp() && renderobj.pmodel->GetRefPosFlag()) {
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+				useGS = false;
 			}
 			else {
 				continue;
 			}
 			break;
 		case 2:
-			if (renderobj.pmodel && renderobj.pmodel->GetRefPosPointDisp()) {
+			if (renderobj.pmodel && renderobj.pmodel->GetRefPosPointDisp() && renderobj.pmodel->GetRefPosFlag()) {
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+				useGS = true;
 			}
 			else {
 				return 0;
@@ -1814,12 +1874,18 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 
 			if ((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (curmat->GetShadowCasterFlag())) {
 				int curnumprim;
-				curnumprim = currb->endface - currb->startface + 1;
+				if (!useGS) {
+					curnumprim = currb->endface - currb->startface + 1;
+				}
+				else {
+					curnumprim = (currb->endface - currb->startface + 1) * 3;
+				}
 
 				bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
 				if (laterflag == false) {
 					bool laterflag2 = false;
 					int result = RenderNormalPM3Material(
+						useGS,
 						rc, renderobj,
 						laterflag2, curmat, currb->startface * 3, curnumprim);
 				}
@@ -1837,10 +1903,20 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 				if (latermaterial.pmaterial &&
 					((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (latermaterial.pmaterial->GetShadowCasterFlag()))) {
 					bool laterflag2 = true;
+
+					int curnumprim;
+					if (!useGS) {
+						curnumprim = latermaterial.trinum;
+					}
+					else {
+						curnumprim = latermaterial.trinum * 3;
+					}
+
 					RenderNormalPM3Material(
+						useGS,
 						rc, renderobj,
 						laterflag2,
-						latermaterial.pmaterial, latermaterial.offset, latermaterial.trinum);
+						latermaterial.pmaterial, latermaterial.offset, curnumprim);
 				}
 			}
 		}
@@ -1849,7 +1925,8 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	return 0;
 }
 
-int CDispObj::RenderNormalPM3Material(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
+int CDispObj::RenderNormalPM3Material(bool useGS,
+	RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 	bool laterflag, CMQOMaterial* curmat,
 	int curoffset, int curtrinum)
 {
@@ -1977,12 +2054,12 @@ int CDispObj::RenderNormalPM3Material(RenderContext* rc, myRenderer::RENDEROBJ r
 	//定数バッファの設定、更新など描画の共通処理を実行する。
 	//int refposindex = 0;//!!!!!!!!!
 	int refposindex = renderobj.refposindex;//2026/05/05
-	curmat->DrawCommon(rc, renderobj, mView, mProj, refposindex);
+	curmat->DrawCommon(useGS, rc, renderobj, mView, mProj, refposindex);
 
 
 	int hasskin = 0;
 	bool isline = false;
-	curmat->BeginRender(rc, renderobj, refposindex);
+	curmat->BeginRender(useGS, rc, renderobj, refposindex);
 
 	//rc.SetDescriptorHeap(m_descriptorHeap);
 
@@ -2339,9 +2416,10 @@ int CDispObj::RenderLine(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 		mView = renderobj.mView;
 		mProj = renderobj.mProj;
 		//定数バッファの設定、更新など描画の共通処理を実行する。
-		curmat->DrawCommon(rc, renderobj, mView, mProj, 0);
+		bool useGS = false;
+		curmat->DrawCommon(useGS, rc, renderobj, mView, mProj, 0);
 
-		curmat->BeginRender(rc, renderobj, 0);
+		curmat->BeginRender(useGS, rc, renderobj, 0);
 		//rc.SetDescriptorHeap(m_descriptorHeap);
 
 		//1. 頂点バッファを設定。

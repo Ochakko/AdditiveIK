@@ -301,7 +301,9 @@
         InitConstantBuffer(initData);
         
         //ルートシグネチャの初期化。
+        bool useGS = false;
         m_rootSignature.Init(
+            useGS,
             initData.m_samplerFilter,
             D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
             D3D12_TEXTURE_ADDRESS_MODE_CLAMP,

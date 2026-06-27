@@ -88,7 +88,9 @@ cbuffer ModelCb : register(b0)
 {
     float4x4 mWorld;
     float4x4 mView;
+    float4x4 minvView;
     float4x4 mProj;
+    float4x4 mViewProj;
     float4 diffusemult;
     float4 ambient0;//ambient0.wはAlphaTestの閾値
     float4 emission;

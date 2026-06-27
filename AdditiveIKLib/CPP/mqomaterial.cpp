@@ -31,10 +31,12 @@
 #include <gltfLoader.h>
 
 #include "../../AdditiveIK/DXUTmisc/DXUTmisc.h"
+#include "../../AdditiveIK/FpsSprite.h"
+
 
 //extern CTexBank* g_texbank;
 extern ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わらずオリジナルのインデックスで格納
-
+extern CFpsSprite g_fpssprite;
 
 #include "../../MiniEngine/ConstantBuffer.h"
 #include "../../MiniEngine/RootSignature.h"
@@ -369,6 +371,7 @@ int CMQOMaterial::InitParams(int srcrefposnum)
 
 	for (int shaderindex0 = 0; shaderindex0 < MQOSHADER_MAX; shaderindex0++) {
 		m_vsMQOShader[shaderindex0] = nullptr;
+		m_gsMQOShader[shaderindex0] = nullptr;
 		m_psMQOShader[shaderindex0] = nullptr;
 	}
 
@@ -1534,7 +1537,9 @@ int CMQOMaterial::InitInstancingShadersAndPipelines(
 	samplerDescArray[5].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
 	samplerDescArray[5].MaxAnisotropy = 1;
 
+	bool useGS = false;
 	m_InstancingrootSignature.Init(
+		useGS,
 		samplerDescArray,
 		6,
 		numCbv,
@@ -1562,6 +1567,8 @@ int CMQOMaterial::InitInstancingShadersAndPipelines(
 
 
 int CMQOMaterial::InitShadersAndPipelines(
+	bool useGS,
+
 	int srcuvnum,
 	int vertextype,
 	const char* fxPBRPath,
@@ -1592,6 +1599,10 @@ int CMQOMaterial::InitShadersAndPipelines(
 	const char* psNoLightShadowMapFunc,
 	const char* psNoLightShadowRecieverFunc,
 
+	const char* vsPointSpFunc,
+	const char* gsPointSpFunc,
+	const char* psPointSpFunc,
+
 	const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat,
 	int numSrv,
 	int numCbv,
@@ -1612,7 +1623,9 @@ int CMQOMaterial::InitShadersAndPipelines(
 
 		!psPBRFunc || !psStdFunc || !psNoLightFunc ||
 		!psPBRShadowMapFunc || !psStdShadowMapFunc || !psNoLightShadowMapFunc ||
-		!psPBRShadowRecieverFunc || !psStdShadowRecieverFunc || !psNoLightShadowRecieverFunc) {
+		!psPBRShadowRecieverFunc || !psStdShadowRecieverFunc || !psNoLightShadowRecieverFunc ||
+		
+		!vsPointSpFunc || !gsPointSpFunc || !psPointSpFunc) {
 		
 		_ASSERT(0);
 		abort();
@@ -1654,7 +1667,7 @@ int CMQOMaterial::InitShadersAndPipelines(
 
 
 	//ルートシグネチャを初期化。
-	D3D12_STATIC_SAMPLER_DESC samplerDescArray[6];
+	D3D12_STATIC_SAMPLER_DESC samplerDescArray[10];
 	//デフォルトのサンプラ
 	samplerDescArray[0].Filter = samplerFilter;
 	samplerDescArray[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -1721,21 +1734,37 @@ int CMQOMaterial::InitShadersAndPipelines(
 	samplerDescArray[5].ComparisonFunc = D3D12_COMPARISON_FUNC_GREATER;
 	samplerDescArray[5].MaxAnisotropy = 1;
 
+	int smpindex;
+	for (smpindex = 6; smpindex <= 9; smpindex++) {
+		samplerDescArray[smpindex] = samplerDescArray[0];
+		samplerDescArray[smpindex].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;//2024/02/21 : 補間無しに
+		samplerDescArray[smpindex].ShaderRegister = smpindex;//!!!!!!!!
+		samplerDescArray[smpindex].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		samplerDescArray[smpindex].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		samplerDescArray[smpindex].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	}
+
 
 
 	for (int refposindex = 0; refposindex < GetRefPosMaxNum(); refposindex++) {
 		m_rootSignature[refposindex].Init(
+			useGS,
 			samplerDescArray,
-			6,
+			//6,
+			10,
 			numCbv,
 			numSrv,
 			8,
 			NUM_CBV_ONE_MATERIAL * refposindex,
 			0//NUM_SRV_ONE_MATERIAL * refposindex
 		);
+
+		bool useGSshadow = false;
 		m_shadowrootSignature[refposindex].Init(
+			useGSshadow,
 			samplerDescArray,
-			6,
+			//6,
+			10,
 			numCbv,
 			numSrv,
 			8,
@@ -1747,6 +1776,8 @@ int CMQOMaterial::InitShadersAndPipelines(
 	//シェーダーを初期化。
 	int result;
 	result = InitShaders(
+		useGS,
+
 		fxPBRPath,
 		fxStdPath,
 		fxNoLightPath,
@@ -1773,7 +1804,11 @@ int CMQOMaterial::InitShadersAndPipelines(
 
 		psNoLightFunc,
 		psNoLightShadowMapFunc,
-		psNoLightShadowRecieverFunc
+		psNoLightShadowRecieverFunc,
+
+		vsPointSpFunc,
+		gsPointSpFunc,
+		psPointSpFunc
 	);
 	if (result != 0) {
 		m_initpipelineflag = false;
@@ -1781,14 +1816,14 @@ int CMQOMaterial::InitShadersAndPipelines(
 	}
 
 	//パイプラインステートを初期化。
-	InitPipelineState(vertextype, colorBufferFormat);
+	InitPipelineState(useGS, vertextype, colorBufferFormat);
 
 	m_initpipelineflag = true;
 	return 0;
 }
 
 
-void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
+void CMQOMaterial::InitPipelineState(bool useGS, int vertextype, const std::array<DXGI_FORMAT, MAX_RENDERING_TARGET>& colorBufferFormat)
 {
 	int refposindex;
 
@@ -1878,20 +1913,41 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		//2023/12/01 シェーダのエントリ関数として　skin有無を切り替えることはあるが　頂点フォーマットはvertextypeによって決める
 		if (vertextype == 0) {//pm4
 			psoDesc.InputLayout = { inputElementDescsWithBone, _countof(inputElementDescsWithBone) };//!!! WithBone
+			if (useGS && (shaderindex == MQOSHADER_POINTSPRITE) && (m_gsMQOShader[shaderindex] != nullptr)) {
+				psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsMQOShader[shaderindex]->GetCompiledBlob());//!!!!!!!!! Skin 
+				psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psMQOShader[shaderindex]->GetCompiledBlob());
+				psoDesc.GS = CD3DX12_SHADER_BYTECODE(m_gsMQOShader[shaderindex]->GetCompiledBlob());
+			}
+			else {
+				psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsMQOShader[shaderindex]->GetCompiledBlob());//!!!!!!!!! Skin 
+				psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psMQOShader[shaderindex]->GetCompiledBlob());
+				//psoDesc.GS = CD3DX12_SHADER_BYTECODE(m_gsMQOShader[shaderindex]->GetCompiledBlob());
+			}
 		}
 		else if (vertextype == 1) {//pm3
 			psoDesc.InputLayout = { inputElementDescsWithoutBone, _countof(inputElementDescsWithoutBone) };
+			if (useGS && (shaderindex == MQOSHADER_POINTSPRITE) && (m_gsMQOShader[shaderindex] != nullptr)) {
+				psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsMQOShader[shaderindex]->GetCompiledBlob());//!!!!!!!!! Skin 
+				psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psMQOShader[shaderindex]->GetCompiledBlob());
+				psoDesc.GS = CD3DX12_SHADER_BYTECODE(m_gsMQOShader[shaderindex]->GetCompiledBlob());
+			}
+			else {
+				psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsMQOShader[shaderindex]->GetCompiledBlob());//!!!!!!!!! Skin 
+				psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psMQOShader[shaderindex]->GetCompiledBlob());
+				//psoDesc.GS = CD3DX12_SHADER_BYTECODE(m_gsMQOShader[shaderindex]->GetCompiledBlob());
+			}
 		}
 		else if (vertextype == 2) {//extline
 			psoDesc.InputLayout = { inputElementDescsExtLine, _countof(inputElementDescsExtLine) };
+			psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsMQOShader[shaderindex]->GetCompiledBlob());//!!!!!!!!! Skin 
+			psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psMQOShader[shaderindex]->GetCompiledBlob());
 		}
 		else {
 			_ASSERT(0);
 			abort();
 		}
-		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsMQOShader[shaderindex]->GetCompiledBlob());//!!!!!!!!! Skin 
-		psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psMQOShader[shaderindex]->GetCompiledBlob());
 		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+
 
 		if (vertextype != 2) {
 			//#ifdef SAMPLE_11
@@ -1928,7 +1984,10 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 		psoDesc.DepthStencilState.StencilEnable = FALSE;
 		psoDesc.SampleMask = UINT_MAX;
-		if (vertextype != 2) {
+		if (useGS && ((vertextype == 1) || (vertextype == 0)) && (shaderindex == MQOSHADER_POINTSPRITE)) {
+			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+		}
+		else if (vertextype != 2) {
 			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		}
 		else {
@@ -1994,7 +2053,11 @@ void CMQOMaterial::InitPipelineState(int vertextype, const std::array<DXGI_FORMA
 		}
 
 		//続いて半透明マテリアル用。
-		psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsMQOShader[shaderindex]->GetCompiledBlob());
+		//psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vsMQOShader[shaderindex]->GetCompiledBlob());
+		//if (m_gsMQOShader[shaderindex] != nullptr) {
+		//	psoDesc.GS = CD3DX12_SHADER_BYTECODE(m_gsMQOShader[shaderindex]->GetCompiledBlob());
+		//}
+		//psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_psMQOShader[shaderindex]->GetCompiledBlob());
 		psoDesc.BlendState.IndependentBlendEnable = TRUE;
 		psoDesc.BlendState.RenderTarget[0].BlendEnable = TRUE;
 		psoDesc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
@@ -2386,6 +2449,8 @@ void CMQOMaterial::InitInstancingPipelineState(int vertextype, const std::array<
 }
 
 int CMQOMaterial::InitShaders(
+	bool useGS,
+
 	const char* fxPBRPath,
 	const char* fxStdPath,
 	const char* fxNoLightPath,
@@ -2412,14 +2477,17 @@ int CMQOMaterial::InitShaders(
 
 	const char* psNoLightFunc,
 	const char* psNoLightShadowMapFunc,
-	const char* psNoLightShadowRecieverFunc
-	)
+	const char* psNoLightShadowRecieverFunc,
+
+	const char* vsPointSpFunc,
+	const char* gsPointSpFunc,
+	const char* psPointSpFunc)
 {
 //###########
 //PBRシェーダ
 //###########
 	int result = 0;
-
+	m_gsMQOShader[MQOSHADER_PBR] = nullptr;
 	m_vsMQOShader[MQOSHADER_PBR] = g_engine->GetShaderFromBank(fxPBRPath, vsPBRFunc);
 	if (m_vsMQOShader[MQOSHADER_PBR] == nullptr) {
 		m_vsMQOShader[MQOSHADER_PBR] = new Shader;
@@ -2445,6 +2513,7 @@ int CMQOMaterial::InitShaders(
 		g_engine->RegistShaderToBank(fxPBRPath, psPBRFunc, m_psMQOShader[MQOSHADER_PBR]);
 	}
 
+	m_gsMQOShader[MQOSHADER_PBR_SHADOWMAP] = nullptr;
 	m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP] = g_engine->GetShaderFromBank(fxPBRPath, vsPBRShadowMapFunc);
 	if (m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP] == nullptr) {
 		m_vsMQOShader[MQOSHADER_PBR_SHADOWMAP] = new Shader;//!!!!!! 2024/03/17
@@ -2470,6 +2539,7 @@ int CMQOMaterial::InitShaders(
 		g_engine->RegistShaderToBank(fxPBRPath, psPBRShadowMapFunc, m_psMQOShader[MQOSHADER_PBR_SHADOWMAP]);
 	}
 
+	m_gsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] = nullptr;
 	m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxPBRPath, vsPBRShadowRecieverFunc);
 	if (m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] == nullptr) {
 		m_vsMQOShader[MQOSHADER_PBR_SHADOWRECIEVER] = new Shader;
@@ -2498,6 +2568,7 @@ int CMQOMaterial::InitShaders(
 //################
 //Standardシェーダ
 //################
+	m_gsMQOShader[MQOSHADER_STD] = nullptr;
 	m_vsMQOShader[MQOSHADER_STD] = g_engine->GetShaderFromBank(fxStdPath, vsStdFunc);
 	if (m_vsMQOShader[MQOSHADER_STD] == nullptr) {
 		m_vsMQOShader[MQOSHADER_STD] = new Shader;
@@ -2523,6 +2594,7 @@ int CMQOMaterial::InitShaders(
 		g_engine->RegistShaderToBank(fxStdPath, psStdFunc, m_psMQOShader[MQOSHADER_STD]);
 	}
 
+	m_gsMQOShader[MQOSHADER_STD_SHADOWMAP] = nullptr;
 	m_vsMQOShader[MQOSHADER_STD_SHADOWMAP] = g_engine->GetShaderFromBank(fxStdPath, vsStdShadowMapFunc);
 	if (m_vsMQOShader[MQOSHADER_STD_SHADOWMAP] == nullptr) {
 		m_vsMQOShader[MQOSHADER_STD_SHADOWMAP] = new Shader;
@@ -2548,6 +2620,7 @@ int CMQOMaterial::InitShaders(
 		g_engine->RegistShaderToBank(fxStdPath, psStdShadowMapFunc, m_psMQOShader[MQOSHADER_STD_SHADOWMAP]);
 	}
 
+	m_gsMQOShader[MQOSHADER_STD_SHADOWRECIEVER] = nullptr;
 	m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxStdPath, vsStdShadowRecieverFunc);
 	if (m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER] == nullptr) {
 		m_vsMQOShader[MQOSHADER_STD_SHADOWRECIEVER] = new Shader;
@@ -2576,6 +2649,7 @@ int CMQOMaterial::InitShaders(
 //###############
 //NoLightシェーダ
 //###############
+	m_gsMQOShader[MQOSHADER_TOON] = nullptr;
 	m_vsMQOShader[MQOSHADER_TOON] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightFunc);
 	if (m_vsMQOShader[MQOSHADER_TOON] == nullptr) {
 		m_vsMQOShader[MQOSHADER_TOON] = new Shader;
@@ -2601,6 +2675,7 @@ int CMQOMaterial::InitShaders(
 		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightFunc, m_psMQOShader[MQOSHADER_TOON]);
 	}
 
+	m_gsMQOShader[MQOSHADER_TOON_SHADOWMAP] = nullptr;
 	m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightShadowMapFunc);
 	if (m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP] == nullptr) {
 		m_vsMQOShader[MQOSHADER_TOON_SHADOWMAP] = new Shader;
@@ -2626,6 +2701,7 @@ int CMQOMaterial::InitShaders(
 		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightShadowMapFunc, m_psMQOShader[MQOSHADER_TOON_SHADOWMAP]);
 	}
 
+	m_gsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] = nullptr;
 	m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightShadowRecieverFunc);
 	if (m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] == nullptr) {
 		m_vsMQOShader[MQOSHADER_TOON_SHADOWRECIEVER] = new Shader;
@@ -2651,6 +2727,81 @@ int CMQOMaterial::InitShaders(
 		g_engine->RegistShaderToBank(fxNoLightPath, psNoLightShadowRecieverFunc, m_psMQOShader[MQOSHADER_TOON_SHADOWRECIEVER]);
 	}
 
+	
+//###############
+//PointSpriteシェーダ
+//###############
+	if (useGS) {
+		//2026/06/27
+		m_gsMQOShader[MQOSHADER_POINTSPRITE] = g_engine->GetShaderFromBank(fxStdPath, gsPointSpFunc);
+		if (m_gsMQOShader[MQOSHADER_POINTSPRITE] == nullptr) {
+			m_gsMQOShader[MQOSHADER_POINTSPRITE] = new Shader;
+			if (!m_gsMQOShader[MQOSHADER_POINTSPRITE]) {
+				return 1;
+			}
+			result = m_gsMQOShader[MQOSHADER_POINTSPRITE]->LoadGS(fxStdPath, gsPointSpFunc);
+			if (result != 0) {
+				return 1;
+			}
+			g_engine->RegistShaderToBank(fxStdPath, gsPointSpFunc, m_gsMQOShader[MQOSHADER_POINTSPRITE]);
+		}
+		else {
+			int dbgflag1 = 1;
+		}
+
+		m_vsMQOShader[MQOSHADER_POINTSPRITE] = g_engine->GetShaderFromBank(fxStdPath, vsPointSpFunc);
+		if (m_vsMQOShader[MQOSHADER_POINTSPRITE] == nullptr) {
+			m_vsMQOShader[MQOSHADER_POINTSPRITE] = new Shader;
+			if (!m_vsMQOShader[MQOSHADER_POINTSPRITE]) {
+				return 1;
+			}
+			result = m_vsMQOShader[MQOSHADER_POINTSPRITE]->LoadVS(fxStdPath, vsPointSpFunc);
+			if (result != 0) {
+				return 1;
+			}
+			g_engine->RegistShaderToBank(fxStdPath, vsPointSpFunc, m_vsMQOShader[MQOSHADER_POINTSPRITE]);
+		}
+		m_psMQOShader[MQOSHADER_POINTSPRITE] = g_engine->GetShaderFromBank(fxStdPath, psPointSpFunc);
+		if (m_psMQOShader[MQOSHADER_POINTSPRITE] == nullptr) {
+			m_psMQOShader[MQOSHADER_POINTSPRITE] = new Shader;
+			if (!m_psMQOShader[MQOSHADER_POINTSPRITE]) {
+				return 1;
+			}
+			result = m_psMQOShader[MQOSHADER_POINTSPRITE]->LoadPS(fxStdPath, psPointSpFunc);
+			if (result != 0) {
+				return 1;
+			}
+			g_engine->RegistShaderToBank(fxStdPath, psPointSpFunc, m_psMQOShader[MQOSHADER_POINTSPRITE]);
+		}
+	}
+	else {
+		m_gsMQOShader[MQOSHADER_POINTSPRITE] = nullptr;
+		m_vsMQOShader[MQOSHADER_POINTSPRITE] = g_engine->GetShaderFromBank(fxNoLightPath, vsNoLightFunc);
+		if (m_vsMQOShader[MQOSHADER_POINTSPRITE] == nullptr) {
+			m_vsMQOShader[MQOSHADER_POINTSPRITE] = new Shader;
+			if (!m_vsMQOShader[MQOSHADER_POINTSPRITE]) {
+				return 1;
+			}
+			result = m_vsMQOShader[MQOSHADER_POINTSPRITE]->LoadVS(fxNoLightPath, vsNoLightFunc);
+			if (result != 0) {
+				return 1;
+			}
+			g_engine->RegistShaderToBank(fxNoLightPath, vsNoLightFunc, m_vsMQOShader[MQOSHADER_POINTSPRITE]);
+		}
+		m_psMQOShader[MQOSHADER_POINTSPRITE] = g_engine->GetShaderFromBank(fxNoLightPath, psNoLightFunc);
+		if (m_psMQOShader[MQOSHADER_POINTSPRITE] == nullptr) {
+			m_psMQOShader[MQOSHADER_POINTSPRITE] = new Shader;
+			if (!m_psMQOShader[MQOSHADER_POINTSPRITE]) {
+				return 1;
+			}
+			result = m_psMQOShader[MQOSHADER_POINTSPRITE]->LoadPS(fxNoLightPath, psNoLightFunc);
+			if (result != 0) {
+				return 1;
+			}
+			g_engine->RegistShaderToBank(fxNoLightPath, psNoLightFunc, m_psMQOShader[MQOSHADER_POINTSPRITE]);
+		}
+	}
+	
 
 	return 0;
 }
@@ -2747,7 +2898,7 @@ bool CMQOMaterial::DecideLightFlag(myRenderer::RENDEROBJ renderobj)
 	return lightflag;
 }
 
-int CMQOMaterial::DecideShaderIndex(myRenderer::RENDEROBJ renderobj)
+int CMQOMaterial::DecideShaderIndex(bool useGS, myRenderer::RENDEROBJ renderobj)
 {
 	//#####################################################################################################
 	//2023/12/05
@@ -2766,61 +2917,75 @@ int CMQOMaterial::DecideShaderIndex(myRenderer::RENDEROBJ renderobj)
 	bool lightflag = DecideLightFlag(renderobj);
 	int shadertype = MQOSHADER_TOON;
 
-	if (lightflag) {
-		int tempshadertype;
-		if (renderobj.shadertype == -2) {//shadertype == -2の場合はマテリアルの設定に従う
-			tempshadertype = GetShaderType();
-		}
-		else {
-			tempshadertype = renderobj.shadertype;
-		}
-
-		switch (tempshadertype) {
-		case -1:
-		case -2://マテリアルの設定も-2だった場合にはAUTOとみなす
-			if (renderobj.pmodel->GetVRoidJointName()) {
-				//VRoid特有のジョイント名を含み　シェーダタイプがAUTOの場合にはNOLIGHTでトゥーン風味に
-				//NoLight
-				shadertype = MQOSHADER_TOON;
+	if (!useGS) {
+		if (lightflag) {
+			int tempshadertype;
+			if (renderobj.shadertype == -2) {//shadertype == -2の場合はマテリアルの設定に従う
+				tempshadertype = GetShaderType();
 			}
 			else {
-				if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
-					(GetNormalTex() && (GetNormalTex())[0]) ||
-					(GetMetalTex() && (GetMetalTex())[0])) {
-					shadertype = MQOSHADER_PBR;
+				tempshadertype = renderobj.shadertype;
+			}
+
+			switch (tempshadertype) {
+			case -1:
+			case -2://マテリアルの設定も-2だった場合にはAUTOとみなす
+				if (renderobj.pmodel->GetVRoidJointName()) {
+					//VRoid特有のジョイント名を含み　シェーダタイプがAUTOの場合にはNOLIGHTでトゥーン風味に
+					//NoLight
+					shadertype = MQOSHADER_TOON;
 				}
 				else {
-					if (pm4) {
-						//NoLight
-						shadertype = MQOSHADER_TOON;
+					if ((GetAlbedoTex() && !(GetAlbedoTex())[0]) ||
+						(GetNormalTex() && (GetNormalTex())[0]) ||
+						(GetMetalTex() && (GetMetalTex())[0])) {
+						if ((renderobj.refposindex != 0) || (renderobj.pmodel && renderobj.pmodel->GetRefPosPointDisp())) {
+							shadertype = MQOSHADER_POINTSPRITE;
+						}
+						else {
+							shadertype = MQOSHADER_PBR;
+						}
 					}
 					else {
-						//Standard
-						shadertype = MQOSHADER_STD;
+						if (pm4 != nullptr) {
+							//NoLight
+							shadertype = MQOSHADER_TOON;
+						}
+						else {
+							//Standard
+							shadertype = MQOSHADER_STD;
+						}
 					}
 				}
+				break;
+			case MQOSHADER_PBR:
+			case MQOSHADER_STD:
+			case MQOSHADER_TOON:
+				shadertype = tempshadertype;
+				break;
+			default:
+				_ASSERT(0);
+				shadertype = MQOSHADER_TOON;
+				break;
 			}
-			break;
-		case MQOSHADER_PBR:
-		case MQOSHADER_STD:
-		case MQOSHADER_TOON:
-			shadertype = tempshadertype;
-			break;
-		default:
-			_ASSERT(0);
+		}
+		else {
+			//ライティング無しの場合には　シェーダ関数 *NoLight*()で処理
 			shadertype = MQOSHADER_TOON;
-			break;
 		}
 	}
 	else {
-		//ライティング無しの場合には　シェーダ関数 *NoLight*()で処理
-		shadertype = MQOSHADER_TOON;
+		shadertype = MQOSHADER_POINTSPRITE;
 	}
+	
 
 
 
 	int shaderindex = -1;
 	switch (shadertype) {
+	case MQOSHADER_POINTSPRITE:
+		shaderindex = MQOSHADER_POINTSPRITE;
+		break;
 	case MQOSHADER_PBR:
 		switch (renderobj.renderkind) {//renderobj.renderkindはCDispObj::Render*()関数内でセット
 		case RENDERKIND_NORMAL:
@@ -2887,6 +3052,28 @@ int CMQOMaterial::DecideShaderIndex(myRenderer::RENDEROBJ renderobj)
 			break;
 		}
 		break;
+	//case MQOSHADER_POINTSPRITE:
+	//	switch (renderobj.renderkind) {//renderobj.renderkindはCDispObj::Render*()関数内でセット
+	//	case RENDERKIND_NORMAL:
+	//		shaderindex = MQOSHADER_POINTSPRITE;
+	//		break;
+	//	case RENDERKIND_SHADOWMAP:
+	//		shaderindex = MQOSHADER_PBR_SHADOWMAP;
+	//		break;
+	//	case RENDERKIND_SHADOWRECIEVER:
+	//		shaderindex = MQOSHADER_POINTSPRITE;
+	//		break;
+	//	case RENDERKIND_ZPREPASS:
+	//		shaderindex = MQOSHADER_TOON;
+	//		break;
+	//	case RENDERKIND_INSTANCING_TRIANGLE://Instancingの場合にはこの関数は呼ばれないはず
+	//	case RENDERKIND_INSTANCING_LINE://Instancingの場合にはこの関数は呼ばれないはず
+	//	default:
+	//		_ASSERT(0);
+	//		shaderindex = MQOSHADER_TOON;
+	//		break;
+	//	}
+	//	break;
 	default:
 		break;
 	}
@@ -2895,7 +3082,8 @@ int CMQOMaterial::DecideShaderIndex(myRenderer::RENDEROBJ renderobj)
 }
 
 
-void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj, int refposindex)
+void CMQOMaterial::BeginRender(bool useGS,
+	RenderContext* rc, myRenderer::RENDEROBJ renderobj, int refposindex)
 //default:refposindex = 0
 {
 	if (!rc || !renderobj.pmodel || !renderobj.mqoobj) {
@@ -2911,7 +3099,7 @@ void CMQOMaterial::BeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderob
 	pm4 = renderobj.mqoobj->GetPm4();
 
 
-	int shaderindex = DecideShaderIndex(renderobj);
+	int shaderindex = DecideShaderIndex(useGS, renderobj);
 
 
 	int currentrefposindex;
@@ -3222,7 +3410,8 @@ int CMQOMaterial::CreateDecl(ID3D12Device* pdev, int objecttype)
 		//###########
 		//pm4 || pm3
 		//###########
-		EXPAND_SRV_REG__START_NO = 6;
+		//EXPAND_SRV_REG__START_NO = 6;
+		EXPAND_SRV_REG__START_NO = 10;
 		NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
 		NUM_CBV_ONE_MATERIAL = 3;
 
@@ -3269,7 +3458,8 @@ int CMQOMaterial::CreateDecl(ID3D12Device* pdev, int objecttype)
 		//#############
 		//extline
 		//#############
-		EXPAND_SRV_REG__START_NO = 6;
+		//EXPAND_SRV_REG__START_NO = 6;
+		EXPAND_SRV_REG__START_NO = 10;
 		NUM_SRV_ONE_MATERIAL = (EXPAND_SRV_REG__START_NO + MAX_MODEL_EXPAND_SRV);
 		NUM_CBV_ONE_MATERIAL = 1;
 
@@ -3347,6 +3537,10 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 			m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
 			m_descriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
 			m_descriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 6, *(g_fpssprite.GetTexture(1)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 7, *(g_fpssprite.GetTexture(2)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 8, *(g_fpssprite.GetTexture(3)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 9, *(g_fpssprite.GetTexture(4)));//Numマップ。
 
 			srvNo += NUM_SRV_ONE_MATERIAL;
 
@@ -3376,6 +3570,10 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
 			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
 			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 6, *(g_fpssprite.GetTexture(1)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 7, *(g_fpssprite.GetTexture(2)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 8, *(g_fpssprite.GetTexture(3)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 9, *(g_fpssprite.GetTexture(4)));//Numマップ。
 
 			srvNo += NUM_SRV_ONE_MATERIAL;
 
@@ -3414,6 +3612,10 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 			m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
 			m_descriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
 			m_descriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 6, *(g_fpssprite.GetTexture(1)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 7, *(g_fpssprite.GetTexture(2)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 8, *(g_fpssprite.GetTexture(3)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 9, *(g_fpssprite.GetTexture(4)));//Numマップ。
 			//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
 
 			srvNo += NUM_SRV_ONE_MATERIAL;
@@ -3439,6 +3641,10 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
 			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
 			//m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 6, *(g_fpssprite.GetTexture(1)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 7, *(g_fpssprite.GetTexture(2)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 8, *(g_fpssprite.GetTexture(3)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 9, *(g_fpssprite.GetTexture(4)));//Numマップ。
 
 			srvNo += NUM_SRV_ONE_MATERIAL;
 			
@@ -3634,7 +3840,9 @@ void CMQOMaterial::SetFl4x4(myRenderer::RENDEROBJ renderobj, int refposindex)
 	}
 }
 
-void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
+void CMQOMaterial::DrawCommon(
+	bool useGS,
+	RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 	const Matrix& mView, const Matrix& mProj,
 	int refposindex)
 //default:refposindex = 0
@@ -3661,7 +3869,7 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	//	return;
 	//}
 
-	int shaderindex = DecideShaderIndex(renderobj);
+	int shaderindex = DecideShaderIndex(useGS, renderobj);
 
 	int pipelineindex = 0;//!!!!!!!!!
 
@@ -3724,7 +3932,9 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].Init();
 		m_cb[currentrefposindex].mWorld = renderobj.mWorld;
 		m_cb[currentrefposindex].mView = mView;
+		m_cb[currentrefposindex].minvView.Inverse(mView);
 		m_cb[currentrefposindex].mProj = mProj;
+		m_cb[currentrefposindex].mViewProj = mView * mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;
 		m_cb[currentrefposindex].diffusemult = pextline->GetColor();
 		m_cb[currentrefposindex].ambient.SetParams(GetAmb3F(), (float)GetAlphaTestClipVal());
@@ -3761,6 +3971,8 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		m_cb[currentrefposindex].time.y = (float)renderobj.pmodel->GetRefPosPointSize();
+
 		MODELBOUND modelbb;
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
@@ -3787,7 +3999,9 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].Init();
 		m_cb[currentrefposindex].mWorld = renderobj.mWorld;
 		m_cb[currentrefposindex].mView = mView;
+		m_cb[currentrefposindex].minvView.Inverse(mView);
 		m_cb[currentrefposindex].mProj = mProj;
+		m_cb[currentrefposindex].mViewProj = mView * mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;
 		if (GetTempDiffuseMultFlag()) {
 			m_cb[currentrefposindex].diffusemult = GetTempDiffuseMult() * renderobj.diffusemult;
@@ -3830,6 +4044,8 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		m_cb[currentrefposindex].time.y = (float)renderobj.pmodel->GetRefPosPointSize();
+
 		MODELBOUND modelbb;
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
@@ -3875,7 +4091,9 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		m_cb[currentrefposindex].Init();
 		m_cb[currentrefposindex].mWorld = renderobj.mWorld;
 		m_cb[currentrefposindex].mView = mView;
+		m_cb[currentrefposindex].minvView.Inverse(mView);
 		m_cb[currentrefposindex].mProj = mProj;
+		m_cb[currentrefposindex].mViewProj = mView * mProj;
 		if (GetTempDiffuseMultFlag()) {
 			m_cb[currentrefposindex].diffusemult = GetTempDiffuseMult() * renderobj.diffusemult;
 		}
@@ -3917,6 +4135,8 @@ void CMQOMaterial::DrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		m_cb[currentrefposindex].time.y = (float)renderobj.pmodel->GetRefPosPointSize();
+
 		MODELBOUND modelbb;
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
@@ -4019,7 +4239,9 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 	if (pdispline && pextline) {
 		m_cb[0].mWorld = renderobj.mWorld;
 		m_cb[0].mView = mView;
+		m_cb[0].minvView.Inverse(mView);
 		m_cb[0].mProj = mProj;
+		m_cb[0].mViewProj = mView * mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;
 		m_cb[0].diffusemult = pextline->GetColor();
 		m_cb[0].ambient.SetParams(GetAmb3F(), (float)GetAlphaTestClipVal());
@@ -4051,6 +4273,8 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		if (DXUTGetGlobalTimer()) {
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		m_cb[0].time.y = (float)renderobj.pmodel->GetRefPosPointSize();
+
 		MODELBOUND modelbb;
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
@@ -4075,7 +4299,9 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 	else if (ppm3) {
 		m_cb[0].mWorld = renderobj.mWorld;//未使用
 		m_cb[0].mView = mView;
+		m_cb[0].minvView.Inverse(mView);
 		m_cb[0].mProj = mProj;
+		m_cb[0].mViewProj = mView * mProj;
 		//m_cb.diffusemult = renderobj.diffusemult;
 		if (GetTempDiffuseMultFlag()) {
 			m_cb[0].diffusemult = GetTempDiffuseMult();
@@ -4112,6 +4338,8 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		if (DXUTGetGlobalTimer()) {
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		m_cb[0].time.y = (float)renderobj.pmodel->GetRefPosPointSize();
+
 		MODELBOUND modelbb;
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
@@ -4151,7 +4379,9 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 	else if (ppm4) {
 		m_cb[0].mWorld = renderobj.mWorld;
 		m_cb[0].mView = mView;
+		m_cb[0].minvView.Inverse(mView);
 		m_cb[0].mProj = mProj;
+		m_cb[0].mViewProj = mView * mProj;
 		if (GetTempDiffuseMultFlag()) {
 			m_cb[0].diffusemult = GetTempDiffuseMult() * renderobj.diffusemult;
 		}
@@ -4187,6 +4417,8 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		if (DXUTGetGlobalTimer()) {
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
+		m_cb[0].time.y = (float)renderobj.pmodel->GetRefPosPointSize();
+
 		MODELBOUND modelbb;
 		modelbb.Init();
 		modelbb = renderobj.pmodel->GetCalclatedModelBound();
