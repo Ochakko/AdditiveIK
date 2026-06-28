@@ -865,7 +865,7 @@ int CRefPosDlg::CreateRefPosWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_pointsizeSlider = new OWP_Slider((double)m_model->GetRefPosPointSize(), 1, 50);
+		m_pointsizeSlider = new OWP_Slider((double)m_model->GetRefPosPointSize(), 0.1, 6.0);
 		if (!m_pointsizeSlider) {
 			_ASSERT(0);
 			abort();
@@ -1045,10 +1045,8 @@ int CRefPosDlg::CreateRefPosWnd()
 
 		m_pointsizeSlider->setCursorListener([=, this]() {
 			double value = m_pointsizeSlider->getValue();
-			int setvalue = (int)(value + 0.0001);
 			if (m_model != nullptr) {
-				m_model->SetRefPosPointSize(setvalue);
-				m_pointsizeSlider->setValue((double)setvalue, false);//intに丸めてセットし直し
+				m_model->SetRefPosPointSize((float)value);
 			}
 			});
 

@@ -20,7 +20,7 @@ public:
 	int DrawScreen(RenderContext* rc, int srcfps);
 
 	Texture* GetTexture(int srcindex) {
-		if ((srcindex >= 0) && (srcindex <= 10)) {
+		if ((srcindex >= 0) && (srcindex < 10)) {
 			return m_texture[srcindex];
 		}
 		else {

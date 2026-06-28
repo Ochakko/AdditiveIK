@@ -3470,10 +3470,10 @@ public: //accesser
 	bool GetRefPosPointDisp() {
 		return m_refpos_pointdisp;
 	}
-	void SetRefPosPointSize(int srcval) {
+	void SetRefPosPointSize(float srcval) {
 		m_refpos_pointsize = srcval;
 	}
-	int GetRefPosPointSize() {
+	float GetRefPosPointSize() {
 		return m_refpos_pointsize;
 	}
 	void SetRefPosParallaxEffect(bool srcval) {
@@ -4106,7 +4106,7 @@ private:
 	bool m_refpos_soliddisp;
 	bool m_refpos_linedisp;
 	bool m_refpos_pointdisp;
-	int m_refpos_pointsize;
+	float m_refpos_pointsize;
 	bool m_refpos_parallax_effect;
 
 	bool m_skyflag;

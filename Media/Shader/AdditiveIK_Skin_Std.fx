@@ -142,7 +142,7 @@ cbuffer ModelCb : register(b0)
     int4 UVs; //x:UVSet, y:TilingU, z:TilingV, w:distortionFlag   
     int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag, w:VSM
     int4 Flags2; //x:grassflag    
-    float4 time1; //2024/04/27 y:refpos_pointsize
+    float4 time1; //2024/04/27 x:DXUTTime, y:refpos_pointsize
     float4 bbsize; //2024/05/11 size of bourndary        
     int4 distortiontype; //[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)
     float4 distortionscale; //x:distortionscale, y:riverflowrate
@@ -328,8 +328,8 @@ SGSIn VSMainSkinStdForGS(SVSIn vsIn, uniform bool hasSkin)
     
     psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
     psIn.FogAndOther.y = 0.0f;
-    psIn.FogAndOther.z = time1.y;
-    psIn.FogAndOther.w = 0.0f;
+    psIn.FogAndOther.z = time1.y;//size of PointNumSprite
+    psIn.FogAndOther.w = time1.x;//dxuttime --> texindex of PointNumSprite
     //psIn.pos = mul(mView, psIn.pos);
     //psIn.pos = mul(mProj, psIn.pos);
     ////psIn.pos /= psIn.pos.w;
@@ -431,6 +431,8 @@ void GSParticleDraw(point SGSIn input[1], inout TriangleStream<SGSOut> SpriteStr
 {
     SGSOut output;
     
+    int orgtime = (int) (input[0].FogAndOther.w * 5.0f);
+    
     // Emit two new triangles.
     for (int i = 0; i < 4; i++)
     {
@@ -446,7 +448,7 @@ void GSParticleDraw(point SGSIn input[1], inout TriangleStream<SGSOut> SpriteStr
         output.uv = g_texcoords[i];//input[0].uv;
         output.diffusemult = input[0].diffusemult;
         output.FogAndOther = input[0].FogAndOther;
-        output.FogAndOther.w = i;
+        output.FogAndOther.w = (orgtime + i) % (i + 1);
         output.depth = input[0].depth;
         output.normal = input[0].normal;
 

@@ -128,6 +128,8 @@ int CDispObj::InitParams()
 
 	m_indexBuffer = nullptr;	//インデックスバッファ。
 	ZeroMemory(&m_indexBufferView, sizeof(D3D12_INDEX_BUFFER_VIEW));	//インデックスバッファビュー。
+	m_indexBuffer_PointNumSprite = nullptr;	//インデックスバッファ。
+	ZeroMemory(&m_indexBufferView_PointNumSprite, sizeof(D3D12_INDEX_BUFFER_VIEW));	//インデックスバッファビュー。
 
 	m_csdeform = nullptr;
 
@@ -152,6 +154,10 @@ int CDispObj::DestroyObjs()
 	if (m_indexBuffer) {
 		m_indexBuffer->Unmap(0, nullptr);
 		m_indexBuffer->Release();
+	}
+	if (m_indexBuffer_PointNumSprite) {
+		m_indexBuffer_PointNumSprite->Unmap(0, nullptr);
+		m_indexBuffer_PointNumSprite->Release();
 	}
 
 	m_InstancingBuffer.DestroyObjs();
@@ -943,6 +949,83 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape)
 			//m_indexBuffer->Unmap(0, nullptr);
 		}
 	}
+	//#################################
+	//インデックスバッファ_PointNumSprite
+	//#################################
+	{
+		if (m_pm3 || m_pm4) {
+			//auto d3dDevice = g_graphicsEngine->GetD3DDevice();
+			DWORD ibsize = pmvleng * sizeof(int);
+			//auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+			auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_GPU_UPLOAD);
+			auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(ibsize);
+			HRESULT hrib0 = pdev->CreateCommittedResource(
+				&heapProp,
+				D3D12_HEAP_FLAG_NONE,
+				&rDesc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				IID_PPV_ARGS(&m_indexBuffer_PointNumSprite));
+			if (FAILED(hrib0) || !m_indexBuffer_PointNumSprite) {
+				::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+					"CreateIndexBuffer_PointNumSprite Error", MB_OK | MB_ICONERROR);
+				abort();
+			}
+
+			m_indexBuffer_PointNumSprite->SetName(L"DispOjb:indexBuffer_PointNumSprite");
+
+
+			//インデックスバッファのビューを作成。
+			m_indexBufferView_PointNumSprite.BufferLocation = m_indexBuffer_PointNumSprite->GetGPUVirtualAddress();
+			m_indexBufferView_PointNumSprite.Format = DXGI_FORMAT_R32_UINT;
+			m_indexBufferView_PointNumSprite.SizeInBytes = ibsize;
+
+			//インデックスバッファをコピー。
+			uint32_t* pData;
+			//DWORD triangleno;
+			m_indexBuffer_PointNumSprite->Map(0, nullptr, reinterpret_cast<void**>(&pData));
+			for (int index0 = 0; index0 < pmvleng; index0++) {
+				*(pData + index0) = index0;
+			}
+			//m_indexBuffer->Unmap(0, nullptr);
+		}
+		else if (m_extline) {
+			DWORD ibsize = pmvleng * sizeof(int);
+			//auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+			auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_GPU_UPLOAD);
+			auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(ibsize);
+			HRESULT hrib1 = pdev->CreateCommittedResource(
+				&heapProp,
+				D3D12_HEAP_FLAG_NONE,
+				&rDesc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				IID_PPV_ARGS(&m_indexBuffer_PointNumSprite));
+			if (FAILED(hrib1) || !m_indexBuffer_PointNumSprite) {
+				::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+					"CreateIndexBuffer_PointNumSprite Error", MB_OK | MB_ICONERROR);
+				abort();
+			}
+
+			m_indexBuffer->SetName(L"DispOjb:indexBuffer_PointNumSprite");
+
+			//インデックスバッファのビューを作成。
+			m_indexBufferView_PointNumSprite.BufferLocation = m_indexBuffer_PointNumSprite->GetGPUVirtualAddress();
+			m_indexBufferView_PointNumSprite.Format = DXGI_FORMAT_R32_UINT;
+			m_indexBufferView_PointNumSprite.SizeInBytes = ibsize;
+
+			//インデックスバッファをコピー。
+			uint32_t* pData;
+			//DWORD triangleno;
+			m_indexBuffer_PointNumSprite->Map(0, nullptr, reinterpret_cast<void**>(&pData));
+
+			DWORD lineno;
+			for (lineno = 0; lineno < (DWORD)pmvleng; lineno++) {
+				*(pData + lineno) = lineno;
+			}
+			//m_indexBuffer->Unmap(0, nullptr);
+		}
+	}
 
 
 
@@ -1376,8 +1459,7 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 	//##################################################################################
 	//1. 頂点バッファを設定。
 	rc->SetVertexBuffer(m_vertexBufferView);
-	//3. インデックスバッファを設定。
-	rc->SetIndexBuffer(m_indexBufferView);
+
 
 	bool useGS = false;
 	int topoindex;
@@ -1387,6 +1469,10 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 			if (renderobj.pmodel &&
 				(renderobj.pmodel->GetRefPosSolidDisp() || (renderobj.refposindex == 0) ||
 					(renderobj.renderkind == RENDERKIND_SHADOWMAP) || (renderobj.renderkind == RENDERKIND_SHADOWRECIEVER))) {
+
+				//3. インデックスバッファを設定。
+				rc->SetIndexBuffer(m_indexBufferView);
+
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				useGS = false;
 			}
@@ -1396,6 +1482,9 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 			break;
 		case 1:
 			if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp() && renderobj.pmodel->GetRefPosFlag()) {
+				//3. インデックスバッファを設定。
+				rc->SetIndexBuffer(m_indexBufferView);
+
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 				useGS = false;
 			}
@@ -1405,6 +1494,9 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 			break;
 		case 2:
 			if (renderobj.pmodel && renderobj.pmodel->GetRefPosPointDisp() && renderobj.pmodel->GetRefPosFlag()) {
+				//3. インデックスバッファを設定。
+				rc->SetIndexBuffer(m_indexBufferView_PointNumSprite);
+
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 				useGS = true;
 			}
@@ -1422,59 +1514,96 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 			renderobj.renderkind = RENDERKIND_NORMAL;//2023/12/11
 		}
 
-		bool isfirstmaterial = true;
-		int materialcnt;
-		for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
-			CMQOMaterial* curmat = NULL;
-			int curoffset = 0;
-			int curtrinum = 0;
-			int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
-			if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0) &&
-				((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (curmat->GetShadowCasterFlag()))) {
-				bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
+		if (!useGS) {
+			//###################
+			//PointNumSprite以外
+			//###################
 
-				int curnumprim;
-				if (!useGS) {
-					curnumprim = curtrinum;
+			bool isfirstmaterial = true;
+			int materialcnt;
+			for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
+				CMQOMaterial* curmat = NULL;
+				int curoffset = 0;
+				int curtrinum = 0;
+				int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
+				if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0) &&
+					((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (curmat->GetShadowCasterFlag()))) {
+					bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
+
+					int curnumprim = curtrinum;
+
+					if (laterflag == false) {
+						bool laterflag2 = false;
+						RenderNormalMaterial(useGS, rc, renderobj, laterflag2,
+							curmat, curoffset, curnumprim, isfirstmaterial);
+						isfirstmaterial = false;
+					}
 				}
-				else {
-					curnumprim = curtrinum * 3;
-				}
+			}
 
+			int latermatnum = renderobj.mqoobj->GetLaterMaterialNum();
+			if ((renderobj.forcewithalpha || renderobj.withalpha) && (latermatnum > 0)) {
+				//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
+				int laterindex;
+				for (laterindex = 0; laterindex < latermatnum; laterindex++) {
+					LATERMATERIAL latermaterial = renderobj.mqoobj->GetLaterMaterial(laterindex);
+					if (latermaterial.pmaterial &&
+						((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (latermaterial.pmaterial->GetShadowCasterFlag()))) {
+						bool laterflag2 = true;
 
-				if (laterflag == false) {
-					bool laterflag2 = false;
-					RenderNormalMaterial(useGS, rc, renderobj, laterflag2,
-						curmat, curoffset, curnumprim, isfirstmaterial);
-					isfirstmaterial = false;
+						int curnumprim = latermaterial.trinum;
+						
+						RenderNormalMaterial(useGS, rc, renderobj,
+							laterflag2,
+							latermaterial.pmaterial, latermaterial.offset, curnumprim,
+							isfirstmaterial);
+						isfirstmaterial = false;
+					}
 				}
 			}
 		}
+		else {
 
-		int latermatnum = renderobj.mqoobj->GetLaterMaterialNum();
-		if ((renderobj.forcewithalpha || renderobj.withalpha) && (latermatnum > 0)) {
-			//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
-			int laterindex;
-			for (laterindex = 0; laterindex < latermatnum; laterindex++) {
-				LATERMATERIAL latermaterial = renderobj.mqoobj->GetLaterMaterial(laterindex);
-				if (latermaterial.pmaterial &&
-					((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (latermaterial.pmaterial->GetShadowCasterFlag()))) {
-					bool laterflag2 = true;
+			//#################
+			//PointNumSprite
+			//#################
 
-					int curnumprim;
-					if (!useGS) {
-						curnumprim = latermaterial.trinum;
-					}
-					else {
-						curnumprim = latermaterial.trinum * 3;
-					}
+			CMQOMaterial* curmat = NULL;
+			int curoffset = 0;
+			int curtrinum = 0;
+			int materialcnt = 0;//!!!
+			int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
+			if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0) &&
+				((renderobj.renderkind != RENDERKIND_SHADOWMAP))) {
+				ChaVector4 diffuse;
+				ChaVector4 curdif4f = curmat->GetDif4F();
+				diffuse.w = curdif4f.w * renderobj.diffusemult.w;
+				diffuse.x = curdif4f.x * renderobj.diffusemult.x * renderobj.materialdisprate.x;
+				diffuse.y = curdif4f.y * renderobj.diffusemult.y * renderobj.materialdisprate.x;
+				diffuse.z = curdif4f.z * renderobj.diffusemult.z * renderobj.materialdisprate.x;
+				//diffuse.Clamp(0.0f, 1.0f);
 
-					RenderNormalMaterial(useGS, rc, renderobj,
-						laterflag2,
-						latermaterial.pmaterial, latermaterial.offset, curnumprim,
-						isfirstmaterial);
-					isfirstmaterial = false;
+				bool withalpha = renderobj.withalpha || renderobj.forcewithalpha;
+				Matrix mView, mProj;
+				if ((renderobj.renderkind != RENDERKIND_SHADOWMAP)) {
+					mView = renderobj.mView;
+					mProj = renderobj.mProj;
 				}
+				else {
+					//for shadow
+					mView = g_cameraShadow->GetViewMatrix(false);
+					mProj = g_cameraShadow->GetProjectionMatrix();
+				}
+				//定数バッファの設定、更新など描画の共通処理を実行する。
+
+				curmat->DrawCommon(useGS, rc, renderobj, mView, mProj, renderobj.refposindex);
+				int hasskin = 1;
+				bool isline = false;
+				curmat->BeginRender(useGS, rc, renderobj, renderobj.refposindex);
+				//4. ドローコールを実行。
+				int pmvleng = m_pm4->GetOptLeng();
+				rc->DrawIndexed(pmvleng, curoffset);
+				//rc.DrawIndexed(m_pm4->GetFaceNum() * 3);
 			}
 		}
 	}
@@ -1521,20 +1650,14 @@ int CDispObj::RenderNormalMaterial(bool useGS,
 	//diffuse.Clamp(0.0f, 1.0f);
 
 	bool opeflag = false;
-	bool withalpha = renderobj.withalpha || renderobj.forcewithalpha;
-	if (laterflag) {
-		//laterflag == trueのときは　withalpha == trueのときだけ描画
-		if (withalpha) {
-			opeflag = true;
-		}
-		else {
-			opeflag = false;
-		}
+	if (useGS) {
+		opeflag = true;
 	}
 	else {
-		if (withalpha == false) {
-			//不透明だけを描画
-			if (diffuse.w > 0.99999f) {
+		bool withalpha = renderobj.withalpha || renderobj.forcewithalpha;
+		if (laterflag) {
+			//laterflag == trueのときは　withalpha == trueのときだけ描画
+			if (withalpha) {
 				opeflag = true;
 			}
 			else {
@@ -1542,28 +1665,38 @@ int CDispObj::RenderNormalMaterial(bool useGS,
 			}
 		}
 		else {
-			//ここを通るのは　(renderobj.withalpha == true) || (renderobj.forcewithalpha == true)
-			if (renderobj.forcewithalpha) {
-				//renderobj.forcewithalpha == trueのときは　1passでオブジェクト全部を描画するのでopeflag = true
-				opeflag = true;
-			}
-			else {
-				//renderobj.withalpha == trueのときは　2passの内の1passで半透明だけを描画
-				if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+			if (withalpha == false) {
+				//不透明だけを描画
+				if (diffuse.w > 0.99999f) {
 					opeflag = true;
 				}
 				else {
 					opeflag = false;
 				}
 			}
+			else {
+				//ここを通るのは　(renderobj.withalpha == true) || (renderobj.forcewithalpha == true)
+				if (renderobj.forcewithalpha) {
+					//renderobj.forcewithalpha == trueのときは　1passでオブジェクト全部を描画するのでopeflag = true
+					opeflag = true;
+				}
+				else {
+					//renderobj.withalpha == trueのときは　2passの内の1passで半透明だけを描画
+					if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+						opeflag = true;
+					}
+					else {
+						opeflag = false;
+					}
+				}
+			}
+		}
+
+		if (opeflag == false) {
+			return 0;
 		}
 	}
-
-	if (opeflag == false) {
-		return 0;
-	}
-
-
+	
 //
 ////diffuse.SetParams( 0.6f, 0.6f, 0.6f, 1.0f );
 //
@@ -1812,8 +1945,6 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	//##################################################################################
 	//1. 頂点バッファを設定。
 	rc->SetVertexBuffer(m_vertexBufferView);
-	//3. インデックスバッファを設定。
-	rc->SetIndexBuffer(m_indexBufferView);
 
 	bool useGS = false;
 	int topoindex;
@@ -1823,6 +1954,9 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			if (renderobj.pmodel &&
 				(renderobj.pmodel->GetRefPosSolidDisp() || (renderobj.refposindex == 0) || 
 					(renderobj.renderkind == RENDERKIND_SHADOWMAP) || (renderobj.renderkind == RENDERKIND_SHADOWRECIEVER))) {
+				//3. インデックスバッファを設定。
+				rc->SetIndexBuffer(m_indexBufferView);
+
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				useGS = false;
 			}
@@ -1832,6 +1966,9 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			break;
 		case 1:
 			if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp() && renderobj.pmodel->GetRefPosFlag()) {
+				//3. インデックスバッファを設定。
+				rc->SetIndexBuffer(m_indexBufferView);
+
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 				useGS = false;
 			}
@@ -1841,6 +1978,9 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			break;
 		case 2:
 			if (renderobj.pmodel && renderobj.pmodel->GetRefPosPointDisp() && renderobj.pmodel->GetRefPosFlag()) {
+				//3. インデックスバッファを設定。
+				rc->SetIndexBuffer(m_indexBufferView_PointNumSprite);
+
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 				useGS = true;
 			}
@@ -1858,13 +1998,66 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			renderobj.renderkind = RENDERKIND_NORMAL;//2023/12/11
 		}
 
-		//マテリアルごとにドロー。
 
-		//HRESULT hr;
-		int blno;
-		for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
+		if (!useGS) {
+			//##################
+			//PointNumSprite以外
+			//##################
+			//マテリアルごとにドロー。
+			int blno;
+			for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
+				MATERIALBLOCK* currb = m_pm3->GetMatBlock() + blno;
+
+				CMQOMaterial* curmat;
+				curmat = currb->mqomat;
+				if (!curmat) {
+					//_ASSERT(0);
+					return 1;
+				}
+
+				if ((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (curmat->GetShadowCasterFlag())) {
+					int curnumprim = currb->endface - currb->startface + 1;
+					
+					bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
+					if (laterflag == false) {
+						bool laterflag2 = false;
+						int result = RenderNormalPM3Material(
+							useGS,
+							rc, renderobj,
+							laterflag2, curmat, currb->startface * 3, curnumprim);
+					}
+				}
+			}
+
+
+
+			int latermatnum = renderobj.mqoobj->GetLaterMaterialNum();
+			if ((renderobj.forcewithalpha || renderobj.withalpha) && (latermatnum > 0)) {
+				//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
+				int laterindex;
+				for (laterindex = 0; laterindex < latermatnum; laterindex++) {
+					LATERMATERIAL latermaterial = renderobj.mqoobj->GetLaterMaterial(laterindex);
+					if (latermaterial.pmaterial &&
+						((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (latermaterial.pmaterial->GetShadowCasterFlag()))) {
+						bool laterflag2 = true;
+
+						int curnumprim = latermaterial.trinum;
+
+						RenderNormalPM3Material(
+							useGS,
+							rc, renderobj,
+							laterflag2,
+							latermaterial.pmaterial, latermaterial.offset, curnumprim);
+					}
+				}
+			}
+		}
+		else {
+			//##################
+			//PointNumSprite
+			//##################
+			int blno = 0;
 			MATERIALBLOCK* currb = m_pm3->GetMatBlock() + blno;
-
 			CMQOMaterial* curmat;
 			curmat = currb->mqomat;
 			if (!curmat) {
@@ -1873,51 +2066,37 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			}
 
 			if ((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (curmat->GetShadowCasterFlag())) {
-				int curnumprim;
-				if (!useGS) {
-					curnumprim = currb->endface - currb->startface + 1;
+				ChaVector4 diffuse;
+				ChaVector4 curdif4f = curmat->GetDif4F();
+				diffuse.w = curdif4f.w * renderobj.diffusemult.w;
+				diffuse.x = curdif4f.x * renderobj.diffusemult.x * renderobj.materialdisprate.x;
+				diffuse.y = curdif4f.y * renderobj.diffusemult.y * renderobj.materialdisprate.x;
+				diffuse.z = curdif4f.z * renderobj.diffusemult.z * renderobj.materialdisprate.x;
+
+				bool withalpha = renderobj.withalpha || renderobj.forcewithalpha;
+				Matrix mView, mProj;
+				if ((renderobj.renderkind != RENDERKIND_SHADOWMAP)) {
+					mView = renderobj.mView;
+					mProj = renderobj.mProj;
 				}
 				else {
-					curnumprim = (currb->endface - currb->startface + 1) * 3;
+					//for shadow
+					mView = g_cameraShadow->GetViewMatrix(false);
+					mProj = g_cameraShadow->GetProjectionMatrix();
 				}
-
-				bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
-				if (laterflag == false) {
-					bool laterflag2 = false;
-					int result = RenderNormalPM3Material(
-						useGS,
-						rc, renderobj,
-						laterflag2, curmat, currb->startface * 3, curnumprim);
-				}
-			}
-		}
+				//定数バッファの設定、更新など描画の共通処理を実行する。
+				//int refposindex = 0;//!!!!!!!!!
+				int refposindex = renderobj.refposindex;//2026/05/05
+				curmat->DrawCommon(useGS, rc, renderobj, mView, mProj, refposindex);
 
 
+				int hasskin = 0;
+				bool isline = false;
+				curmat->BeginRender(useGS, rc, renderobj, refposindex);
 
-		int latermatnum = renderobj.mqoobj->GetLaterMaterialNum();
-		if ((renderobj.forcewithalpha || renderobj.withalpha) && (latermatnum > 0)) {
-			//VRoid VRM 裾(すそ)の透過の順番のため　最後に描画
-			int laterindex;
-			for (laterindex = 0; laterindex < latermatnum; laterindex++) {
-				LATERMATERIAL latermaterial = renderobj.mqoobj->GetLaterMaterial(laterindex);
-				if (latermaterial.pmaterial &&
-					((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (latermaterial.pmaterial->GetShadowCasterFlag()))) {
-					bool laterflag2 = true;
-
-					int curnumprim;
-					if (!useGS) {
-						curnumprim = latermaterial.trinum;
-					}
-					else {
-						curnumprim = latermaterial.trinum * 3;
-					}
-
-					RenderNormalPM3Material(
-						useGS,
-						rc, renderobj,
-						laterflag2,
-						latermaterial.pmaterial, latermaterial.offset, curnumprim);
-				}
+				int curnumprim = m_pm3->GetOptLeng();
+				//4. ドローコールを実行。
+				rc->DrawIndexed(curnumprim, 0);
 			}
 		}
 	}
@@ -1945,20 +2124,14 @@ int CDispObj::RenderNormalPM3Material(bool useGS,
 
 
 	bool opeflag = false;
-	bool withalpha = renderobj.withalpha || renderobj.forcewithalpha;
-	if (laterflag) {
-		//laterflag == trueのときは　withalpha == trueのときだけ描画
-		if (withalpha) {
-			opeflag = true;
-		}
-		else {
-			opeflag = false;
-		}
+	if (useGS) {
+		opeflag = true;
 	}
 	else {
-		if (withalpha == false) {
-			//不透明だけを描画
-			if (diffuse.w > 0.99999f) {
+		bool withalpha = renderobj.withalpha || renderobj.forcewithalpha;
+		if (laterflag) {
+			//laterflag == trueのときは　withalpha == trueのときだけ描画
+			if (withalpha) {
 				opeflag = true;
 			}
 			else {
@@ -1966,27 +2139,38 @@ int CDispObj::RenderNormalPM3Material(bool useGS,
 			}
 		}
 		else {
-			//ここを通るのは　(renderobj.withalpha == true) || (renderobj.forcewithalpha == true)
-			if (renderobj.forcewithalpha) {
-				//renderobj.forcewithalpha == trueのときは　1passでオブジェクト全部を描画するのでopeflag = true
-				opeflag = true;
-			}
-			else {
-				//renderobj.withalpha == trueのときは　2passの内の1passで半透明だけを描画
-				if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+			if (withalpha == false) {
+				//不透明だけを描画
+				if (diffuse.w > 0.99999f) {
 					opeflag = true;
 				}
 				else {
 					opeflag = false;
 				}
 			}
+			else {
+				//ここを通るのは　(renderobj.withalpha == true) || (renderobj.forcewithalpha == true)
+				if (renderobj.forcewithalpha) {
+					//renderobj.forcewithalpha == trueのときは　1passでオブジェクト全部を描画するのでopeflag = true
+					opeflag = true;
+				}
+				else {
+					//renderobj.withalpha == trueのときは　2passの内の1passで半透明だけを描画
+					if ((curmat->GetTransparent() == 1) || (diffuse.w <= 0.99999f)) {
+						opeflag = true;
+					}
+					else {
+						opeflag = false;
+					}
+				}
+			}
+		}
+
+		if (opeflag == false) {
+			return 0;
 		}
 	}
-
-	if (opeflag == false) {
-		return 0;
-	}
-
+	
 	//HRESULT hr;
 	//hr = g_hdiffuse->SetRawValue(&diffuse, 0, sizeof(ChaVector4));
 	//_ASSERT(SUCCEEDED(hr));

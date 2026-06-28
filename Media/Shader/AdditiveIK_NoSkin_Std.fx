@@ -339,8 +339,9 @@ SGSIn VSMainNoSkinStdForGS(SVSInWithoutBone vsIn, uniform bool hasSkin)
     
     psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
     psIn.FogAndOther.y = (Flags2.y == 0) ? 0.0f : 1.0f;
-    psIn.FogAndOther.z = time1.y;
-    psIn.FogAndOther.w = 0.0f;
+    psIn.FogAndOther.z = time1.y; //size of PointNumSprite
+    psIn.FogAndOther.w = time1.x; //dxuttime --> texindex of PointNumSprite
+     
     //psIn.pos = mul(mView, psIn.pos);    // ワールド座標系からカメラ座標系に変換
     //psIn.pos = mul(mProj, psIn.pos);    // カメラ座標系からスクリーン座標系に変換
 
@@ -445,6 +446,8 @@ SPSInExtLine VSMainExtLine(SVSInExtLine vsIn, uniform bool hasSkin)
 void GSParticleDraw(point SGSIn input[1], inout TriangleStream<SGSOut> SpriteStream)
 {
     SGSOut output;
+  
+    int orgtime = (int) (input[0].FogAndOther.w * 5.0f);
     
     // Emit two new triangles.
     for (int i = 0; i < 4; i++)
@@ -461,7 +464,7 @@ void GSParticleDraw(point SGSIn input[1], inout TriangleStream<SGSOut> SpriteStr
         output.uv = g_texcoords[i];//input[0].uv;
         output.diffusemult = input[0].diffusemult;
         output.FogAndOther = input[0].FogAndOther;
-        output.FogAndOther.w = i;
+        output.FogAndOther.w = (orgtime + i) % (i + 1);
         output.depth = input[0].depth;
         output.normal = input[0].normal;
 

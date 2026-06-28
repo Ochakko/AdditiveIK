@@ -231,6 +231,8 @@ private:
 
 	ID3D12Resource* m_indexBuffer;	//インデックスバッファ。
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;	//インデックスバッファビュー。
+	ID3D12Resource* m_indexBuffer_PointNumSprite;	//インデックスバッファ。
+	D3D12_INDEX_BUFFER_VIEW m_indexBufferView_PointNumSprite;	//インデックスバッファビュー。
 
 
 	CSDeform* m_csdeform;//ComputeShader for Deform

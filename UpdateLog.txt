@@ -1,13 +1,18 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
-
+2026/06/28
+　RefPos調整中_1
+　　PointNumSpriteを割と高速化
+　　PointNumSpriteのサイズ範囲変更
+　　PointNumSpriteの数字を変化させるテスト
+　　
 2026/06/27
 　RefPosのPoint表示でテスト中
 　　Pointにチェックを入れた場合にPointSizeスライダーで指定したサイズのの数字(１から４)テクスチャを表示
 　　笑えるほど重いので考え中
 　　とりあえずコミット
-
+　　
 2026/06/21
 　AdditiveIK 1.0.0.74 release
 　　1.0.0.73からの変更点

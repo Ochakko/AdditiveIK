@@ -540,7 +540,7 @@ int CModel::InitParams(int srcrefposnum)
 	m_refpos_linedisp = false;
 	m_refpos_pointdisp = false;
 	m_refpos_parallax_effect = true;
-	m_refpos_pointsize = 4;
+	m_refpos_pointsize = 1.0f;
 	m_monoflag = false;
 
 	int index1;
