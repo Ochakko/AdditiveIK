@@ -210,6 +210,15 @@ sampler g_sampler_num3 : register(s8);
 sampler g_sampler_num4 : register(s9);
 
 
+float fracSin11(float x)
+{ // 1 in, 1 out
+    return frac(1000.0f * sin(x));
+}
+float fracSin21(float2 xy)
+{ // 2 in, 1 out
+    return frac(sin(dot(xy, float2(12.9898f, 78.233f))) * 43758.5453123f);
+}
+
 float CalcVSFog(float4 worldpos)
 {
     worldpos /= worldpos.w;
@@ -430,30 +439,35 @@ SPSInShadowReciever VSMainSkinStdShadowReciever(SVSIn vsIn, uniform bool hasSkin
 void GSParticleDraw(point SGSIn input[1], inout TriangleStream<SGSOut> SpriteStream)
 {
     SGSOut output;
-    
-    int orgtime = (int) (input[0].FogAndOther.w * 5.0f);
+
+    float rndsinpos = fracSin21(input[0].pos.xy) * 4.0f;
+    float rndsintime = fracSin11(input[0].FogAndOther.w) * 4.0f;
+    int texkind = (int) (rndsinpos * rndsintime) % 4;
+    float modscale = (rndsinpos > 2.9f) ? 3.0f : ((rndsinpos < 1.9f) ? 2.0f : ((rndsinpos < 0.9f) ? 1.0f : 0.1f));
+    float shiftx = fracSin11(input[0].pos.x) * 2.0f;
+    float shifty = fracSin11(input[0].pos.y) * 2.0f;
     
     // Emit two new triangles.
     for (int i = 0; i < 4; i++)
     {
-        float3 position = g_positions[i] * input[0].FogAndOther.z;// x refpos_pointsize
-        position = mul((float3x3)minvView, position) + input[0].pos.xyz;
-        
-        //output.worldPos = float4(position, 1.0);
+        float3 position = g_positions[i] * input[0].FogAndOther.z; // x refpos_pointsize
+        position = mul((float3x3) minvView, position) * modscale + input[0].pos.xyz + float3(shiftx, shifty, 0.0f);
+      
         output.pos = float4(position, 1.0);
-        //output.pos = mul(mWorld, output.pos);
         output.pos = mul(mViewProj, output.pos);
         output.posrw = output.pos;
         
         output.uv = g_texcoords[i];//input[0].uv;
         output.diffusemult = input[0].diffusemult;
         output.FogAndOther = input[0].FogAndOther;
-        output.FogAndOther.w = (orgtime + i) % (i + 1);
+        output.FogAndOther.w = texkind;
         output.depth = input[0].depth;
         output.normal = input[0].normal;
 
         SpriteStream.Append(output);
     }
+
+
     SpriteStream.RestartStrip();
 }
 

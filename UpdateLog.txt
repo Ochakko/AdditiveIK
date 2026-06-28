@@ -2,6 +2,10 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2026/06/28
+　RefPos調整中_2
+　　PointNumSpriteのランダム性を少し追加
+　　
+2026/06/28
 　RefPos調整中_1
 　　PointNumSpriteを割と高速化
 　　PointNumSpriteのサイズ範囲変更
