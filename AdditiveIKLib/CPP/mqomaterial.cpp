@@ -2898,7 +2898,7 @@ bool CMQOMaterial::DecideLightFlag(myRenderer::RENDEROBJ renderobj)
 	return lightflag;
 }
 
-int CMQOMaterial::DecideShaderIndex(bool useGS, myRenderer::RENDEROBJ renderobj)
+int CMQOMaterial::DecideShaderIndex(bool useGS, bool topoline, myRenderer::RENDEROBJ renderobj)
 {
 	//#####################################################################################################
 	//2023/12/05
@@ -2917,7 +2917,7 @@ int CMQOMaterial::DecideShaderIndex(bool useGS, myRenderer::RENDEROBJ renderobj)
 	bool lightflag = DecideLightFlag(renderobj);
 	int shadertype = MQOSHADER_TOON;
 
-	if (!useGS) {
+	if (!useGS && !topoline) {
 		if (lightflag) {
 			int tempshadertype;
 			if (renderobj.shadertype == -2) {//shadertype == -2の場合はマテリアルの設定に従う
@@ -2974,7 +2974,12 @@ int CMQOMaterial::DecideShaderIndex(bool useGS, myRenderer::RENDEROBJ renderobj)
 			shadertype = MQOSHADER_TOON;
 		}
 	}
+	else if (topoline) {
+		//line
+		shadertype = MQOSHADER_TOON;
+	}
 	else {
+		//PointNumSprite
 		shadertype = MQOSHADER_POINTSPRITE;
 	}
 	
@@ -3082,7 +3087,7 @@ int CMQOMaterial::DecideShaderIndex(bool useGS, myRenderer::RENDEROBJ renderobj)
 }
 
 
-void CMQOMaterial::BeginRender(bool useGS,
+void CMQOMaterial::BeginRender(bool useGS, bool topoline,
 	RenderContext* rc, myRenderer::RENDEROBJ renderobj, int refposindex)
 //default:refposindex = 0
 {
@@ -3099,7 +3104,7 @@ void CMQOMaterial::BeginRender(bool useGS,
 	pm4 = renderobj.mqoobj->GetPm4();
 
 
-	int shaderindex = DecideShaderIndex(useGS, renderobj);
+	int shaderindex = DecideShaderIndex(useGS, topoline, renderobj);
 
 
 	int currentrefposindex;
@@ -3841,7 +3846,7 @@ void CMQOMaterial::SetFl4x4(myRenderer::RENDEROBJ renderobj, int refposindex)
 }
 
 void CMQOMaterial::DrawCommon(
-	bool useGS,
+	bool useGS, bool topoline,
 	RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 	const Matrix& mView, const Matrix& mProj,
 	int refposindex)
@@ -3869,7 +3874,7 @@ void CMQOMaterial::DrawCommon(
 	//	return;
 	//}
 
-	int shaderindex = DecideShaderIndex(useGS, renderobj);
+	int shaderindex = DecideShaderIndex(useGS, topoline, renderobj);
 
 	int pipelineindex = 0;//!!!!!!!!!
 

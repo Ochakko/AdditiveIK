@@ -81,7 +81,7 @@ public:
 	 * @return 成功したら０。
 	 */
 	int RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
-	int RenderNormalMaterial(bool useGS, RenderContext* rc, myRenderer::RENDEROBJ renderobj,
+	int RenderNormalMaterial(bool useGS, bool topoline, RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		bool laterflag, CMQOMaterial* rmaterial, int curoffset, int curtrinum, bool isfirstmaterial);
 
 
@@ -95,7 +95,7 @@ public:
 	 * @detail FBXデータは１オブジェクトにつき１マテリアル(材質)だが、メタセコイアデータは１オブジェクトに複数マテリアルが設定されていることが多い。
 	 */
 	int RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
-	int RenderNormalPM3Material(bool useGS, RenderContext* rc, myRenderer::RENDEROBJ renderobj,
+	int RenderNormalPM3Material(bool useGS, bool topoline, RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		bool lasterflag, CMQOMaterial* rmaterial,
 		int curoffset, int curtrinum);
 
@@ -233,6 +233,8 @@ private:
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;	//インデックスバッファビュー。
 	ID3D12Resource* m_indexBuffer_PointNumSprite;	//インデックスバッファ。
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView_PointNumSprite;	//インデックスバッファビュー。
+	ID3D12Resource* m_indexBuffer_RefPosLine;	//インデックスバッファ。
+	D3D12_INDEX_BUFFER_VIEW m_indexBufferView_RefPosLine;	//インデックスバッファビュー。
 
 
 	CSDeform* m_csdeform;//ComputeShader for Deform

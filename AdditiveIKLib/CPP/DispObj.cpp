@@ -130,6 +130,8 @@ int CDispObj::InitParams()
 	ZeroMemory(&m_indexBufferView, sizeof(D3D12_INDEX_BUFFER_VIEW));	//インデックスバッファビュー。
 	m_indexBuffer_PointNumSprite = nullptr;	//インデックスバッファ。
 	ZeroMemory(&m_indexBufferView_PointNumSprite, sizeof(D3D12_INDEX_BUFFER_VIEW));	//インデックスバッファビュー。
+	m_indexBuffer_RefPosLine = nullptr;	//インデックスバッファ。
+	ZeroMemory(&m_indexBufferView_RefPosLine, sizeof(D3D12_INDEX_BUFFER_VIEW));	//インデックスバッファビュー。
 
 	m_csdeform = nullptr;
 
@@ -158,6 +160,10 @@ int CDispObj::DestroyObjs()
 	if (m_indexBuffer_PointNumSprite) {
 		m_indexBuffer_PointNumSprite->Unmap(0, nullptr);
 		m_indexBuffer_PointNumSprite->Release();
+	}
+	if (m_indexBuffer_RefPosLine) {
+		m_indexBuffer_RefPosLine->Unmap(0, nullptr);
+		m_indexBuffer_RefPosLine->Release();
 	}
 
 	m_InstancingBuffer.DestroyObjs();
@@ -768,15 +774,8 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape)
 //###########
 	{
 		//auto d3dDevice = g_graphicsEngine->GetD3DDevice();
-		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-		//auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_GPU_UPLOAD);//2026/02/28
-		//auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);//2026/06/27
-		//D3D12_HEAP_PROPERTIES heapProp{};
-		//heapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-		//heapProp.CreationNodeMask = 1;
-		//heapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-		//heapProp.Type = D3D12_HEAP_TYPE_CUSTOM;//RWなので読み込みアクセスの可能性有(コンピュートシェーダで使用).　よってD3D12_HEAP_TYPE_GPU_UPLOADにはしない.
-		//heapProp.VisibleNodeMask = 1;
+		//auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_GPU_UPLOAD);//2026/02/28
 		auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(vbsize);
 		HRESULT hrvb0 = pdev->CreateCommittedResource(
 			&heapProp,
@@ -1027,6 +1026,109 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape)
 		}
 	}
 
+	//#################################
+	//インデックスバッファ_RefPosLine
+	//#################################
+	{
+		if (m_pm3 || m_pm4) {
+			//auto d3dDevice = g_graphicsEngine->GetD3DDevice();
+			DWORD ibsize = pmfleng * 3 * 2 * sizeof(int);
+			//auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+			auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_GPU_UPLOAD);
+			auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(ibsize);
+			HRESULT hrib0 = pdev->CreateCommittedResource(
+				&heapProp,
+				D3D12_HEAP_FLAG_NONE,
+				&rDesc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				IID_PPV_ARGS(&m_indexBuffer_RefPosLine));
+			if (FAILED(hrib0) || !m_indexBuffer_RefPosLine) {
+				::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+					"CreateIndexBuffer_RefPosLine Error", MB_OK | MB_ICONERROR);
+				abort();
+			}
+
+			m_indexBuffer_RefPosLine->SetName(L"DispOjb:indexBuffer_RefPosLine");
+
+
+			//インデックスバッファのビューを作成。
+			m_indexBufferView_RefPosLine.BufferLocation = m_indexBuffer_RefPosLine->GetGPUVirtualAddress();
+			m_indexBufferView_RefPosLine.Format = DXGI_FORMAT_R32_UINT;
+			m_indexBufferView_RefPosLine.SizeInBytes = ibsize;
+
+			//インデックスバッファをコピー。
+			uint32_t* pData;
+			//DWORD triangleno;
+			m_indexBuffer_RefPosLine->Map(0, nullptr, reinterpret_cast<void**>(&pData));
+			if (m_pm3) {
+				for (DWORD triangleno = 0; triangleno < (DWORD)pmfleng; triangleno++) {
+					*(pData + triangleno * 3 * 2) = *(m_pm3->GetDispIndex() + triangleno * 3);
+					*(pData + triangleno * 3 * 2 + 1) = *(m_pm3->GetDispIndex() + triangleno * 3 + 1);
+
+					*(pData + triangleno * 3 * 2 + 2) = *(m_pm3->GetDispIndex() + triangleno * 3 + 1);
+					*(pData + triangleno * 3 * 2 + 3) = *(m_pm3->GetDispIndex() + triangleno * 3 + 2);
+
+					*(pData + triangleno * 3 * 2 + 4) = *(m_pm3->GetDispIndex() + triangleno * 3 + 2);
+					*(pData + triangleno * 3 * 2 + 5) = *(m_pm3->GetDispIndex() + triangleno * 3);
+				}
+			}
+			else if (m_pm4) {
+				for (DWORD triangleno = 0; triangleno < (DWORD)pmfleng; triangleno++) {
+					*(pData + triangleno * 3 * 2) = *(m_pm4->GetDispIndex() + triangleno * 3);
+					*(pData + triangleno * 3 * 2 + 1) = *(m_pm4->GetDispIndex() + triangleno * 3 + 1);
+
+					*(pData + triangleno * 3 * 2 + 2) = *(m_pm4->GetDispIndex() + triangleno * 3 + 1);
+					*(pData + triangleno * 3 * 2 + 3) = *(m_pm4->GetDispIndex() + triangleno * 3 + 2);
+
+					*(pData + triangleno * 3 * 2 + 4) = *(m_pm4->GetDispIndex() + triangleno * 3 + 2);
+					*(pData + triangleno * 3 * 2 + 5) = *(m_pm4->GetDispIndex() + triangleno * 3);
+				}
+			}
+			else {
+				_ASSERT(0);
+				//m_indexBuffer->Unmap(0, nullptr);
+				return 1;
+			}
+			//m_indexBuffer->Unmap(0, nullptr);
+		}
+		else if (m_extline) {
+			DWORD ibsize = pmvleng * sizeof(int);
+			//auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+			auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_GPU_UPLOAD);
+			auto rDesc = CD3DX12_RESOURCE_DESC::Buffer(ibsize);
+			HRESULT hrib1 = pdev->CreateCommittedResource(
+				&heapProp,
+				D3D12_HEAP_FLAG_NONE,
+				&rDesc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				IID_PPV_ARGS(&m_indexBuffer_RefPosLine));
+			if (FAILED(hrib1) || !m_indexBuffer_RefPosLine) {
+				::MessageBoxA(NULL, "may not have enough videomemory? App must exit.",
+					"CreateIndexBuffer_RefPosLine Error", MB_OK | MB_ICONERROR);
+				abort();
+			}
+
+			m_indexBuffer->SetName(L"DispOjb:indexBuffer_RefPosLine");
+
+			//インデックスバッファのビューを作成。
+			m_indexBufferView_RefPosLine.BufferLocation = m_indexBuffer_RefPosLine->GetGPUVirtualAddress();
+			m_indexBufferView_RefPosLine.Format = DXGI_FORMAT_R32_UINT;
+			m_indexBufferView_RefPosLine.SizeInBytes = ibsize;
+
+			//インデックスバッファをコピー。
+			uint32_t* pData;
+			//DWORD triangleno;
+			m_indexBuffer_RefPosLine->Map(0, nullptr, reinterpret_cast<void**>(&pData));
+
+			DWORD lineno;
+			for (lineno = 0; lineno < (DWORD)pmvleng; lineno++) {
+				*(pData + lineno) = lineno;
+			}
+			//m_indexBuffer->Unmap(0, nullptr);
+		}
+	}
 
 
 
@@ -1462,6 +1564,7 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 
 
 	bool useGS = false;
+	bool topoline = false;
 	int topoindex;
 	for (topoindex = 0; topoindex < 3; topoindex++) {
 		switch (topoindex) {
@@ -1472,9 +1575,9 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 
 				//3. インデックスバッファを設定。
 				rc->SetIndexBuffer(m_indexBufferView);
-
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				useGS = false;
+				topoline = false;
 			}
 			else {
 				continue;
@@ -1483,10 +1586,10 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 		case 1:
 			if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp() && renderobj.pmodel->GetRefPosFlag()) {
 				//3. インデックスバッファを設定。
-				rc->SetIndexBuffer(m_indexBufferView);
-
+				rc->SetIndexBuffer(m_indexBufferView_RefPosLine);
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 				useGS = false;
+				topoline = true;
 			}
 			else {
 				continue;
@@ -1496,9 +1599,9 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 			if (renderobj.pmodel && renderobj.pmodel->GetRefPosPointDisp() && renderobj.pmodel->GetRefPosFlag()) {
 				//3. インデックスバッファを設定。
 				rc->SetIndexBuffer(m_indexBufferView_PointNumSprite);
-
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 				useGS = true;
+				topoline = false;
 			}
 			else {
 				return 0;
@@ -1531,10 +1634,13 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 					bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
 
 					int curnumprim = curtrinum;
+					if (topoline) {
+						curnumprim = curnumprim * 3;
+					}
 
 					if (laterflag == false) {
 						bool laterflag2 = false;
-						RenderNormalMaterial(useGS, rc, renderobj, laterflag2,
+						RenderNormalMaterial(useGS, topoline, rc, renderobj, laterflag2,
 							curmat, curoffset, curnumprim, isfirstmaterial);
 						isfirstmaterial = false;
 					}
@@ -1552,8 +1658,11 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 						bool laterflag2 = true;
 
 						int curnumprim = latermaterial.trinum;
+						if (topoline) {
+							curnumprim = curnumprim * 3;
+						}
 						
-						RenderNormalMaterial(useGS, rc, renderobj,
+						RenderNormalMaterial(useGS, topoline, rc, renderobj,
 							laterflag2,
 							latermaterial.pmaterial, latermaterial.offset, curnumprim,
 							isfirstmaterial);
@@ -1596,10 +1705,10 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 				}
 				//定数バッファの設定、更新など描画の共通処理を実行する。
 
-				curmat->DrawCommon(useGS, rc, renderobj, mView, mProj, renderobj.refposindex);
+				curmat->DrawCommon(useGS, topoline, rc, renderobj, mView, mProj, renderobj.refposindex);
 				int hasskin = 1;
 				bool isline = false;
-				curmat->BeginRender(useGS, rc, renderobj, renderobj.refposindex);
+				curmat->BeginRender(useGS, topoline, rc, renderobj, renderobj.refposindex);
 				//4. ドローコールを実行。
 				int pmvleng = m_pm4->GetOptLeng();
 				rc->DrawIndexed(pmvleng, curoffset);
@@ -1624,7 +1733,7 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 }
 
 
-int CDispObj::RenderNormalMaterial(bool useGS, 
+int CDispObj::RenderNormalMaterial(bool useGS, bool topoline,
 	RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 	bool laterflag, CMQOMaterial* curmat, int curoffset, int curtrinum, bool isfirstmaterial)
 {
@@ -1767,12 +1876,17 @@ int CDispObj::RenderNormalMaterial(bool useGS,
 	}
 	//定数バッファの設定、更新など描画の共通処理を実行する。
 
-	curmat->DrawCommon(useGS, rc, renderobj, mView, mProj, renderobj.refposindex);
+	curmat->DrawCommon(useGS, topoline, rc, renderobj, mView, mProj, renderobj.refposindex);
 	int hasskin = 1;
 	bool isline = false;
-	curmat->BeginRender(useGS, rc, renderobj, renderobj.refposindex);
+	curmat->BeginRender(useGS, topoline, rc, renderobj, renderobj.refposindex);
 	//4. ドローコールを実行。
-	rc->DrawIndexed(curtrinum * 3, curoffset);
+	if (!topoline) {
+		rc->DrawIndexed(curtrinum * 3, curoffset);
+	}
+	else {
+		rc->DrawIndexed(curtrinum * 2, curoffset);
+	}
 	//rc.DrawIndexed(m_pm4->GetFaceNum() * 3);
 
 	return 0;
@@ -1947,6 +2061,7 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	rc->SetVertexBuffer(m_vertexBufferView);
 
 	bool useGS = false;
+	bool topoline = false;
 	int topoindex;
 	for (topoindex = 0; topoindex < 3; topoindex++) {
 		switch (topoindex) {
@@ -1956,9 +2071,9 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 					(renderobj.renderkind == RENDERKIND_SHADOWMAP) || (renderobj.renderkind == RENDERKIND_SHADOWRECIEVER))) {
 				//3. インデックスバッファを設定。
 				rc->SetIndexBuffer(m_indexBufferView);
-
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				useGS = false;
+				topoline = false;
 			}
 			else {
 				continue;
@@ -1967,10 +2082,10 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		case 1:
 			if (renderobj.pmodel && renderobj.pmodel->GetRefPosLineDisp() && renderobj.pmodel->GetRefPosFlag()) {
 				//3. インデックスバッファを設定。
-				rc->SetIndexBuffer(m_indexBufferView);
-
+				rc->SetIndexBuffer(m_indexBufferView_RefPosLine);
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 				useGS = false;
+				topoline = true;
 			}
 			else {
 				continue;
@@ -1980,9 +2095,9 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 			if (renderobj.pmodel && renderobj.pmodel->GetRefPosPointDisp() && renderobj.pmodel->GetRefPosFlag()) {
 				//3. インデックスバッファを設定。
 				rc->SetIndexBuffer(m_indexBufferView_PointNumSprite);
-
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 				useGS = true;
+				topoline = false;
 			}
 			else {
 				return 0;
@@ -2017,12 +2132,15 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 
 				if ((renderobj.renderkind != RENDERKIND_SHADOWMAP) || (curmat->GetShadowCasterFlag())) {
 					int curnumprim = currb->endface - currb->startface + 1;
-					
+					if (topoline) {
+						curnumprim = curnumprim * 3;
+					}
+
 					bool laterflag = renderobj.mqoobj->ExistInLaterMaterial(curmat);
 					if (laterflag == false) {
 						bool laterflag2 = false;
 						int result = RenderNormalPM3Material(
-							useGS,
+							useGS, topoline,
 							rc, renderobj,
 							laterflag2, curmat, currb->startface * 3, curnumprim);
 					}
@@ -2042,9 +2160,12 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 						bool laterflag2 = true;
 
 						int curnumprim = latermaterial.trinum;
+						if (topoline) {
+							curnumprim = curnumprim * 3;
+						}
 
 						RenderNormalPM3Material(
-							useGS,
+							useGS, topoline,
 							rc, renderobj,
 							laterflag2,
 							latermaterial.pmaterial, latermaterial.offset, curnumprim);
@@ -2087,12 +2208,12 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 				//定数バッファの設定、更新など描画の共通処理を実行する。
 				//int refposindex = 0;//!!!!!!!!!
 				int refposindex = renderobj.refposindex;//2026/05/05
-				curmat->DrawCommon(useGS, rc, renderobj, mView, mProj, refposindex);
+				curmat->DrawCommon(useGS, topoline, rc, renderobj, mView, mProj, refposindex);
 
 
 				int hasskin = 0;
 				bool isline = false;
-				curmat->BeginRender(useGS, rc, renderobj, refposindex);
+				curmat->BeginRender(useGS, topoline, rc, renderobj, refposindex);
 
 				int curnumprim = m_pm3->GetOptLeng();
 				//4. ドローコールを実行。
@@ -2104,7 +2225,7 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 	return 0;
 }
 
-int CDispObj::RenderNormalPM3Material(bool useGS,
+int CDispObj::RenderNormalPM3Material(bool useGS, bool topoline,
 	RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 	bool laterflag, CMQOMaterial* curmat,
 	int curoffset, int curtrinum)
@@ -2238,12 +2359,12 @@ int CDispObj::RenderNormalPM3Material(bool useGS,
 	//定数バッファの設定、更新など描画の共通処理を実行する。
 	//int refposindex = 0;//!!!!!!!!!
 	int refposindex = renderobj.refposindex;//2026/05/05
-	curmat->DrawCommon(useGS, rc, renderobj, mView, mProj, refposindex);
+	curmat->DrawCommon(useGS, topoline, rc, renderobj, mView, mProj, refposindex);
 
 
-	int hasskin = 0;
-	bool isline = false;
-	curmat->BeginRender(useGS, rc, renderobj, refposindex);
+	//int hasskin = 0;
+	//bool isline = false;
+	curmat->BeginRender(useGS, topoline, rc, renderobj, refposindex);
 
 	//rc.SetDescriptorHeap(m_descriptorHeap);
 
@@ -2253,7 +2374,12 @@ int CDispObj::RenderNormalPM3Material(bool useGS,
 	//rc.SetIndexBuffer(m_indexBufferView);
 
 	//4. ドローコールを実行。
-	rc->DrawIndexed(curtrinum * 3, curoffset);
+	if (!topoline) {
+		rc->DrawIndexed(curtrinum * 3, curoffset);
+	}
+	else {
+		rc->DrawIndexed(curtrinum * 2, curoffset);
+	}
 	//rc.DrawIndexed(m_pm3->GetFaceNum() * 3);
 
 	//descriptorHeapNo += NUM_SRV_ONE_MATERIAL;
@@ -2586,7 +2712,7 @@ int CDispObj::RenderLine(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 	curnumprim = m_extline->GetLineNum();
 
 	int hasskin = 0;
-	bool isline = true;
+	bool topoline = true;
 	CMQOMaterial* curmat = m_extline->GetMaterial();//m_rootsignatureのためのMaterial. 色はextline::m_colorにある
 	if (curmat) {
 
@@ -2601,9 +2727,9 @@ int CDispObj::RenderLine(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 		mProj = renderobj.mProj;
 		//定数バッファの設定、更新など描画の共通処理を実行する。
 		bool useGS = false;
-		curmat->DrawCommon(useGS, rc, renderobj, mView, mProj, 0);
+		curmat->DrawCommon(useGS, topoline, rc, renderobj, mView, mProj, 0);
 
-		curmat->BeginRender(useGS, rc, renderobj, 0);
+		curmat->BeginRender(useGS, topoline, rc, renderobj, 0);
 		//rc.SetDescriptorHeap(m_descriptorHeap);
 
 		//1. 頂点バッファを設定。

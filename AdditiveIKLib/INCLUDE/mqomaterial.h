@@ -453,17 +453,17 @@ public:
 
 
 
-	int DecideShaderIndex(bool useGS, myRenderer::RENDEROBJ renderobj);//2024/03/07
+	int DecideShaderIndex(bool useGS, bool topoline, myRenderer::RENDEROBJ renderobj);//2024/03/07
 	bool DecideLightFlag(myRenderer::RENDEROBJ renderobj);//2024/03/07
 	void SetFl4x4(myRenderer::RENDEROBJ renderobj, int refposindex);
 	int SetRefPosFl4x4(CModel* srcmodel, int refposindex);
 	void SetConstLights(myRenderer::RENDEROBJ renderobj, SConstantBufferLights* pcbLights);
 	void SetConstShadow(SConstantBufferShadow* pcbShadow);
-	void DrawCommon(bool useGS,
+	void DrawCommon(bool useGS, bool topoline,
 		RenderContext* rc, myRenderer::RENDEROBJ renderobj,
 		const Matrix& mView, const Matrix& mProj,
 		int refposindex);
-	void BeginRender(bool useGS,
+	void BeginRender(bool useGS, bool topoline,
 		RenderContext* rc, myRenderer::RENDEROBJ renderobj, 
 		int refposindex);
 	////void ZPreDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
