@@ -542,6 +542,8 @@ int CModel::InitParams(int srcrefposnum)
 	m_refpos_parallax_effect = true;
 	m_refpos_pointsize = 1.0f;
 	m_monoflag = false;
+	m_shader_refpos_counter01 = 0;
+	m_refpos_pow = 0.5f;
 
 	int index1;
 	for (index1 = 0; index1 < m_refpos_maxnum; index1++) {
@@ -761,7 +763,7 @@ int CModel::InitParams(int srcrefposnum)
 
 	m_ikstop_alloff = false;
 
-	m_shader_refpos_counter01 = 0;
+
 
 	return 0;
 }

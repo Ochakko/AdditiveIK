@@ -3,6 +3,20 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2026/07/04
+　AdditiveIK 1.0.0.75 RC1(リリース候補1)
+　　1.0.0.74からの変更点
+　　　RefPos機能アップデート
+　　　　残像Num散スプライト(Pointチェックボックス, 散POWスライダー)
+　　　　高速化
+　　　　ランダム性
+　　　　Lineインデックス修正
+　　　　保存読み込み
+　　　　
+　　ショートムービー
+　　　残像Num散スプライト Adjusting 4
+　　　https://youtube.com/shorts/c7OSH06_S1c
+　　　
+2026/07/04
 　RefPos調整中_4
 　　RefPosPointの調整
 　　

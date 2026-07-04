@@ -3978,6 +3978,7 @@ void CMQOMaterial::DrawCommon(
 		}
 		m_cb[currentrefposindex].time.y = renderobj.pmodel->GetRefPosPointSize();
 		m_cb[currentrefposindex].time.z = (float)renderobj.pmodel->GetShaderRefPosCounter01();
+		m_cb[currentrefposindex].time.w = (float)renderobj.pmodel->GetRefPosPow();
 
 
 		MODELBOUND modelbb;
@@ -4053,6 +4054,7 @@ void CMQOMaterial::DrawCommon(
 		}
 		m_cb[currentrefposindex].time.y = renderobj.pmodel->GetRefPosPointSize();
 		m_cb[currentrefposindex].time.z = (float)renderobj.pmodel->GetShaderRefPosCounter01();
+		m_cb[currentrefposindex].time.w = (float)renderobj.pmodel->GetRefPosPow();
 
 		MODELBOUND modelbb;
 		modelbb.Init();
@@ -4145,6 +4147,7 @@ void CMQOMaterial::DrawCommon(
 		}
 		m_cb[currentrefposindex].time.y = renderobj.pmodel->GetRefPosPointSize();
 		m_cb[currentrefposindex].time.z = (float)renderobj.pmodel->GetShaderRefPosCounter01();
+		m_cb[currentrefposindex].time.w = (float)renderobj.pmodel->GetRefPosPow();
 
 		MODELBOUND modelbb;
 		modelbb.Init();
@@ -4284,6 +4287,8 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		}
 		m_cb[0].time.y = renderobj.pmodel->GetRefPosPointSize();
 		m_cb[0].time.z = (float)renderobj.pmodel->GetShaderRefPosCounter01();
+		m_cb[0].time.w = (float)renderobj.pmodel->GetRefPosPow();
+
 
 		MODELBOUND modelbb;
 		modelbb.Init();
@@ -4350,6 +4355,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		}
 		m_cb[0].time.y = renderobj.pmodel->GetRefPosPointSize();
 		m_cb[0].time.z = (float)renderobj.pmodel->GetShaderRefPosCounter01();
+		m_cb[0].time.w = (float)renderobj.pmodel->GetRefPosPow();
 
 
 		MODELBOUND modelbb;
@@ -4431,6 +4437,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		}
 		m_cb[0].time.y = renderobj.pmodel->GetRefPosPointSize();
 		m_cb[0].time.z = (float)renderobj.pmodel->GetShaderRefPosCounter01();
+		m_cb[0].time.w = (float)renderobj.pmodel->GetRefPosPow();
 
 
 		MODELBOUND modelbb;

@@ -274,6 +274,20 @@ int CRefPosDlg::DestroyObjs()
 		m_pointsizeSlider = nullptr;
 	}
 
+	if (m_powsp) {
+		delete m_powsp;
+		m_powsp = nullptr;
+	}
+	if (m_powLabel) {
+		delete m_powLabel;
+		m_powLabel = nullptr;
+	}
+	if (m_powSlider) {
+		delete m_powSlider;
+		m_powSlider = nullptr;
+	}
+
+
 	if (m_linecheck) {
 		delete m_linecheck;
 		m_linecheck = nullptr;
@@ -407,6 +421,9 @@ void CRefPosDlg::InitParams()
 	m_pointsizesp = nullptr;
 	m_pointsizeLabel = nullptr;
 	m_pointsizeSlider = nullptr;
+	m_powsp = nullptr;
+	m_powLabel = nullptr;
+	m_powSlider = nullptr;
 
 	m_nameLabel = nullptr;
 	m_space01Label = nullptr;
@@ -865,8 +882,23 @@ int CRefPosDlg::CreateRefPosWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_pointsizeSlider = new OWP_Slider((double)m_model->GetRefPosPointSize(), 0.1, 6.0);
+		m_pointsizeSlider = new OWP_Slider((double)m_model->GetRefPosPointSize(), 0.1, 15.0);
 		if (!m_pointsizeSlider) {
+			_ASSERT(0);
+			abort();
+		}
+		m_powLabel = new OWP_Label(L"散POW", labelheight);
+		if (!m_powLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_powsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_powsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_powSlider = new OWP_Slider((double)m_model->GetRefPosPow(), 0.1, 2.0);
+		if (!m_powSlider) {
 			_ASSERT(0);
 			abort();
 		}
@@ -918,6 +950,9 @@ int CRefPosDlg::CreateRefPosWnd()
 		m_dlgWnd->addParts(*m_pointsizesp);
 		m_pointsizesp->addParts1(*m_pointsizeLabel);
 		m_pointsizesp->addParts2(*m_pointsizeSlider);
+		m_dlgWnd->addParts(*m_powsp);
+		m_powsp->addParts1(*m_powLabel);
+		m_powsp->addParts2(*m_powSlider);
 
 		m_dlgWnd->addParts(*m_space03Label);
 
@@ -1047,6 +1082,12 @@ int CRefPosDlg::CreateRefPosWnd()
 			double value = m_pointsizeSlider->getValue();
 			if (m_model != nullptr) {
 				m_model->SetRefPosPointSize((float)value);
+			}
+			});
+		m_powSlider->setCursorListener([=, this]() {
+			double value = m_powSlider->getValue();
+			if (m_model != nullptr) {
+				m_model->SetRefPosPow((float)value);
 			}
 			});
 
@@ -1220,6 +1261,14 @@ int CRefPosDlg::Params2Dlg()
 			m_pointcheck->setValue(pointdisp, false);
 		}
 
+		float pointsize = m_model->GetRefPosPointSize();
+		if (m_pointsizeSlider != nullptr) {
+			m_pointsizeSlider->setValue((double)pointsize, false);
+		}
+		float sanpow = m_model->GetRefPosPow();
+		if (m_powSlider != nullptr) {
+			m_powSlider->setValue((double)sanpow, false);
+		}
 
 		m_dlgWnd->callRewrite();
 	}

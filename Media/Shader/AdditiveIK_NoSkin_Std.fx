@@ -160,7 +160,7 @@ cbuffer ModelCb : register(b0)
     int4 UVs; //x:UVSet, y:TilingU, z:TilingV, w:distortionFlag   
     int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag, w:VSM
     int4 Flags2; //x:grassflag, y:monoflag   
-    float4 time1; //2024/04/27 y:refpos_pointsize
+    float4 time1; //2024/04/27 x:DXUTTime, y:refpos_pointsize, z:refposCounter01, w:refpos_power
     float4 bbsize; //2024/05/11 size of bourndary    
     int4 distortiontype; //[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)
     float4 distortionscale; //x:distortionscale, y:riverflowrate
@@ -461,9 +461,9 @@ void GSParticleDraw(point SGSIn input[1], inout TriangleStream<SGSOut> SpriteStr
     int timeint = (int) (input[0].FogAndOther.w + posrnd) % 60;
     int timeint2 = (int) (input[0].FogAndOther.w + posrnd) % 200;
     float addbase = (float) timeint / 60.0f; // * 0.5f;
-    float shiftx = fracSin11(input[0].pos.x) * (float) timeint2 * input[0].FogAndOther.z;
-    float shifty = fracSin11(input[0].pos.y) * (float) timeint2 * input[0].FogAndOther.z;
-    float shiftz = fracSin11(input[0].pos.z) * (float) timeint2 * input[0].FogAndOther.z;
+    float shiftx = fracSin11(input[0].pos.x) * pow((float) timeint2, time1.w) * input[0].FogAndOther.z;
+    float shifty = fracSin11(input[0].pos.y) * pow((float) timeint2, time1.w) * input[0].FogAndOther.z;
+    float shiftz = fracSin11(input[0].pos.z) * pow((float) timeint2, time1.w) * input[0].FogAndOther.z;
 
     float params_x = addbase * addbase * addbase * addbase * addbase * addbase * input[0].FogAndOther.z;
     //float params_y = fracSin21(float2(input[0].pos.x, input[0].FogAndOther.w)) * 4.0f;

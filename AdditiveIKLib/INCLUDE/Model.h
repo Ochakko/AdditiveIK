@@ -3402,6 +3402,7 @@ public: //accesser
 		return m_bindpose;
 	}
 
+
 	bool GetRefPosFlag()
 	{
 		return m_refposflag;
@@ -3482,6 +3483,23 @@ public: //accesser
 	bool GetRefPosParallaxEffect() {
 		return m_refpos_parallax_effect;
 	}
+	void ProcessShaderRefPosCounter01()
+	{
+		m_shader_refpos_counter01++;
+	};
+	int GetShaderRefPosCounter01()
+	{
+		return m_shader_refpos_counter01;
+	};
+	void SetRefPosPow(float srcval)
+	{
+		m_refpos_pow = srcval;
+	};
+	float GetRefPosPow() {
+		return m_refpos_pow;
+	};
+
+
 
 	void SetMonoFlag(bool srcflag)
 	{
@@ -3883,14 +3901,8 @@ public: //accesser
 		return m_objBounding_BlockNum;
 	};
 
-	void ProcessShaderRefPosCounter01()
-	{
-		m_shader_refpos_counter01++;
-	};
-	int GetShaderRefPosCounter01()
-	{
-		return m_shader_refpos_counter01;
-	};
+
+
 
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
@@ -4117,6 +4129,7 @@ private:
 	bool m_refpos_pointdisp;
 	float m_refpos_pointsize;
 	bool m_refpos_parallax_effect;
+	float m_refpos_pow;
 
 	bool m_skyflag;
 	bool m_groundflag;

@@ -311,7 +311,9 @@ int CChaFile::WriteFileInfo()
 	//version 1025 : 2026/06/20 1.0.0.74へ向けて  RefPosSolidDisp, RefPosPointDisp追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1025</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1026 : 2026/06/21 1.0.0.74へ向けて  RefPosCurrentDiffuseRate*追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1026</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1026</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1027 : 2026/07/04 1.0.0.75へ向けて  RefPosPointSize, RefPosPower追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1027</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -406,6 +408,9 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 	else {
 		CallF(Write2File("    <RefPosParallaxEffect>0</RefPosParallaxEffect>\r\n"), return 1);
 	}
+	CallF(Write2File("    <RefPosPointSize>%f</RefPosPointSize>\r\n", curmodel->GetRefPosPointSize()), return 1);
+	CallF(Write2File("    <RefPosPower>%f</RefPosPower>\r\n", curmodel->GetRefPosPow()), return 1);
+
 
 
 	if (curmodel->GetGrassFlag() && srcgrasselem) {
@@ -1346,6 +1351,11 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	int monoDisp = 0;
 	int getparallaxeffect = 0;
 	int parallaxeffect = 0;
+	int getrefposPointSize = 0;
+	float refposPointSize = 1.0f;
+	int getrefposPower = 0;
+	float refposPower = 0.5f;
+
 
 	int refnum = 0;
 	int impnum = 0;
@@ -1386,6 +1396,8 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	getrefposPointDisp = Read_Int(xmlbuf, "<RefPosPointDisp>", "</RefPosPointDisp>", &refposPointDisp);
 	getmonoDisp = Read_Int(xmlbuf, "<MonoDisp>", "</MonoDisp>", &monoDisp);
 	getparallaxeffect = Read_Int(xmlbuf, "<RefPosParallaxEffect>", "</RefPosParallaxEffect>", &parallaxeffect);
+	getrefposPointSize = Read_Float(xmlbuf, "<RefPosPointSize>", "</RefPosPointSize>", &refposPointSize);
+	getrefposPower = Read_Float(xmlbuf, "<RefPosPower>", "</RefPosPower>", &refposPower);
 
 
 	int grassflag = 0;
@@ -1618,6 +1630,15 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 		//記述が無い古いバージョンの場合　trueに.
 		setparallaxeffect = true;
 	}
+	float setrefposPointSize = 1.0f;
+	if ((getrefposPointSize == 0) && (refposPointSize >= 0.1f) && (refposPointSize <= 15.0f)) {
+		setrefposPointSize = refposPointSize;
+	}
+	float setrefposPower = 0.5f;
+	if ((getrefposPower == 0) && (refposPower >= 0.1f) && (refposPower <= 2.0f)) {
+		setrefposPower = refposPower;
+	}
+
 	newmodel->SetRefPosDiffuseRate(refposdiffuse);
 	newmodel->SetRefPosCurrentDiffuseRate(refposCurrentDiffuse);
 	newmodel->SetRefPosRainbowMode(refposrainbowmode);
@@ -1628,7 +1649,8 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	newmodel->SetRefPosPointDisp(setrefposPointDisp);
 	newmodel->SetMonoFlag(setmonoDisp);
 	newmodel->SetRefPosParallaxEffect(setparallaxeffect);
-
+	newmodel->SetRefPosPointSize(setrefposPointSize);
+	newmodel->SetRefPosPow(setrefposPower);
 
 	//newmodel->m_tmpmotspeed = m_motspeed;
 	if (grassflag == 1) {

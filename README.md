@@ -7,8 +7,8 @@ DirectX12対応. fbx入出力. BulletPhysics対応.<br>
 MITランセンス.<br>
 <br>
 # ScreenShot
-![TopFig20260612](ScreenShots/SS_For10072/SS_RefPosGym_02_2.png "トップ絵20260612")<br>
-Fig. ver 1.0.0.72 残像物理GYM_02.<br>
+![TopFig20260704](ScreenShots/SS_For10075/SS_NumSanSprite_Adjusting_4_01_01.png "トップ絵20260704")<br>
+Fig. ver 1.0.0.75 残像Num散スプライト.<br>
 <br>
 ![TopFig20260505](ScreenShots/SS_For10067/SS_RefPos4D_01_01_50per.png "トップ絵20260505")<br>
 Fig. ver 1.0.0.67開発中 RefPos4D ４次元スイッチが入った時【UnityAsset】ithapyFantasy, CosmoDragonGirl, FantasyAnimal読込.<br>
@@ -341,7 +341,7 @@ Fig.Settings of NVIDIA App (Select Native as upper fig so faster display.)
 
 [【観測者が】４次元RefPosボクサー【ダークマター】 2026/05/10](https://youtu.be/AIgPOpzXTtU "Usage example17")<br>
 
-[残像物理GYM_02 2026/06/12](https://youtube.com/shorts/WP6W6SkjRtw "Usage example18")<br>
+[残像Num散スプライト 2026/07/04](https://youtube.com/shorts/c7OSH06_S1c "Usage example18")<br>
 <br>
 
 # Site
