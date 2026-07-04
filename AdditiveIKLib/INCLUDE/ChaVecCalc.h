@@ -959,6 +959,10 @@ typedef  struct tag_modelbound
 
 
 #ifdef CHACALCCPP
+float ChaRnd1(float x);//疑似乱数　昔風　out:0.0～1.0
+float ChaRnd2(ChaVector2 xy);//疑似乱数　昔風　out:0.0～1.0
+int ChaRnd1Int(float x, int rangemax);//疑似乱数　昔風　out:0～rangemax
+int ChaRnd2Int(ChaVector2 xy, int rangemax);//疑似乱数　昔風　out:0～rangemax
 BOOL FbxDouble3NanZero(FbxDouble3 srcvec3, FbxDouble3& dstvec3);
 BOOL IsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul);
 ChaMatrix ChaMatrixTranspose(ChaMatrix srcmat);
@@ -969,6 +973,7 @@ double ChaVector3LengthDbl_2D(ChaVector3* psrc);
 double ChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
 
 void ChaVector2Normalize(ChaVector2* pdst, const ChaVector2* psrc);
+double ChaVector2DotDbl(const ChaVector2* psrc1, const ChaVector2* psrc2);
 
 //float ChaVector3LengthDbl(ChaVector3* psrc);
 void ChaVector3Normalize(ChaVector3* pdst, const ChaVector3* psrc);
@@ -1058,6 +1063,10 @@ ChaMatrix ChaMatrixFromFbxAMatrix(FbxAMatrix srcmat);
 ChaMatrix CalcAxisMatX(ChaVector3 vecx, ChaVector3 srcpos, ChaMatrix srcmat);
 
 #else
+extern float ChaRnd1(float x);//疑似乱数　昔風　out:0.0～1.0
+extern float ChaRnd2(ChaVector2 xy);//疑似乱数　昔風　out:0.0～1.0
+extern int ChaRnd1Int(float x, int rangemax);//疑似乱数　昔風　out:0～rangemax
+extern int ChaRnd2Int(ChaVector2 xy, int rangemax);//疑似乱数　昔風　out:0～rangemax
 extern BOOL FbxDouble3NanZero(FbxDouble3 srcvec3, FbxDouble3& dstvec3);
 extern BOOL IsValidNewEul(ChaVector3 srcneweul, ChaVector3 srcbefeul);
 extern ChaMatrix ChaMatrixTranspose(ChaMatrix srcmat);
@@ -1068,6 +1077,7 @@ extern double ChaVector3LengthDbl_2D(ChaVector3* psrc);
 extern double ChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
 
 extern void ChaVector2Normalize(ChaVector2* pdst, const ChaVector2* psrc);
+extern double ChaVector2DotDbl(const ChaVector2* psrc1, const ChaVector2* psrc2);
 
 //extern float ChaVector3LengthDbl(ChaVector3* psrc);
 extern void ChaVector3Normalize(ChaVector3* pdst, const ChaVector3* psrc);

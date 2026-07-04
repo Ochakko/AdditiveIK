@@ -4665,6 +4665,11 @@ void ChaVector2Normalize(ChaVector2* pdst, const ChaVector2* psrc)
 	ChaCalcFunc chacalcfunc;
 	chacalcfunc.ccfChaVector2Normalize(pdst, psrc);
 }
+double ChaVector2DotDbl(const ChaVector2* psrc1, const ChaVector2* psrc2)
+{
+	ChaCalcFunc chacalcfunc;
+	return chacalcfunc.ccfChaVector2DotDbl(psrc1, psrc2);
+}
 
 
 double ChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2)
@@ -5846,6 +5851,27 @@ void ChaFrustumInfo::InitParams()
 //	return 0;
 //}
 
-
-
-
+float ChaRnd1(float x)//疑似乱数　昔風　out:0.0～1.0
+{ // 1 in, 1 out
+	double value = 1000.0f * sin(x);
+	double intPart;
+	double fracPart = modf(value, &intPart); // 小数部と整数部を分離
+	return (float)fracPart;
+}
+float ChaRnd2(ChaVector2 xy)//疑似乱数　昔風　out:0.0～1.0
+{ // 2 in, 1 out
+	ChaVector2 vec0 = ChaVector2(12.9898f, 78.233f);
+	return ChaRnd1((float)sin(ChaVector2DotDbl((const ChaVector2*)&xy, (const ChaVector2*)&vec0)) * 43758.5453123f);
+}
+int ChaRnd1Int(float x, int rangemax)//疑似乱数　昔風　out:0～rangemax
+{
+	float tmpval = ChaRnd1(x) * (float)(rangemax + 1);
+	int retval = (int)min(rangemax, tmpval);
+	return retval;
+}
+int ChaRnd2Int(ChaVector2 xy, int rangemax)//疑似乱数　昔風　out:0～rangemax
+{
+	float tmpval = ChaRnd2(xy) * (float)(rangemax + 1);
+	int retval = (int)min(rangemax, tmpval);
+	return retval;
+}

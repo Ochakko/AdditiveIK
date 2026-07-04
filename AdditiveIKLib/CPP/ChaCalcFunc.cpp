@@ -5904,6 +5904,16 @@ double ChaCalcFunc::ccfChaVector3LengthDbl_2D(ChaVector3* v)
 
 }
 
+double ChaCalcFunc::ccfChaVector2DotDbl(const ChaVector2* psrc1, const ChaVector2* psrc2)
+{
+	if (!psrc1 || !psrc2) {
+		return 0.0f;
+	}
+
+	double retval = (double)psrc1->x * (double)psrc2->x + (double)psrc1->y * (double)psrc2->y;
+
+	return retval;
+}
 double ChaCalcFunc::ccfChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2)
 {
 	if (!psrc1 || !psrc2) {

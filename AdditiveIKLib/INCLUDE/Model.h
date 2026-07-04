@@ -3883,6 +3883,15 @@ public: //accesser
 		return m_objBounding_BlockNum;
 	};
 
+	void ProcessShaderRefPosCounter01()
+	{
+		m_shader_refpos_counter01++;
+	};
+	int GetShaderRefPosCounter01()
+	{
+		return m_shader_refpos_counter01;
+	};
+
 public:
 	//CRITICAL_SECTION m_CritSection_GetGP;
 	//FUNCMPPARAMS* m_armpparams[6];
@@ -4150,6 +4159,7 @@ private:
 	ChaVector3 m_posture_parent_pos_offset;
 	ChaVector3 m_posture_parent_rot_offset;
 	
+	int m_shader_refpos_counter01;
 
 	std::vector<IKROTREC> m_ikrotrec;
 	std::vector<IKROTREC> m_ikrotrec_u;

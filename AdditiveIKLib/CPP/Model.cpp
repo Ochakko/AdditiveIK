@@ -761,6 +761,8 @@ int CModel::InitParams(int srcrefposnum)
 
 	m_ikstop_alloff = false;
 
+	m_shader_refpos_counter01 = 0;
+
 	return 0;
 }
 

@@ -3977,6 +3977,8 @@ void CMQOMaterial::DrawCommon(
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
 		m_cb[currentrefposindex].time.y = renderobj.pmodel->GetRefPosPointSize();
+		m_cb[currentrefposindex].time.z = (float)renderobj.pmodel->GetShaderRefPosCounter01();
+
 
 		MODELBOUND modelbb;
 		modelbb.Init();
@@ -4050,6 +4052,7 @@ void CMQOMaterial::DrawCommon(
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
 		m_cb[currentrefposindex].time.y = renderobj.pmodel->GetRefPosPointSize();
+		m_cb[currentrefposindex].time.z = (float)renderobj.pmodel->GetShaderRefPosCounter01();
 
 		MODELBOUND modelbb;
 		modelbb.Init();
@@ -4141,6 +4144,7 @@ void CMQOMaterial::DrawCommon(
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
 		m_cb[currentrefposindex].time.y = renderobj.pmodel->GetRefPosPointSize();
+		m_cb[currentrefposindex].time.z = (float)renderobj.pmodel->GetShaderRefPosCounter01();
 
 		MODELBOUND modelbb;
 		modelbb.Init();
@@ -4279,6 +4283,7 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
 		m_cb[0].time.y = renderobj.pmodel->GetRefPosPointSize();
+		m_cb[0].time.z = (float)renderobj.pmodel->GetShaderRefPosCounter01();
 
 		MODELBOUND modelbb;
 		modelbb.Init();
@@ -4344,6 +4349,8 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
 		m_cb[0].time.y = renderobj.pmodel->GetRefPosPointSize();
+		m_cb[0].time.z = (float)renderobj.pmodel->GetShaderRefPosCounter01();
+
 
 		MODELBOUND modelbb;
 		modelbb.Init();
@@ -4423,6 +4430,8 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 			m_cb[0].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
 		m_cb[0].time.y = renderobj.pmodel->GetRefPosPointSize();
+		m_cb[0].time.z = (float)renderobj.pmodel->GetShaderRefPosCounter01();
+
 
 		MODELBOUND modelbb;
 		modelbb.Init();

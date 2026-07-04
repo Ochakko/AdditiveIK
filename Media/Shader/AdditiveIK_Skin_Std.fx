@@ -39,8 +39,8 @@ struct SGSIn
 {
     float2 uv           : TEXCOORD0;
     float4 diffusemult : TEXCOORD1;
-    float4 FogAndOther : TEXCOORD2; //x:Fog, y:Mono, w:texid
-    float4 depth : TEXCOORD3;
+    float4 FogAndOther : TEXCOORD2; //x:Fog, y:Mono
+    float4 depth : TEXCOORD4;
     float4 normal       : NORMAL;    
     float4 pos          : POSITION;
 };
@@ -48,8 +48,9 @@ struct SGSOut
 {
     float2 uv           : TEXCOORD0;
     float4 diffusemult : TEXCOORD1;
-    float4 FogAndOther : TEXCOORD2; //x:Fog, y:Mono, w:texid
-    float4 depth : TEXCOORD3;
+    float4 FogAndOther : TEXCOORD2; //x:Fog, y:Mono
+    float4 RefPosParams : TEXCOORD3; //x:pointsize, y:texkind, z:refcounter    
+    float4 depth : TEXCOORD4;
     float4 normal       : NORMAL;    
     float4 posrw          : POSITION;
     float4 pos          : SV_POSITION;
@@ -59,7 +60,8 @@ struct SPSInFromGS
     float2 uv           : TEXCOORD0;
     float4 diffusemult : TEXCOORD1;
     float4 FogAndOther : TEXCOORD2; //x:Fog
-    float4 depth : TEXCOORD3;
+    float4 RefPosParams : TEXCOORD3; //x:pointsize, y:texkind, z:refcounter
+    float4 depth : TEXCOORD4;
     float4 normal       : NORMAL;    
     float4 posrw          : POSITION;
 };
@@ -337,8 +339,9 @@ SGSIn VSMainSkinStdForGS(SVSIn vsIn, uniform bool hasSkin)
     
     psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
     psIn.FogAndOther.y = 0.0f;
-    psIn.FogAndOther.z = time1.y;//size of PointNumSprite
-    psIn.FogAndOther.w = time1.x;//dxuttime --> texindex of PointNumSprite
+    psIn.FogAndOther.z = time1.y;
+    psIn.FogAndOther.w = time1.z;
+        
     //psIn.pos = mul(mView, psIn.pos);
     //psIn.pos = mul(mProj, psIn.pos);
     ////psIn.pos /= psIn.pos.w;
@@ -438,38 +441,51 @@ SPSInShadowReciever VSMainSkinStdShadowReciever(SVSIn vsIn, uniform bool hasSkin
 [maxvertexcount(4)]
 void GSParticleDraw(point SGSIn input[1], inout TriangleStream<SGSOut> SpriteStream)
 {
-    SGSOut output;
+    int posrnd = (int) (fracSin21(input[0].pos.xy) * 60.0f);
+    int timeint = (int) (input[0].FogAndOther.w + posrnd) % 60;
+    int timeint2 = (int) (input[0].FogAndOther.w + posrnd) % 200;    
+    float addbase = (float) timeint / 60.0f; // * 0.5f;
+    float shiftx = fracSin11(input[0].pos.x) * (float) timeint2 * input[0].FogAndOther.z;
+    float shifty = fracSin11(input[0].pos.y) * (float) timeint2 * input[0].FogAndOther.z;
+    float shiftz = fracSin11(input[0].pos.z) * (float) timeint2 * input[0].FogAndOther.z;
 
-    float rndsinpos = fracSin21(input[0].pos.xy) * 4.0f;
-    float rndsintime = fracSin11(input[0].FogAndOther.w) * 4.0f;
-    int texkind = (int) (rndsinpos * rndsintime) % 4;
-    float modscale = (rndsinpos > 2.9f) ? 3.0f : ((rndsinpos < 1.9f) ? 2.0f : ((rndsinpos < 0.9f) ? 1.0f : 0.1f));
-    float shiftx = fracSin11(input[0].pos.x) * 2.0f;
-    float shifty = fracSin11(input[0].pos.y) * 2.0f;
+    float params_x = addbase * addbase * addbase * addbase * addbase * addbase * input[0].FogAndOther.z;
+    //float params_y = fracSin21(float2(input[0].pos.x, input[0].FogAndOther.w)) * 4.0f;
+    float params_y = fracSin21(input[0].pos.xy) * 4.0f;
+    float params_z = input[0].FogAndOther.w;
+    float params_w = fracSin11(input[0].FogAndOther.w);
+
     
     // Emit two new triangles.
     for (int i = 0; i < 4; i++)
     {
-        float3 position = g_positions[i] * input[0].FogAndOther.z; // x refpos_pointsize
-        position = mul((float3x3) minvView, position) * modscale + input[0].pos.xyz + float3(shiftx, shifty, 0.0f);
+        SGSOut output;
+
+        //RefPosParams x:pointsize, y:texkind, z:refcounter
+        output.RefPosParams.x = params_x;
+        output.RefPosParams.y = params_y;
+        output.RefPosParams.z = params_z;
+        output.RefPosParams.w = params_w;
+
+        float3 position = g_positions[i] * params_x; // x refpos_pointsize
+        position = mul((float3x3) minvView, position) + input[0].pos.xyz + float3(shiftx, shifty, shiftz);
       
         output.pos = float4(position, 1.0);
         output.pos = mul(mViewProj, output.pos);
         output.posrw = output.pos;
         
-        output.uv = g_texcoords[i];//input[0].uv;
+        output.uv = g_texcoords[i]; //input[0].uv;
         output.diffusemult = input[0].diffusemult;
         output.FogAndOther = input[0].FogAndOther;
-        output.FogAndOther.w = texkind;
         output.depth = input[0].depth;
         output.normal = input[0].normal;
 
         SpriteStream.Append(output);
     }
 
-
     SpriteStream.RestartStrip();
 }
+
 
 
 
@@ -522,9 +538,12 @@ SPSOut2 PSMainSkinStd(SPSIn psIn) : SV_Target
 
 SPSOut2 PSMainSkinStdFromGS(SPSInFromGS psIn) : SV_Target
 {
+    //RefPosParams x:pointsize, y:texkind, z:refcounter
+
+    // 普通にテクスチャを
     //float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-    float4 albedoColor;// = g_numMap3.Sample(g_sampler_num3, psIn.uv);
-    albedoColor = (psIn.FogAndOther.w >= 2.9f) ? g_numMap4.Sample(g_sampler_num4, psIn.uv) : ((psIn.FogAndOther.w >= 1.9f) ? g_numMap3.Sample(g_sampler_num3, psIn.uv) : ((psIn.FogAndOther.w >= 0.9f) ? g_numMap2.Sample(g_sampler_num2, psIn.uv) : g_numMap1.Sample(g_sampler_num1, psIn.uv)));
+    float4 albedoColor; // = g_numMap2.Sample(g_sampler_num2, psIn.uv);
+    albedoColor = (psIn.RefPosParams.y >= 2.9f) ? g_numMap4.Sample(g_sampler_num4, psIn.uv) : ((psIn.RefPosParams.y >= 1.9f) ? g_numMap3.Sample(g_sampler_num3, psIn.uv) : ((psIn.RefPosParams.y >= 0.9f) ? g_numMap2.Sample(g_sampler_num2, psIn.uv) : g_numMap1.Sample(g_sampler_num1, psIn.uv)));
     
      
     float3 wPos = psIn.posrw.xyz / psIn.posrw.w;

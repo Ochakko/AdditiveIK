@@ -155,6 +155,7 @@ public:
 	ChaMatrix ccfChaMatrixTranspose(ChaMatrix srcmat);
 	double ccfChaVector3LengthDbl(ChaVector3* psrc);
 	double ccfChaVector3LengthDbl_2D(ChaVector3* psrc);
+	double ccfChaVector2DotDbl(const ChaVector2* psrc1, const ChaVector2* psrc2);
 	double ccfChaVector3DotDbl(const ChaVector3* psrc1, const ChaVector3* psrc2);
 	//float ccfChaVector3LengthDbl(ChaVector3* psrc);
 	void ccfChaVector2Normalize(ChaVector2* pdst, const ChaVector2* psrc);

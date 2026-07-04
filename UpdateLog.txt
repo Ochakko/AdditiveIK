@@ -1,6 +1,11 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+
+2026/07/04
+　RefPos調整中_4
+　　RefPosPointの調整
+　　
 2026/07/04
 　RefPos調整中_3
 　　Lineのインデックスを修正

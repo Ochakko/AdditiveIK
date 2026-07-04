@@ -6587,6 +6587,7 @@ void OnFrameRender(myRenderer::RenderingEngine* re, RenderContext* rc, double fT
 						//背景モデルの場合：RefPosNum >= 2のときにOnRenderRefPos()を呼ぶ
 						//上記のようにしないと　RefPosNum == 1のときに　背景がライティングされない
 						curmodel->SetRefPosFlag(true);
+						curmodel->ProcessShaderRefPosCounter01();
 						OnRenderRefPos(re, curmodel, s_owpLTimeline->getCurrentTime());
 					}
 					else {
