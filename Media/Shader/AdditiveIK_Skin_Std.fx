@@ -446,9 +446,12 @@ void GSParticleDraw(point SGSIn input[1], inout TriangleStream<SGSOut> SpriteStr
     int santime2 = (int) (200 / (time1.w * time1.w));
     int timeint2 = (int) (input[0].FogAndOther.w + posrnd) % santime2;// % 200;
     float addbase = (float) timeint / 60.0f; // * 0.5f;
-    float shiftx = fracSin11(input[0].pos.x) * pow((float) timeint2, time1.w) * input[0].FogAndOther.z;
-    float shifty = fracSin11(input[0].pos.y) * pow((float) timeint2, time1.w) * input[0].FogAndOther.z;
-    float shiftz = fracSin11(input[0].pos.z) * pow((float) timeint2, time1.w) * input[0].FogAndOther.z;
+    //float signx = (input[0].normal.x >= 0.0f) ? 1.0f : -1.0f;
+    //float signy = (input[0].normal.y >= 0.0f) ? 1.0f : -1.0f;
+    //float signz = (input[0].normal.z >= 0.0f) ? 1.0f : -1.0f;
+    float shiftx = input[0].normal.x * fracSin11(input[0].pos.x) * pow((float) timeint2, time1.w) * input[0].FogAndOther.z;
+    float shifty = input[0].normal.y * fracSin11(input[0].pos.y) * pow((float) timeint2, time1.w) * input[0].FogAndOther.z;
+    float shiftz = input[0].normal.z * fracSin11(input[0].pos.z) * pow((float) timeint2, time1.w) * input[0].FogAndOther.z;
 
     float params_x = addbase * addbase * addbase * addbase * addbase * addbase * input[0].FogAndOther.z;
     //float params_y = fracSin21(float2(input[0].pos.x, input[0].FogAndOther.w)) * 4.0f;
