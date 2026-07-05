@@ -3,6 +3,11 @@ https://github.com/Ochakko/AdditiveIK
 
 
 2026/07/05
+　パラメータ設定の様子を動画に.
+　　Settings 残像Num散スプライト
+　　https://youtu.be/-E7NNdraSfw
+　　
+2026/07/05
 　AdditiveIK 1.0.0.75 release
 　　1.0.0.74からの変更点
 　　　RefPos機能アップデート
