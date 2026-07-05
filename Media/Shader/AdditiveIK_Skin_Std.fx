@@ -443,7 +443,8 @@ void GSParticleDraw(point SGSIn input[1], inout TriangleStream<SGSOut> SpriteStr
 {
     int posrnd = (int) (fracSin21(input[0].pos.xy) * 60.0f);
     int timeint = (int) (input[0].FogAndOther.w + posrnd) % 60;
-    int timeint2 = (int) (input[0].FogAndOther.w + posrnd) % 200;    
+    int santime2 = (int) (200 / (time1.w * time1.w));
+    int timeint2 = (int) (input[0].FogAndOther.w + posrnd) % santime2;// % 200;
     float addbase = (float) timeint / 60.0f; // * 0.5f;
     float shiftx = fracSin11(input[0].pos.x) * pow((float) timeint2, time1.w) * input[0].FogAndOther.z;
     float shifty = fracSin11(input[0].pos.y) * pow((float) timeint2, time1.w) * input[0].FogAndOther.z;

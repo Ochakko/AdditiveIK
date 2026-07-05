@@ -2,8 +2,8 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 
-2026/07/04
-　AdditiveIK 1.0.0.75 RC1(リリース候補1)
+2026/07/05
+　AdditiveIK 1.0.0.75 RC2(リリース候補2)
 　　1.0.0.74からの変更点
 　　　RefPos機能アップデート
 　　　　残像Num散スプライト(Pointチェックボックス, 散POWスライダー)
@@ -16,6 +16,13 @@ https://github.com/Ochakko/AdditiveIK
 　　　残像Num散スプライト Adjusting 4
 　　　https://youtube.com/shorts/c7OSH06_S1c
 　　　
+　RC2:
+　　散POWスライダー値を大きくしたときのNum散周期を調整
+　　(説明しよう！
+　　数字が散らばるスピードを大きくしたときに　数字がどんどん遠くへ行ってみえなくなるので
+　　適当な時間で初期化して繰り返すようにしたのだ.)
+　　
+　　
 2026/07/04
 　RefPos調整中_4
 　　RefPosPointの調整
