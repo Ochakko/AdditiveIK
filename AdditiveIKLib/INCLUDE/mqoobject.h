@@ -79,8 +79,9 @@ public:
 	int MakePolymesh3(bool fbxfileflag, ID3D12Device* pdev, CModel* pmodel);
 	int MakePolymesh4(ID3D12Device* pdev, CModel* pmodel);
 	int MakeExtLine(CModel* srcmodel);
-	int MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag);
-//	int MakeExtLine( unordered_map<int,CMQOMaterial*>& srcmat );
+	int MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag, int pointspritetexkind);
+	int RemakeConstantBuffers(ID3D12Device* pdev, int hasbone, bool grassflag, int pointspritetexkind);
+	//	int MakeExtLine( unordered_map<int,CMQOMaterial*>& srcmat );
 	int SetGPUInteraction(bool srcflag);
 
 

@@ -179,7 +179,7 @@ int CDispObj::DestroyObjs()
 }
 
 
-int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, int srcuvnum, bool grassflag)
+int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, int srcuvnum, bool grassflag, int pointspritetexkind)
 {
 	DestroyObjs();
 
@@ -216,7 +216,7 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 		bool withboneflag = false;
 		int vertextype = 1;//pm3
 		if (curmat) {
-			curmat->CreateDecl(pdev, vertextype);
+			curmat->CreateDecl(pdev, vertextype, pointspritetexkind);
 
 			bool useGS = true;
 			int result1 = 0;
@@ -397,7 +397,7 @@ int CDispObj::SetGPUInteraction(bool srcflag)
 }
 
 
-int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, int srcuvnum, bool hasBlendShape)
+int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, int srcuvnum, bool hasBlendShape, int pointspritetexkind)
 {
 	DestroyObjs();
 
@@ -435,7 +435,7 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, in
 			if (curmat) {
 				int vertextype = 0;//pm4
 
-				curmat->CreateDecl(pdev, vertextype);
+				curmat->CreateDecl(pdev, vertextype, pointspritetexkind);
 
 				bool useGS = true;
 				int result1;
@@ -570,7 +570,7 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 	if (curmat) {
 		int vertextype = 2;//extline
 
-		curmat->CreateDecl(pdev, vertextype);
+		curmat->CreateDecl(pdev, vertextype, POINTSPRITE_1234);
 
 		bool useGS = false;
 		int result1;
@@ -628,6 +628,59 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 
 	return 0;
 }
+
+int CDispObj::RemakeConstantBuffers(ID3D12Device* pdev, int pointspritetexkind)
+{
+	int result = 0;
+
+	if (m_pm4 != nullptr) {
+		int materialnum = m_pm4->GetDispMaterialNum();
+		int materialcnt;
+		int rootindex = 0;
+		for (materialcnt = 0; materialcnt < materialnum; materialcnt++) {
+			CMQOMaterial* curmat = NULL;
+			int curoffset = 0;
+			int curtrinum = 0;
+			bool withboneflag = true;
+			int result0 = m_pm4->GetDispMaterial(materialcnt, &curmat, &curoffset, &curtrinum);
+			if ((result0 == 0) && (curmat != NULL) && (curtrinum > 0)) {
+				if (curmat) {
+					int objtype = 0;
+					result = curmat->RemakeConstantBuffers(objtype, pointspritetexkind);
+				}
+			}
+		}
+	}
+	else if (m_pm3 != nullptr) {
+		//int MateiralNo = 0;//!!!!!! shaderとpipelineは１メッシュにつき１つにした
+		int materialNum = m_pm3->GetOptMatNum();
+		int rootindex = 0;
+		int blno;
+		for (blno = 0; blno < m_pm3->GetOptMatNum(); blno++) {
+			MATERIALBLOCK* currb = m_pm3->GetMatBlock() + blno;
+			CMQOMaterial* curmat;
+			curmat = currb->mqomat;
+			bool withboneflag = false;
+			int vertextype = 1;//pm3
+			if (curmat) {
+				int objtype = 1;
+				result = curmat->RemakeConstantBuffers(objtype, pointspritetexkind);
+			}
+		}
+	}
+	else if(m_extline != nullptr) {
+		CMQOMaterial* curmat = m_extline->GetMaterial();
+		if (curmat) {
+			int objtype = 2;//extline
+			result = curmat->RemakeConstantBuffers(objtype, pointspritetexkind);
+		}
+	}
+	if (result != 0) {
+		_ASSERT(0);
+	}
+	return result;
+}
+
 
 //void MeshParts::CreateMeshFromTkmMesh(
 //	const TkmFile::SMesh& tkmMesh,

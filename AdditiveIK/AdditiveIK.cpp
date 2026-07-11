@@ -1645,6 +1645,29 @@ static Texture* s_spritetex98 = 0;
 static Texture* s_spritetex99 = 0;
 static Texture* s_spritetex100 = 0;
 
+//for PointSprite
+Texture* g_spritetex101 = 0;
+Texture* g_spritetex102 = 0;
+Texture* g_spritetex103 = 0;
+Texture* g_spritetex104 = 0;
+Texture* g_spritetex105 = 0;
+Texture* g_spritetex106 = 0;
+Texture* g_spritetex107 = 0;
+Texture* g_spritetex108 = 0;
+Texture* g_spritetex109 = 0;
+Texture* g_spritetex110 = 0;
+Texture* g_spritetex111 = 0;
+Texture* g_spritetex112 = 0;
+Texture* g_spritetex113 = 0;
+Texture* g_spritetex114 = 0;
+Texture* g_spritetex115 = 0;
+Texture* g_spritetex116 = 0;
+Texture* g_spritetex117 = 0;
+Texture* g_spritetex118 = 0;
+Texture* g_spritetex119 = 0;
+Texture* g_spritetex120 = 0;
+
+
 static Texture* s_spritetex_pushed1 = 0;
 static Texture* s_spritetex_pushed2 = 0;
 static Texture* s_spritetex_pushed5 = 0;
@@ -36484,7 +36507,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.75 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.76 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -40048,7 +40071,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.75 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.76 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {
@@ -46001,6 +46024,133 @@ int CreateSprites()
 	spriteinitdata.m_textures[0] = s_spritetex100;
 	s_speffectsw[SPEFFECTSW_REFPOS].spriteOFF.Init(spriteinitdata, screenvertexflag);
 
+	{
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\1234\\Point1.png");
+		g_spritetex101 = new Texture();
+		g_spritetex101->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex101;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\1234\\Point2.png");
+		g_spritetex102 = new Texture();
+		g_spritetex102->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex102;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\1234\\Point3.png");
+		g_spritetex103 = new Texture();
+		g_spritetex103->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex103;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\1234\\Point4.png");
+		g_spritetex104 = new Texture();
+		g_spritetex104->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex104;
+	}
+	{
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Janken\\Point1.png");
+		g_spritetex105 = new Texture();
+		g_spritetex105->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex105;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Janken\\Point2.png");
+		g_spritetex106 = new Texture();
+		g_spritetex106->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex106;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Janken\\Point3.png");
+		g_spritetex107 = new Texture();
+		g_spritetex107->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex107;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Janken\\Point4.png");
+		g_spritetex108 = new Texture();
+		g_spritetex108->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex108;
+	}
+	{
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Marukao\\Point1.png");
+		g_spritetex109 = new Texture();
+		g_spritetex109->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex109;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Marukao\\Point2.png");
+		g_spritetex110 = new Texture();
+		g_spritetex110->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex110;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Marukao\\Point3.png");
+		g_spritetex111 = new Texture();
+		g_spritetex111->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex111;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Marukao\\Point4.png");
+		g_spritetex112 = new Texture();
+		g_spritetex112->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex112;
+	}
+	{
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Yubisashi\\Point1.png");
+		g_spritetex113 = new Texture();
+		g_spritetex113->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex113;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Yubisashi\\Point2.png");
+		g_spritetex114 = new Texture();
+		g_spritetex114->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex114;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Yubisashi\\Point3.png");
+		g_spritetex115 = new Texture();
+		g_spritetex115->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex115;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Yubisashi\\Point4.png");
+		g_spritetex116 = new Texture();
+		g_spritetex116->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex116;
+	}
+	{
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Star\\Point1.gif");
+		g_spritetex117 = new Texture();
+		g_spritetex117->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex117;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Star\\Point2.gif");
+		g_spritetex118 = new Texture();
+		g_spritetex118->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex118;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Star\\Point3.gif");
+		g_spritetex119 = new Texture();
+		g_spritetex119->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex119;
+
+		wcscpy_s(filepath, MAX_PATH, mpath);
+		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\Star\\Point4.gif");
+		g_spritetex120 = new Texture();
+		g_spritetex120->InitFromWICFile(filepath);
+		spriteinitdata.m_textures[0] = g_spritetex120;
+	}
+
+
 
 	//{
 	//	int aimno;
@@ -46828,6 +46978,28 @@ void InitSprites()
 	s_spritetex98 = 0;
 	s_spritetex99 = 0;
 	s_spritetex100 = 0;
+	
+	//for PointSprite
+	g_spritetex101 = 0;
+	g_spritetex102 = 0;
+	g_spritetex103 = 0;
+	g_spritetex104 = 0;
+	g_spritetex105 = 0;
+	g_spritetex106 = 0;
+	g_spritetex107 = 0;
+	g_spritetex108 = 0;
+	g_spritetex109 = 0;
+	g_spritetex110 = 0;
+	g_spritetex111 = 0;
+	g_spritetex112 = 0;
+	g_spritetex113 = 0;
+	g_spritetex114 = 0;
+	g_spritetex115 = 0;
+	g_spritetex116 = 0;
+	g_spritetex117 = 0;
+	g_spritetex118 = 0;
+	g_spritetex119 = 0;
+	g_spritetex120 = 0;
 }
 
 void DestroySprites()
@@ -47255,6 +47427,87 @@ void DestroySprites()
 	if (s_spritetex100) {
 		delete s_spritetex100;
 		s_spritetex100 = 0;
+	}
+
+	if (g_spritetex101) {
+		delete g_spritetex101;
+		g_spritetex101 = 0;
+	}
+	if (g_spritetex102) {
+		delete g_spritetex102;
+		g_spritetex102 = 0;
+	}
+	if (g_spritetex103) {
+		delete g_spritetex103;
+		g_spritetex103 = 0;
+	}
+	if (g_spritetex104) {
+		delete g_spritetex104;
+		g_spritetex104 = 0;
+	}
+	if (g_spritetex105) {
+		delete g_spritetex105;
+		g_spritetex105 = 0;
+	}
+	if (g_spritetex106) {
+		delete g_spritetex106;
+		g_spritetex106 = 0;
+	}
+	if (g_spritetex107) {
+		delete g_spritetex107;
+		g_spritetex107 = 0;
+	}
+	if (g_spritetex108) {
+		delete g_spritetex108;
+		g_spritetex108 = 0;
+	}
+	if (g_spritetex109) {
+		delete g_spritetex109;
+		g_spritetex109 = 0;
+	}
+	if (g_spritetex110) {
+		delete g_spritetex110;
+		g_spritetex110 = 0;
+	}
+	if (g_spritetex111) {
+		delete g_spritetex111;
+		g_spritetex111 = 0;
+	}
+	if (g_spritetex112) {
+		delete g_spritetex112;
+		g_spritetex112 = 0;
+	}
+	if (g_spritetex113) {
+		delete g_spritetex113;
+		g_spritetex113 = 0;
+	}
+	if (g_spritetex114) {
+		delete g_spritetex114;
+		g_spritetex114 = 0;
+	}
+	if (g_spritetex115) {
+		delete g_spritetex115;
+		g_spritetex115 = 0;
+	}
+	if (g_spritetex116) {
+		delete g_spritetex116;
+		g_spritetex116 = 0;
+	}
+	if (g_spritetex117) {
+		delete g_spritetex117;
+		g_spritetex117 = 0;
+	}
+	if (g_spritetex118) {
+		delete g_spritetex118;
+		g_spritetex118 = 0;
+	}
+	if (g_spritetex119) {
+		delete g_spritetex119;
+		g_spritetex119 = 0;
+	}
+	if (g_spritetex120) {
+		delete g_spritetex120;
+		g_spritetex120 = 0;
 	}
 
 

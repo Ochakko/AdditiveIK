@@ -169,6 +169,7 @@ private:
 	OrgWinGUI::OWP_Separator* m_powsp;
 	OrgWinGUI::OWP_Label* m_powLabel;
 	OrgWinGUI::OWP_Slider* m_powSlider;
+	OrgWinGUI::OWP_ComboBoxA* m_texkindCombo;
 
 	OrgWinGUI::OWP_Label* m_nameLabel;
 	OrgWinGUI::OWP_Label* m_space01Label;

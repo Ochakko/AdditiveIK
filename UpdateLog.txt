@@ -1,7 +1,11 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
-
+2026/07/11
+　RefPosのPoint用テクスチャを選択可能に.
+　　テクスチャ選択用のコンボボックス追加.
+　　
+　　
 2026/07/05
 　パラメータ設定の様子を動画に.
 　　Settings 残像Num散スプライト

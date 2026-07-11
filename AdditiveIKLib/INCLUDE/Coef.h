@@ -24,6 +24,15 @@ class CMQOMaterial;
 #define	u_long	unsigned long
 
 
+enum {//CModel::m_refpos_texkind
+	POINTSPRITE_1234,//MameMedia/0_PointSprite/1234 : 0
+	POINTSPRITE_Janken,//MameMedia/0_PointSprite/Janken : 1
+	POINTSPRITE_Marukao,//MameMedia/0_PointSprite/Marukao : 2
+	POINTSPRITE_Yubisashi,//MameMedia/0_PointSprite/Yubisashi : 3
+	POINTSPRITE_Star,//MameMedia/0_PointSprite/Star : 4
+	POINTSPRITE_MAX
+};
+
 enum {//g_underWriteFbxState
 	WRITEFBX_NONE,
 	WRITEFBX_START,

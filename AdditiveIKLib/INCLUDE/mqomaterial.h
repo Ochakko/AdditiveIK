@@ -291,6 +291,10 @@ public:
 	~CMQOMaterial();
 
 	void DestroyObjs();
+	void DestroyConstantBuffers();
+	void DestroyDescriptorHeap();
+	int InitConstantBuffers(int objecttype, int pointspritetexkind);
+	int RemakeConstantBuffers(int objecttype, int pointspritetexkind);
 
 	int SetParams( int srcno, ChaVector4 srcsceneamb, char* srcchar, int srcleng );
 
@@ -332,8 +336,9 @@ public:
 	//int CreateTexture( WCHAR* dirname, int texpool = 0 );
 	int CreateTexture(WCHAR* dirname, int texpool = 0);//!!!!!!!!!!!!!!!!!!!!!!!!
 
-	int CreateDecl(ID3D12Device* pdev, int objecttype);
-	void CreateDescriptorHeaps(int objecttype);
+	int CreateDecl(ID3D12Device* pdev, int objecttype, int pointspritetexkind);
+	int AllocateDescriptorHeaps(int objecttype, int pointspritetexkind);
+	void CreateDescriptorHeaps(int objecttype, int pointspritetexkind);
 
 	int InitShadersAndPipelines(
 		bool useGS,

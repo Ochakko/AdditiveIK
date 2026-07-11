@@ -36,7 +36,31 @@
 
 //extern CTexBank* g_texbank;
 extern ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わらずオリジナルのインデックスで格納
+
+//################
+//For PointSprite
+//################
 extern CFpsSprite g_fpssprite;
+extern Texture* g_spritetex101;
+extern Texture* g_spritetex102;
+extern Texture* g_spritetex103;
+extern Texture* g_spritetex104;
+extern Texture* g_spritetex105;
+extern Texture* g_spritetex106;
+extern Texture* g_spritetex107;
+extern Texture* g_spritetex108;
+extern Texture* g_spritetex109;
+extern Texture* g_spritetex110;
+extern Texture* g_spritetex111;
+extern Texture* g_spritetex112;
+extern Texture* g_spritetex113;
+extern Texture* g_spritetex114;
+extern Texture* g_spritetex115;
+extern Texture* g_spritetex116;
+extern Texture* g_spritetex117;
+extern Texture* g_spritetex118;
+extern Texture* g_spritetex119;
+extern Texture* g_spritetex120;
 
 #include "../../MiniEngine/ConstantBuffer.h"
 #include "../../MiniEngine/RootSignature.h"
@@ -496,6 +520,63 @@ void CMQOMaterial::DestroyObjs()
 		m_convnamenum = 0;
 	}
 
+	DestroyConstantBuffers();
+
+	int refposindex;
+	for (refposindex = 0; refposindex < GetRefPosMaxNum(); refposindex++) {
+		m_opaquePipelineState2[refposindex].DestroyObjs();
+		m_transPipelineState2[refposindex].DestroyObjs();
+		m_transNoZPipelineState2[refposindex].DestroyObjs();
+		m_zalwaysPipelineState2[refposindex].DestroyObjs();
+	}
+
+		//for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
+	//	m_ZPreModelPipelineState[refposindex].DestroyObjs();
+	//	m_ZPreModelSkyPipelineState[refposindex].DestroyObjs();
+	//}
+	m_InstancingOpequeTrianglePipelineState.DestroyObjs();
+	m_InstancingtransTrianglePipelineState.DestroyObjs();
+	m_InstancingtransTriangleNoZPipelineState.DestroyObjs();
+	m_InstancingzalwaysTrianglePipelineState.DestroyObjs();
+	m_InstancingOpequeLinePipelineState.DestroyObjs();
+	m_InstancingtransLinePipelineState.DestroyObjs();
+	m_InstancingzalwaysLinePipelineState.DestroyObjs();
+
+	DestroyDescriptorHeap();
+
+	for (int rsindex = 0; rsindex < GetRefPosMaxNum(); rsindex++) {
+		m_rootSignature[rsindex].DestroyObjs();
+		//m_ZPrerootSignature[rsindex].DestroyObjs();
+		m_shadowrootSignature[rsindex].DestroyObjs();
+	}
+
+	m_InstancingrootSignature.DestroyObjs();
+
+	//bank管理の外部ポインタ
+	m_albedoMap = nullptr;
+
+	//bank管理の外部ポインタ
+	//if (m_normalMap) {
+	//	delete m_normalMap;
+	//	m_normalMap = nullptr;
+	//}
+	m_normalMap = nullptr;
+
+	//bank管理の外部ポインタ
+	//if (m_specularMap) {
+	//	delete m_specularMap;
+	//	m_specularMap = nullptr;
+	//}
+	m_metalMap = nullptr;
+
+	//bank管理の外部ポインタ
+	m_emissiveMap = nullptr;
+
+
+}
+
+void CMQOMaterial::DestroyConstantBuffers()
+{
 	int cbindex;
 	for (cbindex = 0; cbindex < GetRefPosMaxNum(); cbindex++) {
 		//m_commonConstantBuffer[cbindex]->DestroyObjs();
@@ -533,59 +614,241 @@ void CMQOMaterial::DestroyObjs()
 	m_shadowexpandConstantBuffer2.clear();
 
 
-	int refposindex;
-	for (refposindex = 0; refposindex < GetRefPosMaxNum(); refposindex++) {
-		m_opaquePipelineState2[refposindex].DestroyObjs();
-		m_transPipelineState2[refposindex].DestroyObjs();
-		m_transNoZPipelineState2[refposindex].DestroyObjs();
-		m_zalwaysPipelineState2[refposindex].DestroyObjs();
-	}
+}
 
-		//for (refposindex = 0; refposindex < REFPOSMAXNUM; refposindex++) {
-	//	m_ZPreModelPipelineState[refposindex].DestroyObjs();
-	//	m_ZPreModelSkyPipelineState[refposindex].DestroyObjs();
-	//}
-	m_InstancingOpequeTrianglePipelineState.DestroyObjs();
-	m_InstancingtransTrianglePipelineState.DestroyObjs();
-	m_InstancingtransTriangleNoZPipelineState.DestroyObjs();
-	m_InstancingzalwaysTrianglePipelineState.DestroyObjs();
-	m_InstancingOpequeLinePipelineState.DestroyObjs();
-	m_InstancingtransLinePipelineState.DestroyObjs();
-	m_InstancingzalwaysLinePipelineState.DestroyObjs();
-
-
+void CMQOMaterial::DestroyDescriptorHeap()
+{
 	m_descriptorHeap.DestroyObjs();
 	m_shadowdescriptorHeap.DestroyObjs();
 
-	for (int rsindex = 0; rsindex < GetRefPosMaxNum(); rsindex++) {
-		m_rootSignature[rsindex].DestroyObjs();
-		//m_ZPrerootSignature[rsindex].DestroyObjs();
-		m_shadowrootSignature[rsindex].DestroyObjs();
+	m_descriptorHeap.InitParams();
+	m_shadowdescriptorHeap.InitParams();
+}
+
+
+int CMQOMaterial::RemakeConstantBuffers(int objecttype, int pointspritetexkind)
+{
+
+	int result1 = 0;
+
+	DestroyConstantBuffers();
+	DestroyDescriptorHeap();
+	m_createdescriptorflag = false;
+
+	result1 = AllocateDescriptorHeaps(objecttype, pointspritetexkind);
+	return result1;
+}
+int CMQOMaterial::InitConstantBuffers(int objecttype, int pointspritetexkind)
+{
+	if ((objecttype == 0) || (objecttype == 1)) {//pm4 || pm3
+		//ディスクリプタヒープを構築していく。
+		{
+			int srvNo = 0;
+			int cbNo = 0;
+			//ディスクリプタヒープにディスクリプタを登録していく。
+			m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());	//アルベドに乗算するテクスチャ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
+
+			switch (pointspritetexkind) {
+			case POINTSPRITE_1234:
+				m_descriptorHeap.RegistShaderResource(srvNo + 6, *g_spritetex101);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 7, *g_spritetex102);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 8, *g_spritetex103);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 9, *g_spritetex104);//Numマップ。
+				break;
+			case POINTSPRITE_Janken:
+				m_descriptorHeap.RegistShaderResource(srvNo + 6, *g_spritetex105);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 7, *g_spritetex106);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 8, *g_spritetex107);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 9, *g_spritetex108);//Numマップ。
+				break;
+			case POINTSPRITE_Marukao:
+				m_descriptorHeap.RegistShaderResource(srvNo + 6, *g_spritetex109);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 7, *g_spritetex110);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 8, *g_spritetex111);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 9, *g_spritetex112);//Numマップ。
+				break;
+			case POINTSPRITE_Yubisashi:
+				m_descriptorHeap.RegistShaderResource(srvNo + 6, *g_spritetex113);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 7, *g_spritetex114);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 8, *g_spritetex115);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 9, *g_spritetex116);//Numマップ。
+				break;
+			case POINTSPRITE_Star:
+				m_descriptorHeap.RegistShaderResource(srvNo + 6, *g_spritetex117);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 7, *g_spritetex118);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 8, *g_spritetex119);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 9, *g_spritetex120);//Numマップ。
+				break;
+			default:
+				m_descriptorHeap.RegistShaderResource(srvNo + 6, *(g_fpssprite.GetTexture(1)));//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 7, *(g_fpssprite.GetTexture(2)));//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 8, *(g_fpssprite.GetTexture(3)));//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 9, *(g_fpssprite.GetTexture(4)));//Numマップ。
+				break;
+			}
+
+			srvNo += NUM_SRV_ONE_MATERIAL;
+
+			int refposindex;
+			for (refposindex = 0; refposindex < GetRefPosMaxNum(); refposindex++) {
+				m_descriptorHeap.RegistConstantBuffer(cbNo, *m_commonConstantBuffer[refposindex]);
+				if (m_expandConstantBuffer[refposindex]->IsValid()) {
+					m_descriptorHeap.RegistConstantBuffer(cbNo + 1, *m_expandConstantBuffer[refposindex]);//BoneMatrix
+				}
+				if (m_expandConstantBuffer2[refposindex]->IsValid()) {
+					m_descriptorHeap.RegistConstantBuffer(cbNo + 2, *m_expandConstantBuffer2[refposindex]);//Shadow
+				}
+
+				cbNo += NUM_CBV_ONE_MATERIAL;
+			}
+			m_descriptorHeap.Commit();
+
+		}
+
+		{
+			int srvNo = 0;
+			int cbNo = 0;
+			//ディスクリプタヒープにディスクリプタを登録していく。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());//アルベドに乗算するテクスチャ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 6, *(g_fpssprite.GetTexture(1)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 7, *(g_fpssprite.GetTexture(2)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 8, *(g_fpssprite.GetTexture(3)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 9, *(g_fpssprite.GetTexture(4)));//Numマップ。
+
+			srvNo += NUM_SRV_ONE_MATERIAL;
+
+
+			int refposindex;
+			for (refposindex = 0; refposindex < GetRefPosMaxNum(); refposindex++) {
+				//ディスクリプタヒープにディスクリプタを登録していく。
+				m_shadowdescriptorHeap.RegistConstantBuffer(cbNo, *m_shadowcommonConstantBuffer[refposindex]);
+				if (m_shadowexpandConstantBuffer[refposindex]->IsValid()) {
+					m_shadowdescriptorHeap.RegistConstantBuffer(cbNo + 1, *m_shadowexpandConstantBuffer[refposindex]);//BoneMatrix
+				}
+				if (m_shadowexpandConstantBuffer2[refposindex]->IsValid()) {
+					m_shadowdescriptorHeap.RegistConstantBuffer(cbNo + 2, *m_shadowexpandConstantBuffer2[refposindex]);//Shadow
+				}
+
+				cbNo += NUM_CBV_ONE_MATERIAL;
+
+				m_createdescriptorflag = true;
+			}
+			m_shadowdescriptorHeap.Commit();
+
+		}
+
+		m_createdescriptorflag = true;
 	}
+	else if (objecttype == 2) {
+		//ディスクリプタヒープを構築していく。
+		{
+			int srvNo = 0;
+			int cbNo = 0;
+			//ディスクリプタヒープにディスクリプタを登録していく。
 
-	m_InstancingrootSignature.DestroyObjs();
+			m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());	//アルベドに乗算するテクスチャ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
+			switch (pointspritetexkind) {
+			case POINTSPRITE_1234:
+				m_descriptorHeap.RegistShaderResource(srvNo + 6, *g_spritetex101);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 7, *g_spritetex102);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 8, *g_spritetex103);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 9, *g_spritetex104);//Numマップ。
+				break;
+			case POINTSPRITE_Janken:
+				m_descriptorHeap.RegistShaderResource(srvNo + 6, *g_spritetex105);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 7, *g_spritetex106);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 8, *g_spritetex107);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 9, *g_spritetex108);//Numマップ。
+				break;
+			case POINTSPRITE_Marukao:
+				m_descriptorHeap.RegistShaderResource(srvNo + 6, *g_spritetex109);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 7, *g_spritetex110);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 8, *g_spritetex111);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 9, *g_spritetex112);//Numマップ。
+				break;
+			case POINTSPRITE_Yubisashi:
+				m_descriptorHeap.RegistShaderResource(srvNo + 6, *g_spritetex113);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 7, *g_spritetex114);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 8, *g_spritetex115);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 9, *g_spritetex116);//Numマップ。
+				break;
+			case POINTSPRITE_Star:
+				m_descriptorHeap.RegistShaderResource(srvNo + 6, *g_spritetex117);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 7, *g_spritetex118);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 8, *g_spritetex119);//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 9, *g_spritetex120);//Numマップ。
+				break;
+			default:
+				m_descriptorHeap.RegistShaderResource(srvNo + 6, *(g_fpssprite.GetTexture(1)));//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 7, *(g_fpssprite.GetTexture(2)));//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 8, *(g_fpssprite.GetTexture(3)));//Numマップ。
+				m_descriptorHeap.RegistShaderResource(srvNo + 9, *(g_fpssprite.GetTexture(4)));//Numマップ。
+				break;
+			}			//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
 
-	//bank管理の外部ポインタ
-	m_albedoMap = nullptr;
-
-	//bank管理の外部ポインタ
-	//if (m_normalMap) {
-	//	delete m_normalMap;
-	//	m_normalMap = nullptr;
-	//}
-	m_normalMap = nullptr;
-
-	//bank管理の外部ポインタ
-	//if (m_specularMap) {
-	//	delete m_specularMap;
-	//	m_specularMap = nullptr;
-	//}
-	m_metalMap = nullptr;
-
-	//bank管理の外部ポインタ
-	m_emissiveMap = nullptr;
+			srvNo += NUM_SRV_ONE_MATERIAL;
 
 
+			int refposindex;
+			for (refposindex = 0; refposindex < GetRefPosMaxNum(); refposindex++) {
+				m_descriptorHeap.RegistConstantBuffer(cbNo, *m_commonConstantBuffer[refposindex]);
+
+				cbNo += NUM_CBV_ONE_MATERIAL;
+			}
+			m_descriptorHeap.Commit();
+		}
+
+		{
+			int srvNo = 0;
+			int cbNo = 0;
+			//ディスクリプタヒープにディスクリプタを登録していく。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());//アルベドに乗算するテクスチャ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
+			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
+			//m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 6, *(g_fpssprite.GetTexture(1)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 7, *(g_fpssprite.GetTexture(2)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 8, *(g_fpssprite.GetTexture(3)));//Numマップ。
+			m_descriptorHeap.RegistShaderResource(srvNo + 9, *(g_fpssprite.GetTexture(4)));//Numマップ。
+
+			srvNo += NUM_SRV_ONE_MATERIAL;
+
+			//ディスクリプタヒープにディスクリプタを登録していく。
+			int refposindex;
+			for (refposindex = 0; refposindex < GetRefPosMaxNum(); refposindex++) {
+				m_shadowdescriptorHeap.RegistConstantBuffer(cbNo, *m_shadowcommonConstantBuffer[refposindex]);
+
+				cbNo += NUM_CBV_ONE_MATERIAL;
+			}
+			m_shadowdescriptorHeap.Commit();
+		}
+
+		m_createdescriptorflag = true;
+
+
+	}
+	else {
+
+	}
+	return 0;
 }
 
 int CMQOMaterial::SetName( char* srcchar, int pos, int srcleng, int* stepnum )
@@ -3395,7 +3658,7 @@ int CMQOMaterial::SetBlackTexture()
 
 
 
-int CMQOMaterial::CreateDecl(ID3D12Device* pdev, int objecttype)
+int CMQOMaterial::CreateDecl(ID3D12Device* pdev, int objecttype, int pointspritetexkind)
 {
 	//###########################################
 	//vertextype : 0-->pm4, 1-->pm3, 2-->extline
@@ -3408,8 +3671,12 @@ int CMQOMaterial::CreateDecl(ID3D12Device* pdev, int objecttype)
 		return 0;
 	}
 
+	int result = AllocateDescriptorHeaps(objecttype, pointspritetexkind);
+	return result;
+}
 
-
+int CMQOMaterial::AllocateDescriptorHeaps(int objecttype, int pointspritetexkind)
+{
 	//共通定数バッファの作成。
 	if ((objecttype == 0) || (objecttype == 1)) {
 		//###########
@@ -3511,13 +3778,13 @@ int CMQOMaterial::CreateDecl(ID3D12Device* pdev, int objecttype)
 
 
 	//ディスクリプタヒープを作成。
-	CreateDescriptorHeaps(objecttype);
-
-
+	CreateDescriptorHeaps(objecttype, pointspritetexkind);
 	return 0;
 }
 
-void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
+
+
+void CMQOMaterial::CreateDescriptorHeaps(int objecttype, int pointspritetexkind)
 {
 	//###########################################
 	//vertextype : 0-->pm4, 1-->pm3, 2-->extline
@@ -3530,146 +3797,7 @@ void CMQOMaterial::CreateDescriptorHeaps(int objecttype)
 		return;
 	}
 
-	if ((objecttype == 0) || (objecttype == 1)) {//pm4 || pm3
-		//ディスクリプタヒープを構築していく。
-		{
-			int srvNo = 0;
-			int cbNo = 0;
-			//ディスクリプタヒープにディスクリプタを登録していく。
-			m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());	//アルベドに乗算するテクスチャ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 6, *(g_fpssprite.GetTexture(1)));//Numマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 7, *(g_fpssprite.GetTexture(2)));//Numマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 8, *(g_fpssprite.GetTexture(3)));//Numマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 9, *(g_fpssprite.GetTexture(4)));//Numマップ。
-
-			srvNo += NUM_SRV_ONE_MATERIAL;
-
-			int refposindex;
-			for (refposindex = 0; refposindex < GetRefPosMaxNum(); refposindex++) {
-				m_descriptorHeap.RegistConstantBuffer(cbNo, *m_commonConstantBuffer[refposindex]);
-				if (m_expandConstantBuffer[refposindex]->IsValid()) {
-					m_descriptorHeap.RegistConstantBuffer(cbNo + 1, *m_expandConstantBuffer[refposindex]);//BoneMatrix
-				}
-				if (m_expandConstantBuffer2[refposindex]->IsValid()) {
-					m_descriptorHeap.RegistConstantBuffer(cbNo + 2, *m_expandConstantBuffer2[refposindex]);//Shadow
-				}
-
-				cbNo += NUM_CBV_ONE_MATERIAL;
-			}
-			m_descriptorHeap.Commit();
-
-		}
-
-		{
-			int srvNo = 0;
-			int cbNo = 0;
-			//ディスクリプタヒープにディスクリプタを登録していく。
-			m_shadowdescriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());//アルベドに乗算するテクスチャ。
-			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
-			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
-			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
-			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
-			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 6, *(g_fpssprite.GetTexture(1)));//Numマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 7, *(g_fpssprite.GetTexture(2)));//Numマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 8, *(g_fpssprite.GetTexture(3)));//Numマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 9, *(g_fpssprite.GetTexture(4)));//Numマップ。
-
-			srvNo += NUM_SRV_ONE_MATERIAL;
-
-
-			int refposindex;
-			for (refposindex = 0; refposindex < GetRefPosMaxNum(); refposindex++) {
-				//ディスクリプタヒープにディスクリプタを登録していく。
-					m_shadowdescriptorHeap.RegistConstantBuffer(cbNo, *m_shadowcommonConstantBuffer[refposindex]);
-				if (m_shadowexpandConstantBuffer[refposindex]->IsValid()) {
-					m_shadowdescriptorHeap.RegistConstantBuffer(cbNo + 1, *m_shadowexpandConstantBuffer[refposindex]);//BoneMatrix
-				}
-				if (m_shadowexpandConstantBuffer2[refposindex]->IsValid()) {
-					m_shadowdescriptorHeap.RegistConstantBuffer(cbNo + 2, *m_shadowexpandConstantBuffer2[refposindex]);//Shadow
-				}
-
-				cbNo += NUM_CBV_ONE_MATERIAL;
-
-				m_createdescriptorflag = true;
-			}
-			m_shadowdescriptorHeap.Commit();
-
-		}
-
-		m_createdescriptorflag = true;
-	}
-	else if (objecttype == 2) {
-		//ディスクリプタヒープを構築していく。
-		{
-			int srvNo = 0;
-			int cbNo = 0;
-			//ディスクリプタヒープにディスクリプタを登録していく。
-
-			m_descriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());	//アルベドに乗算するテクスチャ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 6, *(g_fpssprite.GetTexture(1)));//Numマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 7, *(g_fpssprite.GetTexture(2)));//Numマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 8, *(g_fpssprite.GetTexture(3)));//Numマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 9, *(g_fpssprite.GetTexture(4)));//Numマップ。
-			//m_descriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
-
-			srvNo += NUM_SRV_ONE_MATERIAL;
-
-
-			int refposindex;
-			for (refposindex = 0; refposindex < GetRefPosMaxNum(); refposindex++) {
-				m_descriptorHeap.RegistConstantBuffer(cbNo, *m_commonConstantBuffer[refposindex]);
-
-				cbNo += NUM_CBV_ONE_MATERIAL;
-			}
-			m_descriptorHeap.Commit();
-		}
-
-		{
-			int srvNo = 0;
-			int cbNo = 0;
-			//ディスクリプタヒープにディスクリプタを登録していく。
-			m_shadowdescriptorHeap.RegistShaderResource(srvNo, GetDiffuseMap());//アルベドに乗算するテクスチャ。
-			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 1, GetAlbedoMap());//アルベドマップ。
-			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 2, GetNormalMap());//法線マップ。
-			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 3, GetMetalMap());//Metalマップ。
-			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, GetEmissiveMap());//Emissiveマップ。
-			m_shadowdescriptorHeap.RegistShaderResource(srvNo + 5, *g_shadowmapforshader);//Shadowマップ。
-			//m_shadowdescriptorHeap.RegistShaderResource(srvNo + 4, m_boneMatricesStructureBuffer);//ボーンのストラクチャードバッファ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 6, *(g_fpssprite.GetTexture(1)));//Numマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 7, *(g_fpssprite.GetTexture(2)));//Numマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 8, *(g_fpssprite.GetTexture(3)));//Numマップ。
-			m_descriptorHeap.RegistShaderResource(srvNo + 9, *(g_fpssprite.GetTexture(4)));//Numマップ。
-
-			srvNo += NUM_SRV_ONE_MATERIAL;
-			
-			//ディスクリプタヒープにディスクリプタを登録していく。
-			int refposindex;
-			for (refposindex = 0; refposindex < GetRefPosMaxNum(); refposindex++) {
-				m_shadowdescriptorHeap.RegistConstantBuffer(cbNo, *m_shadowcommonConstantBuffer[refposindex]);
-
-				cbNo += NUM_CBV_ONE_MATERIAL;
-			}
-			m_shadowdescriptorHeap.Commit();
-		}
-
-		m_createdescriptorflag = true;
-
-
-	}
-	else {
-
-	}
+	InitConstantBuffers(objecttype, pointspritetexkind);
 
 }
 

@@ -454,7 +454,7 @@ public:
  * @return 成功したら０。
  */	
 	int MakeDispObj();
-
+	int RemakeConstantBuffers();
 /**
  * @fn
  * UpdateMatrix
@@ -3423,6 +3423,14 @@ public: //accesser
 	int GetRefPosMaxNum() {
 		return m_refpos_maxnum;
 	}
+	void SetRefPosTexKind(int srcval) {
+		if ((srcval >= 0) && (srcval < POINTSPRITE_MAX)) {
+			m_refpos_texkind = srcval;
+		}
+	}
+	int GetRefPosTexKind() {
+		return m_refpos_texkind;
+	}
 	void SetRefPosDiffuseRate(ChaVector4 srcval) {
 		m_refpos_diffuserate = srcval;
 	}
@@ -4130,6 +4138,14 @@ private:
 	float m_refpos_pointsize;
 	bool m_refpos_parallax_effect;
 	float m_refpos_pow;
+
+
+	//MameMedia/0_PointSprite/1234 : 0
+	//MameMedia/0_PointSprite/Janken : 1
+	//MameMedia/0_PointSprite/Marukao : 2
+	//MameMedia/0_PointSprite/Yubisashi : 3
+	int m_refpos_texkind;
+
 
 	bool m_skyflag;
 	bool m_groundflag;

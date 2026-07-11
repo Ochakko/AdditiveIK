@@ -1041,7 +1041,7 @@ int CMQOObject::MakeExtLine(CModel* srcmodel)
 	return 0;
 }
 
-int CMQOObject::MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag)
+int CMQOObject::MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag, int pointspritetexkind)
 {
 
 	SetClusterTopBone();//2025/09/15
@@ -1070,7 +1070,7 @@ int CMQOObject::MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag)
 			_ASSERT(0);
 			return 1;
 		}
-		CallF(m_dispobj->CreateDispObj(pdev, m_pm3, hasbone, GetUVNum(), grassflag), return 1);
+		CallF(m_dispobj->CreateDispObj(pdev, m_pm3, hasbone, GetUVNum(), grassflag, pointspritetexkind), return 1);
 
 		m_pm3->CalcBound();
 
@@ -1091,7 +1091,7 @@ int CMQOObject::MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag)
 			_ASSERT(0);
 			return 1;
 		}
-		CallF(m_dispobj->CreateDispObj(pdev, m_pm4, hasbone, GetUVNum(), !EmptyShape()), return 1);
+		CallF(m_dispobj->CreateDispObj(pdev, m_pm4, hasbone, GetUVNum(), !EmptyShape(), pointspritetexkind), return 1);
 
 
 		m_pm4->CalcBound();
@@ -1115,6 +1115,26 @@ int CMQOObject::MakeDispObj(ID3D12Device* pdev, int hasbone, bool grassflag)
 
 	return 0;
 }
+
+int CMQOObject::RemakeConstantBuffers(ID3D12Device* pdev, int hasbone, bool grassflag, int pointspritetexkind)
+{
+	if (!m_dispobj) {
+		_ASSERT(0);
+		return 1;
+	}
+	if (m_pm3 && m_pm3->GetCreateOptFlag() && (m_dispobj != nullptr)) {
+		CallF(m_dispobj->RemakeConstantBuffers(pdev, pointspritetexkind), return 1);
+	}
+	else if (m_pm4 && m_pm4->GetCreateOptFlag() && (m_dispobj != nullptr)) {
+		CallF(m_dispobj->RemakeConstantBuffers(pdev, pointspritetexkind), return 1);
+	}
+	else if ((m_extline != nullptr) && (m_displine != nullptr)) {
+		CallF(m_displine->RemakeConstantBuffers(pdev, pointspritetexkind), return 1);
+	}
+	return 0;
+}
+
+
 
 int CMQOObject::SetGPUInteraction(bool srcflag)
 {

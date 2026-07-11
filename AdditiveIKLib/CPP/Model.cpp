@@ -544,6 +544,7 @@ int CModel::InitParams(int srcrefposnum)
 	m_monoflag = false;
 	m_shader_refpos_counter01 = 0;
 	m_refpos_pow = 0.5f;
+	m_refpos_texkind = POINTSPRITE_1234;
 
 	int index1;
 	for (index1 = 0; index1 < m_refpos_maxnum; index1++) {
@@ -1462,7 +1463,7 @@ _ASSERT(m_bonelist[0]);
 						//MakeDispObj内で　不要メモリ削除
 						//PolyMesh4は マウスとの当たり判定をしない前提で不要メモリを削除
 						//PolyMesh3は　fbxfileflagがtrue --> マウスとの当たり判定をしない前提で不要メモリを削除
-						CallF(curobj->MakeDispObj(m_pdev, hasbone, GetGrassFlag()), return 1);
+						CallF(curobj->MakeDispObj(m_pdev, hasbone, GetGrassFlag(), GetRefPosTexKind()), return 1);
 
 					}
 				}
@@ -1587,6 +1588,28 @@ _ASSERT(m_bonelist[0]);
 
 	return 0;
 }
+
+int CModel::RemakeConstantBuffers()
+{
+	int objnum = (int)m_object.size();
+	for (int objindex = 0; objindex < objnum; objindex++) {
+		CMQOObject* curobj = m_object[objindex];
+		if (curobj) {
+			int hasbone = 0;
+			int clusternum = (int)curobj->GetClusterSize();
+			if ((GetNoBoneFlag() == false) && (clusternum >= 1)) {
+				hasbone = 1;
+			}
+			else {
+				hasbone = 0;
+			}
+
+			curobj->RemakeConstantBuffers(m_pdev, hasbone, GetGrassFlag(), GetRefPosTexKind());
+		}
+	}
+	return 0;
+}
+
 
 int CModel::LoadFBXAnim( FbxManager* psdk, FbxScene* pscene, int (*tlfunc)( int srcmotid ), BOOL motioncachebatchflag)
 {
@@ -2506,7 +2529,7 @@ int CModel::MakeDispObj()
 				hasbone = 0;
 			}
 
-			CallF( curobj->MakeDispObj(m_pdev, hasbone, GetGrassFlag()), return 1 );
+			CallF( curobj->MakeDispObj(m_pdev, hasbone, GetGrassFlag(), GetRefPosTexKind()), return 1 );
 		}
 	}
 

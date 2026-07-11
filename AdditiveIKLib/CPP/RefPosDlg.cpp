@@ -287,6 +287,12 @@ int CRefPosDlg::DestroyObjs()
 		m_powSlider = nullptr;
 	}
 
+	if (m_texkindCombo) {
+		delete m_texkindCombo;
+		m_texkindCombo = nullptr;
+	}
+
+
 
 	if (m_linecheck) {
 		delete m_linecheck;
@@ -424,6 +430,7 @@ void CRefPosDlg::InitParams()
 	m_powsp = nullptr;
 	m_powLabel = nullptr;
 	m_powSlider = nullptr;
+	m_texkindCombo = nullptr;
 
 	m_nameLabel = nullptr;
 	m_space01Label = nullptr;
@@ -902,6 +909,18 @@ int CRefPosDlg::CreateRefPosWnd()
 			_ASSERT(0);
 			abort();
 		}
+		m_texkindCombo = new OWP_ComboBoxA(L"PointSprite Kind", labelheight);
+		if (!m_texkindCombo) {
+			_ASSERT(0);
+			abort();
+		}
+		m_texkindCombo->addString("1234");
+		m_texkindCombo->addString("Janken");
+		m_texkindCombo->addString("Marukao");
+		m_texkindCombo->addString("Yubisashi");
+		m_texkindCombo->addString("Star");
+		m_texkindCombo->setSelectedCombo(0);
+
 
 		m_dlgWnd->addParts(*m_nameLabel);
 		m_dlgWnd->addParts(*m_space01Label);
@@ -953,6 +972,7 @@ int CRefPosDlg::CreateRefPosWnd()
 		m_dlgWnd->addParts(*m_powsp);
 		m_powsp->addParts1(*m_powLabel);
 		m_powsp->addParts2(*m_powSlider);
+		m_dlgWnd->addParts(*m_texkindCombo);
 
 		m_dlgWnd->addParts(*m_space03Label);
 
@@ -984,6 +1004,17 @@ int CRefPosDlg::CreateRefPosWnd()
 		m_intervalsp->addParts1(*m_intervalLabel);
 		m_intervalsp->addParts2(*m_intervalSlider);
 
+
+		//############
+		//ComboBox
+		//############
+		m_texkindCombo->setButtonListener([=, this]() {
+			int comboid = m_texkindCombo->trackPopUpMenu();
+			if ((comboid >= 0) && (m_model != nullptr)) {
+				m_model->SetRefPosTexKind(comboid);
+				m_model->RemakeConstantBuffers();
+			}
+			});
 
 		//##########
 		//Slider
@@ -1268,6 +1299,10 @@ int CRefPosDlg::Params2Dlg()
 		float sanpow = m_model->GetRefPosPow();
 		if (m_powSlider != nullptr) {
 			m_powSlider->setValue((double)sanpow, false);
+		}
+		int texkind = m_model->GetRefPosTexKind();
+		if (m_texkindCombo != nullptr) {
+			m_texkindCombo->setSelectedCombo(texkind);
 		}
 
 		m_dlgWnd->callRewrite();
