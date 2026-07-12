@@ -322,6 +322,8 @@ public:
 
 	//int GetName( int srcmatno, char** nameptr );
 	int AddConvName( char** ppname );
+	bool GetFaceSkipFlag(CModel* srcmodel);
+
 
 	//int SetCurTexname( int srcenabletex );
 

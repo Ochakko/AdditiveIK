@@ -3506,6 +3506,19 @@ public: //accesser
 	float GetRefPosPow() {
 		return m_refpos_pow;
 	};
+	void SetRefPosDec(int srcval)
+	{
+		m_refpos_dec = srcval;
+	};
+	int GetRefPosDec() {
+		return m_refpos_dec;
+	};
+	void SetRefPosSkip(bool srcval) {
+		m_refpos_skip = srcval;
+	};
+	bool GetRefPosSkip() {
+		return m_refpos_skip;
+	};
 
 
 
@@ -4138,7 +4151,8 @@ private:
 	float m_refpos_pointsize;
 	bool m_refpos_parallax_effect;
 	float m_refpos_pow;
-
+	int m_refpos_dec;
+	bool m_refpos_skip;
 
 	//MameMedia/0_PointSprite/1234 : 0
 	//MameMedia/0_PointSprite/Janken : 1

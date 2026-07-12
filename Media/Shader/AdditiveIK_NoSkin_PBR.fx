@@ -15,12 +15,13 @@ static const float POW = 5.0f;
 // 頂点シェーダーへの入力
 struct SVSInWithoutBone
 {
-    float4 pos      : POSITION;
+    float4 pos : POSITION0;
     float4 normal   : NORMAL;
     float4 tangent : TANGENT;
     float4 biNormal : BINORMAL; 
     float4 uv       : TEXCOORD0;
-    float4 projpos : POSITIONT;    
+    float4 projpos : POSITIONT;  
+    float4 vertexid4 : POSITION1;
 };
 
 struct SVSInExtLine
@@ -40,42 +41,6 @@ struct SPSIn
     float4 diffusemult : TEXCOORD2;
     float4 FogAndOther : TEXCOORD3; //x:Fog, y:Mono
     float4 depth : TEXCOORD4;
-};
-
-struct SGSIn
-{
-    float2 uv : TEXCOORD0; // uv座標
-    float4 diffusemult : TEXCOORD1;
-    float4 FogAndOther : TEXCOORD2; //x:Fog, y:Mono
-    float4 depth : TEXCOORD3; 
-    float4 normal : NORMAL; // 法線
-    float4 tangent : TANGENT;
-    float4 biNormal : BINORMAL;
-    float4 pos : POSITION; // ワールド空間でのピクセルの座標
-};
-struct SGSOut
-{
-    float2 uv : TEXCOORD0; // uv座標
-    float4 worldPos : TEXCOORD1; // ワールド空間でのピクセルの座標
-    float4 diffusemult : TEXCOORD2;
-    float4 FogAndOther : TEXCOORD3; //x:Fog, y:Mono
-    float4 depth : TEXCOORD4;
-    float4 normal : NORMAL; // 法線
-    float4 tangent : TANGENT;
-    float4 biNormal : BINORMAL;
-    float4 posrw : POSITION; // スクリーン空間でのピクセルの座標
-    float4 pos : SV_POSITION; // スクリーン空間でのピクセルの座標
-};
-struct SPSInFromGS
-{
-    float2 uv : TEXCOORD0; // uv座標
-    float4 worldPos : TEXCOORD1; // ワールド空間でのピクセルの座標
-    float4 diffusemult : TEXCOORD2;
-    float4 FogAndOther : TEXCOORD3; //x:Fog, y:Mono
-    float4 depth : TEXCOORD4;
-    float4 normal : NORMAL; // 法線
-    float4 tangent : TANGENT;
-    float4 biNormal : BINORMAL;
 };
 
 struct SPSInExtLine
@@ -544,40 +509,6 @@ SPSIn VSMainNoSkinPBR(SVSInWithoutBone vsIn, uniform bool hasSkin)
     return psIn;
 }
 
-SGSIn VSMainNoSkinPBRForGS(SVSInWithoutBone vsIn, uniform bool hasSkin)
-{
-    SGSIn psIn;
-
-    psIn.pos = mul(mWorld, vsIn.pos); // モデルの頂点をワールド座標系に変換
-    //psIn.pos = vsIn.pos; // モデルの頂点
-    psIn.pos = psIn.pos / psIn.pos.w;
-    
-    float3 distvec = (psIn.pos.xyz / psIn.pos.w) - eyePos.xyz;
-    float skyvalue = (Flags1.z == 1) ? 490000.0f : 0.0f; //skydof ? skydofON : skydofOFF
-    psIn.depth.xyz = (Flags1.x == 0) ? length(distvec) : skyvalue; // !skymesh ? dist : skyvalue
-    psIn.depth.w = 1.0f; //自動的にwで割られても良いように
-    
-    psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
-    psIn.FogAndOther.y = (Flags2.y == 0) ? 0.0f : 1.0f;
-    psIn.FogAndOther.z = 0.0f;
-    psIn.FogAndOther.w = 0.0f;
-    //psIn.worldPos = psIn.pos;
-    //psIn.pos = mul(mView, psIn.pos); // ワールド座標系からカメラ座標系に変換
-    //psIn.pos = mul(mProj, psIn.pos); // カメラ座標系からスクリーン座標系に変換
-
-    float2 orguv = (UVs.x == 0) ? vsIn.uv.xy : vsIn.uv.zw;
-    psIn.uv.x = orguv.x * (float) UVs.y;
-    psIn.uv.y = orguv.y * (float) UVs.z;
-
-    psIn.diffusemult = diffusemult;
-    
-    psIn.normal = normalize(mul(mWorld, vsIn.normal));
-    psIn.tangent = normalize(mul(mWorld, vsIn.tangent));
-    psIn.biNormal = normalize(mul(mWorld, vsIn.biNormal));
-    
-    return psIn;
-}
-
 SPSInShadowMap VSMainNoSkinPBRShadowMap(SVSInWithoutBone vsIn, uniform bool hasSkin)
 {
     SPSInShadowMap psIn;
@@ -658,51 +589,6 @@ SPSInExtLine VSMainExtLine(SVSInExtLine vsIn, uniform bool hasSkin)
     psIn.diffusemult = diffusemult;
     
     return psIn;
-}
-
-//
-// GS for rendering point sprite particles.  Takes a point and turns 
-// it into 2 triangles.
-//
-[maxvertexcount(4)]
-void GSParticleDraw(point SGSIn input[1], inout TriangleStream<SGSOut> SpriteStream)
-{
-    SGSOut output;
-    
-    //float4x4 transmat = mWorld * mView * mProj;
-    
-    // Emit two new triangles.
-    for (int i = 0; i < 4; i++)
-    {
-        //float4 position = g_positions[i];//g_fParticleRad;
-        //position = mul(position, minvView);//
-        ////position = float4(position.xyz / position.w + input[0].pos.xyz / input[0].pos.w, 1.0f);
-        //position = float4(position.xyz + input[0].pos.xyz, 1.0f);
-        
-        float3 position = g_positions[i] * 15.0f;
-        position = mul((float3x3) minvView, position) + input[0].pos.xyz;
-        
-        //output.worldPos = float4(position, 1.0);
-        //output.pos = mul(float4(position, 1.0), transmat);
-        //output.pos = mul(float4(position, 1.0), mWorld);
-        output.worldPos = float4(position, 1.0);
-        output.pos = float4(position, 1.0);
-        //output.pos = mul(mWorld, output.pos);
-        output.pos = mul(mView, output.pos);
-        output.pos = mul(mProj, output.pos);
-
-        output.posrw = output.pos;
-        output.normal = input[0].normal;
-        output.tangent = input[0].tangent;
-        output.biNormal = input[0].biNormal;
-        output.uv = g_texcoords[i];//input[0].uv;
-        output.diffusemult = input[0].diffusemult;
-        output.FogAndOther = input[0].FogAndOther;
-        output.depth = input[0].depth;
-
-        SpriteStream.Append(output);
-    }
-    SpriteStream.RestartStrip();
 }
 
 
@@ -827,123 +713,6 @@ SPSOut2 PSMainNoSkinPBR(SPSIn psIn) : SV_Target
     
 }
 
-SPSOut2 PSMainNoSkinPBRFromGS(SPSInFromGS psIn) : SV_Target
-{
-
-    // アルベドカラー、スペキュラカラー、金属度、滑らかさをサンプリングする。
-    // アルベドカラー（拡散反射光）
-    float4 albedoColor;
-    float2 normaluv;
-    if (UVs.w == 0)
-    {
-        albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv);
-        normaluv = psIn.uv;
-    }
-    else
-    {
-        ////int4 distortiontype; //[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)
-        ////float4 distortionscale; //x:distortionscale, y:riverflowrate
-        ////float4 distortioncenter; //xy:seacenter, zw:riverdir  
-        
-        //float2 grabuv = psIn.pos.xy / psIn.pos.w;
-        ////float2 grabuv = psIn.pos.xy;//<--セマンティクスがPOSITIONなのでこちらの方が正しい気もするが　ビジュアルの問題で　上述の　/ pos.wを採用　オプション化の可能性有
-        //grabuv *= float2(0.5f, -0.5f);
-        //grabuv += float2(0.5f, 0.5f);
-
-        //float4 distortionuv4;
-        ////float2 flowuv = (distortiontype.x == 0) ? (distortioncenter.zw * time1.x * distortionscale.y) : ((grabuv - distortioncenter.xy) * time1.x * distortionscale.y);
-        //float2 flowuv = (distortiontype.x == 0) ? (distortioncenter.zw * time1.x * distortionscale.y) : (distortioncenter.zw * sin(time1.x) * distortionscale.y);
-        //distortionuv4 = g_normalMap.Sample(g_sampler_albedo, (grabuv + flowuv)) * 2.0f - 1.0f;
-
-        //float2 distortionuv2;
-        //if (distortiontype.y == 0)
-        //{
-        //    distortionuv2 = distortionuv4.rg;
-        //}
-        //else if (distortiontype.y == 1)
-        //{
-        //    distortionuv2 = distortionuv4.rb;
-        //}
-        //else
-        //{
-        //    distortionuv2 = distortionuv4.gb;
-        //}
-        normaluv = psIn.uv;//+distortionuv2 * distortionscale.x;
-        albedoColor = g_albedo.Sample(g_sampler_albedo, normaluv);
-    }
-      // 法線を計算
-    float3 normal = GetNormal(psIn.normal.xyz, psIn.tangent.xyz, psIn.biNormal.xyz, normaluv);
-
-
-    // スペキュラカラーはアルベドカラーと同じにする。
-    float3 specColor = albedoColor.xyz;
-
-    // 金属度
-    //float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_metal, psIn.uv);
-    //float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_albedo, psIn.uv);//2024/03/08 複数アセットで確認　UVについてはalbedo,normal,metalをセットで切り替えるように
-    float4 metaltexcol = g_metallicSmoothMap.Sample(g_sampler_albedo, normaluv); //2024/04/28 normaluv
-    float metallic = metaltexcol.r * metalcoef.x + metalcoef.z; //2024/02/18
-    // 滑らかさ
-    float smooth = metaltexcol.a * metalcoef.y; //!!!!smoothcoef
-
-    // 視線に向かって伸びるベクトルを計算する
-    float3 toEye = normalize(eyePos.xyz - psIn.worldPos.xyz);
-
-    float totalalpha = 0.0f;
-    float3 lig = 0;
-    for (int ligNo = 0; ligNo < lightsnum.x; ligNo++)
-    {
-        // シンプルなディズニーベースの拡散反射を実装する。
-        // フレネル反射を考慮した拡散反射を計算
-        float diffuseFromFresnel = CalcDiffuseFromFresnel(
-            normal, directionalLight[ligNo].direction.xyz, toEye);
-
-        // 正規化Lambert拡散反射を求める
-        //float NdotL = saturate(dot(normal, directionalLight[ligNo].direction.xyz));
-        //float3 lambertDiffuse = directionalLight[ligNo].color.xyz * NdotL / PI;
-        float multiplecoef = diffuseFromFresnel * materialdisprate.x;
-        float4 lambertDiffuse0 = CalcDiffuseColor(multiplecoef, normal.xyz, directionalLight[ligNo].direction.xyz, psIn.FogAndOther.y);
-        float3 lambertDiffuse1 = lambertDiffuse0.xyz * directionalLight[ligNo].color.xyz;
-        
-        // 最終的な拡散反射光を計算する
-        float3 diffuse = albedoColor.xyz * lambertDiffuse1;
-
-        // Cook-Torranceモデルを利用した鏡面反射率を計算する
-        // Cook-Torranceモデルの鏡面反射率を計算する
-        float3 spec = CookTorranceSpecular(
-            directionalLight[ligNo].direction.xyz, toEye, normal, smooth)
-            * directionalLight[ligNo].color.xyz * materialdisprate.y * metalcoef.w;
-
-        // 金属度が高ければ、鏡面反射はスペキュラカラー、低ければ白
-        // スペキュラカラーの強さを鏡面反射率として扱う
-        spec *= lerp(float3(1.0f, 1.0f, 1.0f), specColor, metallic);
-
-        // 滑らかさを使って、拡散反射光と鏡面反射光を合成する
-        // 滑らかさが高ければ、拡散反射は弱くなる
-        lig += diffuse * (1.0f - smooth) + spec;
-        totalalpha += lambertDiffuse0.w;
- 
-    }
-
-    // 環境光による底上げ
-    //lig += ambientLight.xyz * albedoColor.xyz;
-
-    //float4 finalColor;
-    //finalColor.xyz = lig;
-    //finalColor.w = albedoColor.w;
-    
-    float diffusew = (lightsnum.x != 0) ? (albedoColor.w * totalalpha * divlights.x) : albedoColor.w;
-    float4 emimap = GetEmissiveMap(psIn.uv);
-    float4 finalColor = emimap * emission * materialdisprate.z + float4(lig, diffusew) * psIn.diffusemult;
-    clip(finalColor.w - ambient0.w); //2024/03/22 アルファテスト　ambient.wより小さいアルファは書き込まない
-    //finalColor.w = ((finalColor.w - ambient0.w) > 0.0f) ? finalColor.w : 0.0f;
-    
-    SPSOut2 psOut;
-    psOut.color_0 = CalcPSFog(finalColor, psIn.FogAndOther.x, psIn.FogAndOther.y);
-    psOut.color_1 = psIn.depth;
-    return psOut;
-    
-}
 
 SPSOut0 PSMainNoSkinPBRShadowMap(SPSInShadowMap psIn) : SV_Target0
 {

@@ -14,12 +14,13 @@ static const float POW = 5.0f;
 // 頂点シェーダーへの入力
 struct SVSIn
 {
-    float4 pos : POSITION;
+    float4 pos : POSITION0;
     float4 normal : NORMAL;
     float4 tangent : TANGENT;
     float4 biNormal : BINORMAL;    
     float4 uv : TEXCOORD0;
-    float4 projpos : POSITIONT;    
+    float4 projpos : POSITIONT;
+    float4 vertexid4 : POSITION1;
     float4 bweight : BLENDWEIGHT;
     int4 bindices : BLENDINDICES;
 };

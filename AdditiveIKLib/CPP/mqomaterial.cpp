@@ -2128,6 +2128,9 @@ void CMQOMaterial::InitPipelineState(bool useGS, int vertextype, const std::arra
 		{ "POSITIONT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "POSITION", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -2156,11 +2159,17 @@ void CMQOMaterial::InitPipelineState(bool useGS, int vertextype, const std::arra
 		{ "POSITIONT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "POSITION", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 	};
 	D3D12_INPUT_ELEMENT_DESC inputElementDescsExtLine[] =
 	{
 		//型：ExtLine
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "POSITION", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 	};
@@ -2555,6 +2564,10 @@ void CMQOMaterial::InitInstancingPipelineState(int vertextype, const std::array<
 		{ "POSITIONT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{ "POSITION", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+
 
 		//wmat : texcoord0 - texcoord4
 		{ "TEXCOORD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,
@@ -3973,6 +3986,36 @@ void CMQOMaterial::SetFl4x4(myRenderer::RENDEROBJ renderobj, int refposindex)
 	}
 }
 
+bool CMQOMaterial::GetFaceSkipFlag(CModel* srcmodel)
+{
+	if (!srcmodel) {
+		_ASSERT(0);
+		return true;//スキップ
+	}
+
+	if (srcmodel->GetRefPosSkip()) {
+		//スキップ有　顔マテリアルかどうかを調べる
+		char pat0[5][10] = {
+			"HAIR",
+			"Face",
+			"Mouth",
+			"Eye",
+			"Iris",
+		};
+		int chkindex;
+		for (chkindex = 0; chkindex < 5; chkindex++) {
+			if (strstr(m_name, &(pat0[chkindex][0])) != nullptr) {
+				return true;//スキップ
+			}
+		}
+		return false;//スキップ無し
+	}
+	else {
+		//スキップ無し
+		return false;
+	}
+}
+
 void CMQOMaterial::DrawCommon(
 	bool useGS, bool topoline,
 	RenderContext* rc, myRenderer::RENDEROBJ renderobj,
@@ -4101,6 +4144,8 @@ void CMQOMaterial::DrawCommon(
 		m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
 		m_cb[currentrefposindex].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
 		m_cb[currentrefposindex].Flags2[1] = (renderobj.pmodel->GetMonoFlag()) ? 1 : 0;
+		m_cb[currentrefposindex].Flags2[2] = renderobj.pmodel->GetRefPosDec();
+		m_cb[currentrefposindex].Flags2[3] = (GetFaceSkipFlag(renderobj.pmodel)) ? 1 : 0;
 		if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
@@ -4177,6 +4222,8 @@ void CMQOMaterial::DrawCommon(
 		m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
 		m_cb[currentrefposindex].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
 		m_cb[currentrefposindex].Flags2[1] = (renderobj.pmodel->GetMonoFlag()) ? 1 : 0;
+		m_cb[currentrefposindex].Flags2[2] = renderobj.pmodel->GetRefPosDec();
+		m_cb[currentrefposindex].Flags2[3] = (GetFaceSkipFlag(renderobj.pmodel)) ? 1 : 0;
 		if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
@@ -4270,7 +4317,9 @@ void CMQOMaterial::DrawCommon(
 			m_cb[currentrefposindex].Flags[3] = g_VSMflag ? 1 : 0;
 			m_cb[currentrefposindex].Flags2[0] = (renderobj.pmodel->GetGrassFlag()) ? 1 : 0;
 			m_cb[currentrefposindex].Flags2[1] = (renderobj.pmodel->GetMonoFlag()) ? 1 : 0;
-		if (DXUTGetGlobalTimer()) {
+			m_cb[currentrefposindex].Flags2[2] = renderobj.pmodel->GetRefPosDec();
+			m_cb[currentrefposindex].Flags2[3] = (GetFaceSkipFlag(renderobj.pmodel)) ? 1 : 0;
+			if (DXUTGetGlobalTimer()) {
 			m_cb[currentrefposindex].time.x = (float)DXUTGetGlobalTimer()->GetTime();
 		}
 		m_cb[currentrefposindex].time.y = renderobj.pmodel->GetRefPosPointSize();

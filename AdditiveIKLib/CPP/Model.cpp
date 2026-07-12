@@ -544,7 +544,9 @@ int CModel::InitParams(int srcrefposnum)
 	m_monoflag = false;
 	m_shader_refpos_counter01 = 0;
 	m_refpos_pow = 0.5f;
+	m_refpos_dec = 25;
 	m_refpos_texkind = POINTSPRITE_1234;
+	m_refpos_skip = false;
 
 	int index1;
 	for (index1 = 0; index1 < m_refpos_maxnum; index1++) {

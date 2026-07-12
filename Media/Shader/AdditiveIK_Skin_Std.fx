@@ -14,12 +14,13 @@ static const float POW = 5.0f;
 // 頂点シェーダーへの入力
 struct SVSIn
 {
-    float4 pos : POSITION;
+    float4 pos : POSITION0;
     float4 normal : NORMAL;
     float4 tangent : TANGENT;
     float4 biNormal : BINORMAL;        
     float4 uv : TEXCOORD0;
-    float4 projpos : POSITIONT;    
+    float4 projpos : POSITIONT;   
+    float4 vertexid4 : POSITION1;
     float4 bweight : BLENDWEIGHT;
     int4 bindices : BLENDINDICES;
 };
@@ -42,7 +43,8 @@ struct SGSIn
     float4 FogAndOther : TEXCOORD2; //x:Fog, y:Mono
     float4 depth : TEXCOORD4;
     float4 normal       : NORMAL;    
-    float4 pos          : POSITION;
+    float4 pos          : POSITION0;
+    float4 vertexid : POSITION1;
 };
 struct SGSOut
 {
@@ -143,7 +145,7 @@ cbuffer ModelCb : register(b0)
     float4 shadowmaxz; //x:(1/shadowfar), y:shadowbias
     int4 UVs; //x:UVSet, y:TilingU, z:TilingV, w:distortionFlag   
     int4 Flags1; //x:skyflag, y:groundflag, z:skydofflag, w:VSM
-    int4 Flags2; //x:grassflag    
+    int4 Flags2; //x:grassflag, y:MonoFlag, z:RefPosDec, w:RefPosSkip
     float4 time1; //2024/04/27 x:DXUTTime, y:refpos_pointsize, z:refposCounter01, w:refpos_power
     float4 bbsize; //2024/05/11 size of bourndary        
     int4 distortiontype; //[0]:riverorsea(0:river,1:sea), [1]:maptype(0:rg,1:rb,2:gb)
@@ -352,6 +354,7 @@ SGSIn VSMainSkinStdForGS(SVSIn vsIn, uniform bool hasSkin)
     psIn.uv.y = orguv.y * (float)UVs.z;
     
     psIn.diffusemult = diffusemult;
+    psIn.vertexid = vsIn.vertexid4;
     
     return psIn;
 }
@@ -442,19 +445,18 @@ SPSInShadowReciever VSMainSkinStdShadowReciever(SVSIn vsIn, uniform bool hasSkin
 void GSParticleDraw(point SGSIn input[1], inout TriangleStream<SGSOut> SpriteStream)
 {
     int posrnd = (int) (fracSin21(input[0].pos.xy) * 60.0f);
-    int timeint = (int) (input[0].FogAndOther.w + posrnd) % 60;
     int santime2 = (int) (200 / (time1.w * time1.w));
     int timeint2 = (int) (input[0].FogAndOther.w + posrnd) % santime2;// % 200;
+    
+    int timeint = (int) (input[0].FogAndOther.w + posrnd) % 64;
     float addbase = (float) timeint / 60.0f; // * 0.5f;
-    //float signx = (input[0].normal.x >= 0.0f) ? 1.0f : -1.0f;
-    //float signy = (input[0].normal.y >= 0.0f) ? 1.0f : -1.0f;
-    //float signz = (input[0].normal.z >= 0.0f) ? 1.0f : -1.0f;
+    float sizescale = (!Flags2.w && (input[0].vertexid.x % Flags2.z) == 0) ? (addbase * addbase * addbase * addbase * addbase * addbase * input[0].FogAndOther.z) : 0.01f;
+
     float shiftx = input[0].normal.x * fracSin11(input[0].pos.x) * pow((float) timeint2, time1.w) * input[0].FogAndOther.z;
     float shifty = input[0].normal.y * fracSin11(input[0].pos.y) * pow((float) timeint2, time1.w) * input[0].FogAndOther.z;
     float shiftz = input[0].normal.z * fracSin11(input[0].pos.z) * pow((float) timeint2, time1.w) * input[0].FogAndOther.z;
 
-    float params_x = addbase * addbase * addbase * addbase * addbase * addbase * input[0].FogAndOther.z;
-    //float params_y = fracSin21(float2(input[0].pos.x, input[0].FogAndOther.w)) * 4.0f;
+    float params_x = sizescale;
     float params_y = fracSin21(input[0].pos.xy) * 4.0f;
     float params_z = input[0].FogAndOther.w;
     float params_w = fracSin11(input[0].FogAndOther.w);
@@ -548,7 +550,7 @@ SPSOut2 PSMainSkinStdFromGS(SPSInFromGS psIn) : SV_Target
     //float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     float4 albedoColor; // = g_numMap2.Sample(g_sampler_num2, psIn.uv);
     albedoColor = (psIn.RefPosParams.y >= 2.9f) ? g_numMap4.Sample(g_sampler_num4, psIn.uv) : ((psIn.RefPosParams.y >= 1.9f) ? g_numMap3.Sample(g_sampler_num3, psIn.uv) : ((psIn.RefPosParams.y >= 0.9f) ? g_numMap2.Sample(g_sampler_num2, psIn.uv) : g_numMap1.Sample(g_sampler_num1, psIn.uv)));
-    
+    albedoColor *= psIn.diffusemult;
      
     float3 wPos = psIn.posrw.xyz / psIn.posrw.w;
     

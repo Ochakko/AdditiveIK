@@ -100,7 +100,6 @@ private:
 	OrgWinGUI::OWP_Label* m_refposnumLabel;
 	OrgWinGUI::OWP_Slider* m_refposnumSlider;
 
-	
 	OrgWinGUI::OWP_Label* m_diffuseLabel;
 	OrgWinGUI::OWP_Separator* m_diffuseRsp;
 	OrgWinGUI::OWP_Label* m_diffuseRLabel;
@@ -159,6 +158,10 @@ private:
 	OrgWinGUI::OWP_Label* m_parallaxeffectLabel;
 	OrgWinGUI::OWP_CheckBoxA* m_parallaxeffectcheck;
 
+	OrgWinGUI::OWP_Separator* m_skipsp;
+	OrgWinGUI::OWP_Label* m_skipLabel;
+	OrgWinGUI::OWP_CheckBoxA* m_skipcheck;
+
 	OrgWinGUI::OWP_GroupBox* m_groupbox1;
 	OrgWinGUI::OWP_CheckBoxA* m_solidcheck;
 	OrgWinGUI::OWP_CheckBoxA* m_linecheck;
@@ -169,6 +172,9 @@ private:
 	OrgWinGUI::OWP_Separator* m_powsp;
 	OrgWinGUI::OWP_Label* m_powLabel;
 	OrgWinGUI::OWP_Slider* m_powSlider;
+	OrgWinGUI::OWP_Separator* m_decsp;
+	OrgWinGUI::OWP_Label* m_decLabel;
+	OrgWinGUI::OWP_Slider* m_decSlider;
 	OrgWinGUI::OWP_ComboBoxA* m_texkindCombo;
 
 	OrgWinGUI::OWP_Label* m_nameLabel;

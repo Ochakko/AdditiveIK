@@ -888,6 +888,7 @@ typedef struct tag_binormaldispv
 	ChaVector4		binormal;
 	ChaVector2		uv[2];
 	ChaVector4		projpos;
+	ChaVector4		vertexid;
 	tag_binormaldispv() {
 		pos.x = 0.0f;
 		pos.y = 0.0f;
@@ -913,6 +914,10 @@ typedef struct tag_binormaldispv
 		projpos.y = 0.0f;
 		projpos.z = 0.0f;
 		projpos.w = 1.0f;
+		vertexid.x = 0.0f;
+		vertexid.y = 0.0f;
+		vertexid.z = 0.0f;
+		vertexid.w = 0.0f;
 	};
 }BINORMALDISPV;
 
@@ -921,11 +926,16 @@ typedef struct tag_binormaldispv
 typedef  struct tag_extlinev
 {
 	ChaVector4 pos;
+	ChaVector4 vertexid;
 	tag_extlinev() {
 		pos.x = 0.0f;
 		pos.y = 0.0f;
 		pos.z = 0.0f;
 		pos.w = 1.0f;
+		vertexid.x = 0.0f;
+		vertexid.y = 0.0f;
+		vertexid.z = 0.0f;
+		vertexid.w = 0.0f;
 	};
 }EXTLINEV;
 

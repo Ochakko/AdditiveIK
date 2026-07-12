@@ -861,8 +861,21 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape)
 		////uint8_t* pData;
 		//m_vertexBuffer->Map(0, nullptr, (void**)&m_vertexMap);
 		if (m_pm3) {
-			memcpy(m_vertexMap, pm3v, m_vertexBufferView.SizeInBytes);
-			//memcpy((void*)m_vertexBuffer->GetGPUVirtualAddress(), pm3v, m_vertexBufferView.SizeInBytes);
+			DWORD vno;
+			for (vno = 0; vno < (DWORD)pmvleng; vno++) {
+				uint8_t* pdest = m_vertexMap + vno * sizeof(BINORMALDISPV);
+
+				BINORMALDISPV* curv = pm3v + vno;
+
+				float vertexid = (float)vno;
+				ChaVector4 vertexid4 = ChaVector4(vertexid, vertexid, vertexid, vertexid);
+
+				memcpy(pdest, curv, (sizeof(BINORMALDISPV) - sizeof(ChaVector4)));
+				memcpy(pdest + sizeof(BINORMALDISPV) - sizeof(ChaVector4), &vertexid4, sizeof(ChaVector4));
+			}
+
+			//memcpy(m_vertexMap, pm3v, m_vertexBufferView.SizeInBytes);
+			////memcpy((void*)m_vertexBuffer->GetGPUVirtualAddress(), pm3v, m_vertexBufferView.SizeInBytes);
 		}
 		else if (m_pm4) {
 			if (hasBlendShape) {
@@ -881,8 +894,11 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape)
 				BINORMALDISPV* curv = pm4v + vno;
 				PM3INF* curinf = pmib + vno;
 
+				float vertexid = (float)vno;
+				ChaVector4 vertexid4 = ChaVector4(vertexid, vertexid, vertexid, vertexid);
 
-				memcpy(pdest, curv, sizeof(BINORMALDISPV));
+				memcpy(pdest, curv, (sizeof(BINORMALDISPV) - sizeof(ChaVector4)));
+				memcpy(pdest + sizeof(BINORMALDISPV) - sizeof(ChaVector4), &vertexid4, sizeof(ChaVector4));
 				memcpy(pdest + sizeof(BINORMALDISPV), curinf, sizeof(PM3INF));
 
 				if (hasBlendShape && (m_vertexSystem != nullptr)) {
@@ -895,7 +911,14 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape)
 
 		}
 		else if (m_extline) {
-			memcpy(m_vertexMap, plinev, m_vertexBufferView.SizeInBytes);
+			DWORD vno;
+			for (vno = 0; vno < (DWORD)pmvleng; vno++) {
+				uint8_t* pdest = m_vertexMap + vno * sizeof(EXTLINEV);
+				EXTLINEV* curplinev = plinev + vno;
+				memcpy(pdest, curplinev, sizeof(EXTLINEV));
+			}
+	
+			//memcpy(m_vertexMap, plinev, m_vertexBufferView.SizeInBytes);
 		}
 		else {
 			_ASSERT(0);

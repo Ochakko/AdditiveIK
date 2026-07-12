@@ -235,6 +235,18 @@ int CRefPosDlg::DestroyObjs()
 		m_parallaxeffectsp = nullptr;
 	}
 
+	if (m_skipLabel) {
+		delete m_skipLabel;
+		m_skipLabel = nullptr;
+	}
+	if (m_skipcheck) {
+		delete m_skipcheck;
+		m_skipcheck = nullptr;
+	}
+	if (m_skipsp) {
+		delete m_skipsp;
+		m_skipsp = nullptr;
+	}
 
 	if (m_intervalLabel) {
 		delete m_intervalLabel;
@@ -285,6 +297,18 @@ int CRefPosDlg::DestroyObjs()
 	if (m_powSlider) {
 		delete m_powSlider;
 		m_powSlider = nullptr;
+	}
+	if (m_decsp) {
+		delete m_decsp;
+		m_decsp = nullptr;
+	}
+	if (m_decLabel) {
+		delete m_decLabel;
+		m_decLabel = nullptr;
+	}
+	if (m_decSlider) {
+		delete m_decSlider;
+		m_decSlider = nullptr;
 	}
 
 	if (m_texkindCombo) {
@@ -421,6 +445,10 @@ void CRefPosDlg::InitParams()
 	m_parallaxeffectLabel = nullptr;
 	m_parallaxeffectcheck = nullptr;
 
+	m_skipsp = nullptr;
+	m_skipLabel = nullptr;
+	m_skipcheck = nullptr;
+
 	m_solidcheck = nullptr;
 	m_linecheck = nullptr;
 	m_pointcheck = nullptr;
@@ -430,6 +458,9 @@ void CRefPosDlg::InitParams()
 	m_powsp = nullptr;
 	m_powLabel = nullptr;
 	m_powSlider = nullptr;
+	m_decsp = nullptr;
+	m_decLabel = nullptr;
+	m_decSlider = nullptr;
 	m_texkindCombo = nullptr;
 
 	m_nameLabel = nullptr;
@@ -559,7 +590,7 @@ int CRefPosDlg::CreateRefPosWnd()
 	}
 	else {
 		labelheight = 20;
-		labelheightL = 28;
+		labelheightL = 22;
 	}
 
 
@@ -846,6 +877,21 @@ int CRefPosDlg::CreateRefPosWnd()
 			abort();
 		}
 
+		m_skipLabel = new OWP_Label(L"顔残像スキップ", labelheight);
+		if (!m_skipLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_skipsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_skipsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_skipcheck = new OWP_CheckBoxA(L"FaceSkip", m_model->GetRefPosSkip(), labelheight, false);
+		if (!m_skipcheck) {
+			_ASSERT(0);
+			abort();
+		}
 
 		m_intervalLabel = new OWP_Label(L"TimesPerImage", labelheight);
 		if (!m_intervalLabel) {
@@ -909,6 +955,24 @@ int CRefPosDlg::CreateRefPosWnd()
 			_ASSERT(0);
 			abort();
 		}
+		m_decLabel = new OWP_Label(L"間引Dec", labelheight);
+		if (!m_decLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_decsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_decsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_decSlider = new OWP_Slider((double)m_model->GetRefPosPow(), 1.0, 400.0);
+		if (!m_decSlider) {
+			_ASSERT(0);
+			abort();
+		}
+
+
+
 		m_texkindCombo = new OWP_ComboBoxA(L"PointSprite Kind", labelheight);
 		if (!m_texkindCombo) {
 			_ASSERT(0);
@@ -972,6 +1036,9 @@ int CRefPosDlg::CreateRefPosWnd()
 		m_dlgWnd->addParts(*m_powsp);
 		m_powsp->addParts1(*m_powLabel);
 		m_powsp->addParts2(*m_powSlider);
+		m_dlgWnd->addParts(*m_decsp);
+		m_decsp->addParts1(*m_decLabel);
+		m_decsp->addParts2(*m_decSlider);
 		m_dlgWnd->addParts(*m_texkindCombo);
 
 		m_dlgWnd->addParts(*m_space03Label);
@@ -995,6 +1062,10 @@ int CRefPosDlg::CreateRefPosWnd()
 		m_dlgWnd->addParts(*m_parallaxeffectsp);
 		m_parallaxeffectsp->addParts1(*m_parallaxeffectLabel);
 		m_parallaxeffectsp->addParts2(*m_parallaxeffectcheck);
+
+		m_dlgWnd->addParts(*m_skipsp);
+		m_skipsp->addParts1(*m_skipLabel);
+		m_skipsp->addParts2(*m_skipcheck);
 
 
 		m_dlgWnd->addParts(*m_space04Label);
@@ -1121,6 +1192,14 @@ int CRefPosDlg::CreateRefPosWnd()
 				m_model->SetRefPosPow((float)value);
 			}
 			});
+		m_decSlider->setCursorListener([=, this]() {
+			double value = m_decSlider->getValue();
+			int setvalue = (int)(value + 0.0001);
+			if (m_model != nullptr) {
+				m_model->SetRefPosDec(setvalue);
+			}
+			m_decSlider->setValue((double)setvalue, false);//intに丸めてセットし直し
+			});
 
 		//########
 		//Check
@@ -1153,6 +1232,12 @@ int CRefPosDlg::CreateRefPosWnd()
 			bool value = m_parallaxeffectcheck->getValue();
 			if (m_model != nullptr) {
 				m_model->SetRefPosParallaxEffect(value);
+			}
+			});
+		m_skipcheck->setButtonListener([=, this]() {
+			bool value = m_skipcheck->getValue();
+			if (m_model != nullptr) {
+				m_model->SetRefPosSkip(value);
 			}
 			});
 
@@ -1277,6 +1362,10 @@ int CRefPosDlg::Params2Dlg()
 		if (m_parallaxeffectcheck != nullptr) {
 			m_parallaxeffectcheck->setValue(parallaxeffectflag, false);
 		}
+		bool skipflag = m_model->GetRefPosSkip();
+		if (m_skipcheck != nullptr) {
+			m_skipcheck->setValue(skipflag, false);
+		}
 
 
 		bool soliddisp = m_model->GetRefPosSolidDisp();
@@ -1300,6 +1389,14 @@ int CRefPosDlg::Params2Dlg()
 		if (m_powSlider != nullptr) {
 			m_powSlider->setValue((double)sanpow, false);
 		}
+		int decnum = m_model->GetRefPosDec();
+		if (m_decSlider != nullptr) {
+			int setvalue = (int)(decnum + 0.0001);
+			setvalue = min(200, setvalue);
+			setvalue = max(1, setvalue);
+			m_decSlider->setValue((double)setvalue, false);//intに丸めてセットし直し
+		}
+
 		int texkind = m_model->GetRefPosTexKind();
 		if (m_texkindCombo != nullptr) {
 			m_texkindCombo->setSelectedCombo(texkind);
