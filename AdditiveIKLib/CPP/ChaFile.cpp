@@ -313,7 +313,9 @@ int CChaFile::WriteFileInfo()
 	//version 1026 : 2026/06/21 1.0.0.74へ向けて  RefPosCurrentDiffuseRate*追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1026</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1027 : 2026/07/04 1.0.0.75へ向けて  RefPosPointSize, RefPosPower追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1027</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1027</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1028 : 2026/07/12 1.0.0.76へ向けて  RefPosKind, RefPosDec, RefPosFaceSkip追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1028</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -402,7 +404,7 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 	else {
 		CallF(Write2File("    <MonoDisp>0</MonoDisp>\r\n"), return 1);
 	}
-	if (curmodel->GetMonoFlag()) {
+	if (curmodel->GetRefPosParallaxEffect()) {
 		CallF(Write2File("    <RefPosParallaxEffect>1</RefPosParallaxEffect>\r\n"), return 1);
 	}
 	else {
@@ -410,6 +412,14 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 	}
 	CallF(Write2File("    <RefPosPointSize>%f</RefPosPointSize>\r\n", curmodel->GetRefPosPointSize()), return 1);
 	CallF(Write2File("    <RefPosPower>%f</RefPosPower>\r\n", curmodel->GetRefPosPow()), return 1);
+	CallF(Write2File("    <RefPosKind>%d</RefPosKind>\r\n", curmodel->GetRefPosTexKind()), return 1);
+	CallF(Write2File("    <RefPosDec>%d</RefPosDec>\r\n", curmodel->GetRefPosDec()), return 1);
+	if (curmodel->GetRefPosSkip()) {
+		CallF(Write2File("    <RefPosFaceSkip>1</RefPosFaceSkip>\r\n"), return 1);
+	}
+	else {
+		CallF(Write2File("    <RefPosFaceSkip>0</RefPosFaceSkip>\r\n"), return 1);
+	}
 
 
 
@@ -1355,6 +1365,12 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	float refposPointSize = 1.0f;
 	int getrefposPower = 0;
 	float refposPower = 0.5f;
+	int getrefposDec = 0;
+	int refposDec = 25;
+	int getrefposSkip = 0;
+	int refposSkip = 0;
+	int getrefposKind = 0;
+	int refposKind = POINTSPRITE_1234;
 
 
 	int refnum = 0;
@@ -1398,6 +1414,9 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	getparallaxeffect = Read_Int(xmlbuf, "<RefPosParallaxEffect>", "</RefPosParallaxEffect>", &parallaxeffect);
 	getrefposPointSize = Read_Float(xmlbuf, "<RefPosPointSize>", "</RefPosPointSize>", &refposPointSize);
 	getrefposPower = Read_Float(xmlbuf, "<RefPosPower>", "</RefPosPower>", &refposPower);
+	getrefposDec = Read_Int(xmlbuf, "<RefPosDec>", "</RefPosDec>", &refposDec);
+	getrefposSkip = Read_Int(xmlbuf, "<RefPosSkip>", "</RefPosSkip>", &refposSkip);
+	getrefposKind = Read_Int(xmlbuf, "<RefPosKind>", "</RefPosKind>", &refposKind);
 
 
 	int grassflag = 0;
@@ -1638,6 +1657,22 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	if ((getrefposPower == 0) && (refposPower >= 0.1f) && (refposPower <= 2.0f)) {
 		setrefposPower = refposPower;
 	}
+	int setrefposDec = 25;
+	if ((getrefposDec == 0) && (refposDec >= 1) && (refposDec <= 400)) {
+		setrefposDec = refposDec;
+	}
+	bool setrefposSkip = false;
+	if (getrefposSkip == 0) {
+		setrefposSkip = (refposSkip == 1) ? true : false;
+	}
+	else {
+		//記述が無い古いバージョンの場合　trueに.
+		setrefposSkip = true;
+	}
+	int setrefposKind = POINTSPRITE_1234;
+	if ((getrefposKind == 0) && (refposKind >= 0) && (refposKind < POINTSPRITE_MAX)) {
+		setrefposKind = refposKind;
+	}
 
 	newmodel->SetRefPosDiffuseRate(refposdiffuse);
 	newmodel->SetRefPosCurrentDiffuseRate(refposCurrentDiffuse);
@@ -1651,6 +1686,15 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	newmodel->SetRefPosParallaxEffect(setparallaxeffect);
 	newmodel->SetRefPosPointSize(setrefposPointSize);
 	newmodel->SetRefPosPow(setrefposPower);
+	newmodel->SetRefPosDec(setrefposDec);
+	newmodel->SetRefPosSkip(setrefposSkip);
+	
+
+	newmodel->SetRefPosTexKind(setrefposKind);
+	if (setrefposKind != POINTSPRITE_1234) {
+		newmodel->RemakeConstantBuffers();//必要
+	}
+
 
 	//newmodel->m_tmpmotspeed = m_motspeed;
 	if (grassflag == 1) {

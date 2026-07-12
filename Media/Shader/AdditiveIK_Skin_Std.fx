@@ -550,8 +550,7 @@ SPSOut2 PSMainSkinStdFromGS(SPSInFromGS psIn) : SV_Target
     //float4 albedoColor = g_albedo.Sample(g_sampler_albedo, psIn.uv);
     float4 albedoColor; // = g_numMap2.Sample(g_sampler_num2, psIn.uv);
     albedoColor = (psIn.RefPosParams.y >= 2.9f) ? g_numMap4.Sample(g_sampler_num4, psIn.uv) : ((psIn.RefPosParams.y >= 1.9f) ? g_numMap3.Sample(g_sampler_num3, psIn.uv) : ((psIn.RefPosParams.y >= 0.9f) ? g_numMap2.Sample(g_sampler_num2, psIn.uv) : g_numMap1.Sample(g_sampler_num1, psIn.uv)));
-    albedoColor *= psIn.diffusemult;
-     
+    
     float3 wPos = psIn.posrw.xyz / psIn.posrw.w;
     
     float3 totaldiffuse = float3(0, 0, 0);
