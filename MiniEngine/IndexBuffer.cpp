@@ -11,6 +11,7 @@ IndexBuffer::~IndexBuffer()
 void IndexBuffer::DestroyObjs()
 {
 	if (m_indexBuffer) {
+		m_indexBuffer->Unmap(0, nullptr);
 		m_indexBuffer->Release();
 		m_indexBuffer = nullptr;
 	}
@@ -58,13 +59,15 @@ void IndexBuffer::Init(int size, int stride)
 	//インデックスバッファのビューを作成。
 	m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
 	
-	
 	//ストライドは４バイト固定。
 	m_strideInBytes = 4;
 	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 	m_indexBufferView.SizeInBytes = m_sizeInBytes;
 	
 	m_count = m_sizeInBytes / m_strideInBytes;
+
+	m_indexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&m_pMapData));
+
 }
 //void IndexBuffer::Copy(uint16_t* srcIndecies)
 //{
@@ -77,10 +80,7 @@ void IndexBuffer::Init(int size, int stride)
 //}
 void IndexBuffer::Copy(uint32_t* srcIndecies)
 {
-	uint32_t* pData;
-	m_indexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pData));
-	for (int i = 0; i < m_count; i++) {
-		pData[i] = srcIndecies[i];
+	if (m_pMapData) {
+		memcpy(m_pMapData, (void*)srcIndecies, sizeof(int) * m_count);
 	}
-	m_indexBuffer->Unmap(0, nullptr);
 }

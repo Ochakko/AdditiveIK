@@ -10,6 +10,7 @@ public:
 	VertexBuffer() {
 		m_vertexBuffer = nullptr;
 		ZeroMemory(&m_vertexBufferView, sizeof(D3D12_VERTEX_BUFFER_VIEW));
+		m_pMapData = nullptr;
 	};
 
 	/// <summary>
@@ -29,7 +30,8 @@ public:
 	/// 頂点データを頂点バッファにコピー。
 	/// </summary>
 	/// <param name="srcVertices">コピー元の頂点データ。</param>
-	void Copy(void* srcVertices) ;
+	void Copy(void* srcVertices);
+
 	/// <summary>
 	/// 頂点バッファビューを取得。
 	/// </summary>
@@ -69,4 +71,5 @@ public:
 private:
 	ID3D12Resource* m_vertexBuffer = nullptr;		//頂点バッファ。
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;	//頂点バッファビュー。
+	uint8_t* m_pMapData;
 };

@@ -1,6 +1,12 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/07/20
+　草の表示が出来なくなっていたのを修正
+　　インスタンシング処理修正
+　バッファコピー部修正
+　　毎回Map,Unmapしている部分が残っていたのを修正
+　　
 2026/07/19
 　設定ファイルの保存場所を変更
 　　プロジェクト保存時にプロジェクトフォルダの中のAdditiveIK_ENVフォルダの中に保存

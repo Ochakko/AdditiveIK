@@ -23816,7 +23816,8 @@ int CModel::ChkInView(int refposindex)
 		for (int objindex = 0; objindex < objnum; objindex++) {
 			CMQOObject* curobj = m_object[objindex];
 			if (curobj != nullptr) {
-				if ((strstr(curobj->GetName(), "LOD0") != 0) || 
+				if (
+					//(strstr(curobj->GetName(), "LOD0") != 0) || //2026/07/20 LOD0を描画する
 					(strstr(curobj->GetName(), "LOD1") != 0) ||
 					(strstr(curobj->GetName(), "LOD2") != 0) ||
 					(strstr(curobj->GetName(), "LOD3") != 0)) {

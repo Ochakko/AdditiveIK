@@ -10,6 +10,7 @@ VertexBuffer::~VertexBuffer()
 void VertexBuffer::DestroyObjs()
 {
 	if (m_vertexBuffer) {
+		m_vertexBuffer->Unmap(0, nullptr);
 		m_vertexBuffer->Release();
 		m_vertexBuffer = nullptr;
 	}
@@ -51,13 +52,24 @@ void VertexBuffer::Init(int size, int stride)
 	m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
 	m_vertexBufferView.SizeInBytes = size;
 	m_vertexBufferView.StrideInBytes = stride;
+
+
+	m_vertexBuffer->Map(0, nullptr, (void**)&m_pMapData);
+
 }
 void VertexBuffer::Copy(void* srcVertices)
 {
-	uint8_t* pData;
-	m_vertexBuffer->Map(0, nullptr, (void**)&pData);
-	if (pData) {
-		memcpy(pData, srcVertices, m_vertexBufferView.SizeInBytes);
-		m_vertexBuffer->Unmap(0, nullptr);
+	//uint8_t* pData;
+	//m_vertexBuffer->Map(0, nullptr, (void**)&pData);
+	//if (pData) {
+	//	memcpy(pData, srcVertices, m_vertexBufferView.SizeInBytes);
+	//	m_vertexBuffer->Unmap(0, nullptr);
+	//}
+
+	if (m_pMapData) {
+		memcpy(m_pMapData, srcVertices, m_vertexBufferView.SizeInBytes);
 	}
 }
+
+
+

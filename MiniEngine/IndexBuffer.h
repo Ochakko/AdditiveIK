@@ -10,6 +10,7 @@ public:
 	IndexBuffer() {
 		m_indexBuffer = nullptr;
 		ZeroMemory(&m_indexBufferView, sizeof(D3D12_INDEX_BUFFER_VIEW));
+		m_pMapData = nullptr;
 		m_count = 0;
 		m_strideInBytes = 0;
 		m_sizeInBytes = 0;
@@ -84,6 +85,7 @@ public:
 private:
 	ID3D12Resource* m_indexBuffer = nullptr;	//インデックスバッファ。
 	D3D12_INDEX_BUFFER_VIEW m_indexBufferView;	//インデックスバッファビュー。
+	uint8_t* m_pMapData;
 	int m_count = 0;							//インデックスの数。
 	int m_strideInBytes = 0;					//ストライド(単位：バイト)。
 	int m_sizeInBytes = 0;						//サイズ(単位：バイト)。
