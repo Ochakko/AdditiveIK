@@ -7,6 +7,9 @@ https://github.com/Ochakko/AdditiveIK
 　バッファコピー部修正
 　　毎回Map,Unmapしている部分が残っていたのを修正
 　　
+　プロジェクトファイル(*.cha)に選択スロット番号を保存するように.
+　　Lightスロット、Shadowスロット、Skyスロット、Fogスロット、Dofスロット
+　　
 2026/07/19
 　設定ファイルの保存場所を変更
 　　プロジェクト保存時にプロジェクトフォルダの中のAdditiveIK_ENVフォルダの中に保存

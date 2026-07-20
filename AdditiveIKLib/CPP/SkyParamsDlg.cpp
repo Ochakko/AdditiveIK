@@ -929,10 +929,6 @@ void CSkyParamsDlg::InitParams()
 	for (slotindex = 0; slotindex < 8; slotindex++) {
 		m_skyst_slotB[slotindex] = nullptr;
 	}
-	
-	m_skyst_slotindex = 0;
-	m_skyst_slotFlag = false;
-
 }
 
 int CSkyParamsDlg::SetPosAndSize(int srcposx, int srcposy, int srcsizex, int srcsizey)
@@ -2077,14 +2073,13 @@ int CSkyParamsDlg::CreateSkyParamsWnd()
 		for (setindex2 = 0; setindex2 < 8; setindex2++) {
 			if (m_skyst_slotB[setindex2]) {
 				m_skyst_slotB[setindex2]->setButtonListener([=, this]() {
-					if (!m_skyst_slotFlag) {
-						m_skyst_slotindex = setindex2;
-						m_skyst_slotFlag = true;
+					if ((setindex2 >= 0) && (setindex2 < SKYSLOTNUM)) {
+						g_skyindex = setindex2;
 					}
 					if (m_dlgWnd) {
 						m_dlgWnd->callRewrite();//再描画
 					}
-					});
+				});
 			}
 		}
 

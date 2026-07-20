@@ -1329,6 +1329,8 @@ static OWP_Label* s_shortcuttext[SHORTCUTTEXTNUM];
 static bool s_skyparamsFlag = false;
 static bool s_fogparamsFlag = false;
 static bool s_dofparamsFlag = false;
+static int s_skybefindex = -1;
+
 
 static OrgWindow* s_toolWnd = 0;
 static OWP_Separator* s_toolSeparator = 0;
@@ -4028,6 +4030,7 @@ void InitApp()
 	s_guiswplateno = 1;
 
 	g_skydispflag = true;
+	s_skybefindex = -1;
 
 	g_hdrpbloom = true;
 	g_alphablending = true;
@@ -19270,7 +19273,7 @@ int SaveEnvFiles(WCHAR* projdir, WCHAR* projname)
 	SaveLightsForEdit(envdir);
 	SaveThreshold(envdir);
 	SaveShadowParamsFile(envdir);
-	SaveSkyParamsFile(envdir);
+	SaveSkyParamsFile(envdir);	
 	SaveFogParamsFile(envdir);
 	SaveDofParamsFile(envdir);
 
@@ -44750,28 +44753,15 @@ int OnFrameSkyParamsDlg()//OnFrameToolWnd()から呼び出す
 		}
 	}
 
-	if (s_skyparamsdlg.GetSkySlotFlag()) {
-		s_skyparamsdlg.SetSkySlotFlag(false);
-		int slotindex = s_skyparamsdlg.GetSkySlotIndex();
-		if ((slotindex >= 0) && (slotindex < 8)) {
-			g_skyindex = slotindex;
 
-			SetSkyParamsToSky(s_skyparamsdlg.GetSkyParams(g_skyindex));
-			//if (s_sky) {
-			//	CMQOMaterial* curmqomat = nullptr;
-			//	curmqomat = s_sky->GetMQOMaterialByIndex(0);
-			//	s_skyparamsdlg.ParamsToDlg(s_sky, curmqomat, &(s_skyparams[g_skyindex]));
-			//}
-			ShowSkyWnd(true);
-		}
-		else {
-			_ASSERT(0);
-		}
+	if (s_skybefindex != g_skyindex) {
+		s_skybefindex = g_skyindex;
+
+		SetSkyParamsToSky(s_skyparamsdlg.GetSkyParams(g_skyindex));
+		ShowSkyWnd(true);
 	}
 
-
 	s_skyparamsdlg.OnFrameSkyParamsDlg();
-
 
 	return 0;
 }

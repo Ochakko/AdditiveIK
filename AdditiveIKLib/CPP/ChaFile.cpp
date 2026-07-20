@@ -53,6 +53,12 @@ extern float g_tmpmqomult;
 extern WCHAR g_tmpmqopath[MULTIPATH];
 extern ChaCamera g_chacamera;
 
+//extern int g_lightSlot;
+//extern int g_shadowmap_slotno;
+//extern int g_skyindex;
+//extern int g_fogindex;
+//extern int g_dofindex;
+
 CChaFile::CChaFile()
 {
 	InitParams();
@@ -233,6 +239,14 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CallF(Write2File("  <RefPosInterval>%d</RefPosInterval>\r\n", g_RefPosRecordInterval), return 1);
 
 
+	CallF(Write2File("  <LightSlot>%d</LightSlot>\r\n", g_lightSlot), return 1);
+	CallF(Write2File("  <ShadowSlot>%d</ShadowSlot>\r\n", g_shadowmap_slotno), return 1);
+	CallF(Write2File("  <SkySlot>%d</SkySlot>\r\n", g_skyindex), return 1);
+	CallF(Write2File("  <FogSlot>%d</FogSlot>\r\n", g_fogindex), return 1);
+	CallF(Write2File("  <DofSlot>%d</DofSlot>\r\n", g_dofindex), return 1);
+	//LightSlot, ShadowSlot, SkySlot, FogSlot, DofSlot
+
+
 	int modelnum = (int)m_modelindex.size();
 	int modelcnt;
 	for( modelcnt = 0; modelcnt < modelnum; modelcnt++ ){
@@ -315,6 +329,8 @@ int CChaFile::WriteFileInfo()
 	//version 1027 : 2026/07/04 1.0.0.75へ向けて  RefPosPointSize, RefPosPower追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1027</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1028 : 2026/07/12 1.0.0.76へ向けて  RefPosKind, RefPosDec, RefPosFaceSkip追加
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1028</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1029 : 2026/07/20 1.0.0.77へ向けて  LightSlot, ShadowSlot, SkySlot, FogSlot, DofSlot追加
 	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1028</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
@@ -461,7 +477,6 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 	CallF(Write2File("    <SpecularDispRate>%f</SpecularDispRate>\r\n", materialdisprate.y), return 1);
 	CallF(Write2File("    <EmissiveDispRate>%f</EmissiveDispRate>\r\n", materialdisprate.z), return 1);
 	CallF(Write2File("    <AmbientDispRate>%f</AmbientDispRate>\r\n", materialdisprate.w), return 1);
-
 
 	//2023/07/21
 	CallF(Write2File("    <CustomIKStopName>1</CustomIKStopName>\r\n"), return 1);
@@ -1140,6 +1155,36 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	if (result == 0) {
 		g_RefPosRecordInterval = temprefposinterval;
 	}
+
+
+
+	int templightSlot = 0;
+	result = Read_Int(&m_xmliobuf, "<LightSlot>", "</LightSlot>", &templightSlot);
+	if ((result == 0) && (templightSlot >= 0) && (templightSlot < LIGHTSLOTNUM)) {
+		g_lightSlot = templightSlot;
+	}
+	int tempshadowSlot = 0;
+	result = Read_Int(&m_xmliobuf, "<ShadowSlot>", "</ShadowSlot>", &tempshadowSlot);
+	if ((result == 0) && (tempshadowSlot >= 0) && (tempshadowSlot < SHADOWSLOTNUM)) {
+		g_shadowmap_slotno = tempshadowSlot;
+	}
+	int tempskySlot = 0;
+	result = Read_Int(&m_xmliobuf, "<SkySlot>", "</SkySlot>", &tempskySlot);
+	if ((result == 0) && (tempskySlot >= 0) && (tempskySlot < SKYSLOTNUM)) {
+		g_skyindex = tempskySlot;
+	}
+	int tempfogSlot = 0;
+	result = Read_Int(&m_xmliobuf, "<FogSlot>", "</FogSlot>", &tempfogSlot);
+	if ((result == 0) && (tempfogSlot >= 0) && (tempfogSlot < FOGSLOTNUM)) {
+		g_fogindex = tempfogSlot;
+	}
+	int tempdofSlot = 0;
+	result = Read_Int(&m_xmliobuf, "<DofSlot>", "</DofSlot>", &tempdofSlot);
+	if ((result == 0) && (tempdofSlot >= 0) && (tempdofSlot < DOFSLOTNUM)) {
+		g_dofindex = tempdofSlot;
+	}
+
+
 
 
 	m_xmliobuf.pos = 0;

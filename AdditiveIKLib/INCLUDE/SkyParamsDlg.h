@@ -847,16 +847,17 @@ public:
 
 	//###########
 	//Slot
+	//2026/07/20 g_skyindexを使う
 	//###########
-	int GetSkySlotIndex() {
-		return m_skyst_slotindex;
-	};
-	bool GetSkySlotFlag() {
-		return m_skyst_slotFlag;
-	};
-	void SetSkySlotFlag(bool srcval) {
-		m_skyst_slotFlag = srcval;
-	};
+	//int GetSkySlotIndex() {
+	//	return m_skyst_slotindex;
+	//};
+	//bool GetSkySlotFlag() {
+	//	return m_skyst_slotFlag;
+	//};
+	//void SetSkySlotFlag(bool srcval) {
+	//	m_skyst_slotFlag = srcval;
+	//};
 
 private:
 
@@ -1102,8 +1103,8 @@ private:
 	OrgWinGUI::OWP_Separator* m_skyst_slotsp2_2;
 	OrgWinGUI::OWP_Button* m_skyst_slotB[8];
 
-	int m_skyst_slotindex;
-	bool m_skyst_slotFlag;
+	//int m_skyst_slotindex;
+	//bool m_skyst_slotFlag;
 
 };
 
