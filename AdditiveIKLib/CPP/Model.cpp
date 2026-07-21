@@ -11138,7 +11138,7 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto,
 		//Motion側の　traanimを取得する
 			ChaMatrix curwm;
 			curwm.SetIdentity();
-			ChaMatrix curtraanim;
+			ChaMatrix smat, rmat, tmat, curtraanim;
 			curtraanim.SetIdentity();
 			{
 				//if (curbone->IsHipsBone() && (curframe >= 50.0)) {
@@ -11157,22 +11157,22 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto,
 					parentwm = curbone->GetParent(false)->GetCurrentWorldMat(true, true);
 				}
 				else {
-					parentwm.SetIdentity();
+					//parentwm.SetIdentity();
+					parentwm = GetWorldMat();//2026/07/21
 				}
 				ChaMatrix curlocalmat;
 				curlocalmat = curwm * ChaMatrixInv(parentwm);
 
-				ChaMatrix smat, rmat, tmat;
 				GetSRTandTraAnim(curlocalmat, curbone->GetNodeMat(), &smat, &rmat, &tmat, &curtraanim);
 			}
 
 			if (curbone) {
 				if (curbone->GetBtKinFlag() == 0) {//2023/01/28
 					if (g_previewFlag == 4) {
-						curbto->SetBtMotion(limitdegflag, curtraanim);
+						curbto->SetBtMotion(limitdegflag, smat, curtraanim);
 					}
 					else if (g_previewFlag == 5) {
-						curbto->SetBtMotion(limitdegflag, curtraanim);
+						curbto->SetBtMotion(limitdegflag, smat, curtraanim);
 					}
 				}
 				else {

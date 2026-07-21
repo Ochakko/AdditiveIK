@@ -1,6 +1,11 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/07/21
+　物理シミュ修正
+　　ModelWorldMat(モデルの全体位置)を大きく移動しても物理シミュが乱れないように.
+　　(ただし、まだ拡大縮小アニメを設定すると、多少乱れます.)
+　　
 2026/07/20
 　草の表示が出来なくなっていたのを修正
 　　インスタンシング処理修正

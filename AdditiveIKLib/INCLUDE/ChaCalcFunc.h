@@ -125,7 +125,7 @@ public:
 		CBone* bvhbone, ChaVector3 traanim);
 	ChaMatrix CalcNewLocalRotMatFromQofIK(CBone* srcbone, bool limitdegflag, int srcmotid, double srcframe,
 		CQuaternion qForRot, ChaMatrix* dstsmat, ChaMatrix* dstrmat, ChaMatrix* dsttanimmat);
-	ChaMatrix GetCurrentZeroFrameMat(CBone* srcbone, bool limitdegflag, int updateflag);
+	ChaMatrix GetCurrentZeroFrameMat(CBone* srcbone, bool limitdegflag, int updateflag, bool multModelWM);
 	int FKRotate(CModel* srcmodel, bool limitdegflag, int wallscrapingikflag, 
 		bool onretarget, int reqflag,
 		CBone* bvhbone, int traflag, ChaVector3 traanim, double srcframe, int srcboneno,

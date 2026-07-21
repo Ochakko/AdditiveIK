@@ -303,8 +303,10 @@ int CBtObject::CreateObject(bool limitdegflag, int srcmotid, double srcframe, CB
 	//	return 0;
 	//}
 
+	bool multModelWM = false;
+
 	ChaVector3 centerA, parentposA, childposA, aftparentposA, aftchildposA;
-	ChaMatrix tmpzerofm = m_bone->GetCurrentZeroFrameMat(limitdegflag, 0);
+	ChaMatrix tmpzerofm = m_bone->GetCurrentZeroFrameMat(limitdegflag, 0, multModelWM);
 	parentposA = m_bone->GetJointFPos();
 	ChaVector3TransformCoord(&aftparentposA, &parentposA, &tmpzerofm);
 	childposA = m_endbone->GetJointFPos();
@@ -346,8 +348,9 @@ int CBtObject::CreateObject(bool limitdegflag, int srcmotid, double srcframe, CB
 	btScalar qz = startrotq.z;
 	btScalar qw = startrotq.w;
 	btQuaternion btq(qx, qy, qz, qw);
-	//centerA = (aftparentposA + aftchildposA) * 0.5f;
+
 	centerA = (parentposA + childposA) * 0.5f;//2023/01/27
+	
 	//centerA = aftparentposA;
 	btVector3 btv(btScalar(centerA.x), btScalar(centerA.y), btScalar(centerA.z));
 	btTransform transform;
@@ -516,6 +519,8 @@ int CBtObject::CalcConstraintTransform(int chilflag, CRigidElem* curre, CBtObjec
 		return 1;
 	}
 
+	ChaMatrix modelwm = m_bone->GetParModel()->GetWorldMat();//2026/07/21
+
 	ChaMatrix transmatx;
 	ChaMatrixIdentity(&transmatx);
 	//int setstartflag = 1;
@@ -523,6 +528,7 @@ int CBtObject::CalcConstraintTransform(int chilflag, CRigidElem* curre, CBtObjec
 	//bool dir2xflag = false;
 	//curbto->m_bone->CalcAxisMatX_RigidBody(dir2xflag, 0, curbto->m_endbone, &transmatx, setstartflag);
 	transmatx = curbto->m_bone->GetNodeMat();//2023/01/27
+	//transmatx = curbto->m_bone->GetNodeMat() * modelwm;//2026/07/21
 
 	CQuaternion rotq;
 	rotq.RotationMatrix(transmatx);
@@ -543,6 +549,12 @@ int CBtObject::CalcConstraintTransform(int chilflag, CRigidElem* curre, CBtObjec
 	ChaVector3 parentposA, childposA, aftparentposA, aftchildposA;
 	parentposA = curbto->m_bone->GetJointFPos();
 	childposA = curbto->m_endbone->GetJointFPos();
+
+	ChaVector3TransformCoord(&aftparentposA, &parentposA, &modelwm);//2026/07/21
+	ChaVector3TransformCoord(&aftchildposA, &parentposA, &modelwm);//2026/07/21
+
+
+
 	//if (setstartflag == 1) {
 	//	ChaMatrix tmpzerofm = curbto->m_bone->GetCurrentZeroFrameMat(0);
 	//	ChaVector3TransformCoord(&aftparentposA, &parentposA, &tmpzerofm);
@@ -564,11 +576,11 @@ int CBtObject::CalcConstraintTransform(int chilflag, CRigidElem* curre, CBtObjec
 	//	}
 	//}
 	if (chilflag == 0){
-		//m_curpivot = invtra(btVector3(aftchildposA.x, aftchildposA.y, aftchildposA.z));
+		//m_curpivot = invtra(btVector3(aftchildposA.x, aftchildposA.y, aftchildposA.z));//2026/07/21
 		m_curpivot = invtra(btVector3(childposA.x, childposA.y, childposA.z));//2023/01/27
 	}
 	else{
-		//m_curpivot = invtra(btVector3(aftparentposA.x, aftparentposA.y, aftparentposA.z));
+		//m_curpivot = invtra(btVector3(aftparentposA.x, aftparentposA.y, aftparentposA.z));//2026/07/21
 		m_curpivot = invtra(btVector3(parentposA.x, parentposA.y, parentposA.z));//2023/01/27
 	}
 
@@ -1123,13 +1135,27 @@ int CBtObject::Motion2Bt(CModel* srcmodel, int srcmotid, double srcframe)
 int CBtObject::SetPosture2Bt(bool secondcall, bool btmovable, int limitrate,
 	ChaMatrix srcmat, ChaVector3 srcrigidcenter, int constraintupdateflag)
 {
-	CQuaternion tmpq;
-	tmpq.RotationMatrix(srcmat);
-	btQuaternion btrotq(tmpq.x, tmpq.y, tmpq.z, tmpq.w);
+	//CQuaternion tmpq;
+	//tmpq.RotationMatrix(srcmat);
+	//btQuaternion btrotq(tmpq.x, tmpq.y, tmpq.z, tmpq.w);
+
+	//2026/07/21 scaleを含むために quaternionではなく　3x3でセットする
+	btMatrix3x3 basismat;
+	basismat.setIdentity();
+	basismat[0][0] = srcmat.data[MATI_11];
+	basismat[0][1] = srcmat.data[MATI_21];
+	basismat[0][2] = srcmat.data[MATI_31];
+	basismat[1][0] = srcmat.data[MATI_12];
+	basismat[1][1] = srcmat.data[MATI_22];
+	basismat[1][2] = srcmat.data[MATI_32];
+	basismat[2][0] = srcmat.data[MATI_13];
+	basismat[2][1] = srcmat.data[MATI_23];
+	basismat[2][2] = srcmat.data[MATI_33];
 
 	btTransform worldtra;
 	worldtra.setIdentity();
-	worldtra.setRotation(btrotq);
+	//worldtra.setRotation(btrotq);
+	worldtra.setBasis(basismat);
 	worldtra.setOrigin(btVector3(srcrigidcenter.x, srcrigidcenter.y, srcrigidcenter.z));
 
 	m_rigidbody->getMotionState()->setWorldTransform(worldtra);
@@ -1216,7 +1242,7 @@ int CBtObject::SetPosture2Bt(bool secondcall, bool btmovable, int limitrate,
 
 //void CBtObject::RecalcConstraintFrameAB()
 
-int CBtObject::SetBtMotion(bool limitdegflag, ChaMatrix curtraanim)
+int CBtObject::SetBtMotion(bool limitdegflag, ChaMatrix curscalemat, ChaMatrix curtraanim)
 {
 	if (m_topflag == 1) {
 		return 0;
@@ -1240,26 +1266,24 @@ int CBtObject::SetBtMotion(bool limitdegflag, ChaMatrix curtraanim)
 	ChaMatrix savebtmat = m_bone->GetBtMat(true);
 	ChaVector3 savebteul = m_bone->GetBtEul();
 
+	ChaVector3 orgpos0, orgchildpos0;
+	orgpos0 = m_bone->GetJointFPos();
+	orgchildpos0 = m_endbone->GetJointFPos();
+	ChaVector3 bonevec = orgchildpos0 - orgpos0;
+	float boneleng = (float)ChaVector3LengthDbl(&bonevec);
 
-
-	ChaVector3 orgpos, orgchildpos, aftpos, aftchildpos;
-	ChaMatrix zerowm;
-	orgpos = m_bone->GetJointFPos();
-	orgchildpos = m_endbone->GetJointFPos();
-	zerowm = m_bone->GetCurrentZeroFrameMat(limitdegflag, 1);
-	ChaVector3TransformCoord(&aftpos, &orgpos, &zerowm);
-	ChaVector3TransformCoord(&aftchildpos, &orgchildpos, &zerowm);
 	ChaMatrix befpivotmat, aftpivotmat;
 	befpivotmat.SetIdentity();
 	aftpivotmat.SetIdentity();
-	befpivotmat.SetTranslation(-orgpos);
-	aftpivotmat.SetTranslation(orgpos);
-
+	befpivotmat.SetTranslation(-orgpos0);
+	aftpivotmat.SetTranslation(orgpos0);
 
 	btTransform worldtra;
 	m_rigidbody->getMotionState()->getWorldTransform(worldtra);
 	ChaMatrix newxworld;
 	newxworld = ChaMatrixFromBtTransform(&(worldtra.getBasis()), &(worldtra.getOrigin()));
+	ChaMatrix newxworldrot = ChaMatrixRot(newxworld);
+
 
 	btTransform parentworldtra;
 	ChaMatrix parentnewxworld;
@@ -1272,27 +1296,29 @@ int CBtObject::SetBtMotion(bool limitdegflag, ChaMatrix curtraanim)
 		parentnewxworld.SetIdentity();
 	}
 
+
 	ChaMatrix xlocal;
 	xlocal = newxworld * ChaMatrixInv(parentnewxworld);
-	ChaMatrix xlocalrotmat;
-	xlocalrotmat = ChaMatrixRot(xlocal);
+	ChaMatrix rotmat;
+	rotmat = ChaMatrixRot(xlocal);
 
 	ChaMatrix setwm;
 	ChaMatrix localmat;
-	localmat = befpivotmat * xlocalrotmat * aftpivotmat * curtraanim;
+	localmat = befpivotmat * curscalemat * rotmat * aftpivotmat * curtraanim;//2026/07/21 scalemat対応
 	ChaMatrix parentbtmat;
 	if (m_bone->GetParent(false) && m_bone->GetParent(false)->IsSkeleton()) {
-		parentbtmat = m_bone->GetParent(false)->GetBtMat(true);
+		parentbtmat = m_bone->GetParent(false)->GetBtMat(true);//modelwmは掛かっている
 	}
 	else {
-		parentbtmat.SetIdentity();
+		//parentbtmat.SetIdentity();
+		parentbtmat = m_bone->GetParModel()->GetWorldMat();
 	}
 	setwm = localmat * parentbtmat;
 
 
 	//calc BtEul
 	CQuaternion curlocalq;
-	curlocalq.RotationMatrix(xlocalrotmat);	
+	curlocalq.RotationMatrix(rotmat);	
 	ChaVector3 cureul;
 	cureul.SetParams(0.0f, 0.0f, 0.0f);
 	int notmodify180flag = 1;

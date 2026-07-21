@@ -331,7 +331,7 @@ int CChaFile::WriteFileInfo()
 	//version 1028 : 2026/07/12 1.0.0.76へ向けて  RefPosKind, RefPosDec, RefPosFaceSkip追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1028</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1029 : 2026/07/20 1.0.0.77へ向けて  LightSlot, ShadowSlot, SkySlot, FogSlot, DofSlot追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1028</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1029</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );

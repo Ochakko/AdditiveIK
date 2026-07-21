@@ -523,8 +523,8 @@ public:
 	int SetCurrentMotion(int srcmotid, double animleng);
 	void ResetMotionCache();
 
-	ChaMatrix GetCurrentZeroFrameMat(bool limitdegflag, int updateflag);//current motionのframe 0のworldmat
-	ChaMatrix GetCurrentZeroFrameInvMat(bool limitdegflag, int updateflag);
+	ChaMatrix GetCurrentZeroFrameMat(bool limitdegflag, int updateflag, bool multModelWM);//current motionのframe 0のworldmat
+	ChaMatrix GetCurrentZeroFrameInvMat(bool limitdegflag, int updateflag, bool multModelWM);
 
 
 	static CBone* GetNewBone(CModel* parmodel);

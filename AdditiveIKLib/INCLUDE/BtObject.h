@@ -70,7 +70,7 @@ public:
  * @breaf 剛体シミュレーションの行列からシミュレーション適用後の行列を計算する。
  * @return 成功したら０。
  */
-	int SetBtMotion(bool limitdegflag, ChaMatrix curtraanim);
+	int SetBtMotion(bool limitdegflag, ChaMatrix curscalemat, ChaMatrix curtraanim);
 
 	int SetCapsuleBtMotion(CRigidElem* srcre);
 

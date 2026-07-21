@@ -18931,6 +18931,8 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 
 					//決め打ち
 					s_btWorld->setGravity(btVector3(0.0f, -9.8f, 0.0f)); // 重力加速度の設定　//SetBtKinFlagReqにて剛体ごとにも設定
+					//float gscale = pmodel->GetBtGScale(s_reindexmap[pmodel]);
+					//s_btWorld->setGravity(btVector3(0.0f, -9.8f * gscale, 0.0f));
 
 					//s_btWorld->setGravity(btVector3(0.0, 0.0, 0.0)); // 重力加速度の設定
 					s_bpWorld->setGlobalERP(btScalar(g_erp));// ERP
@@ -18955,8 +18957,9 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 					//		updatemodel->UpdateMatrix(&tmpwm, &s_matVP);
 					//	}
 					//}
-					ChaMatrix tmpwm = pmodel->GetWorldMat();
-					pmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+					//ChaMatrix tmpwm = pmodel->GetWorldMat();
+					ChaMatrix modelwm = pmodel->GetWorldMat();
+					pmodel->UpdateMatrix(g_limitdegflag, &modelwm, &s_matView, &s_matProj, true, 0);
 
 					//curmodel->SetCurrentRigidElem(s_curreindex);//s_curreindexをmodelごとに持つ必要あり！！！reの内容を変えてから呼ぶ
 					//s_curreindex = 1;
@@ -19010,8 +19013,9 @@ int StartBt(CModel* curmodel, BOOL isfirstmodel, int flag, int btcntzero)
 					//		updatemodel->UpdateMatrix(&tmpwm, &s_matVP);
 					//	}
 					//}
-					ChaMatrix tmpwm = pmodel->GetWorldMat();
-					pmodel->UpdateMatrix(g_limitdegflag, &tmpwm, &s_matView, &s_matProj, true, 0);
+					//ChaMatrix tmpwm = pmodel->GetWorldMat();
+					ChaMatrix modelwm = pmodel->GetWorldMat();
+					pmodel->UpdateMatrix(g_limitdegflag, &modelwm, &s_matView, &s_matProj, true, 0);
 
 
 					//curmodel->SetAllKData(-1, s_rgdindex, 3, 3, 1000.0, 0.1);

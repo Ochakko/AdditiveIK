@@ -4290,10 +4290,12 @@ int ChaCalcFunc::ConvBoneRotation(CModel* srcmodel, CModel* srcbvhmodel, int sel
 				invmodelcurrentmat = ChaMatrixInv(offsetformodelmat * modelmp.GetWorldMat());
 				invmodelQ.RotationMatrix(invmodelcurrentmat);
 
+				bool multModelWM = false;
+
 				//model zeroframe anim
 				ChaMatrix zeroframemodelmat;
 				CQuaternion zeroframemodelQ;
-				zeroframemodelmat = offsetformodelmat * srcbone->GetCurrentZeroFrameMat(limitdegflag, 1);
+				zeroframemodelmat = offsetformodelmat * srcbone->GetCurrentZeroFrameMat(limitdegflag, 1, multModelWM);
 				zeroframemodelQ.RotationMatrix(zeroframemodelmat);
 
 
@@ -4316,7 +4318,7 @@ int ChaCalcFunc::ConvBoneRotation(CModel* srcmodel, CModel* srcbvhmodel, int sel
 				////bvh zeroframe anim
 				ChaMatrix zeroframebvhmat;
 				CQuaternion invzeroframebvhQ;
-				zeroframebvhmat = offsetforbvhmat * bvhbone->GetCurrentZeroFrameMat(limitdegflag, 1);
+				zeroframebvhmat = offsetforbvhmat * bvhbone->GetCurrentZeroFrameMat(limitdegflag, 1, multModelWM);
 				invzeroframebvhQ.RotationMatrix(ChaMatrixInv(zeroframebvhmat));
 
 
@@ -4781,7 +4783,7 @@ ChaMatrix ChaCalcFunc::CalcNewLocalRotMatFromQofIK(CBone* srcbone, bool limitdeg
 	return newlocalrotmat;
 }
 
-ChaMatrix ChaCalcFunc::GetCurrentZeroFrameMat(CBone* srcbone, bool limitdegflag, int updateflag)
+ChaMatrix ChaCalcFunc::GetCurrentZeroFrameMat(CBone* srcbone, bool limitdegflag, int updateflag, bool multModelWM)
 {
 	if (!srcbone) {
 		_ASSERT(0);
@@ -4803,8 +4805,15 @@ ChaMatrix ChaCalcFunc::GetCurrentZeroFrameMat(CBone* srcbone, bool limitdegflag,
 
 	//取得時に計算
 	
+	ChaMatrix firstgetmatrix;
 	//m_firstgetflag = 1;
-	ChaMatrix firstgetmatrix = srcbone->GetWorldMat(limitdegflag, srcbone->GetCurMotID(), 0.0, 0);
+	if (multModelWM && srcbone->GetParModel()) {
+		//2026/07/20
+		firstgetmatrix = srcbone->GetWorldMat(limitdegflag, srcbone->GetCurMotID(), 0.0, 0) * srcbone->GetParModel()->GetWorldMat();
+	}
+	else {
+		firstgetmatrix = srcbone->GetWorldMat(limitdegflag, srcbone->GetCurMotID(), 0.0, 0);
+	}
 	srcbone->SetFirstGetMatrix(firstgetmatrix);
 	srcbone->SetInvFirstGetMatrix(ChaMatrixInv(firstgetmatrix));
 	
@@ -7538,10 +7547,11 @@ ChaMatrix ChaCalcFunc::ccfChaMatrixFromBtTransform(btMatrix3x3* srcmat3x3, btVec
 	ChaMatrixIdentity(&retmat);
 
 	btVector3 tmpcol[3];
+	btVector3 tmprow[3];
 	int colno;
 	for (colno = 0; colno < 3; colno++) {
 		tmpcol[colno] = srcmat3x3->getColumn(colno);
-		//tmprow[rowno] = srcmat3x3->getRow(rowno);
+		tmprow[colno] = srcmat3x3->getRow(colno);
 	}
 	//##############################
 	//ChaMatrixのrowはbtMatrixのcol
@@ -7555,6 +7565,15 @@ ChaMatrix ChaCalcFunc::ccfChaMatrixFromBtTransform(btMatrix3x3* srcmat3x3, btVec
 	retmat.data[MATI_31] = tmpcol[2].x();
 	retmat.data[MATI_32] = tmpcol[2].y();
 	retmat.data[MATI_33] = tmpcol[2].z();
+	//retmat.data[MATI_11] = tmprow[0].x();
+	//retmat.data[MATI_12] = tmprow[0].y();
+	//retmat.data[MATI_13] = tmprow[0].z();
+	//retmat.data[MATI_21] = tmprow[1].x();
+	//retmat.data[MATI_22] = tmprow[1].y();
+	//retmat.data[MATI_23] = tmprow[1].z();
+	//retmat.data[MATI_31] = tmprow[2].x();
+	//retmat.data[MATI_32] = tmprow[2].y();
+	//retmat.data[MATI_33] = tmprow[2].z();
 
 
 	retmat.data[MATI_41] = srcpivot->x();
