@@ -2720,7 +2720,7 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 		mProj = renderobj.mProj;
 		//定数バッファの設定、更新など描画の共通処理を実行する。
 
-		curmat->InstancingDrawCommon(rc, renderobj, mView, mProj, GetScaleInstancing());
+		curmat->InstancingDrawCommon(rc, renderobj, mView, mProj);
 		curmat->InstancingBeginRender(rc, renderobj);
 
 		//rc.SetDescriptorHeap(m_descriptorHeap);

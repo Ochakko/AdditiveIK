@@ -479,8 +479,7 @@ public:
 	////	int refposindex);
 	//void ZPreBeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj, int refposindex);
 	void InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
-		const Matrix& mView, const Matrix& mProj,
-		bool isfirstmaterial = false);
+		const Matrix& mView, const Matrix& mProj);
 	void InstancingBeginRender(RenderContext* rc, myRenderer::RENDEROBJ renderobj);
 
 

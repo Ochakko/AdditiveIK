@@ -4393,8 +4393,7 @@ void CMQOMaterial::DrawCommon(
 
 
 void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ renderobj,
-	const Matrix& mView, const Matrix& mProj,
-	bool isfirstmaterial)
+	const Matrix& mView, const Matrix& mProj)
 {
 	if (!rc || !renderobj.mqoobj || !renderobj.pmodel) {
 		_ASSERT(0);
