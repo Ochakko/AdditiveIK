@@ -3619,6 +3619,12 @@ public: //accesser
 	{
 		return m_gltfloader;
 	};
+	void SetMoaFirstChangeFlag(bool srcval) {
+		m_moa_firstChangeFlag = srcval;
+	};
+	bool GetMoaFirstChangeFlag() {
+		return m_moa_firstChangeFlag;
+	};
 	void SetUnderBlending(bool srcval) {
 		m_moa_underblending = srcval;
 	};
@@ -3631,9 +3637,8 @@ public: //accesser
 	bool GetChangeUnderBlending() {
 		return m_moa_changeunderblending;
 	};
-	void SetMoaNextMotId(int srcval) {
-		m_moa_nextmotid = srcval;
-	};
+	
+	void SetMoaNextMotId(int srcval);
 	int GetMoaNextMotId() {
 		return m_moa_nextmotid;
 	};
@@ -4179,6 +4184,7 @@ private:
 	CMCHandler* m_mch;
 	CEventKey* m_eventkey;
 	CEventPad* m_eventpad;
+	bool m_moa_firstChangeFlag;
 	bool m_moa_underblending;
 	bool m_moa_changeunderblending;
 	int m_moa_nextmotid;

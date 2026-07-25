@@ -742,6 +742,7 @@ int CModel::InitParams(int srcrefposnum)
 	m_mch = nullptr;
 	m_eventkey = nullptr;
 	m_eventpad = nullptr;
+	m_moa_firstChangeFlag = false;
 	m_moa_underblending = false;
 	m_moa_changeunderblending = false;
 	m_moa_nextmotid = -1;
@@ -2735,7 +2736,7 @@ int CModel::UpdateMatrix(bool limitdegflag,
 	//}
 
 	int curmotid = GetCurrentMotID();
-	double curframe = GetCurrentFrame();
+	double curframe = fmax(1.0, GetCurrentFrame());
 
 
 	//if (g_previewFlag != 0) {
@@ -3127,7 +3128,7 @@ int CModel::HierarchyRouteUpdateMatrix(bool limitdegflag, CBone* srcbone,
 	std::reverse(vecroute.begin(), vecroute.end());
 
 	int curmotid = GetCurrentMotID();
-	double curframe = GetCurrentFrame();
+	double curframe = fmax(1.0, GetCurrentFrame());
 
 	std::vector<CBone*>::iterator itrbone;
 	for (itrbone = vecroute.begin(); itrbone != vecroute.end(); itrbone++) {
@@ -4127,7 +4128,7 @@ int CModel::SetMotionFrame(double srcframe)
 	//m_curmotinfo->befframe = m_curmotinfo->curframe;
 	SetRenderSlotFrame(m_curmotinfo->curframe);
 	double minframe;
-	if (g_previewFlag == 0) {
+	if ((g_previewFlag == 0) && (g_previewMOA == 0)) {
 		minframe = 0.0;
 	}
 	else {
@@ -4141,7 +4142,7 @@ int CModel::SetMotionFrame(int srcmotid, double srcframe)
 	MOTINFO* curmi = GetMotInfoPtr(srcmotid);
 	if (curmi) {
 		double minframe;
-		if (g_previewFlag == 0) {
+		if ((g_previewFlag == 0) && (g_previewMOA == 0)) {
 			minframe = 0.0;
 		}
 		else {
@@ -5185,7 +5186,7 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 
 	if( previewflag >= 0 ){
 		if (onefps == 0) {
-			nextframe = curframe + difftime / oneframe * curspeed;
+			nextframe = fmax(1.0, curframe + difftime / oneframe * curspeed);//2026/07/25 max(1.0,...
 		}
 		else {
 			nextframe = curframe + 1.0;
@@ -5201,7 +5202,7 @@ int CModel::AdvanceTime( int onefps, CEditRange srcrange, int previewflag, doubl
 		}
 	}else{
 		if (onefps == 0) {
-			nextframe = curframe - difftime / oneframe * curspeed;
+			nextframe = fmax(1.0, curframe - difftime / oneframe * curspeed);//2026/07/25 max(1.0,...
 		}
 		else {
 			nextframe = curframe + 1.0;
@@ -11157,8 +11158,8 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto,
 					parentwm = curbone->GetParent(false)->GetCurrentWorldMat(true, true);
 				}
 				else {
-					//parentwm.SetIdentity();
-					parentwm = GetWorldMat();//2026/07/21
+					parentwm.SetIdentity();
+					//parentwm = GetWorldMat();//2026/07/21
 				}
 				ChaMatrix curlocalmat;
 				curlocalmat = curwm * ChaMatrixInv(parentwm);
@@ -25636,6 +25637,9 @@ double CModel::GetFbxTimeScale() {
 };
 
 
+void CModel::SetMoaNextMotId(int srcval) {
+	m_moa_nextmotid = srcval;
+}
 
 int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotchangedlg,
 	int (*pChangeMotionWithGUI)(CModel* srcmodel, int srcmotid), 
@@ -25869,7 +25873,7 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 	//現在のモーションの状態を取得
 	//########################
 	int curmotid = -1;
-	double curframe = 0;
+	double curframe = 1.0;
 	double curframeleng = 0;
 	ret = GetMotionFrame(&curmotid, &curframe);
 	if (ret || (curmotid < 0)) {

@@ -99,16 +99,16 @@ int CThreadingMotion2Bt::ThreadFunc()
 
 					//if (m_model && (m_model->GetInView() == true)) {
 					if (m_model) {
-						//EnterCriticalSection(&m_CritSection);//再入防止 呼び出し側で処理終了を待つので不要
-						if ((m_model->GetBtCnt() != 0) && (loopstartflag == 1)) {
-							m_model->ZeroBtCnt();
+						EnterCriticalSection(&m_CritSection);//再入防止 呼び出し側で処理終了を待つので不要
+						//if ((m_model->GetBtCnt() != 0) && (loopstartflag == 1)) {
+						if (loopstartflag == 1) {
+							//m_model->ZeroBtCnt();
+							nextframe = 1.0;
 						}
-						else {
-							if (m_model->ExistCurrentMotion()) {
-								m_model->Motion2Bt(limitdegflag, nextframe, &matView, &matProj);//, updateslot);
-							}
-							m_model->PlusPlusBtCnt();
+						if (m_model->ExistCurrentMotion()) {
+							m_model->Motion2Bt(limitdegflag, nextframe, &matView, &matProj);//, updateslot);
 						}
+						m_model->PlusPlusBtCnt();
 					}
 					
 					InterlockedExchange(&m_start_state, 0L);
@@ -153,15 +153,15 @@ int CThreadingMotion2Bt::ThreadFunc()
 					//if (m_model && (m_model->GetInView() == true)) {
 					if (m_model) {
 						EnterCriticalSection(&m_CritSection);
-						if ((m_model->GetBtCnt() != 0) && (loopstartflag == 1)) {
-							m_model->ZeroBtCnt();
+						//if ((m_model->GetBtCnt() != 0) && (loopstartflag == 1)) {
+						if (loopstartflag == 1) {
+							//m_model->ZeroBtCnt();
+							nextframe = 1.0;
 						}
-						else {
-							if (m_model->ExistCurrentMotion()) {
-								m_model->Motion2Bt(limitdegflag, nextframe, &matView, &matProj);//, updateslot);
-							}
-							m_model->PlusPlusBtCnt();
+						if (m_model->ExistCurrentMotion()) {
+							m_model->Motion2Bt(limitdegflag, nextframe, &matView, &matProj);//, updateslot);
 						}
+						m_model->PlusPlusBtCnt();
 
 						InterlockedExchange(&m_start_state, 0L);
 						LeaveCriticalSection(&m_CritSection);

@@ -948,13 +948,12 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 		//	}
 		//}
 
-
 		if (GetParModel() && (GetParModel()->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
 			bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
 			SetBtMat(GetWorldMat(limitdegflag, srcmotid, roundingframe, &m_targetmp), settobothflag);
 			SetBtFlag(1);
 		}
-
+		
 		//2024/09/06
 		//if (GetFootRigUpdated() || 
 		//	(GetParent(false) && GetParent(false)->GetFootRigUpdated()) || 
@@ -963,14 +962,13 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 			//2024/09/06
 			//物理乱れ防止
 			//FootRigジョイントの場合とkinematicジョイントの場合にはCBtObject::SetBtMotion()が処理をしないので　ここでSetBtMatする
-
+		
 			bool settobothflag = false;
 			ChaMatrix matforbt = GetWorldMat(limitdegflag, srcmotid, roundingframe, &m_targetmp);
 			SetBtMat(matforbt, settobothflag);
 			SetBtEul(m_targetmp.GetLocalEul());
 			//SetBtFlag(1);
 		}
-
 	}
 	else{
 		////RagdollIK時のボーン選択対策
@@ -7285,7 +7283,6 @@ int CBone::CalcNewBtMat(CModel* srcmodel, CBone* childbone, ChaMatrix* dstmat, C
 		else{
 			tramat = befbtmat;
 			rotmat = ChaMatrixRot(tramat);
-
 			jointfpos = GetJointFPos();
 			ChaVector3TransformCoord(&m_btparentpos, &jointfpos, &tramat);
 			jointfpos = childbone->GetJointFPos();
@@ -7301,7 +7298,6 @@ int CBone::CalcNewBtMat(CModel* srcmodel, CBone* childbone, ChaMatrix* dstmat, C
 			//	}
 			//	findbone = findbone->GetParent(false);
 			//}
-
 			////2023/01/28
 			////純粋な物理計算においては　Kinematic部分だけ手動で移動すれば良いのだが
 			////計算が乱れやすく　大げさになり易いので
@@ -7322,16 +7318,16 @@ int CBone::CalcNewBtMat(CModel* srcmodel, CBone* childbone, ChaMatrix* dstmat, C
 			//	ChaMatrix movemat;
 			//	movemat.SetIdentity();
 			//	movemat.SetTranslation(movevec);
-
+			//
 			//	tramat = befbtmat * movemat;
 			//	//tramat = befbtmat * (curparentwm * ChaMatrixInv(befparentwm));//2026/07/21
 			//}
 			//else {
 			//	tramat = befbtmat;
 			//}
-
+			//
 			//rotmat = ChaMatrixRot(tramat);				
-
+			//
 			//jointfpos = GetJointFPos();
 			//ChaVector3TransformCoord(&m_btparentpos, &jointfpos, &tramat);
 			//jointfpos = childbone->GetJointFPos();

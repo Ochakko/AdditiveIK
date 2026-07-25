@@ -3551,7 +3551,7 @@ INT WINAPI wWinMain(
 //時間を進める
 //###########
 				double difftime = s_fTime - s_time;
-				double nextframe = 0.0;
+				double nextframe = 1.0;
 				int endflag = 0;
 				int loopstartflag = 0;
 				OnFrameProcessTime(difftime, &nextframe, &endflag, &loopstartflag);
@@ -6219,9 +6219,9 @@ void OnUserFrameMove(double fTime, float fElapsedTime, double difftime, int endf
 
 		SetCamera3DFromEyePos();
 
-		s_matWorld.SetTranslationZero();
-		////s_matW = s_matWorld;
-		s_matVP = s_matView * s_matProj;
+		//s_matWorld.SetTranslationZero();
+		//////s_matW = s_matWorld;
+		//s_matVP = s_matView * s_matProj;
 
 //##########
 //Preview
@@ -11534,8 +11534,9 @@ int AddTimeLine(int newmotid, bool dorefreshtl)
 					//s_LtimelineWnd->addParts(*s_owpLTimeline);//playerbuttonより後
 					s_LTSeparator->addParts1(*s_owpLTimeline);
 					s_owpLTimeline->setCursorListener([]() {
-						if (GetCurrentModel() && 
-							((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false)))) {
+						//if (GetCurrentModel() && 
+						//	((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false)))) {
+						if (GetCurrentModel()) {//2026/07/25
 							s_LcursorFlag = true;
 						}
 						});
@@ -13315,6 +13316,29 @@ int OnChangeModel(CModel* selmodel, bool forceflag, bool callundo)
 
 int OnChangePreviewMOA()
 {
+	//2026/07/25
+	if (g_previewMOA == 1) {
+		int modelnum = g_chascene->GetModelNum();
+		int modelcount;
+		for (modelcount = 0; modelcount < modelnum; modelcount++) {
+			CModel* curmodel = g_chascene->GetModel(modelcount);
+			if (curmodel != nullptr) {
+				curmodel->SetMoaFirstChangeFlag(true);
+				curmodel->ZeroBtCnt();
+
+				CMCHandler* mch = curmodel->GetMotChangeHandler();
+				if (mch) {
+					int idlingmotid = mch->GetIdlingMotID(nullptr, 0);
+					if (idlingmotid > 0) {
+						curmodel->SetCurrentMotion(idlingmotid);
+						curmodel->SetMotionFrame(1.0);
+					}
+				}
+			}
+		}
+	}
+
+
 	refreshEulerGraph();
 	PrepairUndo();
 	return 0;
@@ -26269,7 +26293,8 @@ int OnFrameProcessTime(double difftime, double* pnextframe, int* pendflag, int* 
 				rangestart = s_previewrange.GetStartFrame();
 			}
 			GetCurrentModel()->SetMotionFrame(rangestart);
-			*pnextframe = 0.0;
+			//*pnextframe = 0.0;
+			*pnextframe = rangestart;//2026/07/25
 		}
 		GetCurrentModel()->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, -1);
 		if ((*pendflag == 1) && (g_previewMOA == 0)) {
@@ -26531,7 +26556,7 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 
 	//安定のために　シミュ開始時の姿勢で　キネマティックしている回数
 	int INITTERM;
-	INITTERM = max(10, (int)(g_avrgfps * 0.1));
+	INITTERM = max(20, (int)(g_avrgfps * 0.15));
 
 	bool recstopflag = false;
 	BOOL firstmodelflag = TRUE;
@@ -26543,12 +26568,32 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 		if (curmodel && (curmodel->GetNoBoneFlag() == false)) {//2023/11/03 NoBoneのときはスキップ
 
 			if (curmodel->GetBtCnt() <= INITTERM) {
-				curmodel->SetKinematicFlag();
+				
+				//####################################################################
+				//剛体暴れ防止処理が必要な理由として
+				//剛体は０フレーム姿勢で作成するが　再生スタートのフレームは０フレームではないため
+				//馴染ませる必要がある
+				//物理開始時のみの処理
+				//####################################################################
+
+				if (curmodel->GetMoaFirstChangeFlag()) {
+					//MOA2.0開始時にも　剛体暴れ防止
+					//curmodel->SetBtEquilibriumPoint(g_limitdegflag);
+					curmodel->SetKinematicFlag();
+				}
+				else {
+					//開始時に　剛体あばれ防止
+					curmodel->SetKinematicFlag();
+				}
 				//!!curmodel->SetBtEquilibriumPoint();
 			}
 			else {
 				curmodel->SetBtKinFlagReq(curmodel->GetTopBt(), 0);
 				//curmodel->SetBtEquilibriumPoint();
+				if (curmodel->GetMoaFirstChangeFlag()) {
+					//MOA初回処理フラグをリセット
+					curmodel->SetMoaFirstChangeFlag(false);
+				}
 			}
 
 			if ((curmodel == GetCurrentModel()) && (GetCurrentModel()->GetBtCnt() == 0)) {
@@ -48836,7 +48881,17 @@ int ChangeMotionWithGUI(CModel* srcmodel, int srcmotid)
 		int selindex = g_chascene->MotID2SelIndex(g_chascene->FindModelIndex(GetCurrentModel()), srcmotid);
 		if (selindex >= 0) {
 			bool dorefreshtl;
-			if ((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false))) {
+
+			//if ((g_previewMOA == 0) || ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == false))) {
+			
+			//#################################################################### 
+			//2026/07/25
+			//MOAのときには　dorefreshtl = falseとする
+			//dorefreshtl == trueの場合　OnAnimMenu()内でCreateBtObject()が呼ばれる
+			//MOA+物理シミュのモーションループ時に　CreateBtObject()を呼ぶと剛体が暴れる
+			//#################################################################### 
+			if (g_previewMOA == 0)
+			{
 				dorefreshtl = true;
 			}
 			else {

@@ -1,6 +1,11 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/07/25
+　MOA+物理シミュの修正
+　　MOA再生中に物理が乱れる不具合を修
+　　MOAを再生開始した時と　モーションがループするときに問題があった
+　　
 2026/07/21
 　物理シミュ修正
 　　ModelWorldMat(モデルの全体位置)を大きく移動しても物理シミュが乱れないように.
