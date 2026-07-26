@@ -2,7 +2,7 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2026/07/26
-　AdditiveIK 1.0.0.77 RC1(リリース候補1)
+　AdditiveIK 1.0.0.77 release
 　　1.0.0.76からの変更点
 　　　設定ファイルの保存場所を変更
 　　　　プロジェクト保存時にプロジェクトフォルダの中のAdditiveIK_ENVフォルダの中に保存
@@ -29,6 +29,12 @@ https://github.com/Ochakko/AdditiveIK
 　　　　(MOA無しの物理シミュだけで物理が暴れていた場合には、今回の修正では直りません)
 　　　RefPosの残像画像をエディット
 　　　　
+　release:
+　　MOAを使用していない場合のモーションループは、モーション開始時に暴れ防止処理を行うように.
+　　　MOAのループモーションはモーションの最初と終わりを同じ姿勢にしておくことを想定しているが
+　　　MOAを使用していない場合は、モーションの途中の範囲を繰り返し再生して編集することを想定.
+　　　
+　　　
 2026/07/25
 　MOA+物理シミュの修正
 　　MOA再生中に物理が乱れる不具合を修

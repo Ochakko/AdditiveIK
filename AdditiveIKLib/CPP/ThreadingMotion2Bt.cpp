@@ -102,8 +102,13 @@ int CThreadingMotion2Bt::ThreadFunc()
 						EnterCriticalSection(&m_CritSection);//再入防止 呼び出し側で処理終了を待つので不要
 						//if ((m_model->GetBtCnt() != 0) && (loopstartflag == 1)) {
 						if (loopstartflag == 1) {
-							//m_model->ZeroBtCnt();
-							nextframe = 1.0;
+							if (g_previewMOA == 0) {
+								m_model->ZeroBtCnt();
+							}
+							else {
+								//MOAの場合　髪の毛の揺れをリセットしないために　ZeroBtCnt()を呼ばない
+								nextframe = 1.0;
+							}
 						}
 						if (m_model->ExistCurrentMotion()) {
 							m_model->Motion2Bt(limitdegflag, nextframe, &matView, &matProj);//, updateslot);
@@ -155,8 +160,13 @@ int CThreadingMotion2Bt::ThreadFunc()
 						EnterCriticalSection(&m_CritSection);
 						//if ((m_model->GetBtCnt() != 0) && (loopstartflag == 1)) {
 						if (loopstartflag == 1) {
-							//m_model->ZeroBtCnt();
-							nextframe = 1.0;
+							if (g_previewMOA == 0) {
+								m_model->ZeroBtCnt();
+							}
+							else {
+								//MOAの場合　髪の毛の揺れをリセットしないために　ZeroBtCnt()を呼ばない
+								nextframe = 1.0;
+							}
 						}
 						if (m_model->ExistCurrentMotion()) {
 							m_model->Motion2Bt(limitdegflag, nextframe, &matView, &matProj);//, updateslot);
