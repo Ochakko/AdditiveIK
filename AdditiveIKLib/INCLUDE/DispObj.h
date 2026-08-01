@@ -199,7 +199,7 @@ private:
 	 * @breaf ３D表示用の頂点バッファとインデックスバッファを作成する。
 	 * @return 成功したら０。
 	 */
-	int CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape = false);
+	int CreateVBandIB(bool grassflag, ID3D12Device* pdev, bool hasBlendShape = false);
 
 	/**
 	 * @fn

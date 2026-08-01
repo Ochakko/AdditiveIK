@@ -573,6 +573,11 @@ int CModel::InitParams(int srcrefposnum)
 	m_instancingdrawnum = 0;
 	ZeroMemory(m_instancingparams, sizeof(INSTANCINGPARAMS) * RIGMULTINDEXMAX);
 
+	m_instancingnum_grass = 0;
+	m_instancingdrawnum_grass = 0;
+	ZeroMemory(m_instancingparams_grass, sizeof(INSTANCINGPARAMS) * GRASSINDEXMAX);
+
+
 	m_materialbank.InitParams();
 	m_vroidjointname = false;
 

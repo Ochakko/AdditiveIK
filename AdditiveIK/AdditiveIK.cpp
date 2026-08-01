@@ -36634,7 +36634,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.77 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.78 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -40198,7 +40198,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.77 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.78 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {
@@ -43666,8 +43666,8 @@ int SetModelWorldMat()
 
 	if (curgrasselem && (s_removegrassflag == false)) {
 		int grassnum = curgrasselem->GetGrassNum();
-		if (grassnum >= GRASSINDEXMAX) {//2024/05/11現在GRASSINDEXMAXはRIGINDEXMAXと同じで256
-			::MessageBox(s_modelworldmatdlgwnd, L"草のインスタンス数は２５６個までです。", L"これ以上追加できません。", MB_OK);
+		if (grassnum >= GRASSINDEXMAX) {//2026/08/01現在GRASSINDEXMAXは1000
+			::MessageBox(s_modelworldmatdlgwnd, L"草のインスタンス数は1000個までです。", L"これ以上追加できません。", MB_OK);
 			return 1;
 		}
 	}
@@ -43678,7 +43678,7 @@ int SetModelWorldMat()
 	tmprot.SetParams(0.0f, 0.0f, 0.0f);
 	int result = GetModelWorldMat(&tmppos, &tmprot);//向きはダイアログにセットされている向きを使用
 	if (result == 0) {
-		if (!curgrasselem) {
+		if (curgrasselem == nullptr) {
 			if (GetCurrentModel()->GetPostureChildOfCameraFlag()) {
 				//カレントモデルがカメラの子供の場合
 				GetCurrentModel()->ResetModelWorldMat(nullptr);

@@ -29,7 +29,7 @@ CGrassElem::CGrassElem(CModel* srcmodel)
 	InitParams();
 	m_grass = srcmodel;
 	m_grass->SetGrassFlag(true);
-	m_grass->SetInstancingNum(GRASSINDEXMAX);
+	m_grass->SetInstancingNum_Grass(GRASSINDEXMAX);
 	_ASSERT(m_grass);
 }
 
@@ -53,7 +53,7 @@ void CGrassElem::DestroyObjs()
 int CGrassElem::ResetInstancingParams()
 {
 	if (GetGrass()) {
-		GetGrass()->ResetInstancingParams();
+		GetGrass()->ResetInstancingParams_Grass();
 	}
 	else {
 		_ASSERT(0);
@@ -73,7 +73,7 @@ int CGrassElem::SetInstancingParams(ChaMatrix matVP)
 		if (grassindex < GRASSINDEXMAX) {
 			ChaVector4 grassmaterial;
 			grassmaterial.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
-			GetGrass()->SetInstancingParams(grassindex, GetGrassMat(grassindex), matVP, grassmaterial);
+			GetGrass()->SetInstancingParams_Grass(grassindex, GetGrassMat(grassindex), matVP, grassmaterial);
 		}
 	}
 

@@ -188,7 +188,7 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh3* pm3, int hasbone, in
 	m_pdev = pdev;
 	m_pm3 = pm3;
 
-	CallF(CreateVBandIB(pdev), return 1);
+	CallF(CreateVBandIB(grassflag, pdev), return 1);
 
 
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
@@ -405,8 +405,9 @@ int CDispObj::CreateDispObj(ID3D12Device* pdev, CPolyMesh4* pm4, int hasbone, in
 
 	m_pdev = pdev;
 	m_pm4 = pm4;
+	bool grassflag = false;
 
-	CallF( CreateVBandIB(pdev, hasBlendShape), return 1 );
+	CallF( CreateVBandIB(grassflag, pdev, hasBlendShape), return 1 );
 
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
 		DXGI_FORMAT_R32G32B32A32_FLOAT,//for SV_Target0
@@ -544,9 +545,10 @@ int CDispObj::CreateDispObj( ID3D12Device* pdev, CExtLine* extline )
 
 	m_pdev = pdev;
 	m_extline = extline;
+	bool grassflag = false;
 
 	//CallF( CreateVBandIBLine(pdev), return 1 );
-	CallF(CreateVBandIB(pdev), return 1);
+	CallF(CreateVBandIB(grassflag, pdev), return 1);
 
 
 	std::array<DXGI_FORMAT, MAX_RENDERING_TARGET> colorBufferFormat = {
@@ -767,7 +769,7 @@ int CDispObj::RemakeConstantBuffers(ID3D12Device* pdev, int pointspritetexkind)
 //
 //}
 
-int CDispObj::CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape)
+int CDispObj::CreateVBandIB(bool grassflag, ID3D12Device* pdev, bool hasBlendShape)
 {
 	//HRESULT hr;
 
@@ -850,7 +852,12 @@ int CDispObj::CreateVBandIB(ID3D12Device* pdev, bool hasBlendShape)
 		m_vertexBufferView.StrideInBytes = stride;
 
 		//インスタンシングバッファ
-		m_InstancingBuffer.Init((sizeof(INSTANCINGPARAMS) * RIGMULTINDEXMAX), sizeof(INSTANCINGPARAMS));
+		if (grassflag) {
+			m_InstancingBuffer.Init((sizeof(INSTANCINGPARAMS) * GRASSINDEXMAX), sizeof(INSTANCINGPARAMS));
+		}
+		else {
+			m_InstancingBuffer.Init((sizeof(INSTANCINGPARAMS) * RIGMULTINDEXMAX), sizeof(INSTANCINGPARAMS));
+		}
 
 
 
@@ -2594,9 +2601,18 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 		return 0;
 	}
 
-	int instancingdrawnum = renderobj.pmodel->GetInstancingDrawNum();
-	if ((instancingdrawnum <= 0) || (instancingdrawnum > GRASSINDEXMAX)) {
-		return 0;
+	int instancingdrawnum;
+	if (renderobj.pmodel->GetGrassFlag()) {
+		instancingdrawnum = renderobj.pmodel->GetInstancingDrawNum_Grass();
+		if ((instancingdrawnum <= 0) || (instancingdrawnum > GRASSINDEXMAX)) {
+			return 0;
+		}
+	}
+	else {
+		instancingdrawnum = renderobj.pmodel->GetInstancingDrawNum();
+		if ((instancingdrawnum <= 0) || (instancingdrawnum > RIGMULTINDEXMAX)) {
+			return 0;
+		}
 	}
 
 
@@ -2628,23 +2644,38 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 	//スケール情報にメッシュのスケールを格納する。
 	//#####################################################
 
-	INSTANCINGPARAMS* pinstancingparams = renderobj.pmodel->GetInstancingParams();
-	SCALEINSTANCING* pscale = GetScaleInstancing();
-	if (pinstancingparams && pscale) {
-		int instanceno;
-		for (instanceno = 0; instanceno < GRASSINDEXMAX; instanceno++) {
-			INSTANCINGPARAMS* curparams = pinstancingparams + instanceno;
-			SCALEINSTANCING* curscale = GetScaleInstancing() + instanceno;
-			curparams->scale = curscale->scale;
-			curparams->scaleoffset = curscale->offset;
+	if (renderobj.pmodel->GetGrassFlag()) {
+		//草
+		INSTANCINGPARAMS* pinstancingparams = renderobj.pmodel->GetInstancingParams_Grass();
+		if (pinstancingparams) {
+			m_InstancingBuffer.Copy(pinstancingparams);
 		}
-		m_InstancingBuffer.Copy(pinstancingparams);
-		rc->SetVertexBuffer(1, m_InstancingBuffer);//!!!!!!! InstancingBuffer !!!!!!
+		else {
+			_ASSERT(0);
+			abort();
+		}
 	}
 	else {
-		_ASSERT(0);
-		abort();
+		//Rig
+		INSTANCINGPARAMS* pinstancingparams = renderobj.pmodel->GetInstancingParams();
+		SCALEINSTANCING* pscale = GetScaleInstancing();
+		if (pinstancingparams && pscale) {
+			int instanceno;
+			for (instanceno = 0; instanceno < RIGMULTINDEXMAX; instanceno++) {
+				INSTANCINGPARAMS* curparams = pinstancingparams + instanceno;
+				SCALEINSTANCING* curscale = GetScaleInstancing() + instanceno;
+				curparams->scale = curscale->scale;
+				curparams->scaleoffset = curscale->offset;
+			}
+			m_InstancingBuffer.Copy(pinstancingparams);
+		}
+		else {
+			_ASSERT(0);
+			abort();
+		}
 	}
+	rc->SetVertexBuffer(1, m_InstancingBuffer);//!!!!!!! InstancingBuffer !!!!!!
+
 
 	//3. インデックスバッファを設定。
 	rc->SetIndexBuffer(m_indexBufferView);
@@ -2731,10 +2762,7 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 		//rc.SetIndexBuffer(m_indexBufferView);
 
 		//4. ドローコールを実行。
-		//rc->DrawIndexedInstanced(curtrinum * 3, renderobj.pmodel->GetInstancingDrawNum());
-		rc->DrawIndexedInstanced(curtrinum * 3, renderobj.pmodel->GetInstancingDrawNum());
-
-
+		rc->DrawIndexedInstanced(curtrinum * 3, instancingdrawnum);
 	}
 
 	return 0;
