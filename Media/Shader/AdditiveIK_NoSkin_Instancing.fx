@@ -206,7 +206,7 @@ SPSIn VSMainNoSkinInstancing(SVSInInstancing vsIn, uniform bool hasSkin)
     
     if (Flags2.x == 1)
     {
-        float bendval = ((vsIn.pos.y >= (bbsize.y * 0.5f))) ? (vsIn.pos.y / bbsize.y) : 0.0f;
+        float bendval = vsIn.pos.y / (bbsize.y + 0.0001f);
         //float xgrassshift = sin(time1) * bendval * bendval * bbsize.x * 0.5f;
         float maxshift = min(7.5f, bbsize.x);
         float xgrassshift = sin(time1) * bendval * bendval * maxshift;

@@ -58,6 +58,9 @@ class CInfoWindow;
 
 #ifdef ADDITIVEIKLIBGLOBALVAR
 
+float g_grassHeightScale = 1.0f;
+float g_grassBendScale = 1.0f;
+
 int g_RefPosRecordInterval = 5;
 bool g_ikstop_alloff = false;
 int g_edittarget = EDITTARGET_BONE;
@@ -367,6 +370,9 @@ double g_playingend = 1.0;
 
 
 #else
+extern float g_grassHeightScale;
+extern float g_grassBendScale;
+
 extern int g_RefPosRecordInterval;
 extern bool g_ikstop_alloff;
 extern int g_edittarget;

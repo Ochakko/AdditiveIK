@@ -115,6 +115,7 @@ private:
 	OrgWinGUI::OWP_Label* m_dispspacerLabel003;
 	OrgWinGUI::OWP_Label* m_dispspacerLabel004;
 	OrgWinGUI::OWP_Label* m_dispspacerLabel005;
+	OrgWinGUI::OWP_Label* m_dispspacerLabel006;
 
 	OrgWinGUI::OWP_Label* m_ikrateLabel;
 	OrgWinGUI::OWP_EditBox* m_ikrateEdit;
@@ -125,6 +126,15 @@ private:
 	OrgWinGUI::OWP_Label* m_posconsttimesLabel;
 	OrgWinGUI::OWP_EditBox* m_posconsttimesEdit;
 	OrgWinGUI::OWP_Separator* m_dispsp8;
+
+
+	OrgWinGUI::OWP_Separator* m_grassheightsp;
+	OrgWinGUI::OWP_Label* m_grassheightLabel;
+	OrgWinGUI::OWP_Slider* m_grassheightSlider;
+	OrgWinGUI::OWP_Separator* m_grassbendsp;
+	OrgWinGUI::OWP_Label* m_grassbendLabel;
+	OrgWinGUI::OWP_Slider* m_grassbendSlider;
+
 };
 
 #endif //__ColiIDDlg_H_

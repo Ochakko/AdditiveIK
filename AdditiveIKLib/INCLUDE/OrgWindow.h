@@ -45,6 +45,20 @@ struct KeyInfo{
 	};
 };
 
+struct RADIOBUTTONNAME {
+	std::basic_string<TCHAR> name;
+	bool greenflag;
+
+	void Init() {
+		name = _T(" ");
+		greenflag = false;
+	};
+	RADIOBUTTONNAME() {
+		Init();
+	};
+};
+
+
 extern int g_endappflag;
 extern bool g_4kresolution;//Main.cpp
 extern bool g_selecttolastFlag;//Main.cpp
@@ -5666,9 +5680,11 @@ void s_dummyfunc()
 	class OWP_RadioButton : public OrgWindowParts{
 	public:
 		//////////////////// Constructor/Destructor //////////////////////
-		OWP_RadioButton( const TCHAR *name, bool srclimitnamelen, int _labelheight) : OrgWindowParts() {
+		OWP_RadioButton(bool greenflag, const TCHAR *name, bool srclimitnamelen, int _labelheight) : OrgWindowParts() {
 
 			limitnamelen = srclimitnamelen;
+			RADIOBUTTONNAME newname;
+			newname.Init();
 
 			if (limitnamelen) {
 				//2023/02/17
@@ -5689,14 +5705,24 @@ void s_dummyfunc()
 				else {
 					_tcscpy_s(name30, 31, _T(" "));
 				}
-				nameList.push_back(name30);
+
+				newname.name = name30;
+				newname.greenflag = greenflag;
+
+				nameList.push_back(newname);
 			}
 			else {
 				if (name) {
-					nameList.push_back(name);
+					newname.name = name;
+					newname.greenflag = greenflag;
+
+					nameList.push_back(newname);
 				}
 				else {
-					nameList.push_back(_T(" "));
+					newname.name = _T(" ");
+					newname.greenflag = greenflag;
+
+					nameList.push_back(newname);
 				}
 			}
 
@@ -5736,6 +5762,14 @@ void s_dummyfunc()
 				int textposx = pos.x + BOX_POS_X + BOX_WIDTH + 3;
 				int textposy = pos.y + SIZE_Y * i + 2;
 
+				COLORREF textcol;
+				if (nameList[i].greenflag) {
+					textcol = RGB(0, 128, 64);
+				}
+				else {
+					textcol = RGB(240, 240, 240);
+				}
+
 				//ボタン部分
 				if (i == selectIndex) {
 					//白い丸セレクトマーク
@@ -5743,15 +5777,16 @@ void s_dummyfunc()
 					int pos1y= pos.y+SIZE_Y/2-BOX_WIDTH/2+ SIZE_Y*i+ 2;
 					int pos2x= pos.x+BOX_POS_X+BOX_WIDTH-1;
 					int pos2y= pos.y+SIZE_Y/2+BOX_WIDTH/2-1+ SIZE_Y*i+ 2;
-					hdcM->setPenAndBrush(NULL,RGB(240,240,240));
+
+					hdcM->setPenAndBrush(NULL, textcol);
 					Ellipse(hdcM->hDC, pos1x+2,pos1y+2, pos2x-2,pos2y-2);
 
-					DrawGdiText(hdcM->hDC, nameList[i].c_str(),
-						textposx, textposy, SIZE_Y, RGB(240, 240, 240), true);//underline付
+					DrawGdiText(hdcM->hDC, nameList[i].name.c_str(),
+						textposx, textposy, SIZE_Y, textcol, true);//underline付
 				}
 				else {
-					DrawGdiText(hdcM->hDC, nameList[i].c_str(),
-						textposx, textposy, SIZE_Y, RGB(240, 240, 240), false);
+					DrawGdiText(hdcM->hDC, nameList[i].name.c_str(),
+						textposx, textposy, SIZE_Y, textcol, false);
 				}
 
 
@@ -5787,7 +5822,10 @@ void s_dummyfunc()
 		}
 
 		/// Method : 項目の追加
-		void addLine( const TCHAR *name ){
+		void addLine(bool greenflag, const TCHAR *name){
+			RADIOBUTTONNAME newname;
+			newname.Init();
+
 			if (limitnamelen) {
 				//2023/02/17
 				//sepalatorと一緒に使う場合に　右側にはみ出さないように文字数制限30
@@ -5807,14 +5845,23 @@ void s_dummyfunc()
 				else {
 					_tcscpy_s(name30, 31, _T(" "));
 				}
-				nameList.push_back(name30);
+				newname.name = name30;
+				newname.greenflag = greenflag;
+
+				nameList.push_back(newname);
 			}
 			else {
 				if (name) {
-					nameList.push_back(name);
+					newname.name = name;
+					newname.greenflag = greenflag;
+
+					nameList.push_back(newname);
 				}
 				else {
-					nameList.push_back(_T(" "));
+					newname.name = _T(" ");
+					newname.greenflag = greenflag;
+
+					nameList.push_back(newname);
 				}
 			}
 
@@ -5876,8 +5923,8 @@ void s_dummyfunc()
 
 			//2つ以上の項目がある場合は最初に名前が一致した項目を削除
 			if ((int)nameList.size() != 1){
-				for( int i=0; i<(int)nameList.size(); i++ ){
-					if( nameList[i]==name ){
+				for(int i=0; i<(int)nameList.size(); i++){
+					if(nameList[i].name == name){
 						return deleteLine(i);
 					}
 				}
@@ -5915,7 +5962,7 @@ void s_dummyfunc()
 		int selectIndex;
 		std::function<void()> selectListener;
 
-		std::vector< std::basic_string<TCHAR> > nameList;
+		std::vector<RADIOBUTTONNAME> nameList;
 
 		int SIZE_Y= 15;
 		static const int BOX_POS_X= 3;

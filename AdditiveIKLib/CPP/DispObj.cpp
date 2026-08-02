@@ -2638,11 +2638,6 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 	rc->SetVertexBuffer(m_vertexBufferView);
 
 
-	//#####################################################
-	//インスタンシングはモデル単位。剛体のスケール情報はメッシュ単位。
-	//m_InstancingBufferはメッシュと同じ単位。
-	//スケール情報にメッシュのスケールを格納する。
-	//#####################################################
 
 	if (renderobj.pmodel->GetGrassFlag()) {
 		//草
@@ -2657,6 +2652,13 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 	}
 	else {
 		//Rig
+	
+		//#####################################################
+		//インスタンシングはモデル単位。剛体のスケール情報はメッシュ単位。
+		//m_InstancingBufferはメッシュと同じ単位。
+		//スケール情報にメッシュのスケールを格納する。
+		//#####################################################
+
 		INSTANCINGPARAMS* pinstancingparams = renderobj.pmodel->GetInstancingParams();
 		SCALEINSTANCING* pscale = GetScaleInstancing();
 		if (pinstancingparams && pscale) {

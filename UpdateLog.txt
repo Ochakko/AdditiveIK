@@ -1,6 +1,13 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/08/02
+　インスタンシング描画アップデート
+　　読み込みダイアログのLoad as Grassチェックボックスの位置を見やすい位置へ移動.
+　　モデルパネルの草モデルは緑色で表示.
+　　DispAndLimitsプレートメニューに　草の高さ(GrassHeight)スライダーと草の曲がり具合(GrassBend)スライダーを追加.
+　　草表示用シェーダーの草の曲がり具合の計算を修正.
+　　
 2026/08/01
 　インスタンシング描画修正
 　　草描画とリグ描画を分けました.

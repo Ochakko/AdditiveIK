@@ -1028,6 +1028,7 @@ int CSkyParamsDlg::CreateSkyParamsWnd()
 		bool limitradionamelen = true;
 		double separaterate = 0.26;
 		double separateratelit = 0.35;
+		bool radio_greenflag = false;
 
 		m_skyst_Sc = new OWP_ScrollWnd(L"SkyParamsScroll", false, labelheight);//wheelフラグOFF：ホイールでスライダーを動かしたいから
 		if (!m_skyst_Sc) {
@@ -1143,14 +1144,14 @@ int CSkyParamsDlg::CreateSkyParamsWnd()
 
 
 
-		m_skyst_shadertyperadio = new OWP_RadioButton(L"Auto", limitradionamelen, labelheight);
+		m_skyst_shadertyperadio = new OWP_RadioButton(radio_greenflag, L"Auto", limitradionamelen, labelheight);
 		if (!m_skyst_shadertyperadio) {
 			_ASSERT(0);
 			return 1;
 		}
-		m_skyst_shadertyperadio->addLine(L"PBR");
-		m_skyst_shadertyperadio->addLine(L"Std.");
-		m_skyst_shadertyperadio->addLine(L"HSV Toon");
+		m_skyst_shadertyperadio->addLine(radio_greenflag, L"PBR");
+		m_skyst_shadertyperadio->addLine(radio_greenflag, L"Std.");
+		m_skyst_shadertyperadio->addLine(radio_greenflag, L"HSV Toon");
 
 
 		m_skyst_litflagsp = new OWP_Separator(m_dlgWnd, true, 0.5, true);
@@ -1402,18 +1403,18 @@ int CSkyParamsDlg::CreateSkyParamsWnd()
 		}
 
 
-		m_skyst_toonlitradio = new OWP_RadioButton(L"ToonLit1", limitradionamelen, labelheight);
+		m_skyst_toonlitradio = new OWP_RadioButton(radio_greenflag, L"ToonLit1", limitradionamelen, labelheight);
 		if (!m_skyst_toonlitradio) {
 			_ASSERT(0);
 			return 1;
 		}
-		m_skyst_toonlitradio->addLine(L"ToonLit2");
-		m_skyst_toonlitradio->addLine(L"ToonLit3");
-		m_skyst_toonlitradio->addLine(L"ToonLit4");
-		m_skyst_toonlitradio->addLine(L"ToonLit5");
-		m_skyst_toonlitradio->addLine(L"ToonLit6");
-		m_skyst_toonlitradio->addLine(L"ToonLit7");
-		m_skyst_toonlitradio->addLine(L"ToonLit8");
+		m_skyst_toonlitradio->addLine(radio_greenflag, L"ToonLit2");
+		m_skyst_toonlitradio->addLine(radio_greenflag, L"ToonLit3");
+		m_skyst_toonlitradio->addLine(radio_greenflag, L"ToonLit4");
+		m_skyst_toonlitradio->addLine(radio_greenflag, L"ToonLit5");
+		m_skyst_toonlitradio->addLine(radio_greenflag, L"ToonLit6");
+		m_skyst_toonlitradio->addLine(radio_greenflag, L"ToonLit7");
+		m_skyst_toonlitradio->addLine(radio_greenflag, L"ToonLit8");
 
 
 		m_skyst_toonaddrsp0 = new OWP_Separator(m_dlgWnd, true, 0.5, true);
@@ -1773,12 +1774,12 @@ int CSkyParamsDlg::CreateSkyParamsWnd()
 		}
 
 
-		m_skyst_riverradio = new OWP_RadioButton(L"river", limitradionamelen, labelheight);
+		m_skyst_riverradio = new OWP_RadioButton(radio_greenflag, L"river", limitradionamelen, labelheight);
 		if (!m_skyst_riverradio) {
 			_ASSERT(0);
 			return 1;
 		}
-		m_skyst_riverradio->addLine(L"sea");
+		m_skyst_riverradio->addLine(radio_greenflag, L"sea");
 
 
 		m_skyst_seacentersp0 = new OWP_Separator(m_dlgWnd, true, separaterate, true);
@@ -1853,13 +1854,13 @@ int CSkyParamsDlg::CreateSkyParamsWnd()
 
 
 
-		m_skyst_distortionmapradio = new OWP_RadioButton(L"RG", limitradionamelen, labelheight);
+		m_skyst_distortionmapradio = new OWP_RadioButton(radio_greenflag, L"RG", limitradionamelen, labelheight);
 		if (!m_skyst_distortionmapradio) {
 			_ASSERT(0);
 			return 1;
 		}
-		m_skyst_distortionmapradio->addLine(L"GB");
-		m_skyst_distortionmapradio->addLine(L"RB");
+		m_skyst_distortionmapradio->addLine(radio_greenflag, L"GB");
+		m_skyst_distortionmapradio->addLine(radio_greenflag, L"RB");
 
 
 		m_skyst_spall->addParts1(*m_skyst_namesp);

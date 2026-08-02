@@ -975,6 +975,7 @@ int CShaderParamsDlg::CreateShaderParamsWnd()
 		bool limitradionamelen = true;
 		double separaterate = 0.26;
 		double separateratelit = 0.35;
+		bool radio_greenflag = false;
 
 		m_st_Sc = new OWP_ScrollWnd(L"ShaderParamsScroll", false, labelheight);//wheelフラグOFF：ホイールでスライダーを動かしたいから
 		if (!m_st_Sc) {
@@ -1046,14 +1047,14 @@ int CShaderParamsDlg::CreateShaderParamsWnd()
 		m_st_namelabel->setTextColor(colorCaution);
 
 
-		m_st_shadertyperadio = new OWP_RadioButton(L"Auto", limitradionamelen, labelheight);
+		m_st_shadertyperadio = new OWP_RadioButton(radio_greenflag, L"Auto", limitradionamelen, labelheight);
 		if (!m_st_shadertyperadio) {
 			_ASSERT(0);
 			return 1;
 		}
-		m_st_shadertyperadio->addLine(L"PBR");
-		m_st_shadertyperadio->addLine(L"Std.");
-		m_st_shadertyperadio->addLine(L"HSV Toon");
+		m_st_shadertyperadio->addLine(radio_greenflag, L"PBR");
+		m_st_shadertyperadio->addLine(radio_greenflag, L"Std.");
+		m_st_shadertyperadio->addLine(radio_greenflag, L"HSV Toon");
 
 
 		m_st_litflagsp = new OWP_Separator(m_dlgWnd, true, 0.5, true);
@@ -1305,18 +1306,18 @@ int CShaderParamsDlg::CreateShaderParamsWnd()
 		}
 
 
-		m_st_toonlitradio = new OWP_RadioButton(L"ToonLit1", limitradionamelen, labelheight);
+		m_st_toonlitradio = new OWP_RadioButton(radio_greenflag, L"ToonLit1", limitradionamelen, labelheight);
 		if (!m_st_toonlitradio) {
 			_ASSERT(0);
 			return 1;
 		}
-		m_st_toonlitradio->addLine(L"ToonLit2");
-		m_st_toonlitradio->addLine(L"ToonLit3");
-		m_st_toonlitradio->addLine(L"ToonLit4");
-		m_st_toonlitradio->addLine(L"ToonLit5");
-		m_st_toonlitradio->addLine(L"ToonLit6");
-		m_st_toonlitradio->addLine(L"ToonLit7");
-		m_st_toonlitradio->addLine(L"ToonLit8");
+		m_st_toonlitradio->addLine(radio_greenflag, L"ToonLit2");
+		m_st_toonlitradio->addLine(radio_greenflag, L"ToonLit3");
+		m_st_toonlitradio->addLine(radio_greenflag, L"ToonLit4");
+		m_st_toonlitradio->addLine(radio_greenflag, L"ToonLit5");
+		m_st_toonlitradio->addLine(radio_greenflag, L"ToonLit6");
+		m_st_toonlitradio->addLine(radio_greenflag, L"ToonLit7");
+		m_st_toonlitradio->addLine(radio_greenflag, L"ToonLit8");
 
 
 		m_st_toonaddrsp0 = new OWP_Separator(m_dlgWnd, true, 0.5, true);
@@ -1676,12 +1677,12 @@ int CShaderParamsDlg::CreateShaderParamsWnd()
 		}
 
 
-		m_st_riverradio = new OWP_RadioButton(L"river", limitradionamelen, labelheight);
+		m_st_riverradio = new OWP_RadioButton(radio_greenflag, L"river", limitradionamelen, labelheight);
 		if (!m_st_riverradio) {
 			_ASSERT(0);
 			return 1;
 		}
-		m_st_riverradio->addLine(L"sea");
+		m_st_riverradio->addLine(radio_greenflag, L"sea");
 
 
 		m_st_seacentersp0 = new OWP_Separator(m_dlgWnd, true, separaterate, true);
@@ -1756,13 +1757,13 @@ int CShaderParamsDlg::CreateShaderParamsWnd()
 
 
 
-		m_st_distortionmapradio = new OWP_RadioButton(L"RG", limitradionamelen, labelheight);
+		m_st_distortionmapradio = new OWP_RadioButton(radio_greenflag, L"RG", limitradionamelen, labelheight);
 		if (!m_st_distortionmapradio) {
 			_ASSERT(0);
 			return 1;
 		}
-		m_st_distortionmapradio->addLine(L"GB");
-		m_st_distortionmapradio->addLine(L"RB");
+		m_st_distortionmapradio->addLine(radio_greenflag, L"GB");
+		m_st_distortionmapradio->addLine(radio_greenflag, L"RB");
 
 
 		m_st_spall->addParts1(*m_st_namesp);

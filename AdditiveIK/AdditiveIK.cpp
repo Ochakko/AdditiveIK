@@ -3891,6 +3891,9 @@ void InitApp()
 
 	InitCommonControls();
 
+	g_grassHeightScale = 1.0f;
+	g_grassBendScale = 1.0f;
+
 	g_RefPosRecordInterval = 5;
 	g_chacamera.InitParams();
 
@@ -17152,6 +17155,7 @@ int CreateModelPanel()
 			for (modelcnt = 0; modelcnt < modelnum; modelcnt++) {
 				CModel* curmodel = g_chascene->GetModel(modelcnt);
 				if (curmodel) {
+					bool greenflag = curmodel->GetGrassFlag();
 
 					//2024/07/12
 					//文字を大きくした影響で
@@ -17163,7 +17167,7 @@ int CreateModelPanel()
 
 					if (modelcnt == 0) {
 						bool limitnamelen = true;
-						s_modelpanel.radiobutton = new OWP_RadioButton(printname, limitnamelen, 20);
+						s_modelpanel.radiobutton = new OWP_RadioButton(greenflag, printname, limitnamelen, 20);
 						if (!s_modelpanel.radiobutton) {
 							_ASSERT(0);
 							return 1;
@@ -17171,7 +17175,7 @@ int CreateModelPanel()
 					}
 					else {
 						if (s_modelpanel.radiobutton) {
-							s_modelpanel.radiobutton->addLine(printname);
+							s_modelpanel.radiobutton->addLine(greenflag, printname);
 						}
 					}
 				}
@@ -17536,11 +17540,12 @@ int CreateCameraPanel()
 			for (miindex = 0; miindex < minum; miindex++) {
 				MOTINFO curmi = g_chacamera.GetCameraAnimModel()->GetMotInfoByIndex(miindex);
 				if (curmi.cameramotion) {//!!!!!
+					bool greenflag = false;
 					WCHAR wmotname[MAX_PATH] = { 0L };
 					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmi.motname, 256, wmotname, MAX_PATH);
 					if (cameracnt == 0) {
 						bool limitnamelen = true;
-						s_camerapanel.radiobutton = new OWP_RadioButton(wmotname, limitnamelen, 20);
+						s_camerapanel.radiobutton = new OWP_RadioButton(greenflag, wmotname, limitnamelen, 20);
 						if (!s_camerapanel.radiobutton) {
 							_ASSERT(0);
 							return 1;
@@ -17549,10 +17554,10 @@ int CreateCameraPanel()
 					else {
 						if (s_camerapanel.radiobutton) {
 							if (wmotname[0] != 0L) {
-								s_camerapanel.radiobutton->addLine(wmotname);
+								s_camerapanel.radiobutton->addLine(greenflag, wmotname);
 							}
 							else {
-								s_camerapanel.radiobutton->addLine(L"NoName");
+								s_camerapanel.radiobutton->addLine(greenflag, L"NoName");
 							}
 						}
 					}
@@ -17878,12 +17883,13 @@ int CreateMotionPanel()
 			minum = GetCurrentModel()->GetMotInfoSize();
 			for (miindex = 0; miindex < minum; miindex++) {
 				MOTINFO curmi = GetCurrentModel()->GetMotInfoByIndex(miindex);
+				bool greenflag = false;
 
 				WCHAR wmotname[MAX_PATH] = { 0L };
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, curmi.motname, 256, wmotname, MAX_PATH);
 				if (motioncnt == 0) {
 					bool limitnamelen = true;
-					s_motionpanel.radiobutton = new OWP_RadioButton(wmotname, limitnamelen, 20);
+					s_motionpanel.radiobutton = new OWP_RadioButton(greenflag, wmotname, limitnamelen, 20);
 					if (!s_motionpanel.radiobutton) {
 						_ASSERT(0);
 						return 1;
@@ -17892,10 +17898,10 @@ int CreateMotionPanel()
 				else {
 					if (s_motionpanel.radiobutton) {
 						if (wmotname[0] != 0L) {
-							s_motionpanel.radiobutton->addLine(wmotname);
+							s_motionpanel.radiobutton->addLine(greenflag, wmotname);
 						}
 						else {
-							s_motionpanel.radiobutton->addLine(L"NoName");
+							s_motionpanel.radiobutton->addLine(greenflag, L"NoName");
 						}
 					}
 				}

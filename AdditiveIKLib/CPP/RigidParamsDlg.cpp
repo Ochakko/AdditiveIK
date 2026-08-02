@@ -898,6 +898,7 @@ int CRigidParamsDlg::CreateRigidWnd()
 		m_rigidWnd->setListenMouse(true);
 
 		bool limitradionamelen = false;
+		bool radio_greenflag = false;
 
 		m_rigidSc = new OWP_ScrollWnd(L"RigidScroll", true, labelheight);
 		if (!m_rigidSc) {
@@ -1239,23 +1240,23 @@ int CRigidParamsDlg::CreateRigidWnd()
 			_ASSERT(0);
 			return 1;
 		}
-		m_colradio = new OWP_RadioButton(L"Cone", limitradionamelen, labelheight);
+		m_colradio = new OWP_RadioButton(radio_greenflag, L"Cone", limitradionamelen, labelheight);
 		if (!m_colradio) {
 			_ASSERT(0);
 			return 1;
 		}
-		m_colradio->addLine(L"Capsule");
-		m_colradio->addLine(L"Sphere");
-		m_colradio->addLine(L"Rectangular");
+		m_colradio->addLine(radio_greenflag, L"Capsule");
+		m_colradio->addLine(radio_greenflag, L"Sphere");
+		m_colradio->addLine(radio_greenflag, L"Rectangular");
 
-		m_lkradio = new OWP_RadioButton(L"[posSpring]very weak", limitradionamelen, labelheight);
+		m_lkradio = new OWP_RadioButton(radio_greenflag, L"[posSpring]very weak", limitradionamelen, labelheight);
 		if (!m_lkradio) {
 			_ASSERT(0);
 			return 1;
 		}
-		m_lkradio->addLine(L"[posSpring]weak");
-		m_lkradio->addLine(L"[posSpring]regular");
-		m_lkradio->addLine(L"[posSpring]custom");
+		m_lkradio->addLine(radio_greenflag, L"[posSpring]weak");
+		m_lkradio->addLine(radio_greenflag, L"[posSpring]regular");
+		m_lkradio->addLine(radio_greenflag, L"[posSpring]custom");
 
 		//m_lkSlider = new OWP_Slider(g_initcuslk, 1e6, 1e4);//60000
 		//m_lkSlider = new OWP_Slider(g_initcuslk, 1e10, 1e8);//60000
@@ -1270,14 +1271,14 @@ int CRigidParamsDlg::CreateRigidWnd()
 			return 1;
 		}
 
-		m_akradio = new OWP_RadioButton(L"[rotSpring]very weak", limitradionamelen, labelheight);
+		m_akradio = new OWP_RadioButton(radio_greenflag, L"[rotSpring]very weak", limitradionamelen, labelheight);
 		if (!m_akradio) {
 			_ASSERT(0);
 			return 1;
 		}
-		m_akradio->addLine(L"[rotSpring]weak");
-		m_akradio->addLine(L"[rotSpring]regular");
-		m_akradio->addLine(L"[rotSpring]custom");
+		m_akradio->addLine(radio_greenflag, L"[rotSpring]weak");
+		m_akradio->addLine(radio_greenflag, L"[rotSpring]regular");
+		m_akradio->addLine(radio_greenflag, L"[rotSpring]custom");
 
 		//m_akSlider = new OWP_Slider(g_initcusak, 6000.0f, 0.0f);//300
 		//m_akSlider = new OWP_Slider(g_initcusak, 30.0f, 0.0f);//300

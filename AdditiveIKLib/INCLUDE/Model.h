@@ -3368,7 +3368,6 @@ public: //accesser
 			params.SetVPMat(srcvpmat);
 			params.diffusemult = srcdiffusemult;
 
-
 			//2024/05/12 bendvec 草をカメラ横方向に揺らすためのベクトル
 			Matrix invcammat;
 			if (g_camera3D) {
@@ -3435,43 +3434,7 @@ public: //accesser
 			_ASSERT(0);
 		}
 	}
-	int SetInstancingParams_Grass(int srcinstancingno, ChaMatrix srcwmat, ChaMatrix srcvpmat, ChaVector4 srcdiffusemult)
-	{
-		//#######################################################################################
-		//srcinstancingnoは参考程度の値
-		//GetしたCModelのインデックスと　様々なスキップ処理を経てDrawするCModelのインデックスには違いが生じる
-		//#######################################################################################
-
-		if ((m_instancingdrawnum_grass >= 0) && (m_instancingdrawnum_grass < GRASSINDEXMAX)) {
-
-			INSTANCINGPARAMS params;
-			params.Init();
-			params.SetWMat(srcwmat);
-			params.SetVPMat(srcvpmat);
-			params.diffusemult = srcdiffusemult;
-
-
-			//2024/05/12 bendvec 草をカメラ横方向に揺らすためのベクトル
-			Matrix invcammat;
-			if (g_camera3D) {
-				invcammat = g_camera3D->GetViewMatrixInv();
-			}
-			else {
-				invcammat.SetIdentity();
-			}
-			params.bendvec.SetParams(invcammat._11, invcammat._12, invcammat._13, 0.0f);
-
-			m_instancingparams_grass[m_instancingdrawnum_grass] = params;
-			m_instancingdrawnum_grass++;
-		}
-		else {
-			_ASSERT(0);
-			return 1;
-		}
-
-
-		return 0;
-	}
+	int SetInstancingParams_Grass(int srcinstancingno, ChaMatrix srcwmat, ChaMatrix srcvpmat, ChaVector4 srcdiffusemult);
 	INSTANCINGPARAMS* GetInstancingParams_Grass()
 	{
 		return m_instancingparams_grass;
