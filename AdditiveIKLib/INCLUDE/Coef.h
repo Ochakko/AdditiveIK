@@ -165,7 +165,11 @@ enum {
 //2023/12/13, 2023/12/14
 //for shadowmap
 //シャドウマップパラメータは　この後GUIで設定可能にし g_*変数 にする予定
-#define SHADOWMAP_SIZE	2048
+
+//#define SHADOWMAP_SIZE	2048
+//2026/08/11
+#define SHADOWMAP_SIZE	4096
+
 //#define SHADOWMAP_FOV	60.0f
 ////2023/12/14 PROJSCALEはアセットのシーン全体の倍率を想定　シャドウライトの高さにも影響
 ////PROJSCALE : UnityAssetJapaneseCityで1.0f, UnityAssetTheHuntStreet1で7.0f位
