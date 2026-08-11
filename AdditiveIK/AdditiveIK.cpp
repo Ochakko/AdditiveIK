@@ -25572,7 +25572,6 @@ int OnFrameKeyboard()
 				g_chacamera.ResetRefPosViewFlag();
 				shiftdoneflag = true;
 			}
-			
 
 			if (!g_shiftkey && !g_controlkey && !g_altkey && (g_keybuf[VK_F13] & 0x80) && ((g_savekeybuf[VK_F13] & 0x80) == 0)) {
 				//GUISetVisible_CameraAndIK();//toggle disp GUI
@@ -25673,6 +25672,11 @@ int OnFrameKeyboard()
 				s_guiswflag = false;
 				GUIMenuSetVisible(SPPLATEMENUKIND_EFFECT, SPEFFECTSW_REFPOS + 1);//２段目　(enum + 1)
 				shiftdoneflag = true;
+			}
+			if (g_altkey && (g_keybuf[VK_F20] & 0x80) && ((g_savekeybuf[VK_F20] & 0x80) == 0)) {
+				s_guiswflag = false;
+				GUIMenuSetVisible(SPPLATEMENUKIND_EFFECT, SPEFFECTSW_GRASS + 1);//２段目　(enum + 1)
+				//shiftdoneflag = true;
 			}
 		}
 

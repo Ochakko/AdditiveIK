@@ -1,6 +1,12 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/08/12
+　STREAM DECKのプロファイルを更新
+　　Grassプレートメニュー用のボタン設定を追加
+　　プロファイルは以下の場所に. 
+　　Test\STREAM_DECK_XL_Profile\AdditiveIK Profile.streamDeckProfile
+　　
 2026/08/11
 　シャドウマップサイズを2048から4096へ変更
 　
