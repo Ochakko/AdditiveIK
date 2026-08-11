@@ -71,9 +71,7 @@ int CGrassElem::SetInstancingParams(ChaMatrix matVP)
 	int grassindex;
 	for (grassindex = 0; grassindex < grassnum; grassindex++) {
 		if (grassindex < GRASSINDEXMAX) {
-			ChaVector4 grassmaterial;
-			grassmaterial.SetParams(1.0f, 1.0f, 1.0f, 1.0f);
-			GetGrass()->SetInstancingParams_Grass(grassindex, GetGrassMat(grassindex), matVP, grassmaterial);
+			GetGrass()->SetInstancingParams_Grass(grassindex, GetGrassMat(grassindex), matVP);
 		}
 	}
 

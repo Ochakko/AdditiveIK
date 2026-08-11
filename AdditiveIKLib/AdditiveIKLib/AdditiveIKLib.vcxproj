@@ -224,6 +224,7 @@
     <ClCompile Include="..\CPP\GetMaterial.cpp" />
     <ClCompile Include="..\CPP\gltfLoader.cpp" />
     <ClCompile Include="..\CPP\GPlaneDlg.cpp" />
+    <ClCompile Include="..\CPP\GrassDlg.cpp" />
     <ClCompile Include="..\CPP\GrassElem.cpp" />
     <ClCompile Include="..\CPP\ImpFile.cpp" />
     <ClCompile Include="..\CPP\ImpulseDlg.cpp" />
@@ -656,6 +657,7 @@
     <ClInclude Include="..\INCLUDE\GlobalVar.h" />
     <ClInclude Include="..\INCLUDE\gltfLoader.h" />
     <ClInclude Include="..\INCLUDE\GPlaneDlg.h" />
+    <ClInclude Include="..\INCLUDE\GrassDlg.h" />
     <ClInclude Include="..\INCLUDE\GrassElem.h" />
     <ClInclude Include="..\INCLUDE\ImpFile.h" />
     <ClInclude Include="..\INCLUDE\ImpulseDlg.h" />

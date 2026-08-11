@@ -89,6 +89,7 @@
 #include <RetargetDlg.h>
 #include <LimitEulDlg.h>
 #include <RefPosDlg.h>
+#include <GrassDlg.h>
 #include <ShadowDlg.h>
 #include <ImpulseDlg.h>
 #include <GPlaneDlg.h>
@@ -286,6 +287,7 @@ enum {
 	SPEFFECTSW_FOG,
 	SPEFFECTSW_DOF,
 	SPEFFECTSW_REFPOS,
+	SPEFFECTSW_GRASS,
 	SPEFFECTSWNUM
 };
 
@@ -1016,6 +1018,7 @@ static CSkyParamsDlg s_skyparamsdlg;
 static CRetargetDlg s_retargetdlg;
 static CLimitEulDlg s_limiteuldlg;
 static CRefPosDlg s_refposdlg;
+static CGrassDlg s_grassdlg;
 static CShadowDlg s_shadowdlg;
 static CImpulseDlg s_impulsedlg;
 static CGPlaneDlg s_gplanedlg;
@@ -1647,6 +1650,8 @@ static Texture* s_spritetex97 = 0;
 static Texture* s_spritetex98 = 0;
 static Texture* s_spritetex99 = 0;
 static Texture* s_spritetex100 = 0;
+static Texture* s_spritetex101 = 0;
+static Texture* s_spritetex102 = 0;
 
 //for PointSprite
 Texture* g_spritetex101 = 0;
@@ -2307,6 +2312,7 @@ static void ShowSkyWnd(bool srcflag);
 static void ShowFogWnd(bool srcflag);
 static void ShowDofWnd(bool srcflag);
 static void ShowRefPosWnd(bool srcflag);
+static void ShowGrassWnd(bool srcflag);
 
 
 static CInfoWindow* CreateInfoWnd();
@@ -3864,6 +3870,7 @@ int SetRightPainDlgsPosAndSize()
 	s_retargetdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
 	s_limiteuldlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
 	s_refposdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_grassdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
 	s_shadowdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
 	s_impulsedlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
 	s_gplanedlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
@@ -3891,8 +3898,9 @@ void InitApp()
 
 	InitCommonControls();
 
-	g_grassHeightScale = 1.0f;
-	g_grassBendScale = 1.0f;
+	//g_grassShapeScale = ChaVector3(1.0f, 1.0f, 1.0f);
+	//g_grassDiffuseRate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//g_grassBendScale = 1.0f;
 
 	g_RefPosRecordInterval = 5;
 	g_chacamera.InitParams();
@@ -3943,6 +3951,7 @@ void InitApp()
 	s_limiteuldlg.InitParams();
 	s_limiteuldlg.SetFunctions(PrepairUndo, UpdateAfterEditAngleLimit);
 	s_refposdlg.InitParams();
+	s_grassdlg.InitParams();
 	//s_refposdlg.SetFunctions(PrepairUndo, UpdateAfterEditAngleLimit);
 	s_shadowdlg.InitParams();
 	s_shadowdlg.SetFunctions(SetCamera3DFromEyePos);
@@ -5582,6 +5591,7 @@ void OnDestroyDevice()
 	s_retargetdlg.DestroyObjs();
 	s_limiteuldlg.DestroyObjs();
 	s_refposdlg.DestroyObjs();
+	s_grassdlg.DestroyObjs();
 	s_shadowdlg.DestroyObjs();
 	s_impulsedlg.DestroyObjs();
 	s_gplanedlg.DestroyObjs();
@@ -8754,6 +8764,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			s_rigidparamsdlg.SetModel(GetCurrentModel(), s_curboneno, s_reindexmap, s_rgdindexmap);
 			s_limiteuldlg.SetModel(GetCurrentModel(), s_curboneno);
 			s_refposdlg.SetModel(GetCurrentModel());
+			s_grassdlg.SetModel(GetCurrentModel());
 			s_impulsedlg.SetModel(GetCurrentModel(), s_curboneno, s_rgdindexmap);
 			s_gplanedlg.SetModel(s_gplane, s_bpWorld);
 			s_dampanimdlg.SetModel(GetCurrentModel(), s_curboneno, s_rgdindexmap);
@@ -20140,6 +20151,9 @@ int SetSpEffectSWParams()
 	s_speffectsw[SPEFFECTSW_REFPOS].dispcenter.x = s_speffectsw[SPEFFECTSW_DOF].dispcenter.x + (int)spgwidth + spgshift;
 	s_speffectsw[SPEFFECTSW_REFPOS].dispcenter.y = s_speffectsw[SPEFFECTSW_DOF].dispcenter.y;
 
+	s_speffectsw[SPEFFECTSW_GRASS].dispcenter.x = s_speffectsw[SPEFFECTSW_REFPOS].dispcenter.x + (int)spgwidth + spgshift;
+	s_speffectsw[SPEFFECTSW_GRASS].dispcenter.y = s_speffectsw[SPEFFECTSW_REFPOS].dispcenter.y;
+
 	int sprcnt;
 	for (sprcnt = 0; sprcnt < SPEFFECTSWNUM; sprcnt++) {
 		ChaVector3 disppos;
@@ -21839,7 +21853,7 @@ int PickSpScrapingSW(POINT srcpos)
 	//	return 0;
 	//}
 
-	//sprefpos
+	//spscraping
 	int startx = s_spscraping.dispcenter.x - (int)s_spsize / 2;
 	int endx = startx + (int)s_spsize;
 
@@ -22048,7 +22062,7 @@ int PickSpCameraModeSW(POINT srcpos)
 	//	return 0;
 	//}
 
-	//sprefpos
+	//spcameramode
 	int startx = s_spcameramode.dispcenter.x - (int)s_spsize / 2;
 	int endx = startx + (int)s_spsize;
 
@@ -22081,7 +22095,7 @@ int PickSpCameraInheritSW(POINT srcpos)
 	//	return 0;
 	//}
 
-	//sprefpos
+	//spcameraInherit
 	int startx = s_spcamerainherit.dispcenter.x - (int)s_spsize / 2;
 
 	//int endx = startx + (int)s_spsize;
@@ -25052,6 +25066,7 @@ int ChangeCurrentBone(int prepairundoflag)
 			s_rigidparamsdlg.SetModel(GetCurrentModel(), s_curboneno, s_reindexmap, s_rgdindexmap);
 			s_limiteuldlg.SetModel(GetCurrentModel(), s_curboneno);
 			s_refposdlg.SetModel(GetCurrentModel());
+			s_grassdlg.SetModel(GetCurrentModel());
 			s_impulsedlg.SetModel(GetCurrentModel(), s_curboneno, s_rgdindexmap);
 			s_dampanimdlg.SetModel(GetCurrentModel(), s_curboneno, s_rgdindexmap);
 
@@ -33248,7 +33263,7 @@ int OnRenderSprite(myRenderer::RenderingEngine* re, RenderContext* pRenderContex
 				g_chascene->AddSpriteToForwardRenderPass(rendersprite);
 			}
 
-			//lodsw
+			//refpos
 			{
 				myRenderer::RENDERSPRITE rendersprite;
 				rendersprite.Init();
@@ -37741,30 +37756,42 @@ void GUIEffectSetVisible(int srcplateno)
 		ShowFogWnd(false);
 		ShowDofWnd(false);
 		ShowRefPosWnd(false);
+		ShowGrassWnd(false);
 	}
 	else if (srcplateno == (SPEFFECTSW_FOG + 1)) {
 		ShowSkyWnd(false);
 		ShowFogWnd(true);
 		ShowDofWnd(false);
 		ShowRefPosWnd(false);
+		ShowGrassWnd(false);
 	}
 	else if (srcplateno == (SPEFFECTSW_DOF + 1)) {
 		ShowSkyWnd(false);
 		ShowFogWnd(false);
 		ShowDofWnd(true);
 		ShowRefPosWnd(false);
+		ShowGrassWnd(false);
 	}
 	else if (srcplateno == (SPEFFECTSW_REFPOS + 1)) {
 		ShowSkyWnd(false);
 		ShowFogWnd(false);
 		ShowDofWnd(false);
 		ShowRefPosWnd(true);
+		ShowGrassWnd(false);
+	}
+	else if (srcplateno == (SPEFFECTSW_GRASS + 1)) {
+		ShowSkyWnd(false);
+		ShowFogWnd(false);
+		ShowDofWnd(false);
+		ShowRefPosWnd(false);
+		ShowGrassWnd(true);
 	}
 	else if (srcplateno == -2) {
 		ShowSkyWnd(false);
 		ShowFogWnd(false);
 		ShowDofWnd(false);
 		ShowRefPosWnd(false);
+		ShowGrassWnd(false);
 	}
 	else {
 		_ASSERT(0);
@@ -43963,10 +43990,10 @@ bool DispTipUI()
 	}
 
 	if (dispfontfortip == false) {
-		//lod switch
-		int picklodflag = 0;
-		picklodflag = PickSpRefPosSW(ptCursor);
-		if (picklodflag == 1) {
+		//refpos switch
+		int pickrefposflag = 0;
+		pickrefposflag = PickSpRefPosSW(ptCursor);
+		if (pickrefposflag == 1) {
 			dispfontfortip = true;
 			wcscpy_s(sz512, 512, L"Disp ReferencePose");
 			//CreateToolTip(ptCursor, s_strfortip);
@@ -45196,6 +45223,18 @@ void ShowRefPosWnd(bool srcflag)
 	s_speffectsw[SPEFFECTSW_REFPOS].state = srcflag;
 }
 
+void ShowGrassWnd(bool srcflag)
+{
+	if (srcflag && (GetCurrentModel() != nullptr)) {
+		s_grassdlg.SetModel(GetCurrentModel());
+	}
+
+	s_grassdlg.SetVisible(srcflag);
+	if (srcflag) {
+		s_grassdlg.ListenMouse(true);
+	}
+	s_speffectsw[SPEFFECTSW_GRASS].state = srcflag;
+}
 
 int CreateMaterialRateWnd()
 {
@@ -46175,6 +46214,20 @@ int CreateSprites()
 	spriteinitdata.m_textures[0] = s_spritetex100;
 	s_speffectsw[SPEFFECTSW_REFPOS].spriteOFF.Init(spriteinitdata, screenvertexflag);
 
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Grass140ON.png");
+	s_spritetex101 = new Texture();
+	s_spritetex101->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex101;
+	s_speffectsw[SPEFFECTSW_GRASS].spriteON.Init(spriteinitdata, screenvertexflag);
+
+	wcscpy_s(filepath, MAX_PATH, mpath);
+	wcscat_s(filepath, MAX_PATH, L"MameMedia\\GUIPlate_Grass140OFF.png");
+	s_spritetex102 = new Texture();
+	s_spritetex102->InitFromWICFile(filepath);
+	spriteinitdata.m_textures[0] = s_spritetex102;
+	s_speffectsw[SPEFFECTSW_GRASS].spriteOFF.Init(spriteinitdata, screenvertexflag);
+
 	{
 		wcscpy_s(filepath, MAX_PATH, mpath);
 		wcscat_s(filepath, MAX_PATH, L"MameMedia\\0_PointSprite\\1234\\Point1.png");
@@ -47129,7 +47182,9 @@ void InitSprites()
 	s_spritetex98 = 0;
 	s_spritetex99 = 0;
 	s_spritetex100 = 0;
-	
+	s_spritetex101 = 0;
+	s_spritetex102 = 0;
+
 	//for PointSprite
 	g_spritetex101 = 0;
 	g_spritetex102 = 0;
@@ -47578,6 +47633,14 @@ void DestroySprites()
 	if (s_spritetex100) {
 		delete s_spritetex100;
 		s_spritetex100 = 0;
+	}
+	if (s_spritetex101) {
+		delete s_spritetex101;
+		s_spritetex101 = 0;
+	}
+	if (s_spritetex102) {
+		delete s_spritetex102;
+		s_spritetex102 = 0;
 	}
 
 	if (g_spritetex101) {
@@ -48791,6 +48854,7 @@ int SetModel2Dlgs(CModel* srcmodel)
 		s_rigidparamsdlg.SetModel(srcmodel, s_curboneno, s_reindexmap, s_rgdindexmap);
 		s_limiteuldlg.SetModel(srcmodel, s_curboneno);
 		s_refposdlg.SetModel(srcmodel);
+		s_grassdlg.SetModel(srcmodel);
 
 		s_dispgroupdlg.SetModel(srcmodel);
 		s_footrigdlg.SetModel(g_chascene, srcmodel);

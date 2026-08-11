@@ -302,30 +302,30 @@ int CDispLimitsDlg::DestroyObjs()
 	}
 
 
-	if (m_grassheightsp) {
-		delete m_grassheightsp;
-		m_grassheightsp = nullptr;
-	}
-	if (m_grassheightLabel) {
-		delete m_grassheightLabel;
-		m_grassheightLabel = nullptr;
-	}
-	if (m_grassheightSlider) {
-		delete m_grassheightSlider;
-		m_grassheightSlider = nullptr;
-	}
-	if (m_grassbendsp) {
-		delete m_grassbendsp;
-		m_grassbendsp = nullptr;
-	}
-	if (m_grassbendLabel) {
-		delete m_grassbendLabel;
-		m_grassbendLabel = nullptr;
-	}
-	if (m_grassbendSlider) {
-		delete m_grassbendSlider;
-		m_grassbendSlider = nullptr;
-	}
+	//if (m_grassheightsp) {
+	//	delete m_grassheightsp;
+	//	m_grassheightsp = nullptr;
+	//}
+	//if (m_grassheightLabel) {
+	//	delete m_grassheightLabel;
+	//	m_grassheightLabel = nullptr;
+	//}
+	//if (m_grassheightSlider) {
+	//	delete m_grassheightSlider;
+	//	m_grassheightSlider = nullptr;
+	//}
+	//if (m_grassbendsp) {
+	//	delete m_grassbendsp;
+	//	m_grassbendsp = nullptr;
+	//}
+	//if (m_grassbendLabel) {
+	//	delete m_grassbendLabel;
+	//	m_grassbendLabel = nullptr;
+	//}
+	//if (m_grassbendSlider) {
+	//	delete m_grassbendSlider;
+	//	m_grassbendSlider = nullptr;
+	//}
 
 	if (m_dlgWnd) {
 		delete m_dlgWnd;
@@ -413,12 +413,12 @@ void CDispLimitsDlg::InitParams()
 	m_posconsttimesEdit = nullptr;
 	m_dispsp8 = nullptr;
 
-	m_grassheightsp = nullptr;
-	m_grassheightLabel = nullptr;
-	m_grassheightSlider = nullptr;
-	m_grassbendsp = nullptr;
-	m_grassbendLabel = nullptr;
-	m_grassbendSlider = nullptr;
+	//m_grassheightsp = nullptr;
+	//m_grassheightLabel = nullptr;
+	//m_grassheightSlider = nullptr;
+	//m_grassbendsp = nullptr;
+	//m_grassbendLabel = nullptr;
+	//m_grassbendSlider = nullptr;
 
 }
 
@@ -825,36 +825,36 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 		}
 
 
-		m_grassheightsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
-		if (!m_grassheightsp) {
-			_ASSERT(0);
-			abort();
-		}
-		m_grassheightLabel = new OWP_Label(L"GrassHeightScale", labelheight);
-		if (!m_grassheightLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		m_grassheightSlider = new OWP_Slider((double)g_grassHeightScale, 10.0, 0.0, labelheight);
-		if (!m_grassheightSlider) {
-			_ASSERT(0);
-			abort();
-		}
-		m_grassbendsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
-		if (!m_grassbendsp) {
-			_ASSERT(0);
-			abort();
-		}
-		m_grassbendLabel = new OWP_Label(L"GrassBendScale", labelheight);
-		if (!m_grassbendLabel) {
-			_ASSERT(0);
-			abort();
-		}
-		m_grassbendSlider = new OWP_Slider((double)g_grassBendScale, 10.0, 0.0, labelheight);
-		if (!m_grassbendSlider) {
-			_ASSERT(0);
-			abort();
-		}
+		//m_grassheightsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		//if (!m_grassheightsp) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_grassheightLabel = new OWP_Label(L"GrassHeightScale", labelheight);
+		//if (!m_grassheightLabel) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_grassheightSlider = new OWP_Slider((double)g_grassHeightScale, 10.0, 0.0, labelheight);
+		//if (!m_grassheightSlider) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_grassbendsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		//if (!m_grassbendsp) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_grassbendLabel = new OWP_Label(L"GrassBendScale", labelheight);
+		//if (!m_grassbendLabel) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
+		//m_grassbendSlider = new OWP_Slider((double)g_grassBendScale, 10.0, 0.0, labelheight);
+		//if (!m_grassbendSlider) {
+		//	_ASSERT(0);
+		//	abort();
+		//}
 
 
 		//m_cameraheightsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
@@ -982,13 +982,13 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 		//m_cameragmodelsp->addParts1(*m_cameragmodelLabel);
 		//m_cameragmodelsp->addParts2(*m_cameragmodelCombo);
 
-		m_dlgWnd->addParts(*m_dispspacerLabel006);//
-		m_dlgWnd->addParts(*m_grassheightsp);
-		m_grassheightsp->addParts1(*m_grassheightLabel);
-		m_grassheightsp->addParts2(*m_grassheightSlider);
-		m_dlgWnd->addParts(*m_grassbendsp);
-		m_grassheightsp->addParts1(*m_grassbendLabel);
-		m_grassheightsp->addParts2(*m_grassbendSlider);
+		//m_dlgWnd->addParts(*m_dispspacerLabel006);//
+		//m_dlgWnd->addParts(*m_grassheightsp);
+		//m_grassheightsp->addParts1(*m_grassheightLabel);
+		//m_grassheightsp->addParts2(*m_grassheightSlider);
+		//m_dlgWnd->addParts(*m_grassbendsp);
+		//m_grassheightsp->addParts1(*m_grassbendLabel);
+		//m_grassheightsp->addParts2(*m_grassbendSlider);
 
 
 		//###########
@@ -1117,14 +1117,14 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 				PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_DISPLIMITSDLG), (LPARAM)0);
 			}
 		});
-		m_grassheightSlider->setCursorListener([=, this]() {
-			double value = m_grassheightSlider->getValue();
-			g_grassHeightScale = (float)value;
-			});
-		m_grassbendSlider->setCursorListener([=, this]() {
-			double value = m_grassbendSlider->getValue();
-			g_grassBendScale = (float)value;
-			});
+		//m_grassheightSlider->setCursorListener([=, this]() {
+		//	double value = m_grassheightSlider->getValue();
+		//	g_grassHeightScale = (float)value;
+		//	});
+		//m_grassbendSlider->setCursorListener([=, this]() {
+		//	double value = m_grassbendSlider->getValue();
+		//	g_grassBendScale = (float)value;
+		//	});
 
 
 		//############
@@ -1272,12 +1272,12 @@ int CDispLimitsDlg::ParamsToDlg()
 		if (m_refposSlider) {
 			m_refposSlider->setValue((double)g_refalpha, false);
 		}
-		if (m_grassheightSlider) {
-			m_grassheightSlider->setValue((double)g_grassHeightScale, false);
-		}
-		if (m_grassbendSlider) {
-			m_grassbendSlider->setValue((double)g_grassBendScale, false);
-		}
+		//if (m_grassheightSlider) {
+		//	m_grassheightSlider->setValue((double)g_grassHeightScale, false);
+		//}
+		//if (m_grassbendSlider) {
+		//	m_grassbendSlider->setValue((double)g_grassBendScale, false);
+		//}
 
 
 		//#########

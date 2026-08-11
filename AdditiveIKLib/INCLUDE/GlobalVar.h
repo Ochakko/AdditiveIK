@@ -58,8 +58,9 @@ class CInfoWindow;
 
 #ifdef ADDITIVEIKLIBGLOBALVAR
 
-float g_grassHeightScale = 1.0f;
-float g_grassBendScale = 1.0f;
+//ChaVector3 g_grassShapeScale;
+//ChaVector4 g_grassDiffuseRate;
+//float g_grassBendScale = 1.0f;
 
 int g_RefPosRecordInterval = 5;
 bool g_ikstop_alloff = false;
@@ -370,8 +371,9 @@ double g_playingend = 1.0;
 
 
 #else
-extern float g_grassHeightScale;
-extern float g_grassBendScale;
+//extern ChaVector3 g_grassShapeScale;
+//extern ChaVector4 g_grassDiffuseRate;
+//extern float g_grassBendScale;
 
 extern int g_RefPosRecordInterval;
 extern bool g_ikstop_alloff;

@@ -331,7 +331,9 @@ int CChaFile::WriteFileInfo()
 	//version 1028 : 2026/07/12 1.0.0.76へ向けて  RefPosKind, RefPosDec, RefPosFaceSkip追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1028</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1029 : 2026/07/20 1.0.0.77へ向けて  LightSlot, ShadowSlot, SkySlot, FogSlot, DofSlot追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1029</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1029</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1030 : 2026/07/20 1.0.0.78へ向けて  GrassShapeScaleX, GrassShapeScaleY, GrassShapeScaleZ, GrassDiffuseRateR, GrassDiffuseRateG, GrassDiffuseRateB, GrassDiffuseRateA, GrassBendScale追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1030</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -441,6 +443,20 @@ int CChaFile::WriteChara(bool limitdegflag, MODELELEM* srcme, WCHAR* projname,
 
 	if (curmodel->GetGrassFlag() && srcgrasselem) {
 		CallF(Write2File("    <GrassFlag>1</GrassFlag>\r\n"), return 1);
+
+		ChaVector4 grassdiffuserate = curmodel->GetGrassDiffuseRate();
+		CallF(Write2File("    <GrassDiffuseRateR>%f</GrassDiffuseRateR>\r\n", grassdiffuserate.x), return 1);
+		CallF(Write2File("    <GrassDiffuseRateG>%f</GrassDiffuseRateG>\r\n", grassdiffuserate.y), return 1);
+		CallF(Write2File("    <GrassDiffuseRateB>%f</GrassDiffuseRateB>\r\n", grassdiffuserate.z), return 1);
+		CallF(Write2File("    <GrassDiffuseRateA>%f</GrassDiffuseRateA>\r\n", grassdiffuserate.w), return 1);
+
+		ChaVector3 grassshapescale = curmodel->GetGrassShapeScale();
+		CallF(Write2File("    <GrassShapeScaleX>%f</GrassShapeScaleX>\r\n", grassshapescale.x), return 1);
+		CallF(Write2File("    <GrassShapeScaleY>%f</GrassShapeScaleY>\r\n", grassshapescale.y), return 1);
+		CallF(Write2File("    <GrassShapeScaleZ>%f</GrassShapeScaleZ>\r\n", grassshapescale.z), return 1);
+
+		float grassbendscale = curmodel->GetGrassBendScale();
+		CallF(Write2File("    <GrassBendScale>%f</GrassBendScale>\r\n", grassbendscale), return 1);
 	}
 	else {
 		CallF(Write2File("    <GrassFlag>0</GrassFlag>\r\n"), return 1);
@@ -1417,6 +1433,23 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	int getrefposKind = 0;
 	int refposKind = POINTSPRITE_1234;
 
+	int getgrassdiffuseR = 0;
+	float grassdiffuseR = 1.0f;
+	int getgrassdiffuseG = 0;
+	float grassdiffuseG = 1.0f;
+	int getgrassdiffuseB = 0;
+	float grassdiffuseB = 1.0f;
+	int getgrassdiffuseA = 0;
+	float grassdiffuseA = 1.0f;
+	int getgrassshapescaleX = 0;
+	float grassshapescaleX = 1.0f;
+	int getgrassshapescaleY = 0;
+	float grassshapescaleY = 1.0f;
+	int getgrassshapescaleZ = 0;
+	float grassshapescaleZ = 1.0f;
+	int getgrassbendscale = 0;
+	float grassbendscale = 1.0f;
+
 
 	int refnum = 0;
 	int impnum = 0;
@@ -1468,6 +1501,17 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	std::vector<ChaMatrix> grassmatvec;
 	Read_Int(xmlbuf, "<GrassFlag>", "</GrassFlag>", &grassflag);
 	if (grassflag == 1) {
+		getgrassdiffuseR = Read_Float(xmlbuf, "<GrassDiffuseRateR>", "</GrassDiffuseRateR>", &grassdiffuseR);
+		getgrassdiffuseG = Read_Float(xmlbuf, "<GrassDiffuseRateG>", "</GrassDiffuseRateG>", &grassdiffuseG);
+		getgrassdiffuseB = Read_Float(xmlbuf, "<GrassDiffuseRateB>", "</GrassDiffuseRateB>", &grassdiffuseB);
+		getgrassdiffuseA = Read_Float(xmlbuf, "<GrassDiffuseRateA>", "</GrassDiffuseRateA>", &grassdiffuseA);
+
+		getgrassshapescaleX = Read_Float(xmlbuf, "<GrassShapeScaleX>", "</GrassShapeScaleX>", &grassshapescaleX);
+		getgrassshapescaleY = Read_Float(xmlbuf, "<GrassShapeScaleY>", "</GrassShapeScaleY>", &grassshapescaleY);
+		getgrassshapescaleZ = Read_Float(xmlbuf, "<GrassShapeScaleZ>", "</GrassShapeScaleZ>", &grassshapescaleZ);
+
+		getgrassbendscale = Read_Float(xmlbuf, "<GrassBendScale>", "</GrassBendScale>", &grassbendscale);
+
 		ChaMatrix grassmat;
 		grassmat.SetIdentity();
 		int result0 = 0;
@@ -1733,8 +1777,6 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 	newmodel->SetRefPosPow(setrefposPower);
 	newmodel->SetRefPosDec(setrefposDec);
 	newmodel->SetRefPosSkip(setrefposSkip);
-	
-
 	newmodel->SetRefPosTexKind(setrefposKind);
 	if (setrefposKind != POINTSPRITE_1234) {
 		newmodel->RemakeConstantBuffers();//必要
@@ -1743,6 +1785,42 @@ int CChaFile::ReadChara(bool limitdegflag, int charanum, int characnt,
 
 	//newmodel->m_tmpmotspeed = m_motspeed;
 	if (grassflag == 1) {
+
+		ChaVector4 grassdiffuse = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		if ((getgrassdiffuseR == 0) && (grassdiffuseR >= 0.0f) && (grassdiffuseR <= 20.0f)) {
+			grassdiffuse.x = grassdiffuseR;
+		}
+		if ((getgrassdiffuseG == 0) && (grassdiffuseG >= 0.0f) && (grassdiffuseG <= 20.0f)) {
+			grassdiffuse.y = grassdiffuseG;
+		}
+		if ((getgrassdiffuseB == 0) && (grassdiffuseB >= 0.0f) && (grassdiffuseB <= 20.0f)) {
+			grassdiffuse.z = grassdiffuseB;
+		}
+		if ((getgrassdiffuseA == 0) && (grassdiffuseA >= 0.0f) && (grassdiffuseA <= 1.0f)) {
+			grassdiffuse.w = grassdiffuseA;
+		}
+
+		ChaVector3 grassshapescale = ChaVector3(1.0f, 1.0f, 1.0f);
+		if ((getgrassshapescaleX == 0) && (grassshapescaleX >= 0.0f) && (grassshapescaleX <= 20.0f)) {
+			grassshapescale.x = grassshapescaleX;
+		}
+		if ((getgrassshapescaleY == 0) && (grassshapescaleY >= 0.0f) && (grassshapescaleY <= 20.0f)) {
+			grassshapescale.y = grassshapescaleY;
+		}
+		if ((getgrassshapescaleZ == 0) && (grassshapescaleZ >= 0.0f) && (grassshapescaleZ <= 20.0f)) {
+			grassshapescale.z = grassshapescaleZ;
+		}
+
+		float setgrassbendscale = 1.0f;
+		if ((getgrassbendscale == 0) && (grassbendscale >= 0.0f) && (grassbendscale <= 20.0f)) {
+			setgrassbendscale = grassbendscale;
+		}
+
+		newmodel->SetGrassDiffuseRate(grassdiffuse);
+		newmodel->SetGrassShapeScale(grassshapescale);
+		newmodel->SetGrassBendScale(setgrassbendscale);
+
+
 		CGrassElem* newgrasselem = new CGrassElem(newmodel);
 		if (!newgrasselem) {
 			_ASSERT(0);

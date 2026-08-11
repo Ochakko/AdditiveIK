@@ -3434,7 +3434,7 @@ public: //accesser
 			_ASSERT(0);
 		}
 	}
-	int SetInstancingParams_Grass(int srcinstancingno, ChaMatrix srcwmat, ChaMatrix srcvpmat, ChaVector4 srcdiffusemult);
+	int SetInstancingParams_Grass(int srcinstancingno, ChaMatrix srcwmat, ChaMatrix srcvpmat);
 	INSTANCINGPARAMS* GetInstancingParams_Grass()
 	{
 		return m_instancingparams_grass;
@@ -3625,6 +3625,25 @@ public: //accesser
 	//{
 	//	return m_csfirstdispatchflag;
 	//}
+
+	void SetGrassShapeScale(ChaVector3 srcval) {
+		m_grassShapeScale = srcval;
+	};
+	ChaVector3 GetGrassShapeScale() {
+		return m_grassShapeScale;
+	};
+	void SetGrassDiffuseRate(ChaVector4 srcval) {
+		m_grassDiffuseRate = srcval;
+	};
+	ChaVector4 GetGrassDiffuseRate() {
+		return m_grassDiffuseRate;
+	};
+	void SetGrassBendScale(float srcval) {
+		m_grassBendScale = srcval;
+	};
+	float GetGrassBendScale() {
+		return m_grassBendScale;
+	}
 
 	void SetSecondCallOfMotion2Bt(bool secondcall) {
 		m_secondCallOfMotion2Bt = secondcall;
@@ -4200,6 +4219,10 @@ private:
 	int m_instancingnum_grass;
 	int m_instancingdrawnum_grass;
 	INSTANCINGPARAMS m_instancingparams_grass[GRASSINDEXMAX];
+	ChaVector3 m_grassShapeScale;
+	ChaVector4 m_grassDiffuseRate;
+	float m_grassBendScale;
+
 
 
 	bool m_refposflag;

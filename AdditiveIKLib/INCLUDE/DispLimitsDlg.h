@@ -128,12 +128,12 @@ private:
 	OrgWinGUI::OWP_Separator* m_dispsp8;
 
 
-	OrgWinGUI::OWP_Separator* m_grassheightsp;
-	OrgWinGUI::OWP_Label* m_grassheightLabel;
-	OrgWinGUI::OWP_Slider* m_grassheightSlider;
-	OrgWinGUI::OWP_Separator* m_grassbendsp;
-	OrgWinGUI::OWP_Label* m_grassbendLabel;
-	OrgWinGUI::OWP_Slider* m_grassbendSlider;
+	//OrgWinGUI::OWP_Separator* m_grassheightsp;
+	//OrgWinGUI::OWP_Label* m_grassheightLabel;
+	//OrgWinGUI::OWP_Slider* m_grassheightSlider;
+	//OrgWinGUI::OWP_Separator* m_grassbendsp;
+	//OrgWinGUI::OWP_Label* m_grassbendLabel;
+	//OrgWinGUI::OWP_Slider* m_grassbendSlider;
 
 };
 

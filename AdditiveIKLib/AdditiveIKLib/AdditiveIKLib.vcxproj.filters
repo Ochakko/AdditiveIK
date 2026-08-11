@@ -351,6 +351,9 @@
     <ClCompile Include="..\CPP\RefPosDlg.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
+    <ClCompile Include="..\CPP\GrassDlg.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\INCLUDE\ChaScene.h" />
@@ -1619,6 +1622,9 @@
       <Filter>ChaCamera</Filter>
     </ClInclude>
     <ClInclude Include="..\INCLUDE\RefPosDlg.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\INCLUDE\GrassDlg.h">
       <Filter>GUI</Filter>
     </ClInclude>
   </ItemGroup>

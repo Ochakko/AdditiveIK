@@ -576,6 +576,10 @@ int CModel::InitParams(int srcrefposnum)
 	m_instancingnum_grass = 0;
 	m_instancingdrawnum_grass = 0;
 	ZeroMemory(m_instancingparams_grass, sizeof(INSTANCINGPARAMS) * GRASSINDEXMAX);
+	m_grassShapeScale = ChaVector3(1.0f, 1.0f, 1.0f);
+	m_grassDiffuseRate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	m_grassBendScale = 1.0f;
+
 
 
 	m_materialbank.InitParams();
@@ -26312,7 +26316,7 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 	return 0;
 }
 
-int CModel::SetInstancingParams_Grass(int srcinstancingno, ChaMatrix srcwmat, ChaMatrix srcvpmat, ChaVector4 srcdiffusemult)
+int CModel::SetInstancingParams_Grass(int srcinstancingno, ChaMatrix srcwmat, ChaMatrix srcvpmat)
 {
 	//#######################################################################################
 	//srcinstancingnoは参考程度の値
@@ -26325,10 +26329,10 @@ int CModel::SetInstancingParams_Grass(int srcinstancingno, ChaMatrix srcwmat, Ch
 		params.Init();
 		params.SetWMat(srcwmat);
 		params.SetVPMat(srcvpmat);
-		params.diffusemult = srcdiffusemult;
+		params.diffusemult = GetGrassDiffuseRate();
 
 		if (GetGrassFlag()) {
-			params.scale.y = g_grassHeightScale;
+			params.scale = ChaVector4(GetGrassShapeScale(), 1.0f);
 		}
 
 		//2024/05/12 bendvec 草をカメラ横方向に揺らすためのベクトル
@@ -26340,7 +26344,8 @@ int CModel::SetInstancingParams_Grass(int srcinstancingno, ChaMatrix srcwmat, Ch
 			invcammat.SetIdentity();
 		}
 		if (GetGrassFlag()) {
-			params.bendvec.SetParams(invcammat._11 * g_grassBendScale, invcammat._12 * g_grassBendScale, invcammat._13 * g_grassBendScale, 0.0f);
+			float bendscale = GetGrassBendScale();
+			params.bendvec.SetParams(invcammat._11 * bendscale, invcammat._12 * bendscale, invcammat._13 * bendscale, 0.0f);
 		}
 		else {
 			params.bendvec.SetParams(invcammat._11, invcammat._12, invcammat._13, 0.0f);
