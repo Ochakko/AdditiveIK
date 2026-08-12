@@ -150,8 +150,9 @@ int CMotChangeDlg::SetVisible(bool srcflag)
 {
 	int ret;
 
-	BOOL dummy;
-	OnStop( 0, 0, 0, dummy );
+	//2026/08/12 CommentOut
+	//BOOL dummy;
+	//OnStop( 0, 0, 0, dummy );
 
 	if (srcflag) {
 		m_cmdshow = SW_SHOW;

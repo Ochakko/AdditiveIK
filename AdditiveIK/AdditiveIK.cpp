@@ -6276,9 +6276,10 @@ void OnUserFrameMove(double fTime, float fElapsedTime, double difftime, int endf
 					OnTimeLineCursor();
 				}
 			}
-			else {
-				g_previewFlag = 0;
-			}
+			//2026/08/12 CommentOut
+			//else {
+			//	g_previewFlag = 0;
+			//}
 		}
 		else {
 			OnFramePreviewStop();
@@ -11973,12 +11974,13 @@ int refreshEulerGraph()
 {
 	//オイラーグラフのキーを作成しなおさない場合はUpdateEditedEuler()
 
-	if ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == true)) {
-		if (s_owpEulerGraph) {
-			s_owpEulerGraph->setMaxTime(GetCurrentModel()->GetCurrentMaxFrame());
-		}
-		return 0;
-	}
+	//2026/08/12 CommentOut
+	//if ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == true)) {
+	//	if (s_owpEulerGraph) {
+	//		s_owpEulerGraph->setMaxTime(GetCurrentModel()->GetCurrentMaxFrame());
+	//	}
+	//	return 0;
+	//}
 
 	if (s_owpEulerGraph) {
 		if (g_edittarget != EDITTARGET_CAMERA) {
@@ -12268,13 +12270,14 @@ int refreshEulerGraph()
 //タイムラインにモーションデータのキーを設定する
 void refreshTimeline(OWP_Timeline& timeline) 
 {
-	if ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == true)) {
-		timeline.setMaxTime(GetCurrentModel()->GetCurrentMaxFrame());
-		if (s_owpLTimeline) {
-			s_owpLTimeline->setMaxTime(GetCurrentModel()->GetCurrentMaxFrame());
-		}
-		return;
-	}
+	//2026/08/12 CommentOut
+	//if ((g_previewMOA != 0) && (g_previewMOA_SkipGraph == true)) {
+	//	timeline.setMaxTime(GetCurrentModel()->GetCurrentMaxFrame());
+	//	if (s_owpLTimeline) {
+	//		s_owpLTimeline->setMaxTime(GetCurrentModel()->GetCurrentMaxFrame());
+	//	}
+	//	return;
+	//}
 
 
 	if (s_owpEulerGraph) {
@@ -23534,9 +23537,10 @@ void CreateMarkReq(int curboneno, int broflag)
 
 int SetLTimelineMark(int curboneno)
 {
-	if (g_previewFlag != 0) {
-		return 0;
-	}
+	//2026/08/12 CommentOut
+	//if (g_previewFlag != 0) {
+	//	return 0;
+	//}
 	if (!GetCurrentModel() || !s_owpTimeline || !s_owpLTimeline) {
 		return 0;
 	}
@@ -26322,9 +26326,12 @@ int OnFrameProcessTime(double difftime, double* pnextframe, int* pendflag, int* 
 			*pnextframe = rangestart;//2026/07/25
 		}
 		GetCurrentModel()->AdvanceTime(0, s_previewrange, g_previewFlag, difftime, pnextframe, pendflag, ploopstartflag, -1);
-		if ((*pendflag == 1) && (g_previewMOA == 0)) {
-			g_previewFlag = 0;
-		}
+
+		//2026/08/12 CommentOut
+		//if ((*pendflag == 1) && (g_previewMOA == 0)) {
+		//	g_previewFlag = 0;
+		//}
+
 		GetCurrentModel()->SetMotionFrame(*pnextframe);
 	}
 
@@ -27068,23 +27075,23 @@ int OnFrameTimeLineWnd()
 {
 	// カーソル移動フラグを確認 //////////////////////////////////////////////////
 
-
-	if (g_previewFlag != 0) {//underchecking
-
-		if (g_preciseOnPreviewToo) {
-			//2022/10/27 再生中でも選択ジョイント変更処理はする
-			GetCurrentBoneFromTimeline(&s_curboneno);
-		}
-
-		//カレントフレームの１フレームを選択状態にしてしまうのでfalseにする
-		s_cursorFlag = false;
-		s_LcursorFlag = false;
-		s_keyShiftFlag = false;
-		s_LupFlag = false;
-		s_cursorUnderUndo = false;
-
-		return 0;//!!!!!!!!!!!!!!!!!!!!!
-	}
+	//2026/08/12 CommentOut
+	//if (g_previewFlag != 0) {//underchecking
+	//
+	//	if (g_preciseOnPreviewToo) {
+	//		//2022/10/27 再生中でも選択ジョイント変更処理はする
+	//		GetCurrentBoneFromTimeline(&s_curboneno);
+	//	}
+	//
+	//	//カレントフレームの１フレームを選択状態にしてしまうのでfalseにする
+	//	s_cursorFlag = false;
+	//	s_LcursorFlag = false;
+	//	s_keyShiftFlag = false;
+	//	s_LupFlag = false;
+	//	s_cursorUnderUndo = false;
+	//
+	//	return 0;//!!!!!!!!!!!!!!!!!!!!!
+	//}
 
 	if (s_zeroFrameFlag) {
 		if (GetCurrentModel()) {
@@ -27124,7 +27131,9 @@ int OnFrameTimeLineWnd()
 			g_chacamera.SetCameraAnimMode(1);
 			s_spcameramode.state = true;
 
-			PrepairUndo();//編集前のPrepairUndo
+			if (g_previewFlag == 0) {//2026/08/12
+				PrepairUndo();//編集前のPrepairUndo
+			}
 		}
 
 		s_LrefreshEditTarget = 1;
@@ -35624,9 +35633,10 @@ void AutoCameraTarget()
 //////////////////////////////////////////
 int OnTimeLineSelectFromSelectedKey()
 {
-	if (g_previewFlag != 0) {
-		return 0;
-	}
+	//2026/08/12 CommentOut
+	//if (g_previewFlag != 0) {
+	//	return 0;
+	//}
 
 	s_editrange.Clear();
 	if (GetCurrentModel() && GetCurrentModel()->ExistCurrentMotion()) {
