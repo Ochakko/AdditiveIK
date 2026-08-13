@@ -865,6 +865,20 @@ typedef struct tag_hinfo
 	};
 }HINFO;
 
+typedef struct tag_grassmover
+{
+	CModel* mover_model;
+	float mover_r;
+
+	void Init() {
+		mover_model = nullptr;
+		mover_r = 0.0f;
+	};
+	tag_grassmover() {
+		Init();
+	};
+}GRASSMOVER;
+
 typedef struct tag_reinfo
 {
 	char filename[MAX_PATH];

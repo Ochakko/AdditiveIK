@@ -3644,6 +3644,8 @@ public: //accesser
 	float GetGrassBendScale() {
 		return m_grassBendScale;
 	}
+	ChaVector3 GetGrassMoverPosition();
+
 
 	void SetSecondCallOfMotion2Bt(bool secondcall) {
 		m_secondCallOfMotion2Bt = secondcall;

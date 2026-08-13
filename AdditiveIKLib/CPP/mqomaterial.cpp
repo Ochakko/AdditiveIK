@@ -36,6 +36,7 @@
 
 //extern CTexBank* g_texbank;
 extern ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わらずオリジナルのインデックスで格納
+extern GRASSMOVER g_grassmover;
 
 //################
 //For PointSprite
@@ -4480,10 +4481,24 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].distortiontype[2] = 0;
 		m_cb[0].distortiontype[3] = 0;
 		m_cb[0].distortionscale.SetParams((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
-		m_cb[0].distortioncenter.x = GetSeaCenter().x;
-		m_cb[0].distortioncenter.y = GetSeaCenter().y;
-		m_cb[0].distortioncenter.z = GetRiverDir().x;
-		m_cb[0].distortioncenter.w = GetRiverDir().y;
+		//m_cb[0].distortioncenter.x = GetSeaCenter().x;
+		//m_cb[0].distortioncenter.y = GetSeaCenter().y;
+		//m_cb[0].distortioncenter.z = GetRiverDir().x;
+		//m_cb[0].distortioncenter.w = GetRiverDir().y;
+		//2026/08/13 instancingのときは　distortioncenterにはGrassMoverのModelPosとMoverRを入れる
+		if (g_grassmover.mover_model != nullptr) {
+			ChaVector3 moverpos = g_grassmover.mover_model->GetGrassMoverPosition();
+			m_cb[0].distortioncenter.x = moverpos.x;
+			m_cb[0].distortioncenter.y = moverpos.y;
+			m_cb[0].distortioncenter.z = moverpos.z;
+			m_cb[0].distortioncenter.w = g_grassmover.mover_r;
+		}
+		else {
+			m_cb[0].distortioncenter.x = 0.0f;
+			m_cb[0].distortioncenter.y = 0.0f;
+			m_cb[0].distortioncenter.z = 0.0f;
+			m_cb[0].distortioncenter.w = 0.0f;
+		}
 
 		m_commonConstantBuffer[0]->CopyToVRAM(m_cb[0]);
 	}
@@ -4548,10 +4563,24 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].distortiontype[2] = 0;
 		m_cb[0].distortiontype[3] = 0;
 		m_cb[0].distortionscale.SetParams((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
-		m_cb[0].distortioncenter.x = GetSeaCenter().x;
-		m_cb[0].distortioncenter.y = GetSeaCenter().y;
-		m_cb[0].distortioncenter.z = GetRiverDir().x;
-		m_cb[0].distortioncenter.w = GetRiverDir().y;
+		//m_cb[0].distortioncenter.x = GetSeaCenter().x;
+		//m_cb[0].distortioncenter.y = GetSeaCenter().y;
+		//m_cb[0].distortioncenter.z = GetRiverDir().x;
+		//m_cb[0].distortioncenter.w = GetRiverDir().y;
+		//2026/08/13 instancingのときは　distortioncenterにはGrassMoverのModelPosとMoverRを入れる
+		if (g_grassmover.mover_model != nullptr) {
+			ChaVector3 moverpos = g_grassmover.mover_model->GetGrassMoverPosition();
+			m_cb[0].distortioncenter.x = moverpos.x;
+			m_cb[0].distortioncenter.y = moverpos.y;
+			m_cb[0].distortioncenter.z = moverpos.z;
+			m_cb[0].distortioncenter.w = g_grassmover.mover_r;
+		}
+		else {
+			m_cb[0].distortioncenter.x = 0.0f;
+			m_cb[0].distortioncenter.y = 0.0f;
+			m_cb[0].distortioncenter.z = 0.0f;
+			m_cb[0].distortioncenter.w = 0.0f;
+		}
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {
 			m_commonConstantBuffer[0]->CopyToVRAM(m_cb[0]);
@@ -4630,10 +4659,24 @@ void CMQOMaterial::InstancingDrawCommon(RenderContext* rc, myRenderer::RENDEROBJ
 		m_cb[0].distortiontype[2] = 0;
 		m_cb[0].distortiontype[3] = 0;
 		m_cb[0].distortionscale.SetParams((float)GetDistortionScale(), (float)GetRiverFlowRate(), 0.0f, 0.0f);
-		m_cb[0].distortioncenter.x = GetSeaCenter().x;
-		m_cb[0].distortioncenter.y = GetSeaCenter().y;
-		m_cb[0].distortioncenter.z = GetRiverDir().x;
-		m_cb[0].distortioncenter.w = GetRiverDir().y;
+		//m_cb[0].distortioncenter.x = GetSeaCenter().x;
+		//m_cb[0].distortioncenter.y = GetSeaCenter().y;
+		//m_cb[0].distortioncenter.z = GetRiverDir().x;
+		//m_cb[0].distortioncenter.w = GetRiverDir().y;
+		//2026/08/13 instancingのときは　distortioncenterにはGrassMoverのModelPosとMoverRを入れる
+		if (g_grassmover.mover_model != nullptr) {
+			ChaVector3 moverpos = g_grassmover.mover_model->GetGrassMoverPosition();
+			m_cb[0].distortioncenter.x = moverpos.x;
+			m_cb[0].distortioncenter.y = moverpos.y;
+			m_cb[0].distortioncenter.z = moverpos.z;
+			m_cb[0].distortioncenter.w = g_grassmover.mover_r;
+		}
+		else {
+			m_cb[0].distortioncenter.x = 0.0f;
+			m_cb[0].distortioncenter.y = 0.0f;
+			m_cb[0].distortioncenter.z = 0.0f;
+			m_cb[0].distortioncenter.w = 0.0f;
+		}
 
 
 		if (renderobj.renderkind != RENDERKIND_SHADOWMAP) {

@@ -37,7 +37,7 @@ public:
 		return m_createdflag;
 	};
 
-	void SetModel(CModel* srcmodel);
+	void SetModel(ChaScene* srcchascene, CModel* srcmodel);
 	int Params2Dlg();
 	void SetVisible(bool srcflag);
 
@@ -84,6 +84,7 @@ private:
 	int m_sizex;
 	int m_sizey;
 
+	ChaScene* m_chascene;
 	CModel* m_model;
 	ChaVector3 m_shapescale;
 	ChaVector4 m_diffuserate;
@@ -138,6 +139,12 @@ private:
 	OrgWinGUI::OWP_Label* m_space06Label;
 	OrgWinGUI::OWP_Label* m_space07Label;
 
+	OrgWinGUI::OWP_Label* m_moverLabel;
+	OrgWinGUI::OWP_Separator* m_moversp;
+	OrgWinGUI::OWP_ComboBoxA* m_moverCombo;
+	OrgWinGUI::OWP_Separator* m_moverRsp;
+	OrgWinGUI::OWP_Label* m_moverRLabel;
+	OrgWinGUI::OWP_Slider* m_moverRSlider;
 
 	//void (*m_PrepairUndo)();
 	//int (*m_UpdateAfterEditAngleLimit)(int limit2boneflag, bool setcursorflag);//default : setcursorflag = true

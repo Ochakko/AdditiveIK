@@ -204,16 +204,27 @@ SPSIn VSMainNoSkinInstancing(SVSInInstancing vsIn, uniform bool hasSkin)
     //psIn.pos = mul(mWorld, vsIn.pos);//剛体のscalematが入っている
     psIn.pos = mul(scalepos, wmat);
     
-    if (Flags2.x == 1)
+    if (Flags2.x == 1)//grassflag
     {
         float bendval = vsIn.pos.y / (bbsize.y + 0.0001f);
-        //float xgrassshift = sin(time1) * bendval * bendval * bbsize.x * 0.5f;
         float maxshift = min(7.5f, bbsize.x);
         float xgrassshift = sin(time1) * bendval * bendval * maxshift;
-        //psIn.pos.x += xgrassshift;
-        psIn.pos.xyz += vsIn.bendvec.xyz * xgrassshift * psIn.pos.w;//bendvec : 2024/05/12
+
+        float3 movervec = psIn.pos.xyz - distortioncenter.xyz;
+        movervec.y = 0.0f;
+        float moverdist = length(movervec);
+        movervec = normalize(movervec);
+        float3 addmoverpos = ((distortioncenter.w > 0.0f) && (moverdist <= distortioncenter.w)) ? (movervec * vsIn.pos.y) : (vsIn.bendvec.xyz * xgrassshift);
+        psIn.pos.xyz += addmoverpos * psIn.pos.w;
+        //psIn.pos.y *= ((distortioncenter.w > 0.0f) && (moverdist <= distortioncenter.w)) ? 0.25f : 1.0f;
+        
+        //psIn.diffusemult = ((distortioncenter.w > 0.0f) && (moverdist <= distortioncenter.w)) ? (float4(0.10f, 0.10f, 0.10f, 1.0f) * diffusemult * vsIn.material) : (diffusemult * vsIn.material);
+        psIn.diffusemult = ((distortioncenter.w > 0.0f) && (moverdist <= distortioncenter.w)) ? (float4(0.05f, 0.05f, 0.05f, 1.0f) * vsIn.material) : (diffusemult * vsIn.material);
     }
-    
+    else
+    {
+        psIn.diffusemult = diffusemult * vsIn.material;
+    }
     float3 distvec = (psIn.pos.xyz / psIn.pos.w) - eyePos.xyz;
     float skyvalue = (Flags1.z == 1) ? 490000.0f : 0.0f; //skydof ? skydofON : skydofOFF
     psIn.depth.xyz = (Flags1.x == 0) ? length(distvec) : skyvalue; // !skymesh ? dist : skyvalue
@@ -221,7 +232,7 @@ SPSIn VSMainNoSkinInstancing(SVSInInstancing vsIn, uniform bool hasSkin)
     psIn.FogAndOther.x = (vFog.w > 0.1f) ? CalcVSFog(psIn.pos) : 0.0f;
         
     psIn.pos = mul(psIn.pos, vpmat);
-    psIn.diffusemult = diffusemult * vsIn.material;
+    //psIn.diffusemult = diffusemult * vsIn.material;
     
     psIn.normal = normalize(mul(wmat, vsIn.normal));
 

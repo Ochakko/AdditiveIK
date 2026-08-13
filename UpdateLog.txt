@@ -1,13 +1,18 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/08/14
+　GrassプレートメニューにGrassMover設定を追加.
+　　草が密集している場所を　MoverModelが移動したときに　MoverModelが草を倒しながら移動するようにみえる効果
+　　モデルと影響半径を指定
+　　半径０は効果無し
+　　
 2026/08/12
 　STREAM DECK XLのプロファイルを更新
 　　Grassプレートメニュー用のボタン設定を追加
 　　プロファイルは以下の場所に. 
 　　	Test\STREAM_DECK_XL_Profile\AdditiveIK Profile.streamDeckProfile
 　プレビュー中、MOA再生中に　STREAM DECK XLのプレートメニュー選択ボタンを押しても再生が止まらないように.
-　　
 　　
 2026/08/11
 　シャドウマップサイズを2048から4096へ変更

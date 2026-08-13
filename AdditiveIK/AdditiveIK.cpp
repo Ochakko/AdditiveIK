@@ -651,6 +651,7 @@ HWND g_filterdlghwnd = 0;
 CRITICAL_SECTION g_CritSection_GetGP;
 CRITICAL_SECTION g_CritSection_FbxSdk;
 
+GRASSMOVER g_grassmover;
 
 static int s_onselectplugin = 0;
 static CPluginElem* s_plugin = 0;
@@ -3897,6 +3898,8 @@ void InitApp()
 	srand(28347);//2025/01/12 適当にキーをガチャガチャ押して入力しただけで未調整
 
 	InitCommonControls();
+
+	g_grassmover.Init();
 
 	//g_grassShapeScale = ChaVector3(1.0f, 1.0f, 1.0f);
 	//g_grassDiffuseRate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -8765,7 +8768,7 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			s_rigidparamsdlg.SetModel(GetCurrentModel(), s_curboneno, s_reindexmap, s_rgdindexmap);
 			s_limiteuldlg.SetModel(GetCurrentModel(), s_curboneno);
 			s_refposdlg.SetModel(GetCurrentModel());
-			s_grassdlg.SetModel(GetCurrentModel());
+			s_grassdlg.SetModel(g_chascene, GetCurrentModel());
 			s_impulsedlg.SetModel(GetCurrentModel(), s_curboneno, s_rgdindexmap);
 			s_gplanedlg.SetModel(s_gplane, s_bpWorld);
 			s_dampanimdlg.SetModel(GetCurrentModel(), s_curboneno, s_rgdindexmap);
@@ -10915,7 +10918,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 	if (s_grassflag) {
 		//2024/05/11
 		newmodel->SetGrassFlag(true);
-		newmodel->SetInstancingNum(GRASSINDEXMAX);
+		newmodel->SetInstancingNum_Grass(GRASSINDEXMAX);
 	}
 
 
@@ -25070,7 +25073,7 @@ int ChangeCurrentBone(int prepairundoflag)
 			s_rigidparamsdlg.SetModel(GetCurrentModel(), s_curboneno, s_reindexmap, s_rgdindexmap);
 			s_limiteuldlg.SetModel(GetCurrentModel(), s_curboneno);
 			s_refposdlg.SetModel(GetCurrentModel());
-			s_grassdlg.SetModel(GetCurrentModel());
+			s_grassdlg.SetModel(g_chascene, GetCurrentModel());
 			s_impulsedlg.SetModel(GetCurrentModel(), s_curboneno, s_rgdindexmap);
 			s_dampanimdlg.SetModel(GetCurrentModel(), s_curboneno, s_rgdindexmap);
 
@@ -45240,7 +45243,7 @@ void ShowRefPosWnd(bool srcflag)
 void ShowGrassWnd(bool srcflag)
 {
 	if (srcflag && (GetCurrentModel() != nullptr)) {
-		s_grassdlg.SetModel(GetCurrentModel());
+		s_grassdlg.SetModel(g_chascene, GetCurrentModel());
 	}
 
 	s_grassdlg.SetVisible(srcflag);
@@ -48868,7 +48871,7 @@ int SetModel2Dlgs(CModel* srcmodel)
 		s_rigidparamsdlg.SetModel(srcmodel, s_curboneno, s_reindexmap, s_rgdindexmap);
 		s_limiteuldlg.SetModel(srcmodel, s_curboneno);
 		s_refposdlg.SetModel(srcmodel);
-		s_grassdlg.SetModel(srcmodel);
+		s_grassdlg.SetModel(g_chascene, srcmodel);
 
 		s_dispgroupdlg.SetModel(srcmodel);
 		s_footrigdlg.SetModel(g_chascene, srcmodel);

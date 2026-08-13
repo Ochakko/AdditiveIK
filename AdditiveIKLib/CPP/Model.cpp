@@ -135,6 +135,7 @@ extern int g_dspushedOK;
 extern int g_dspushedL3;
 extern int g_dspushedR3;
 extern ChaCamera g_chacamera;
+extern GRASSMOVER g_grassmover;
 
 static bool s_workingChkinView = false;
 
@@ -26361,4 +26362,32 @@ int CModel::SetInstancingParams_Grass(int srcinstancingno, ChaMatrix srcwmat, Ch
 
 
 	return 0;
+}
+
+
+ChaVector3 CModel::GetGrassMoverPosition()
+{
+	ChaVector3 retpos;
+	if (g_grassmover.mover_model != nullptr) {
+		CBone* hipsbone = g_grassmover.mover_model->GetHipsBone();
+		if ((hipsbone != nullptr) && hipsbone->IsSkeleton()) {
+			bool calcslotflag = true;
+			int curmotid = GetCurrentMotID();
+			double opeframe = GetOpeFrame(calcslotflag);
+			CMotionPoint curmp = hipsbone->GetCurMp(calcslotflag);
+			ChaMatrix clustermat = hipsbone->GetWorldMat(g_limitdegflag, curmotid, opeframe, &curmp);
+
+			ChaVector3 befpos, aftpos;
+			befpos = hipsbone->GetJointFPos();
+			ChaVector3TransformCoord(&aftpos, &befpos, &clustermat);
+			retpos = aftpos;
+		}
+		else {
+			retpos = ChaMatrixTraVec(GetWorldMat());
+		}
+	}
+	else {
+		retpos.SetZeroVec3();
+	}
+	return retpos;
 }

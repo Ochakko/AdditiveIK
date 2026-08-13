@@ -3,6 +3,7 @@
 #include <GrassDlg.h>
 #include "../../AdditiveIK/SetDlgPos.h"
 
+#include <ChaScene.h>
 #include <Model.h>
 #include <OrgWindow.h>
 #include <GlobalVar.h>
@@ -19,7 +20,7 @@ using namespace OrgWinGUI;
 
 
 extern HWND g_mainhwnd;//アプリケーションウインドウハンドル
-
+extern GRASSMOVER g_grassmover;
 
 /////////////////////////////////////////////////////////////////////////////
 // CGrassDlg
@@ -157,6 +158,32 @@ int CGrassDlg::DestroyObjs()
 	}
 
 
+	if (m_moverLabel) {
+		delete m_moverLabel;
+		m_moverLabel = nullptr;
+	}
+	if (m_moverCombo) {
+		delete m_moverCombo;
+		m_moverCombo = nullptr;
+	}
+	if (m_moversp) {
+		delete m_moversp;
+		m_moversp = nullptr;
+	}
+	if (m_moverRLabel) {
+		delete m_moverRLabel;
+		m_moverRLabel = nullptr;
+	}
+	if (m_moverRSlider) {
+		delete m_moverRSlider;
+		m_moverRSlider = nullptr;
+	}
+	if (m_moverRsp) {
+		delete m_moverRsp;
+		m_moverRsp = nullptr;
+	}
+
+
 
 	if (m_nameLabel) {
 		delete m_nameLabel;
@@ -257,6 +284,14 @@ void CGrassDlg::InitParams()
 	m_bendscaleSlider = nullptr;
 
 
+	m_moversp = nullptr;
+	m_moverLabel = nullptr;
+	m_moverCombo = nullptr;
+	m_moverRsp = nullptr;
+	m_moverRLabel = nullptr;
+	m_moverRSlider = nullptr;
+
+
 	m_nameLabel = nullptr;
 	m_grassLabel = nullptr;
 	m_space01Label = nullptr;
@@ -294,8 +329,9 @@ int CGrassDlg::SetPosAndSize(int srcposx, int srcposy, int srcsizex, int srcsize
 //	return 0;
 //}
 
-void CGrassDlg::SetModel(CModel* srcmodel)
+void CGrassDlg::SetModel(ChaScene* srcchascene, CModel* srcmodel)
 {
+	m_chascene = srcchascene;
 	m_model = srcmodel;
 	CreateGrassWnd();//作成済はリターン
 
@@ -585,6 +621,37 @@ int CGrassDlg::CreateGrassWnd()
 		}
 
 
+		m_moverLabel = new OWP_Label(L"MoverModel", labelheight);
+		if (!m_moverLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_moversp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_moversp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_moverCombo = new OWP_ComboBoxA(L"GrassMoverCombo", labelheight);
+		if (!m_moverCombo) {
+			_ASSERT(0);
+			abort();
+		}
+		m_moverRLabel = new OWP_Label(L"Mover Radius", labelheight);
+		if (!m_moverRLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_moverRsp = new OWP_Separator(m_dlgWnd, true, rate1, true);
+		if (!m_moverRsp) {
+			_ASSERT(0);
+			abort();
+		}
+		m_moverRSlider = new OWP_Slider((double)g_grassmover.mover_r, 500.0, 0.0);
+		if (!m_moverRSlider) {
+			_ASSERT(0);
+			abort();
+		}
+
 		m_dlgWnd->addParts(*m_nameLabel);
 		m_dlgWnd->addParts(*m_grassLabel);
 		m_dlgWnd->addParts(*m_space01Label);
@@ -627,6 +694,16 @@ int CGrassDlg::CreateGrassWnd()
 		m_bendscalesp->addParts2(*m_bendscaleSlider);
 
 		m_dlgWnd->addParts(*m_space03Label);
+		m_dlgWnd->addParts(*m_space05Label);//common settings
+		m_dlgWnd->addParts(*m_space02Label);
+
+		m_dlgWnd->addParts(*m_moversp);
+		m_moversp->addParts1(*m_moverLabel);
+		m_moversp->addParts2(*m_moverCombo);
+		m_dlgWnd->addParts(*m_space01Label);
+		m_dlgWnd->addParts(*m_moverRsp);
+		m_moverRsp->addParts1(*m_moverRLabel);
+		m_moverRsp->addParts2(*m_moverRSlider);
 
 
 		//##########
@@ -691,15 +768,39 @@ int CGrassDlg::CreateGrassWnd()
 				m_model->SetGrassShapeScale(currentval);
 			}
 			});
-
-
 		m_bendscaleSlider->setCursorListener([=, this]() {
 			double value = m_bendscaleSlider->getValue();
 			if (m_model != nullptr) {
 				m_model->SetGrassBendScale((float)value);
 			}
 			});
+		m_moverRSlider->setCursorListener([=, this]() {
+			double value = m_moverRSlider->getValue();
+			g_grassmover.mover_r = (float)value;
+			});
 
+		///////////////////
+		// Combo
+		///////////////////
+		m_moverCombo->setButtonListener([=, this]() {
+			int comboid = m_moverCombo->trackPopUpMenu();
+			if ((comboid >= 1) && m_chascene && m_model) {
+				MODELELEM modelelem = m_chascene->GetModelElem(comboid - 1);
+				if (modelelem.modelptr) {
+					g_grassmover.mover_model = modelelem.modelptr;
+				}
+				else {
+					g_grassmover.mover_model = nullptr;
+				}
+			}
+			else {
+				g_grassmover.mover_model = nullptr;
+			}
+
+			if (m_dlgWnd) {
+				m_dlgWnd->callRewrite();
+			}
+			});
 
 
 		m_dlgWnd->setSize(WindowSize(m_sizex, m_sizey));
@@ -766,7 +867,39 @@ int CGrassDlg::Params2Dlg()
 			m_bendscaleSlider->setValue((double)bendscale, false);
 		}
 
+		if (m_moverRSlider != nullptr) {
+			m_moverRSlider->setValue((double)g_grassmover.mover_r, false);
+		}
 
+		if (m_moverCombo) {
+			m_moverCombo->ResetCombo();
+			m_moverCombo->addString("   ");//先頭項目は未設定
+
+			int findselected = -1;
+			int modelnum = m_chascene->GetModelNum();
+			int modelindex;
+			for (modelindex = 0; modelindex < modelnum; modelindex++) {
+				MODELELEM curmodelelem = m_chascene->GetModelElem(modelindex);
+				if (curmodelelem.modelptr) {
+					WCHAR movername[MAX_PATH] = { 0L };
+					wcscpy_s(movername, MAX_PATH, curmodelelem.modelptr->GetFileName());
+					char mbmovername[MAX_PATH] = { 0 };
+					WideCharToMultiByte(CP_ACP, 0, movername, -1, mbmovername, MAX_PATH, NULL, NULL);
+					m_moverCombo->addString(mbmovername);
+
+					if ((g_grassmover.mover_model != nullptr) && (g_grassmover.mover_model == curmodelelem.modelptr)) {
+						findselected = modelindex;
+					}
+				}
+				else {
+					m_moverCombo->addString("invalid name");
+				}
+			}
+
+			if (findselected >= 0) {
+				m_moverCombo->setSelectedCombo(findselected + 1);
+			}
+		}
 
 		m_dlgWnd->callRewrite();
 	}
