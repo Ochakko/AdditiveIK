@@ -70,6 +70,7 @@
 #include "GColiIDDlg.h"
 #include "RegistDlg.h"
 #include <GColiFile.h>
+#include <GrassFile.h>
 #include "SettingsDlg.h"
 #include <CopyHistoryDlg2.h>
 #include <DollyHistoryDlg2.h>
@@ -2565,6 +2566,7 @@ CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int init
 static int OpenREFile();
 static int OpenImpFile();
 static int OpenGcoFile();
+static int OpenGrassFile(WCHAR* grassfilepath);
 static int OpenMNLFile();
 
 int OnDelMotion(int delindex, bool ondelbutton = false);
@@ -9478,6 +9480,19 @@ int OpenGcoFile()
 	return 0;
 }
 
+int OpenGrassFile(WCHAR* grassfilepath)
+{
+	int result = 0;
+
+	if (grassfilepath == 0L) {
+		return 0;
+	}
+
+	CGrassFile grassfile;
+	result = grassfile.LoadGrassFile(grassfilepath);
+
+	return result;
+}
 
 int OpenImpFile()
 {
@@ -19699,7 +19714,7 @@ int OpenChaFile()
 	distparams.Init();
 	int ret = chafile.LoadChaFile(g_limitdegflag, g_tmpmqopath,
 		&s_footrigdlg,
-		OpenFBXFile, OpenREFile, OpenImpFile, OpenGcoFile,
+		OpenFBXFile, OpenREFile, OpenImpFile, OpenGcoFile, OpenGrassFile,
 		OnREMenu, OnRgdMenu, OnRgdMorphMenu, OnImpMenu,
 		s_grassElemVec, &cameraonload, &distparams);
 	if (ret == 1) {

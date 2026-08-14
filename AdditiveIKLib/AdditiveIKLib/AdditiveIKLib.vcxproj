@@ -226,6 +226,7 @@
     <ClCompile Include="..\CPP\GPlaneDlg.cpp" />
     <ClCompile Include="..\CPP\GrassDlg.cpp" />
     <ClCompile Include="..\CPP\GrassElem.cpp" />
+    <ClCompile Include="..\CPP\GrassFile.cpp" />
     <ClCompile Include="..\CPP\ImpFile.cpp" />
     <ClCompile Include="..\CPP\ImpulseDlg.cpp" />
     <ClCompile Include="..\CPP\InfBone.cpp" />
@@ -659,6 +660,7 @@
     <ClInclude Include="..\INCLUDE\GPlaneDlg.h" />
     <ClInclude Include="..\INCLUDE\GrassDlg.h" />
     <ClInclude Include="..\INCLUDE\GrassElem.h" />
+    <ClInclude Include="..\INCLUDE\GrassFile.h" />
     <ClInclude Include="..\INCLUDE\ImpFile.h" />
     <ClInclude Include="..\INCLUDE\ImpulseDlg.h" />
     <ClInclude Include="..\INCLUDE\InfBone.h" />

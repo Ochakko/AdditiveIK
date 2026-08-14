@@ -23,6 +23,7 @@
 #include "..\\BTMANAGER\\BPWorld.h"
 #include <ImpFile.h>
 #include <GColiFile.h>
+#include <GrassFile.h>
 #include <RigidElemFile.h>
 
 #include <FBXFile.h>
@@ -83,6 +84,7 @@ int CChaFile::InitParams()
 	m_RefFunc = nullptr;
 	m_ImpFunc = nullptr;
 	m_GcoFunc = nullptr;
+	m_GrassFunc = nullptr;
 	m_ReMenu = nullptr;
 	m_RgdMenu = nullptr;
 	m_MorphMenu = nullptr;
@@ -164,6 +166,13 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	swprintf_s( wgconame, MAX_PATH, L"%s\\%s.gco", m_newdirname, projname );
 	CGColiFile gcofile;
 	CallF( gcofile.WriteGColiFile( wgconame, srcbpw ), return 1 );
+
+	
+	WCHAR wgrassname[MAX_PATH] = { 0L };
+	swprintf_s(wgrassname, MAX_PATH, L"%s\\%s.gra", m_newdirname, projname);
+	CGrassFile grassfile;
+	CallF(grassfile.WriteGrassFile(wgrassname), return 1);
+
 
 	CallF(Write2File("  <BoneMarkDisp>%d</BoneMarkDisp>\r\n", g_bonemarkflag), return 1);
 	CallF(Write2File("  <RigidMarkDisp>%d</RigidMarkDisp>\r\n", g_rigidmarkflag), return 1);
@@ -873,7 +882,7 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	CFootRigDlg* srcfootrigdlg,
 	CModel* (*srcfbxfunc)( bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, 
 		std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum, int srcrefposmaxnum),
-	int (*srcReffunc)(), int (*srcImpFunc)(), int (*srcGcoFunc)(),
+	int (*srcReffunc)(), int (*srcImpFunc)(), int (*srcGcoFunc)(), int (*srcGrassFunc)(WCHAR* srcpath),
 	int (*srcReMenu)( int selindex1, int callbymenu1 ), 
 	int (*srcRgdMenu)( int selindex2, int callbymenu2 ), 
 	int (*srcMorphMenu)( int selindex3 ), int (*srcImpMenu)( int selindex4 ),
@@ -885,6 +894,7 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	m_RefFunc = srcReffunc;
 	m_ImpFunc = srcImpFunc;
 	m_GcoFunc = srcGcoFunc;
+	m_GrassFunc = srcGrassFunc;
 	m_ReMenu = srcReMenu;
 	m_RgdMenu = srcRgdMenu;
 	m_MorphMenu = srcMorphMenu;
@@ -900,6 +910,17 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 		return 1;
 	}
 
+	WCHAR grassfilepath[MAX_PATH] = { 0L };
+	wcscpy_s(grassfilepath, MAX_PATH, strpath);
+	WCHAR* pext1 = wcsrchr(grassfilepath, L'.');
+	if (pext1 != nullptr) {
+		*pext1 = 0L;
+		wcscat_s(grassfilepath, L".gra");
+	}
+	else {
+		grassfilepath[0] = 0L;
+	}
+
 	wcscpy_s( m_wloaddir, MAX_PATH, strpath );
 	WCHAR* lasten;
 	lasten = wcsrchr( m_wloaddir, TEXT('\\') );
@@ -908,6 +929,9 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 		return 1;
 	}
 	*lasten = 0L;
+
+
+
 
 	m_hfile = CreateFile( strpath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
 		FILE_FLAG_SEQUENTIAL_SCAN, NULL );
@@ -1301,7 +1325,6 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	g_boneaxis = tempboneaxis;
 
 
-
 	m_xmliobuf.pos = 0;
 	XMLIOBUF wallbuf;
 	ZeroMemory(&wallbuf, sizeof(XMLIOBUF));
@@ -1310,6 +1333,17 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	if (chkret2 == 0) {
 		CallF(ReadWall(&wallbuf), return 2);
 	}
+
+
+
+
+	int chkret3;
+	chkret3 = (this->m_GrassFunc)(grassfilepath);
+	if ((chkret3 != 0) && (chkret3 != 2)) {
+		_ASSERT(0);
+		return 1;
+	}
+
 
 	return 0;
 }

@@ -1,6 +1,10 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/08/15
+　GrassMover設定の保存読み込み
+　　プロジェクト保存時にGrassMover設定を保存、プロジェクト読み込み時に読み込み.
+　　
 2026/08/14
 　GrassプレートメニューにGrassMover設定を追加.
 　　草が密集している場所を　MoverModelが移動したときに　MoverModelが草を倒しながら移動するようにみえる効果
