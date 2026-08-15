@@ -1,6 +1,13 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/08/16
+　ReadMe.mdのトップ絵を更新
+　
+　ショートムービー
+　　草ムーバー Take02 01
+　　https://youtube.com/shorts/jNrEZlSjsYg
+　　
 2026/08/15
 　1.0.0.79に向けて
 　　不具合修正
