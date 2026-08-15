@@ -2,7 +2,7 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2026/08/15
-　AdditiveIK 1.0.0.78 RC1(リリース候補1)
+　AdditiveIK 1.0.0.78 release
 　　1.0.0.77からの変更点
 　　　シャドウマップサイズを2048から4096へ変更
 　　　　より広い範囲の影がきれいに.
