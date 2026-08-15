@@ -2,6 +2,11 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2026/08/15
+　1.0.0.79に向けて
+　　不具合修正
+　　　GrassメニューでGrassMoverに何かを設定してから保存しないと落ちる不具合を修正
+　　　
+2026/08/15
 　AdditiveIK 1.0.0.78 release
 　　1.0.0.77からの変更点
 　　　シャドウマップサイズを2048から4096へ変更

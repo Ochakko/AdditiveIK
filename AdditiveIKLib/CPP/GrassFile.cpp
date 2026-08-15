@@ -89,7 +89,7 @@ int CGrassFile::WriteGrass()
 	}
 	if (g_grassmover.mover_model == nullptr) {
 		_ASSERT(0);
-		return 1;
+		return 0;
 	}
 
 	WCHAR modeldir[MAX_PATH] = { 0L };

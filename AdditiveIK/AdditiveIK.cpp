@@ -10413,9 +10413,10 @@ int OpenFile()
 		}
 		int result = 0;
 		CModel* newmodel = 0;
-		int cmpcha, cmpfbx, cmpmqo, cmpref, cmpimp, cmpgco, cmpmnl;
+		int cmpcha, cmpfbx, cmpFBX, cmpmqo, cmpref, cmpimp, cmpgco, cmpmnl;
 		cmpcha = wcscmp(extptr, L".cha");
 		cmpfbx = wcscmp(extptr, L".fbx");
+		cmpFBX = wcscmp(extptr, L".FBX");
 		cmpmqo = wcscmp(extptr, L".mqo");
 		cmpref = wcscmp(extptr, L".ref");
 		cmpimp = wcscmp(extptr, L".imp");
@@ -10425,7 +10426,7 @@ int OpenFile()
 			result = OpenChaFile();
 			s_filterindex = 1;
 		}
-		else if (cmpfbx == 0) {
+		else if ((cmpfbx == 0) || (cmpFBX == 0)) {
 			if (g_chascene && (g_chascene->GetModelNum() > 0)) {
 				//OnModelMenu(false, g_chascene->GetModelNum() - 1, 1);
 				bool forceflag = true;//2024/06/26 各ダイアログ作成のためにforceflag必要
@@ -10508,10 +10509,11 @@ int OpenFile()
 			}
 			int result = 0;
 			CModel* newmodel = 0;
-			int cmpfbx, cmpmqo;
+			int cmpfbx, cmpFBX, cmpmqo;
 			cmpfbx = wcscmp(extptr, L".fbx");
+			cmpFBX = wcscmp(extptr, L".FBX");
 			cmpmqo = wcscmp(extptr, L".mqo");
-			if (cmpfbx == 0) {
+			if ((cmpfbx == 0) || (cmpFBX == 0)) {
 				//WCHAR* nexttopchar = topchar + leng2 + 1;
 				//if (*nexttopchar != TEXT('\0')) {
 				if (g_chascene && (g_chascene->GetModelNum() > 0)) {
@@ -36687,7 +36689,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.78 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.79 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -40263,7 +40265,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.78 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.79 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {
@@ -40500,7 +40502,7 @@ int GetchaHistoryDir(std::vector<wstring>& dstvecopenfilename, int filter_cha)
 							}
 						}
 						else {
-							if (FindAtTheLast(newwstr, L".fbx")) {
+							if (FindAtTheLast(newwstr, L".fbx") || FindAtTheLast(newwstr, L".FBX")) {
 								filtermatch = true;
 							}
 							else {
@@ -49050,7 +49052,7 @@ int SaveOpenedNameToHistoryFile(int srctype, WCHAR* srcname, int srcleng)
 			break;
 		case HISTORY_FBX:
 			//if ((wcscmp(pwext, L".fbx") == 0) || (wcscmp(pwext, L".FBX") == 0)) {
-			if (FindAtTheLast(wstrsrcname, L".fbx")) {
+			if (FindAtTheLast(wstrsrcname, L".fbx") || FindAtTheLast(wstrsrcname, L".FBX")) {
 				swprintf_s(HistoryForOpeningProjectWithGamePad, MAX_PATH, L"%sMB3DOpenProj_%04u%02u%02u%02u%02u%02u.txt",
 					s_appFolder,
 					localtime.wYear, localtime.wMonth, localtime.wDay, localtime.wHour, localtime.wMinute, localtime.wSecond);
