@@ -2680,6 +2680,9 @@ LRESULT CMotChangeDlg::OnPlayWithBt(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 		delete mafile;
 	}
 
+	m_chascene->StartBt();//2026/08/22
+
+
 	return 0;
 }
 
@@ -2779,6 +2782,9 @@ LRESULT CMotChangeDlg::OnStop(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bH
 	}
 
 	//g_dspeed = g_dspeedsave;
+
+
+	m_chascene->StopBt();//2026/08/22
 
 
 	g_previewFlag = 0;

@@ -1,6 +1,13 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/08/22
+　MOA2.0のアップデート
+　　〇物理＋MOA2.0＋補間モーションが崩れずに機能するように.
+　　〇DualSense左アナログスティック時以外の場合にも
+　　　モーション切り替え時にモデル位置が連続するように.
+　　〇DualSenseボタンの優先順位　＞　左アナログスティックの優先順位　に変更.
+　　
 2026/08/16
 　ReadMe.mdのトップ絵を更新
 　

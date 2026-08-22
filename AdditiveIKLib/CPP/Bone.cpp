@@ -823,11 +823,10 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 	//}
 
 
-
-	//2023/08/26
-	if (GetParModel() && (GetParModel()->GetInView(refposindex) == false)) {
-		return 0;
-	}
+	////2023/08/26 CommentOut
+	//if (GetParModel() && (GetParModel()->GetInView(refposindex) == false)) {
+	//	return 0;
+	//}
 
 
 	//2023/01/18 注意書修正
@@ -871,7 +870,8 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 
 	int existflag = 0;
 
-	if ((g_previewFlag != 5) || (GetParModel() && (GetParModel()->GetBtCnt() == 0))) {
+	//if ((g_previewFlag != 5) && ((GetBtKinFlag() != 0) || (GetParModel() && (GetParModel()->GetBtCnt() == 0)))) 
+	{
 		if (srcframe >= 0.0) {
 			ChaMatrix newworldmat;
 			ChaMatrixIdentity(&newworldmat);
@@ -936,6 +936,16 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 			SetWorldMat(limitdegflag, srcmotid, roundingframe, *wmat, &m_targetmp);//roundingframe!!!!
 		}
 
+
+		//2026/08/22
+		//物理ON、MOA再生、VRoidモデルの補間モーションで　エンドジョイント(爪 と つま先)位置が飛ぶ件に対応
+		//物理ON時のモーション補間には未対応だが　形状が崩れる不具合は直った
+		//if ((GetParModel()->GetBtCnt() != 0) && (GetBtKinFlag() != 0) && (GetChild(false) == nullptr) && (GetParent(false) != nullptr)) {
+		//	ChaMatrix bttargetmat = GetBtMat(true);
+		//	SetWorldMat(limitdegflag, srcmotid, roundingframe, bttargetmat, GetTargetMp());
+		//}
+
+
 		//if (updateslot >= 2) {
 		//	//2024/03/12 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
 		//	int otherslot = (int)(!(m_updateslot != 0));
@@ -948,49 +958,27 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 		//	}
 		//}
 
-		if (GetParModel() && (GetParModel()->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
-			bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
-			SetBtMat(GetWorldMat(limitdegflag, srcmotid, roundingframe, &m_targetmp), settobothflag);
-			SetBtFlag(1);
-		}
-		
-		//2024/09/06
-		//if (GetFootRigUpdated() || 
-		//	(GetParent(false) && GetParent(false)->GetFootRigUpdated()) || 
-		//	(GetBtKinFlag() != 0)) 
-		{
-			//2024/09/06
-			//物理乱れ防止
-			//FootRigジョイントの場合とkinematicジョイントの場合にはCBtObject::SetBtMotion()が処理をしないので　ここでSetBtMatする
-		
-			bool settobothflag = false;
-			ChaMatrix matforbt = GetWorldMat(limitdegflag, srcmotid, roundingframe, &m_targetmp);
-			SetBtMat(matforbt, settobothflag);
-			SetBtEul(m_targetmp.GetLocalEul());
-			//SetBtFlag(1);
-		}
-	}
-	else{
-		////RagdollIK時のボーン選択対策
-		//ChaVector3 jpos = GetJointFPos();
-
-		//ChaMatrix wmat2, wvpmat;
-		//if (GetParent(true)){
-		//	wmat2 = GetParent(true)->GetBtMat(true);// **wmat;
+		//if (GetParModel() && (GetParModel()->GetBtCnt() == 0)) {//2022/08/18 add checking m_parmodel
+		//	bool settobothflag = true;//2023/11/04 ダブルバッファ物理の始まりで乱れないように　両方のスロットにセット
+		//	SetBtMat(GetWorldMat(limitdegflag, srcmotid, roundingframe, &m_targetmp), settobothflag);
+		//	SetBtFlag(1);
 		//}
-		//else{
-		//	wmat2 = GetBtMat(true);// **wmat;
-		//}
-		//ChaMatrix vpmat = *vmat * *pmat;
-		//wvpmat = wmat2 * vpmat;
-
-
-		////ChaVector3TransformCoord(&m_childscreen, &m_childworld, &wvpmat);
-		////ChaVector3TransformCoord(&m_childworld, &jpos, &wmat);
-		//ChaVector3TransformCoord(&m_childworld, &jpos, &wmat2);
 		//
-		////ChaVector3TransformCoord(&m_childworld, &jpos, &(GetBtMat()));
-		//ChaVector3TransformCoord(&m_childscreen, &m_childworld, &vpmat);
+		////2024/09/06
+		////if (GetFootRigUpdated() || 
+		////	(GetParent(false) && GetParent(false)->GetFootRigUpdated()) || 
+		////	(GetBtKinFlag() != 0)) 
+		//{
+		//	//2024/09/06
+		//	//物理乱れ防止
+		//	//FootRigジョイントの場合とkinematicジョイントの場合にはCBtObject::SetBtMotion()が処理をしないので　ここでSetBtMatする
+		//
+		//	bool settobothflag = false;
+		//	ChaMatrix matforbt = GetWorldMat(limitdegflag, srcmotid, roundingframe, &m_targetmp);
+		//	SetBtMat(matforbt, settobothflag);
+		//	SetBtEul(m_targetmp.GetLocalEul());
+		//	//SetBtFlag(1);
+		//}
 	}
 
 	//2025/08/12
@@ -1059,7 +1047,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 	int existflag = 0;
 
-	if ((g_previewFlag != 5) || (GetParModel() && (GetParModel()->GetBtCnt() == 0))) {
+	if ((g_previewFlag != 5) && ((GetBtKinFlag() != 0) || (GetParModel() && (GetParModel()->GetBtCnt() == 0)))) {
 		if (srcframe >= 0.0) {
 			ChaMatrix newworldmat;
 			ChaMatrixIdentity(&newworldmat);
@@ -1099,19 +1087,27 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 
 			//2025/01/05
-			if (GetParModel() && GetParModel()->GetUnderBlending()) {
-				newworldmat = newworldmat * m_targetrate1 + m_targetmp.GetAnimMat() * (1.0 - m_targetrate1);
+			ChaMatrix newworldmatAnim;
+			ChaMatrix tmpmat;
+			//if ((g_previewMOA != 0) && GetParModel() && (GetParModel()->GetBtCnt() != 0) && GetParModel()->GetUnderBlending()) {
+			if ((g_previewMOA != 0) && GetParModel() && GetParModel()->GetUnderBlending()) {
+				newworldmatAnim = newworldmat * m_targetrate1 + m_targetmp.GetAnimMat() * (1.0 - m_targetrate1);
+				tmpmat = newworldmat * *wmat * m_targetrate1 + m_targetmp.GetWorldMat() * (1.0 - m_targetrate1);
+			}
+			else {
+				newworldmatAnim = newworldmat;
+				tmpmat = newworldmat * *wmat;
 			}
 
 
 		//2023/02/02
 		//modelのworldmatが掛かっていないアニメ姿勢も保存　GetCurrent..., CalcCurrent...用
-			m_curmp[m_updateslot].SetAnimMat(newworldmat);
+			m_curmp[m_updateslot].SetAnimMat(newworldmatAnim);
 
 
 			//modelのworldmatを掛ける
 				//skinmeshの変換の際にはシェーダーでg_hmWorldは掛けない　すでにg_hmWorldが掛かっている必要有
-			ChaMatrix tmpmat = newworldmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
+			//ChaMatrix tmpmat = newworldmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
 			SetWorldMat(limitdegflag, srcmotid, roundingframe, tmpmat, &(m_curmp[m_updateslot]));//roundingframe!!!!
 
 			if (limitdegflag == true) {

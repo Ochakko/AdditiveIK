@@ -26618,7 +26618,6 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 	for (modelcount = 0; modelcount < modelnum; modelcount++) {
 		CModel* curmodel = g_chascene->GetModel(modelcount);
 		if (curmodel && (curmodel->GetNoBoneFlag() == false)) {//2023/11/03 NoBoneのときはスキップ
-
 			if (curmodel->GetBtCnt() <= INITTERM) {
 				
 				//####################################################################
@@ -27634,6 +27633,8 @@ int OnFrameTimeLineWnd()
 
 		OnTimeLineButtonSelectFromSelectStartEnd(0);
 		//_ASSERT(0);
+
+		g_chascene->StopBt();//2026/08/22
 
 		if (s_owpLTimeline && s_owpEulerGraph) {
 			//プレビュー後に　CallRewrite --> InvalidateRect --> draw()を呼ぶため

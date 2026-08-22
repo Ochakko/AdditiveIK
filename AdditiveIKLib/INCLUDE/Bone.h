@@ -1952,7 +1952,9 @@ public: //accesser
 			return inimat;
 		}
 	}
-
+	CMotionPoint* GetTargetMp() {
+		return &m_targetmp;
+	}
 public:
 	CRITICAL_SECTION m_CritSection_GetBefNext;
 	//CRITICAL_SECTION m_CritSection_GetBefNext2;

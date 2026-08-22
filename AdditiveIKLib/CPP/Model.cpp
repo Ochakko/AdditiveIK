@@ -10053,6 +10053,8 @@ void CModel::SetBtKinFlagReq( CBtObject* srcbto, int oncreateflag )
 int CModel::BulletSimulationStop()
 {
 	BulletSimulationStopReq(m_topbt);
+	ZeroBtCnt();//2026/08/22
+
 	return 0;
 }
 
@@ -10070,7 +10072,6 @@ void CModel::BulletSimulationStopReq(CBtObject* srcbto)
 		CBtObject* chilbto = srcbto->GetChildBt(chilno);
 		BulletSimulationStopReq(chilbto);
 	}
-
 }
 
 int CModel::BulletSimulationStart()
@@ -11187,8 +11188,14 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto,
 					}
 				}
 				else {
-					curbone->SetBtMat(curwm);
-					curbone->SetBtFlag(1);
+					//############################################################################
+					//2026/08/22 m_targetmpとモーションのブレンド結果
+					//GetCurMp()を使用することにより　補間(ブレンド結果)がKinematicボーンの姿勢に反映される
+					//############################################################################
+					ChaMatrix curwm2;
+					curwm2 = curbone->GetCurMp().GetWorldMat();
+					curbone->SetBtMat(curwm2);
+					curbone->SetBtFlag(1);					
 				}
 			}
 
@@ -25707,15 +25714,11 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 	//#################################
 	int ret;
 	int eventno = 0;
-	int findindex = -1;
-	int findindex2 = -1;
-	int findindex3 = -1;
-	int findindex4 = -1;
 	double motionspeed = g_dspeed;
 	//bool backplay = false;
 	int cno;
 	for (cno = 0; cno < 256; cno++) {
-		if (g_keybuf[cno] & 0x80) {
+		if ((eventno == 0) && (g_keybuf[cno] & 0x80)) {
 			if (g_savekeybuf[cno] & 0x80) {
 				PlusPlusMoaEventRepeatsKey(cno);//２回目以降
 			}
@@ -25727,20 +25730,16 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 			//if (eventno != 0) {
 			//	int dbgflag1 = 1;
 			//}
-			findindex = cno;//moaeventrepeats初期化時のヒント用
-			break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
+			
+			//2026/08/22 押していないときにリセットするためにここではbreakしない
+			//break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
 		}
-		//else {
-			//s_moaeventrepeats[cno] = 0;
-			//初期化は別ループで
-		//}
-	}
-	for (cno = 0; cno < 256; cno++) {
-		if ((findindex >= 0) && (cno != findindex)) {
-			//採用イベント以外のリピート情報を初期化　2025/01/12
+		else {
+			//2026/08/22
 			SetMoaEventRepeatsKey(cno, 0);
 		}
 	}
+
 
 	//#############################################################
 	//キーボード入力が無くゲームパッドSonyDualSenseが接続認識されている場合
@@ -25752,8 +25751,66 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 
 	if (dualsenseflag && (eventno == 0) && (g_enableDS == true)) {
 
-		if ((g_dsaxisOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) ||
-			(g_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0)) {
+		{
+			int padno;
+			for (padno = 0; padno < MOA_PADNUM; padno++) {
+				if (eventno == 0) {
+					if (padno < MB3D_DSBUTTONNUM) {
+						if (g_dsbuttondown[padno]) {
+							if (g_bef_dsbuttondown[padno]) {
+								PlusPlusMoaEventRepeatsPAD(padno);//２回目以降
+							}
+							else {
+								SetMoaEventRepeatsPAD(padno, 1);//初回
+							}
+							eventno = eventpad->GetEventNo(padno, GetMoaEventRepeatsPAD(padno));
+
+							//2026/08/22 押していないときにリセットするためにここではbreakしない
+							//break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
+						}
+						else {
+							//2026/08/22
+							SetMoaEventRepeatsPAD(padno, 0);
+						}
+					}
+					else {
+
+						//####################################################################
+						//アナログスティックはボタンと併用することがある　今回は排他的にどちらかだけに対応
+						//####################################################################
+						int analogno = padno - MB3D_DSBUTTONNUM;
+						if ((analogno != MB3D_DSAXIS_LEFT_UPDOWN) && (analogno != MB3D_DSAXIS_LEFT_LR) &&
+							((g_dsaxisOverTh[analogno] != 0) || (g_dsaxisMOverTh[analogno] != 0))) {
+							//float value = g_dsaxisvalue[analogno];
+							if ((g_bef_dsaxisOverTh[analogno] != 0) || (g_bef_dsaxisMOverTh[analogno] != 0)) {
+								PlusPlusMoaEventRepeatsPAD(padno);//２回目以降
+							}
+							else {
+								SetMoaEventRepeatsPAD(padno, 1);//初回
+							}
+
+							eventno = eventpad->GetEventNo(padno, GetMoaEventRepeatsPAD(padno));
+
+							//2026/08/22 押していないときにリセットするためにここではbreakしない
+							//break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
+						}
+						else {
+							//2026/08/22
+							SetMoaEventRepeatsPAD(padno, 0);
+						}
+					}
+				}
+				else {
+					//2026/08/22
+					SetMoaEventRepeatsPAD(padno, 0);
+				}
+			}
+		}
+
+		if ((eventno == 0) && 
+			((g_dsaxisOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) ||
+			(g_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0))
+			) {
 
 			//MocapWalkLoop
 
@@ -25789,75 +25846,17 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 			//	backplay = false;
 			//}
 
-
-			if ((g_dsaxisOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0)) {
-				findindex = padno_leftud;//moaeventrepeats初期化時のヒント用
-			}
-			if ((g_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0)) {
-				findindex2 = padno_leftlr;//moaeventrepeats初期化時のヒント用
-			}
-
 			if ((jumpflag0 == false) && (eventno != 0)) {
 				SetMocapWalkFlag(true);
 			}
+
 		}
 		else {
-			int padno;
-			for (padno = 0; padno < MOA_PADNUM; padno++) {
-
-				if (padno < MB3D_DSBUTTONNUM) {
-					if (g_dsbuttondown[padno]) {
-						if (g_bef_dsbuttondown[padno]) {
-							PlusPlusMoaEventRepeatsPAD(padno);//２回目以降
-						}
-						else {
-							SetMoaEventRepeatsPAD(padno, 1);//初回
-						}
-						eventno = eventpad->GetEventNo(padno, GetMoaEventRepeatsPAD(padno));
-						findindex = padno;//moaeventrepeats初期化時のヒント用
-						break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
-					}
-				}
-				else {
-
-					//####################################################################
-					//アナログスティックはボタンと併用することがある　今回は排他的にどちらかだけに対応
-					//####################################################################
-					int analogno = padno - MB3D_DSBUTTONNUM;
-					if ((analogno != MB3D_DSAXIS_LEFT_UPDOWN) && (analogno != MB3D_DSAXIS_LEFT_LR) &&
-						((g_dsaxisOverTh[analogno] != 0) || (g_dsaxisMOverTh[analogno] != 0))) {
-						//float value = g_dsaxisvalue[analogno];
-						if ((g_bef_dsaxisOverTh[analogno] != 0) || (g_bef_dsaxisMOverTh[analogno] != 0)) {
-							PlusPlusMoaEventRepeatsPAD(padno);//２回目以降
-						}
-						else {
-							SetMoaEventRepeatsPAD(padno, 1);//初回
-						}
-
-						eventno = eventpad->GetEventNo(padno, GetMoaEventRepeatsPAD(padno));
-						findindex = padno;//moaeventrepeats初期化時のヒント用
-
-						break;//イベントは優先順位で並んでいるので　最初にみつかったイベントを使用すれば良い
-					}
-				}
-			}
-
-			if ((g_dsaxisOverTh[MB3D_DSAXIS_RIGHT_UPDOWN] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_RIGHT_UPDOWN] != 0)) {
-				findindex3 = MB3D_DSBUTTONNUM + MB3D_DSAXIS_RIGHT_UPDOWN;//moaeventrepeats初期化時のヒント用
-			}
-			if ((g_dsaxisOverTh[MB3D_DSAXIS_RIGHT_LR] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_RIGHT_LR] != 0)) {
-				findindex4 = MB3D_DSBUTTONNUM + MB3D_DSAXIS_RIGHT_LR;//moaeventrepeats初期化時のヒント用
-			}
-
-		}
-
-		int padno2;
-		for (padno2 = 0; padno2 < MOA_PADNUM; padno2++) {
-			if ((padno2 != findindex) && (padno2 != findindex2) ||
-				(padno2 != findindex3) && (padno2 != findindex4)) {
-				//採用イベント以外のリピート情報を初期化　2025/01/12
-				SetMoaEventRepeatsPAD(padno2, 0);
-			}
+			//2026/08/22
+			int padno_leftud = MB3D_DSBUTTONNUM + MB3D_DSAXIS_LEFT_UPDOWN;
+			SetMoaEventRepeatsPAD(padno_leftud, 0);//リセット
+			int padno_leftlr = MB3D_DSBUTTONNUM + MB3D_DSAXIS_LEFT_LR;
+			SetMoaEventRepeatsPAD(padno_leftlr, 0);//リセット
 		}
 
 
@@ -26139,10 +26138,11 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 						//UnderBlendingではない場合の処理
 						//UnderBlendingの場合は　if分の最後で処理
 						//#####################################
-						if (GetMocapWalkFlag() || jumpflag) {
+						//2026/08/22 通常のモーション時にもアイドリングに戻るときに　モーション終了時のWMに移動する
+						//if (GetMocapWalkFlag() || jumpflag) {
 							Move2HipsPos(pfootrigdlg, idlingmotid, 1.0);
 							SetMocapWalkFlag(false);
-						}
+						//}
 						(pChangeMotionWithGUI)(this, idlingmotid);
 						SetMotionFrame(1.0);
 						SetMoaStartFillUpFrame(1.0);
@@ -26229,10 +26229,11 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 						//###########################
 						//補間計算終了　nextmotidへ遷移
 						//###########################
-						if (GetMocapWalkFlag()) {
+						//2026/08/22 通常のモーション時にもアイドリングに戻るときに　モーション終了時のWMに移動する
+						//if (GetMocapWalkFlag()) {
 							Move2HipsPos(pfootrigdlg, model_nextmotid, (double)filluppoint);
 							SetMocapWalkFlag(false);
-						}
+						//}
 						(pChangeMotionWithGUI)(this, model_nextmotid);
 						SetMotionFrame((double)filluppoint);
 						//SetMotionFrame(model_nextframe);
@@ -26249,10 +26250,11 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 						//アイドリングへ戻る
 						//UnderBlending処理の最後で処理
 						//############################
-						if (GetMocapWalkFlag()) {
+						//2026/08/22 通常のモーション時にもアイドリングに戻るときに　モーション終了時のWMに移動する
+						//if (GetMocapWalkFlag()) {
 							Move2HipsPos(pfootrigdlg, idlingmotid, 1.0);
 							SetMocapWalkFlag(false);
-						}
+						//}
 						(pChangeMotionWithGUI)(this, idlingmotid);
 						SetMotionFrame(1.0);
 						SetMoaStartFillUpFrame(1.0);
@@ -26278,10 +26280,11 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 				//###############################
 				//補間無しですぐにモーション遷移を実行
 				//###############################
-				if (GetMocapWalkFlag() || jumpflag) {
+				//2026/08/22 通常のモーション時にもアイドリングに戻るときに　モーション終了時のWMに移動する
+				//if (GetMocapWalkFlag() || jumpflag) {
 					Move2HipsPos(pfootrigdlg, model_nextmotid, 1.0);
 					SetMocapWalkFlag(false);
-				}
+				//}
 				(pChangeMotionWithGUI)(this, model_nextmotid);
 				SetMotionFrame(1.0);
 				SetMoaStartFillUpFrame(1.0);
