@@ -981,8 +981,8 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 		//}
 	}
 
-	//2025/08/12
-	CalcPostureChildWorldMat(limitdegflag, srcmotid, roundingframe);
+	////2025/08/12
+	//CalcPostureChildWorldMat(limitdegflag, srcmotid, roundingframe);
 
 	//m_befupdatetime = srcframe;
 

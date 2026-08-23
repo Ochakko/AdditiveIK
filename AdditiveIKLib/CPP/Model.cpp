@@ -26140,9 +26140,10 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 						//#####################################
 						//2026/08/22 通常のモーション時にもアイドリングに戻るときに　モーション終了時のWMに移動する
 						//if (GetMocapWalkFlag() || jumpflag) {
+						if (!GetPostureParentFlag()) {//2026/08/23 乗り物に乗っている状態でMove2HipsPos()すると落下するので応急処置
 							Move2HipsPos(pfootrigdlg, idlingmotid, 1.0);
 							SetMocapWalkFlag(false);
-						//}
+						}
 						(pChangeMotionWithGUI)(this, idlingmotid);
 						SetMotionFrame(1.0);
 						SetMoaStartFillUpFrame(1.0);
@@ -26231,9 +26232,10 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 						//###########################
 						//2026/08/22 通常のモーション時にもアイドリングに戻るときに　モーション終了時のWMに移動する
 						//if (GetMocapWalkFlag()) {
+						if (!GetPostureParentFlag()) {//2026/08/23 乗り物に乗っている状態でMove2HipsPos()すると落下するので応急処置
 							Move2HipsPos(pfootrigdlg, model_nextmotid, (double)filluppoint);
 							SetMocapWalkFlag(false);
-						//}
+						}
 						(pChangeMotionWithGUI)(this, model_nextmotid);
 						SetMotionFrame((double)filluppoint);
 						//SetMotionFrame(model_nextframe);
@@ -26252,9 +26254,10 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 						//############################
 						//2026/08/22 通常のモーション時にもアイドリングに戻るときに　モーション終了時のWMに移動する
 						//if (GetMocapWalkFlag()) {
+						if (!GetPostureParentFlag()) {//2026/08/23 乗り物に乗っている状態でMove2HipsPos()すると落下するので応急処置
 							Move2HipsPos(pfootrigdlg, idlingmotid, 1.0);
 							SetMocapWalkFlag(false);
-						//}
+						}
 						(pChangeMotionWithGUI)(this, idlingmotid);
 						SetMotionFrame(1.0);
 						SetMoaStartFillUpFrame(1.0);
@@ -26282,9 +26285,10 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 				//###############################
 				//2026/08/22 通常のモーション時にもアイドリングに戻るときに　モーション終了時のWMに移動する
 				//if (GetMocapWalkFlag() || jumpflag) {
+				if (!GetPostureParentFlag()) {//2026/08/23 乗り物に乗っている状態でMove2HipsPos()すると落下するので応急処置
 					Move2HipsPos(pfootrigdlg, model_nextmotid, 1.0);
 					SetMocapWalkFlag(false);
-				//}
+				}
 				(pChangeMotionWithGUI)(this, model_nextmotid);
 				SetMotionFrame(1.0);
 				SetMoaStartFillUpFrame(1.0);
