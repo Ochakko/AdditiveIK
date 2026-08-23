@@ -3146,43 +3146,7 @@ INT WINAPI wWinMain(
 
 	//SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 
-	//_CrtSetBreakAlloc(33496);
-	//_CrtSetBreakAlloc(1080459);
-	//_CrtSetBreakAlloc(1081145);
-
-	//_CrtSetBreakAlloc(22296);
-	//_CrtSetBreakAlloc(22292);
-
-	//_CrtSetBreakAlloc(3879301);
-	//_CrtSetBreakAlloc(3879304);
-	//_CrtSetBreakAlloc(3879308);
-
-	//_CrtSetBreakAlloc(297);
-	//_CrtSetBreakAlloc(303);
-	//_CrtSetBreakAlloc(307);
-
-//_CrtSetBreakAlloc(10309);
-//_CrtSetBreakAlloc(10833);
-
-//_CrtSetBreakAlloc(787);
-//_CrtSetBreakAlloc(2806);
-//_CrtSetBreakAlloc(758);
-//_CrtSetBreakAlloc(469193);
-//_CrtSetBreakAlloc(5557505);
-//_CrtSetBreakAlloc(5557507);
-//_CrtSetBreakAlloc(1750750);
-//_CrtSetBreakAlloc(602);
-
-//_CrtSetBreakAlloc(65234);
-//_CrtSetBreakAlloc(1526483);
-
-	//_CrtSetBreakAlloc(32639);
-
-	//_CrtSetBreakAlloc(46773535);
-	//_CrtSetBreakAlloc(46773550);
-
-	//_CrtSetBreakAlloc(964);
-
+	//_CrtSetBreakAlloc(3408291);
 
 	SetBaseDir();
 	
@@ -15711,7 +15675,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.78\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.79\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 

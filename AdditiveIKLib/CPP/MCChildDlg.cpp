@@ -72,8 +72,8 @@ LRESULT CMCChildDlg::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 			_ASSERT(0);
 		}
 	}
-	m_name_wnd.SendMessage(CB_SETCURSEL, m_cookie, 0);
-
+	//m_name_wnd.SendMessage(CB_SETCURSEL, m_cookie, 0);
+	m_name_wnd.SendMessage(CB_SETCURSEL, m_cookie - 1, 0);//2026/08/23 cookie-1
 
 	ret = Params2Dlg();
 	_ASSERT( !ret );

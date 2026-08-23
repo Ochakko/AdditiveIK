@@ -140,9 +140,9 @@ int CGrassDlg::DestroyObjs()
 	}
 
 
-	if (m_bendscaleLabel) {
-		delete m_bendscaleLabel;
-		m_bendscaleLabel = nullptr;
+	if (m_bendLabel) {
+		delete m_bendLabel;
+		m_bendLabel = nullptr;
 	}
 	if (m_bendscaleLabel) {
 		delete m_bendscaleLabel;
@@ -278,7 +278,7 @@ void CGrassDlg::InitParams()
 	m_shapescaleZLabel = nullptr;
 	m_shapescaleZSlider = nullptr;
 
-	m_bendscaleLabel = nullptr;
+	m_bendLabel = nullptr;
 	m_bendscalesp = nullptr;
 	m_bendscaleLabel = nullptr;
 	m_bendscaleSlider = nullptr;
@@ -599,8 +599,8 @@ int CGrassDlg::CreateGrassWnd()
 		}
 
 
-		m_bendscaleLabel = new OWP_Label(L"BendScale of Grass", labelheightL);
-		if (!m_bendscaleLabel) {
+		m_bendLabel = new OWP_Label(L"BendScale of Grass", labelheightL);
+		if (!m_bendLabel) {
 			_ASSERT(0);
 			abort();
 		}
@@ -688,7 +688,7 @@ int CGrassDlg::CreateGrassWnd()
 		m_dlgWnd->addParts(*m_space07Label);
 
 
-		m_dlgWnd->addParts(*m_bendscaleLabel);
+		m_dlgWnd->addParts(*m_bendLabel);
 		m_dlgWnd->addParts(*m_bendscalesp);
 		m_bendscalesp->addParts1(*m_bendscaleLabel);
 		m_bendscalesp->addParts2(*m_bendscaleSlider);
