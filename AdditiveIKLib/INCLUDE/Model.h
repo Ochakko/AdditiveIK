@@ -1250,7 +1250,9 @@ public:
 
 	ChaMatrix Move2HipsPos(CFootRigDlg* srcfootrigdlg, int nextmotid, double nextframe);
 	ChaMatrix RotMocapWalk(CFootRigDlg* srcfootrigdlg, double srcrot);
-
+	ChaMatrix CalcNextModelWorldMat(int srcmotid, double srcframe, int nextmotid, double nextframe);
+	ChaMatrix CalcNextModelWorldMat(int nextmotid, double nextframe);
+	ChaMatrix CalcModelWorldMatFromPosAndRot(ChaVector3 srcpos, ChaVector3 srcrot);
 private:
 	int InitParams(int srcrefposnum);
 	int DestroyObjs();
@@ -3979,6 +3981,13 @@ public: //accesser
 			return 0;
 		}
 	};
+	void SetMoaNextModelWM(ChaMatrix srcmat) {
+		m_moa_NextModelWM = srcmat;
+	};
+	ChaMatrix GetMoaNextModelWM() {
+		return m_moa_NextModelWM;
+	};
+
 
 	bool GetIKStopAllOFF()
 	{
@@ -4283,6 +4292,8 @@ private:
 	//double m_moaeventtime;//最後にeventno != 0を処理した時間
 	int m_moaeventrepeats[256];
 	int m_moaeventrepeats_pad[MOA_PADNUM];
+
+	ChaMatrix m_moa_NextModelWM;
 
 	bool m_mocapwalk;
 	bool m_ikstop_alloff;

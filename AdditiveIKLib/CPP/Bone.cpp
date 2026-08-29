@@ -1092,11 +1092,13 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 			//if ((g_previewMOA != 0) && GetParModel() && (GetParModel()->GetBtCnt() != 0) && GetParModel()->GetUnderBlending()) {
 			if ((g_previewMOA != 0) && GetParModel() && GetParModel()->GetUnderBlending()) {
 				newworldmatAnim = newworldmat * m_targetrate1 + m_targetmp.GetAnimMat() * (1.0 - m_targetrate1);
-				//tmpmat = newworldmat * *wmat * m_targetrate1 + m_targetmp.GetWorldMat() * (1.0 - m_targetrate1);
+
+				//ChaMatrix targetmodelwm = GetParModel()->GetMoaNextModelWM();
+				tmpmat = (newworldmat * *wmat) * m_targetrate1 + m_targetmp.GetWorldMat() * (1.0 - m_targetrate1);
 			}
 			else {
 				newworldmatAnim = newworldmat;
-				//tmpmat = newworldmat * *wmat;
+				tmpmat = newworldmat * *wmat;
 			}
 
 
@@ -1108,7 +1110,7 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 			//modelのworldmatを掛ける
 				//skinmeshの変換の際にはシェーダーでg_hmWorldは掛けない　すでにg_hmWorldが掛かっている必要有
 			//ChaMatrix tmpmat = newworldmat * *wmat; // !!!!!!!!!!!!!!!!!!!!!!!!!!!
-			tmpmat = newworldmatAnim * *wmat;
+			//tmpmat = newworldmatAnim * *wmat;
 			SetWorldMat(limitdegflag, srcmotid, roundingframe, tmpmat, &(m_curmp[m_updateslot]));//roundingframe!!!!
 
 			if (limitdegflag == true) {

@@ -763,6 +763,7 @@ int CModel::InitParams(int srcrefposnum)
 	m_moa_freezecount = 0;
 	m_moa_fillupcount = 0;
 	m_moa_rand1 = 0;
+	m_moa_NextModelWM.SetIdentity();
 
 	m_mocapwalk = false;
 
@@ -23108,15 +23109,15 @@ void CModel::SetHipsBone()
 	}
 }
 
-void CModel::CalcModelWorldMatOnLoad(CFootRigDlg* srcfootrigdlg)
+ChaMatrix CModel::CalcModelWorldMatFromPosAndRot(ChaVector3 srcpos, ChaVector3 srcrot)
 {
 	CQuaternion rotq;
-	rotq.SetRotationXYZ(nullptr, GetModelRotation());
+	rotq.SetRotationXYZ(nullptr, srcrot);
 	ChaMatrix rotmat;
 	rotmat = rotq.MakeRotMatX();
 	ChaMatrix tramat;
 	tramat.SetIdentity();
-	tramat.SetTranslation(GetModelPosition());
+	tramat.SetTranslation(srcpos);
 
 	ChaMatrix worldmatonload;
 	worldmatonload.SetIdentity();
@@ -23129,12 +23130,19 @@ void CModel::CalcModelWorldMatOnLoad(CFootRigDlg* srcfootrigdlg)
 		//worldmatonload = worldmatonload * postureParentMultMat;
 	}
 
+	return worldmatonload;
+}
+
+void CModel::CalcModelWorldMatOnLoad(CFootRigDlg* srcfootrigdlg)
+{
+	ChaMatrix calcwm = CalcModelWorldMatFromPosAndRot(GetModelPosition(), GetModelRotation());
+
 	//2024/09/09
 	//FootRigDlgのUpdate()により設定したmatWorldが補間されて途中までしか動かない不具合を解消
 	if (srcfootrigdlg) {
-		srcfootrigdlg->SetSaveModelWM(this, worldmatonload);
+		srcfootrigdlg->SetSaveModelWM(this, calcwm);
 	}
-	m_matWorld = worldmatonload;
+	m_matWorld = calcwm;
 
 }
 
@@ -25496,8 +25504,19 @@ int CModel::ChangeIdlingMotion(int srcmotid)
 
 int CModel::CalcFillupTarget(int nextmotid, int filluppoint, double motionrate1, bool calcwm)
 {
+	ChaMatrix newwm;
+	if (calcwm) {
+		MOTINFO curmotinfo = GetCurMotInfo();
+		double srcframe;
+		srcframe = min((curmotinfo.curframe + filluppoint), (curmotinfo.frameleng - 1.0));
+		newwm = CalcNextModelWorldMat(curmotinfo.motid, srcframe, nextmotid, filluppoint);
+	}
+	else {
+		newwm = GetMoaNextModelWM();
+	}
+
 	//if (!GetUnderBlending()) {
-		ChaMatrix wmat = GetWorldMat();
+		//ChaMatrix wmat = GetWorldMat();
 		ChaMatrix vmat = GetViewMat();
 		ChaMatrix pmat = GetProjMat();
 		int refposindex = 0;
@@ -25505,7 +25524,9 @@ int CModel::CalcFillupTarget(int nextmotid, int filluppoint, double motionrate1,
 		if (calcwm) {
 			UpdateMatrixTargetReq(g_limitdegflag, GetTopBone(false),
 				nextmotid, (double)filluppoint,
-				&wmat, &vmat, &pmat, refposindex);
+				//&wmat, 
+				&newwm,//2026/08/29
+				&vmat, &pmat, refposindex);
 		}
 		UpdateMatrixTargetRateReq(GetTopBone(false), motionrate1);
 	//}
@@ -25516,62 +25537,63 @@ int CModel::CalcFillupTarget(int nextmotid, int filluppoint, double motionrate1,
 	return 0;
 }
 
-ChaMatrix CModel::Move2HipsPos(CFootRigDlg* srcfootrigdlg, int nextmotid, double nextframe)
+ChaMatrix CModel::CalcNextModelWorldMat(int srcmotid, double srcframe, int nextmotid, double nextframe)
 {
 	ChaMatrix wm = m_matWorld;
-	//ChaVector3 savepos = ChaMatrixTraVec(wm);
 	ChaVector3 savepos = GetModelPosition();//2025/08/31
-
 
 	CBone* hipsbone = GetHipsBone();
 	if (!hipsbone) {
 		return wm;
 	}
 
-	ChaMatrix currenthipswm = hipsbone->GetCurMp().GetAnimMat();
-	ChaVector3 currenthipspos = ChaMatrixTraVec(currenthipswm);
-	ChaMatrix nexthipsanimmat = hipsbone->GetWorldMat(g_limitdegflag, nextmotid, nextframe, nullptr);
-	ChaVector3 nexthipsanimpos = ChaMatrixTraVec(nexthipsanimmat);
+	ChaVector3 hipspos0 = hipsbone->GetJointFPos();
+
+	ChaMatrix currenthipslocal = hipsbone->GetWorldMat(g_limitdegflag, srcmotid, srcframe, nullptr);
+	ChaMatrix currenthipswm = currenthipslocal * wm;
+	ChaVector3 currenthipspos;
+	ChaVector3TransformCoord(&currenthipspos, &hipspos0, &currenthipswm);
+
+	ChaMatrix nexthipslocal = hipsbone->GetWorldMat(g_limitdegflag, nextmotid, nextframe, nullptr);
+	ChaMatrix nexthipswm = nexthipslocal * wm;
+	ChaVector3 nexthipspos;
+	ChaVector3TransformCoord(&nexthipspos, &hipspos0, &nexthipswm);
 
 	ChaVector3 diffvec, newpos;
-	diffvec = currenthipspos - nexthipsanimpos;//ターゲット位置 - 調整前の次の位置
-	ChaMatrix currentRotMat = ChaMatrixRot(m_matWorld);
-	ChaVector3 rotateddiffvec;
-	ChaVector3TransformCoord(&rotateddiffvec, &diffvec, &currentRotMat);//アニメーションの差分ベクトルに　m_matWorldの回転分を掛ける
+	diffvec = currenthipspos - nexthipspos;//ターゲット位置 - 調整前の次の位置
+	newpos = ChaMatrixTraVec(m_matWorld) + diffvec;
+	//newpos.y = savepos.y;
+	//SetModelPosition(newpos);
 
-	newpos = ChaMatrixTraVec(m_matWorld) + rotateddiffvec;//m_matWorldの新しい移動分
-	newpos.y = savepos.y;
+	ChaMatrix retmat = CalcModelWorldMatFromPosAndRot(newpos, GetModelRotation());
+
+	SetMoaNextModelWM(retmat);//!!!!! CModel::Move2HipsPos(), CBone::UpdateMatrix()で使用する
+
+	return retmat;
+}
+ChaMatrix CModel::CalcNextModelWorldMat(int nextmotid, double nextframe)
+{
+	MOTINFO curmotinfo = GetCurMotInfo();
+	int curmotid = curmotinfo.motid;
+	double curmotframe = curmotinfo.curframe;
+	
+	ChaMatrix retmat = CalcNextModelWorldMat(curmotid, curmotframe, nextmotid, nextframe);
+	return retmat;
+}
+
+
+ChaMatrix CModel::Move2HipsPos(CFootRigDlg* srcfootrigdlg, int nextmotid, double nextframe)
+{
+	//ChaMatrix newwm = CalcNextModelWorldMat(nextmotid, nextframe);
+	ChaMatrix newwm = GetMoaNextModelWM();
+
+	ChaVector3 newpos = ChaMatrixTraVec(newwm);
 	SetModelPosition(newpos);
 
+	//向きはそのまま[GetModelRotation()]
 
-	CQuaternion orgrotq;
-	orgrotq.SetRotationXYZ(nullptr, GetModelRotation());
-
-	ChaMatrix diffmat = currenthipswm * ChaMatrixInv(nexthipsanimmat);
-	CQuaternion diffrotq;
-	diffrotq.RotationMatrix(diffmat);
-
-	//CQuaternion newrotq = diffrotq * orgrotq;
-	////CQuaternion newrotq = orgrotq * diffrotq;
-	//int notmodify180flag = 0;//!!!!!!!!!!!!!!!
-	//BEFEUL befeul;
-	//befeul.Init();
-	//befeul.befframeeul.SetZeroVec3();
-	//befeul.currentframeeul.SetZeroVec3();
-	//ChaVector3 newroteul;
-	//newrotq.Q2EulXYZusingQ(true, false, nullptr, befeul, &newroteul, 1, 0, notmodify180flag);
-	//SetModelRotation(newroteul);
-
-
-	//ChaVector3 beftra = ChaMatrixTraVec(wm);
-	//ChaVector3 newtra = beftra + diffpos;
-	//wm.SetTranslation(newtra);
-	//SetWorldMat(wm);
-
-	//////void SetModelRotation(ChaVector3 srcdir)
 	CalcModelWorldMatOnLoad(srcfootrigdlg);
-	wm = GetWorldMat(GETWM_MIXED);
-	
+	ChaMatrix wm = GetWorldMat(GETWM_MIXED);
 	return wm;
 }
 ChaMatrix CModel::RotMocapWalk(CFootRigDlg* srcfootrigdlg, double srcrot)
@@ -26035,16 +26057,28 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 				//###########################################################
 				if (GetMocapWalkFlag()) {
 					//MocapWalk Loop
+					CalcFillupTarget(GetCurrentMotID(), 1, 1.0,
+						true
+					);
+
 					SetMoaNextMotId(GetCurrentMotID());
 					SetMoaNextFrame(1);
 					SetMoaStartFillUpFrame(curframe);
 				}
 				else if ((GetMoaNextMotId() <= 0)) {
+					CalcFillupTarget(idlingmotid, 1, 1.0,
+						true
+					);
+
 					SetMoaNextMotId(idlingmotid);
 					SetMoaNextFrame(1);
 					SetMoaStartFillUpFrame(curframe);
 				}
 				else {
+					CalcFillupTarget(GetMoaNextMotId(), GetMoaNextFrame(), 1.0,
+						true
+					);
+
 					SetMoaNextMotId(GetMoaNextMotId());
 					SetMoaNextFrame(GetMoaNextFrame());
 					SetMoaStartFillUpFrame(curframe);
@@ -26174,7 +26208,9 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 							//####################
 
 							CalcFillupTarget(model_nextmotid, filluppoint, motionrate1,
-								IsJustEqualTime(curframe, GetMoaStartFillUpFrame()));
+								//IsJustEqualTime(curframe, GetMoaStartFillUpFrame())
+								(GetMoaFillupCount() == 0)
+							);
 							//CalcFillupTarget(model_nextmotid, model_nextframe, motionrate1, 
 							// IsJustEqualTime(curframe, curstartfillupframe));
 						}
@@ -26204,7 +26240,9 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 
 							//2025/01/12 Be Big!!!
 							CalcFillupTarget(model_nextmotid, filluppoint, freezebigrate1, //motionrate1,
-								IsJustEqualTime(curframe, GetMoaStartFillUpFrame()));
+								//IsJustEqualTime(curframe, GetMoaStartFillUpFrame())
+								(GetMoaFillupCount() == 0)
+							);
 						}
 						SetMotionFrame(curframe);
 						//SetUnderBlending(true);
@@ -26286,6 +26324,9 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 				//2026/08/22 通常のモーション時にもアイドリングに戻るときに　モーション終了時のWMに移動する
 				//if (GetMocapWalkFlag() || jumpflag) {
 				if (!GetPostureParentFlag()) {//2026/08/23 乗り物に乗っている状態でMove2HipsPos()すると落下するので応急処置
+					CalcFillupTarget(model_nextmotid, 1, 1.0,
+						true
+					);
 					Move2HipsPos(pfootrigdlg, model_nextmotid, 1.0);
 					SetMocapWalkFlag(false);
 				}
