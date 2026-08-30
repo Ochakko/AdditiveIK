@@ -80,7 +80,7 @@
     <ToonBaseH>0.00</ToonBaseH>
     <ToonBaseS>0.00</ToonBaseS>
     <ToonBaseV>0.60</ToonBaseV>
-    <ToonBaseA>0.16</ToonBaseA>
+    <ToonBaseA>1.00</ToonBaseA>
     <Gradation>1</Gradation>
     <PowerToon>1</PowerToon>
     <SpecularCoef>0.125</SpecularCoef>

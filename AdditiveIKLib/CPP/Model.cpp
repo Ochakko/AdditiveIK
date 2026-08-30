@@ -11160,24 +11160,15 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto,
 					ChaMatrix smat, rmat, tmat, curtraanim;
 					curtraanim.SetIdentity();
 					{
-						//if (curbone->IsHipsBone() && (curframe >= 50.0)) {
-						//	_ASSERT(0);//for debug
-						//}
-
-						//ChaMatrix curwm = curbone->GetWorldMat(curmotid, curframe);
-						//curwm = curbone->GetCurMp().GetWorldMat();
 						curwm = curbone->GetCurrentWorldMat(true, true);
 
 						ChaMatrix parentwm;
 						parentwm.SetIdentity();
 						if (curbone->GetParent(false)) {
-							//parentwm = curbone->GetParent()->GetWorldMat(curmotid, curframe);
-							//parentwm = curbone->GetParent(false)->GetCurMp().GetWorldMat();
 							parentwm = curbone->GetParent(false)->GetCurrentWorldMat(true, true);
 						}
 						else {
 							parentwm.SetIdentity();
-							//parentwm = GetWorldMat();//2026/07/21//2026/08/30
 						}
 						ChaMatrix curlocalmat;
 						curlocalmat = curwm * ChaMatrixInv(parentwm);

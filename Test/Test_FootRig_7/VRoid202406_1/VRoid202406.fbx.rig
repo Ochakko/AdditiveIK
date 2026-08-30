@@ -1133,10 +1133,10 @@
     <RigRigNo>-1</RigRigNo>
       <BoneName>J_Bip_L_LowerLeg</BoneName>
       <AxisU>NodeX</AxisU>
-      <RateU>-5.000000</RateU>
+      <RateU>5.000000</RateU>
       <EnableU>1</EnableU>
       <AxisV>NodeX</AxisV>
-      <RateV>-5.000000</RateV>
+      <RateV>5.000000</RateV>
       <EnableV>1</EnableV>
     </RigElem>
     <RigElem>
@@ -1144,10 +1144,10 @@
     <RigRigNo>-1</RigRigNo>
       <BoneName>J_Bip_L_UpperLeg</BoneName>
       <AxisU>NodeX</AxisU>
-      <RateU>-1.000000</RateU>
+      <RateU>5.000000</RateU>
       <EnableU>1</EnableU>
       <AxisV>NodeX</AxisV>
-      <RateV>-1.000000</RateV>
+      <RateV>5.000000</RateV>
       <EnableV>1</EnableV>
     </RigElem>
   </Bone>
@@ -1213,10 +1213,10 @@
       <BoneName>J_Bip_R_Foot</BoneName>
       <AxisU>NodeX</AxisU>
       <RateU>0.000000</RateU>
-      <EnableU>0</EnableU>
+      <EnableU>1</EnableU>
       <AxisV>NodeX</AxisV>
       <RateV>0.000000</RateV>
-      <EnableV>0</EnableV>
+      <EnableV>1</EnableV>
     </RigElem>
     <RigElem>
     <RigRigName>!noname!</RigRigName>
@@ -1313,10 +1313,10 @@
     <RigRigNo>-1</RigRigNo>
       <BoneName>J_Bip_R_LowerLeg</BoneName>
       <AxisU>NodeX</AxisU>
-      <RateU>-5.000000</RateU>
+      <RateU>5.000000</RateU>
       <EnableU>1</EnableU>
       <AxisV>NodeX</AxisV>
-      <RateV>-5.000000</RateV>
+      <RateV>5.000000</RateV>
       <EnableV>1</EnableV>
     </RigElem>
     <RigElem>
@@ -1324,10 +1324,10 @@
     <RigRigNo>-1</RigRigNo>
       <BoneName>J_Bip_R_UpperLeg</BoneName>
       <AxisU>NodeX</AxisU>
-      <RateU>-1.000000</RateU>
+      <RateU>5.000000</RateU>
       <EnableU>1</EnableU>
       <AxisV>NodeX</AxisV>
-      <RateV>-1.000000</RateV>
+      <RateV>5.000000</RateV>
       <EnableV>1</EnableV>
     </RigElem>
   </Bone>
