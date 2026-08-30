@@ -937,9 +937,9 @@ int CBone::UpdateMatrixTarget(bool limitdegflag, int srcmotid, double srcframe,
 		}
 
 
-		//2026/08/22
-		//物理ON、MOA再生、VRoidモデルの補間モーションで　エンドジョイント(爪 と つま先)位置が飛ぶ件に対応
-		//物理ON時のモーション補間には未対応だが　形状が崩れる不具合は直った
+		////2026/08/22
+		////物理ON、MOA再生、VRoidモデルの補間モーションで　エンドジョイント(爪 と つま先)位置が飛ぶ件に対応
+		////物理ON時のモーション補間には未対応だが　形状が崩れる不具合は直った
 		//if ((GetParModel()->GetBtCnt() != 0) && (GetBtKinFlag() != 0) && (GetChild(false) == nullptr) && (GetParent(false) != nullptr)) {
 		//	ChaMatrix bttargetmat = GetBtMat(true);
 		//	SetWorldMat(limitdegflag, srcmotid, roundingframe, bttargetmat, GetTargetMp());

@@ -2679,8 +2679,18 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 	rc->SetVertexBuffer(1, m_InstancingBuffer);//!!!!!!! InstancingBuffer !!!!!!
 
 
+	bool topoline = false;
 	//3. インデックスバッファを設定。
-	rc->SetIndexBuffer(m_indexBufferView);
+	if (renderobj.renderkind == RENDERKIND_INSTANCING_LINE) {
+		rc->SetIndexBuffer(m_indexBufferView_RefPosLine);
+		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+		topoline = true;
+	}
+	else {
+		rc->SetIndexBuffer(m_indexBufferView);
+		rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		topoline = false;
+	}
 
 
 	//renderobj.renderkind = RENDERKIND_INSTANCING;//2024/01/11
@@ -2763,8 +2773,18 @@ int CDispObj::RenderInstancingPm3(RenderContext* rc, myRenderer::RENDEROBJ rende
 		////3. インデックスバッファを設定。
 		//rc.SetIndexBuffer(m_indexBufferView);
 
+		int curnumprim = curtrinum;
+		if (topoline) {
+			curnumprim = curnumprim * 3;
+		}
+
 		//4. ドローコールを実行。
-		rc->DrawIndexedInstanced(curtrinum * 3, instancingdrawnum);
+		if (!topoline) {
+			rc->DrawIndexedInstanced(curnumprim * 3, instancingdrawnum);
+		}
+		else {
+			rc->DrawIndexedInstanced(curnumprim * 2, instancingdrawnum);
+		}
 	}
 
 	return 0;

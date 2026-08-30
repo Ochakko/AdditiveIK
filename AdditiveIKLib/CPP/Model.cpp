@@ -11138,6 +11138,11 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto,
 		return;
 	}
 
+	//############################################################################
+	//2026/08/30 
+	//物理シミュボーンに対してのみ処理を行うように修正(もともとそうだったが、無駄に計算していた)
+	//############################################################################
+
 	if (ExistCurrentMotion()) {
 		int curmotid = GetCurrentMotID();
 		double curframe = GetCurrentFrame();//curframe : 時間補間有り
@@ -11146,57 +11151,46 @@ void CModel::SetBtMotionReq(bool limitdegflag, CBtObject* curbto,
 			CBone* curbone = curbto->GetBone();
 			CBone* childbone = curbto->GetEndBone();
 
-
-
-		//Motion側の　traanimを取得する
-			ChaMatrix curwm;
-			curwm.SetIdentity();
-			ChaMatrix smat, rmat, tmat, curtraanim;
-			curtraanim.SetIdentity();
-			{
-				//if (curbone->IsHipsBone() && (curframe >= 50.0)) {
-				//	_ASSERT(0);//for debug
-				//}
-
-				//ChaMatrix curwm = curbone->GetWorldMat(curmotid, curframe);
-				//ChaMatrix curwm = curbone->GetCurMp().GetWorldMat();
-				curwm = curbone->GetCurrentWorldMat(true, true);
-
-				ChaMatrix parentwm;
-				parentwm.SetIdentity();
-				if (curbone->GetParent(false)) {
-					//parentwm = curbone->GetParent()->GetWorldMat(curmotid, curframe);
-					//parentwm = curbone->GetParent()->GetCurMp().GetWorldMat();
-					parentwm = curbone->GetParent(false)->GetCurrentWorldMat(true, true);
-				}
-				else {
-					parentwm.SetIdentity();
-					//parentwm = GetWorldMat();//2026/07/21
-				}
-				ChaMatrix curlocalmat;
-				curlocalmat = curwm * ChaMatrixInv(parentwm);
-
-				GetSRTandTraAnim(curlocalmat, curbone->GetNodeMat(), &smat, &rmat, &tmat, &curtraanim);
-			}
-
 			if (curbone) {
 				if (curbone->GetBtKinFlag() == 0) {//2023/01/28
+
+					//Motion側の　traanimを取得する
+					ChaMatrix curwm;
+					curwm.SetIdentity();
+					ChaMatrix smat, rmat, tmat, curtraanim;
+					curtraanim.SetIdentity();
+					{
+						//if (curbone->IsHipsBone() && (curframe >= 50.0)) {
+						//	_ASSERT(0);//for debug
+						//}
+
+						//ChaMatrix curwm = curbone->GetWorldMat(curmotid, curframe);
+						//curwm = curbone->GetCurMp().GetWorldMat();
+						curwm = curbone->GetCurrentWorldMat(true, true);
+
+						ChaMatrix parentwm;
+						parentwm.SetIdentity();
+						if (curbone->GetParent(false)) {
+							//parentwm = curbone->GetParent()->GetWorldMat(curmotid, curframe);
+							//parentwm = curbone->GetParent(false)->GetCurMp().GetWorldMat();
+							parentwm = curbone->GetParent(false)->GetCurrentWorldMat(true, true);
+						}
+						else {
+							parentwm.SetIdentity();
+							//parentwm = GetWorldMat();//2026/07/21//2026/08/30
+						}
+						ChaMatrix curlocalmat;
+						curlocalmat = curwm * ChaMatrixInv(parentwm);
+
+						GetSRTandTraAnim(curlocalmat, curbone->GetNodeMat(), &smat, &rmat, &tmat, &curtraanim);
+					}
+
 					if (g_previewFlag == 4) {
 						curbto->SetBtMotion(limitdegflag, smat, curtraanim);
 					}
 					else if (g_previewFlag == 5) {
 						curbto->SetBtMotion(limitdegflag, smat, curtraanim);
 					}
-				}
-				else {
-					//############################################################################
-					//2026/08/22 m_targetmpとモーションのブレンド結果
-					//GetCurMp()を使用することにより　補間(ブレンド結果)がKinematicボーンの姿勢に反映される
-					//############################################################################
-					ChaMatrix curwm2;
-					curwm2 = curbone->GetCurMp().GetWorldMat();
-					curbone->SetBtMat(curwm2);
-					curbone->SetBtFlag(1);					
 				}
 			}
 
@@ -25562,7 +25556,7 @@ ChaMatrix CModel::CalcNextModelWorldMat(int srcmotid, double srcframe, int nextm
 	ChaVector3 diffvec, newpos;
 	diffvec = currenthipspos - nexthipspos;//ターゲット位置 - 調整前の次の位置
 	newpos = ChaMatrixTraVec(m_matWorld) + diffvec;
-	//newpos.y = savepos.y;
+	newpos.y = savepos.y;
 	//SetModelPosition(newpos);
 
 	ChaMatrix retmat = CalcModelWorldMatFromPosAndRot(newpos, GetModelRotation());
