@@ -2559,7 +2559,7 @@ static int ChangeCameraInherit();
 static int InitCurMotion(int selectflag, double expandmotion);
 
 static int OpenChaFile();
-static int PostOpenChaFile();//2024/04/17 常駐スライダーなどに読込値を反映する
+static int PostOpenChaFile(CAMERADISTPARAMS distparams);//2024/04/17 常駐スライダーなどに読込値を反映する
 CModel* OpenMQOFile();
 CModel* OpenFBXFile(bool callfromcha, bool dorefreshtl, int skipdefref, int inittimelineflag, 
 	std::vector<std::string> ikstopname, bool srcgrassflag, int setobjboundingblocknum, int srcrefposmaxnum);
@@ -10549,7 +10549,16 @@ int OpenFile()
 				return 1;
 			}
 
-			PostOpenChaFile();//cmpcha == 0のときはOpenChaFile()内から呼ばれる
+			CAMERADISTPARAMS camdistparams;
+			camdistparams.Init();
+			camdistparams.cameraanimmode = g_chacamera.GetCameraAnimMode();
+			camdistparams.alwayslock = g_chacamera.GetCamTargetFlag();
+			camdistparams.moveeye = g_chacamera.GetCamMoveEyePos();
+			camdistparams.cameradist = (float)g_chacamera.GetCamDist();
+			camdistparams.height = g_chacamera.GetCameraHeight();
+			camdistparams.heightflag = g_chacamera.GetCameraHeightFlag();
+			camdistparams.gmodel = g_chacamera.GetCameraGModel();
+			PostOpenChaFile(camdistparams);//cmpcha == 0のときはOpenChaFile()内から呼ばれる
 		}
 	}
 
@@ -19509,7 +19518,7 @@ LRESULT CALLBACK SaveChaDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 }
 
 
-int PostOpenChaFile()
+int PostOpenChaFile(CAMERADISTPARAMS distparams)
 {
 
 	//2024/04/17 常駐スライダーなどにchaファイル読込値を反映する
@@ -19555,7 +19564,36 @@ int PostOpenChaFile()
 	s_bulletdlg.CreateBulletWnd();//作成済でない場合に作成
 	s_bulletdlg.ParamsToDlg();
 
+
+
 	CreateSideMenuWnd();
+	//FootRigの設定よりも後で設定
+	g_chacamera.SetCamTargetFlag(distparams.alwayslock);
+	g_chacamera.SetCamDist(distparams.cameradist);
+	g_chacamera.SetCamMoveEyePos(distparams.moveeye);
+	g_chacamera.SetCameraGModel(distparams.gmodel);
+	g_chacamera.SetCameraHeightFlag(distparams.heightflag);
+	g_chacamera.SetCameraHeight(distparams.height);
+	Params2SideMenuWnd();
+	if (distparams.cameraanimmode > 0) {
+		ChangeCameraMode(2);//forcemode 反転をセット:0 強制オフ時:1 【強制オン時:2】
+		SetCamera3DFromEyePos();
+	}
+	else if (distparams.cameraanimmode == 0) {
+		ChangeCameraMode(1);//forcemode 反転をセット:0 【強制オフ時:1】 強制オン時:2
+	}
+	else {
+		//chaファイルでCameraAnimModeを未設定の場合
+		if (distparams.gmodel != nullptr) {
+			ChangeCameraMode(2);//forcemode 反転をセット:0 強制オフ時:1 【強制オン時:2】
+			SetCamera3DFromEyePos();
+		}
+		else {
+			ChangeCameraMode(1);//forcemode 反転をセット:0 【強制オフ時:1】 強制オン時:2
+		}
+	}
+
+
 
 	if (g_chascene && 
 		((g_boneaxis < BONEAXIS_CURRENT) || (g_boneaxis > BONEAXIS_BINDPOSE))) {//g_boneaxisがchafileで設定されなかった場合
@@ -19716,34 +19754,9 @@ int OpenChaFile()
 		}
 	}
 
-	//FootRigの設定よりも後で設定
-	g_chacamera.SetCamDist(distparams.cameradist);
-	g_chacamera.SetCamMoveEyePos(distparams.moveeye);
-	g_chacamera.SetCameraHeightFlag(distparams.heightflag);
-	g_chacamera.SetCameraHeight(distparams.height);
-	g_chacamera.SetCameraGModel(distparams.gmodel);
-	if (distparams.cameraanimmode > 0) {
-		ChangeCameraMode(2);//forcemode 反転をセット:0 強制オフ時:1 【強制オン時:2】
-		SetCamera3DFromEyePos();
-	}
-	else if(distparams.cameraanimmode == 0) {
-		ChangeCameraMode(1);//forcemode 反転をセット:0 【強制オフ時:1】 強制オン時:2
-	}
-	else {
-		//chaファイルでCameraAnimModeを未設定の場合
-		if (distparams.gmodel != nullptr) {
-			ChangeCameraMode(2);//forcemode 反転をセット:0 強制オフ時:1 【強制オン時:2】
-			SetCamera3DFromEyePos();
-		}
-		else {
-			ChangeCameraMode(1);//forcemode 反転をセット:0 【強制オフ時:1】 強制オン時:2
-		}
-	}
+	PostOpenChaFile(distparams);//2024/04/17 常駐スライダーなどにchaファイル読込値を反映する
 
 
-	PostOpenChaFile();//2024/04/17 常駐スライダーなどにchaファイル読込値を反映する
-
-	g_chacamera.SetCamTargetFlag(distparams.alwayslock);
 	if (s_sidemenu_sellock) {//OnModelMenu()内部で sidemenu_sellockのチェックがfalseになるので　ここで設定
 		s_sidemenu_sellock->setValue(g_chacamera.GetCamTargetFlag() != 0);
 	}
@@ -30691,8 +30704,43 @@ int Params2SideMenuWnd()//2024/06/06
 		s_sidemenu_camdistSlider->setValue((double)g_chacamera.GetCamDist(), false);
 	}
 
+	if (s_cameraheightChk) {
+		s_cameraheightChk->setValue(g_chacamera.GetCameraHeightFlag(), false);
+	}
+
 	if (s_cameraheightSlider) {
 		s_cameraheightSlider->setValue((double)g_chacamera.GetCameraHeight(), false);
+	}
+
+
+	if (s_cameragmodelCombo && g_chascene) {
+		s_cameragmodelCombo->ResetCombo();
+		s_cameragmodelCombo->addString("   ");//先頭項目は未設定
+
+		int findselected = -1;
+		int modelnum = g_chascene->GetModelNum();
+		int modelindex;
+		for (modelindex = 0; modelindex < modelnum; modelindex++) {
+			MODELELEM curmodelelem = g_chascene->GetModelElem(modelindex);
+			if (curmodelelem.modelptr != nullptr) {
+				WCHAR gname[MAX_PATH] = { 0L };
+				wcscpy_s(gname, MAX_PATH, curmodelelem.modelptr->GetFileName());
+				char mbgname[MAX_PATH] = { 0 };
+				WideCharToMultiByte(CP_ACP, 0, gname, -1, mbgname, MAX_PATH, NULL, NULL);
+				s_cameragmodelCombo->addString(mbgname);
+
+				if ((g_chacamera.GetCameraGModel() != nullptr) && (g_chacamera.GetCameraGModel() == curmodelelem.modelptr)) {
+					findselected = modelindex;
+				}
+			}
+			else {
+				s_cameragmodelCombo->addString("invalid name");
+			}
+		}
+
+		if (findselected >= 0) {
+			s_cameragmodelCombo->setSelectedCombo(findselected + 1);
+		}
 	}
 
 	return 0;
@@ -31323,7 +31371,6 @@ int CreateSideMenuWnd()
 
 
 			s_sidemenuWnd->callRewrite();						//再描画
-
 		}
 		else {
 			_ASSERT(0);
@@ -43214,7 +43261,17 @@ void RollbackUndoCamera(UNDOCAMERA srcundocamera)
 	g_chacamera.SetCamUpDir(srcundocamera.camUpVec);
 	g_chacamera.SetCamDist(srcundocamera.camdist);
 
-	PostOpenChaFile();//変数をGUIに反映　SetCamera3DFromEyePosも内部で呼ぶ
+	CAMERADISTPARAMS camdistparams;
+	camdistparams.Init();
+	camdistparams.cameraanimmode = srcundocamera.spcameramode;
+	camdistparams.alwayslock = srcundocamera.camtargetflag;
+	camdistparams.moveeye = srcundocamera.moveeyepos;
+	camdistparams.cameradist = srcundocamera.camdist;
+	camdistparams.height = g_chacamera.GetCameraHeight();
+	camdistparams.heightflag = g_chacamera.GetCameraHeightFlag();
+	camdistparams.gmodel = g_chacamera.GetCameraGModel();
+
+	PostOpenChaFile(camdistparams);//変数をGUIに反映　SetCamera3DFromEyePosも内部で呼ぶ
 
 }
 

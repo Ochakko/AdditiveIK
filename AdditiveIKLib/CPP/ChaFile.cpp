@@ -1103,7 +1103,7 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 	}
 	bool getcameraheight = false;
 	float tempcameraheight = (float)g_chacamera.GetCameraHeight();
-	result = Read_Float(&m_xmliobuf, "<CameraHeight>", "</CCameraHeight>", &tempcameraheight);
+	result = Read_Float(&m_xmliobuf, "<CameraHeight>", "</CameraHeight>", &tempcameraheight);
 	if (result == 0) {
 		getcameraheight = true;
 	}

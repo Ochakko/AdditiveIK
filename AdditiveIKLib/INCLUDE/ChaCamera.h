@@ -13,6 +13,8 @@ class CMotionPoint;
 class CModel;
 class ChaScene;
 
+
+
 class CModelFrameView
 {
 public:
@@ -156,12 +158,14 @@ private:
 public:
 	void SetCamEye(ChaVector3 srcval) {
 		m_camEye = srcval;
+		g_camera3D->SetPosition(srcval.x, srcval.y, srcval.z);
 	};
 	ChaVector3 GetCamEye() {
 		return m_camEye;
 	};
 	void SetCamTargetPos(ChaVector3 srcval) {
 		m_camtargetpos = srcval;
+		g_camera3D->SetTarget(srcval.x, srcval.y, srcval.z);
 	};
 	ChaVector3 GetCamTargetPos() {
 		return m_camtargetpos;
@@ -181,6 +185,7 @@ public:
 	void SetCamUpDir(ChaVector3 srcval) {
 		ChaVector3Normalize(&srcval, &srcval);
 		m_cameraupdir = srcval;
+		g_camera3D->SetUp(srcval.x, srcval.y, srcval.z);
 	};
 	ChaVector3 GetCamUpDir() {
 		return m_cameraupdir;
@@ -193,18 +198,21 @@ public:
 	};
 	void SetFovY(float srcval) {
 		m_fovy = srcval;
+		g_camera3D->SetViewAngle(srcval);
 	};
 	float GetFovY() {
 		return m_fovy;
 	};
 	void SetProjNear(float srcval) {
 		m_projnear = srcval;
+		g_camera3D->SetNear(srcval);
 	};
 	float GetProjNear() {
 		return m_projnear;
 	};
 	void SetProjFar(float srcval) {
 		m_projfar = srcval;
+		g_camera3D->SetFar(srcval);
 	};
 	float GetProjFar() {
 		return m_projfar;

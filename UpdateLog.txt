@@ -5,7 +5,8 @@ https://github.com/Ochakko/AdditiveIK
 　FootRig+物理シミュ修正
 　　ver1.0.0.79で挙動が変わっていたのを元に戻した。
 　　FootRig階層以下に物理シミュボーンがある場合にもうまくいくように。
-　　
+　カメラパラメータの保存読込の修正
+　　保存はできていたが読み込みに不具合があったのを修正
 　　
 2026/08/30
 　AdditiveIK 1.0.0.80 release
