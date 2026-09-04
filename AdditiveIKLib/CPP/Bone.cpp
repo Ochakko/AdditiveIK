@@ -1047,7 +1047,10 @@ int CBone::UpdateMatrix(bool limitdegflag, int srcmotid, double srcframe,
 
 	int existflag = 0;
 
-	if ((g_previewFlag != 5) && ((GetBtKinFlag() != 0) || (GetParModel() && (GetParModel()->GetBtCnt() == 0)))) {
+	//if ((g_previewFlag != 5) && ((GetBtKinFlag() != 0) || (GetParModel() && (GetParModel()->GetBtCnt() == 0)))) {
+	
+	//2026/09/05 次の条件分を元に戻す.　BtKinFlag == 0の場合にも計算が必要. BtKinFlag == 0の場合を除外するとFootRig影響下の物理シミュボーンが地面の下に落ちる.
+	if ((g_previewFlag != 5) || (GetParModel() && (GetParModel()->GetBtCnt() == 0))) {
 		if (srcframe >= 0.0) {
 			ChaMatrix newworldmat;
 			ChaMatrixIdentity(&newworldmat);
@@ -7281,6 +7284,7 @@ int CBone::CalcNewBtMat(CModel* srcmodel, CBone* childbone, ChaMatrix* dstmat, C
 		}
 		else{
 			tramat = befbtmat;
+
 			rotmat = ChaMatrixRot(tramat);
 			jointfpos = GetJointFPos();
 			ChaVector3TransformCoord(&m_btparentpos, &jointfpos, &tramat);
@@ -7302,7 +7306,7 @@ int CBone::CalcNewBtMat(CModel* srcmodel, CBone* childbone, ChaMatrix* dstmat, C
 			////計算が乱れやすく　大げさになり易いので
 			////Kinematicとそうではない境目のKinematicの　全フレームからの移動分を　子供ジョイントに波及させる
 			////この処理を加えることにより　ジャンプして着地した時の　乱れ方が　大きくなり過ぎないようになった
-			//if (kinematicbone) {
+			//if (kinematicbone != nullptr) {
 			//	ChaMatrix befparentwm, curparentwm;
 			//	befparentwm = kinematicbone->GetBtMat();//実質一回前の　BtMat
 			//	//befparentwm = kinematicbone->GetCurrentWorldMat(true, false);//2026/07/21

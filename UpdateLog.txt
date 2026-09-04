@@ -1,7 +1,12 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
-
+2026/09/05
+　FootRig+物理シミュ修正
+　　ver1.0.0.79で挙動が変わっていたのを元に戻した。
+　　FootRig階層以下に物理シミュボーンがある場合にもうまくいくように。
+　　
+　　
 2026/08/30
 　AdditiveIK 1.0.0.80 release
 　　不具合修正

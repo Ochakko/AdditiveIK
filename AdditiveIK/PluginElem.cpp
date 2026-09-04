@@ -375,7 +375,10 @@
 //#define MB2VERSION 210079
 
 //2026/08/29 先頭に２を付加
-#define MB2VERSION 210080
+//#define MB2VERSION 210080
+
+//2026/09/05 先頭に２を付加
+#define MB2VERSION 210081
 
 CPluginElem::CPluginElem()
 {

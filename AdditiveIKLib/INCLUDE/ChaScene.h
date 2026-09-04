@@ -189,6 +189,8 @@ public:
 
 	void ChangeIKStopAllOFF();
 
+	ChaMatrix GetWorldMatRenderSlot(CModel* srcmodel);
+
 private:
 	void InitParams();
 	void DestroyObjs();

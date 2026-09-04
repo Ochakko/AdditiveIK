@@ -2861,5 +2861,22 @@ int ChaScene::AddModelElem(MODELELEM srcmodelelem)
 	}
 };
 
+ChaMatrix ChaScene::GetWorldMatRenderSlot(CModel* srcmodel)
+{
+	ChaMatrix retmat;
+	retmat.SetIdentity();
+	if (!srcmodel) {
+		return retmat;
+	}
 
+	int renderslot = (m_updateslot == 0) ? 1 : 0;
+	MATRIXCALLING curmc = GetMatrixCalling(srcmodel);
+	if (curmc.initflag[renderslot]) {
+		retmat = curmc.GetMatWorldForRender(m_updateslot);
+	}
+	else {
+		retmat = srcmodel->GetWorldMat();
+	}
+	return retmat;
+}
 
