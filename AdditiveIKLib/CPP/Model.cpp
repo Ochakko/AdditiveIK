@@ -3562,7 +3562,7 @@ int CModel::SetShaderConst(int btflag, bool calcslotflag)
 					//CMotionPoint tmpmp = curbone->GetCurMp();
 					if (btflag == 0) {
 						//set4x4[matrixindex] = tmpmp.GetWorldMat();
-						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, opeframe, &curmp);
+						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, opeframe, &curmp);//opeframeはただのヒント。curmpはGetCurMp()、前回の計算結果。
 						MoveMemory(&(m_setfl4x4[16 * matrixindex]),
 							clustermat.GetDataPtr(), sizeof(float) * 16);
 					}
@@ -3582,7 +3582,7 @@ int CModel::SetShaderConst(int btflag, bool calcslotflag)
 					}
 					else {
 						//set4x4[matrixindex] = tmpmp.GetWorldMat();
-						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, opeframe, &curmp);
+						clustermat = curbone->GetWorldMat(currentlimitdegflag, curmotid, opeframe, &curmp);//opeframeはただのヒント。curmpはGetCurMp()、前回の計算結果。
 						MoveMemory(&(m_setfl4x4[16 * matrixindex]),
 							clustermat.GetDataPtr(), sizeof(float) * 16);
 					}
@@ -4103,6 +4103,7 @@ int CModel::SetCurrentMotion( int srcmotid )
 
 		m_curmotinfo->curframe = 1.0;
 		m_curmotinfo->befframe = 1.0;
+		SetRenderSlotFrame(1.0);//2026/09/05
 
 		//if ((m_curmotinfo->fbxanimno >= 0) && GetScene()) {
 		//	FbxAnimStack* lCurrentAnimationStack = m_pscene->FindMember<FbxAnimStack>(mAnimStackNameArray[m_curmotinfo->fbxanimno]->Buffer());
