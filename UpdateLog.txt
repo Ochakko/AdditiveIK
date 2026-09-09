@@ -1,6 +1,13 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/09/10
+　ドキュメント追加
+　　Documents\TroubleShooting\ForUsing_UnityAsset_Morro_Mocap_fbx.docx
+　リターゲット設定ファイル追加
+　　Test\RetargetSettingFileExample\VRoid_MorroMocap_2.rtg
+
+
 2026/09/05
 　AdditiveIK 1.0.0.81 release
 　　FootRig+物理シミュ修正
