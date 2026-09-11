@@ -880,6 +880,42 @@ int CBtObject::SetDofRotAxis(int srcaxiskind)
 	return 0;
 }
 
+int CBtObject::OnMotionChanged()
+{
+	//########################################################
+	//2026/09/12
+	//速度と加速度をキャンセル(減速)する
+	//急に０にしても乱れてしまうので　減速する
+	//fpsが小さいほど　1フレームの変化が大きいので　減速もきつくする
+	//########################################################
+	btScalar decrate = btScalar(max(0.001, min(0.10, pow((g_avrgfps * g_dspeed * 0.01), 2.0))));
+
+	btVector3 angv = m_rigidbody->getAngularVelocity();
+	m_rigidbody->setAngularVelocity(angv * decrate);
+	btVector3 linearv = m_rigidbody->getLinearVelocity();
+	m_rigidbody->setLinearVelocity(linearv * decrate);
+	btVector3 pushv = m_rigidbody->getPushVelocity();
+	m_rigidbody->setPushVelocity(pushv * decrate);
+	btVector3 turnv = m_rigidbody->getTurnVelocity();
+	m_rigidbody->setTurnVelocity(turnv * decrate);
+	btVector3 intangv = m_rigidbody->getInterpolationAngularVelocity();
+	m_rigidbody->setInterpolationAngularVelocity(intangv * decrate);
+	btVector3 intlinearv = m_rigidbody->getInterpolationLinearVelocity();
+	m_rigidbody->setInterpolationLinearVelocity(intlinearv * decrate);
+
+
+	//setEquilibriumPointすると　動きが落ち着いた時の　揺れの起点がおかしくなるので　やめる
+	//size_t constraintnum = m_constraint.size();
+	//size_t constno;
+	//for (constno = 0; constno < constraintnum; constno++) {
+	//	btGeneric6DofSpringConstraint* dofC = m_constraint[constno].constraint;
+	//	dofC->setEquilibriumPoint();
+	//}
+
+
+	return 0;
+}
+
 
 int CBtObject::SetEquilibriumPoint(bool limitdegflag, int lflag, int aflag)
 {
@@ -1161,8 +1197,10 @@ int CBtObject::SetPosture2Bt(bool secondcall, bool btmovable, int limitrate,
 	m_rigidbody->getMotionState()->setWorldTransform(worldtra);
 	m_btpos.SetParams(srcrigidcenter.x, srcrigidcenter.y, srcrigidcenter.z);
 
-
-	if (secondcall) {
+	if (m_bone->GetMotionChanged()) {
+		OnMotionChanged();
+	}
+	else if (secondcall) {
 		//2024/05/02 LimitEulオンの時　SetBtMotion()の後にもう一度Motion2Bt()を呼び出す
 		//その際に Velocityを0セット
 		// 
@@ -1230,7 +1268,6 @@ int CBtObject::SetPosture2Bt(bool secondcall, bool btmovable, int limitrate,
 		//	m_rigidbody->setTurnVelocity(turnV);
 		//}
 	}
-
 
 	//constraintのFrameA, FrameBの更新
 	//if (constraintupdateflag == 1) {

@@ -65,6 +65,7 @@ public:
 	int LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname);
 
 	int OnFrameMove(bool limitdegflag);
+	int OnFrameMove(CModel* srcmodel, bool limitdegflag);
 	void AddFootInfo(CModel* srcmodel);
 	void SetSaveModelWM(CModel* srcmodel, ChaMatrix srcmat);
 
@@ -75,7 +76,6 @@ public:
 
 	ChaVector3 GetJointPos(bool limitdegflag, CModel* srcmodel, CBone* srcbone, ChaVector3 srcoffset, bool istoebase);
 	int GetGroundPos(CFootInfo* srcfootinfo, CModel* groundmodel, ChaVector3 basepos, bool gpuflag, ChaVector3* pgpos);
-
 
 private:
 	int Dlg2ParamsListener();

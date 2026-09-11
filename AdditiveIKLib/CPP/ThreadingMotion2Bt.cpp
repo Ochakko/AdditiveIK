@@ -104,10 +104,12 @@ int CThreadingMotion2Bt::ThreadFunc()
 						if (loopstartflag == 1) {
 							if (g_previewMOA == 0) {
 								m_model->ZeroBtCnt();
+								m_model->SetMotionChanged(true);
 							}
 							else {
 								//MOAの場合　髪の毛の揺れをリセットしないために　ZeroBtCnt()を呼ばない
-								nextframe = 1.0;
+								//nextframe = 1.0;
+								m_model->SetMotionChanged(true);
 							}
 						}
 						if (m_model->ExistCurrentMotion()) {
@@ -162,10 +164,12 @@ int CThreadingMotion2Bt::ThreadFunc()
 						if (loopstartflag == 1) {
 							if (g_previewMOA == 0) {
 								m_model->ZeroBtCnt();
+								m_model->SetMotionChanged(true);
 							}
 							else {
 								//MOAの場合　髪の毛の揺れをリセットしないために　ZeroBtCnt()を呼ばない
-								nextframe = 1.0;
+								//nextframe = 1.0;
+								m_model->SetMotionChanged(true);
 							}
 						}
 						if (m_model->ExistCurrentMotion()) {

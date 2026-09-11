@@ -201,6 +201,20 @@ void ChaScene::SetUpdateSlot()
 	}
 }
 
+void ChaScene::SetMotionChanged(bool srcflag)
+{
+	if (!m_modelindex.empty()) {
+		int modelnum = (int)m_modelindex.size();
+		int modelindex;
+		for (modelindex = 0; modelindex < modelnum; modelindex++) {
+			CModel* curmodel = m_modelindex[modelindex].modelptr;
+			if (curmodel) {
+				curmodel->SetMotionChanged(srcflag);
+			}
+		}
+	}
+}
+
 //void ChaScene::ResetCSFirstDispatchFlag()
 //{
 //	if (!m_modelindex.empty()) {
@@ -2164,8 +2178,6 @@ int ChaScene::Motion2Bt(bool secondcall, bool limitdegflag, bool updatematrixfla
 			}
 			WaitMotion2BtFinished();//次に順番に計算することがあるので　待機が必要
 		}
-
-
 
 		//m_updateslot = (int)(!(m_updateslot != 0));
 		////m_totalupdatethreadsnum = 0;

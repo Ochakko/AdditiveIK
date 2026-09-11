@@ -4115,6 +4115,8 @@ int CModel::SetCurrentMotion( int srcmotid )
 		//	}
 		//}
 
+		SetMotionChanged(true);
+
 		return 0;
 	}
 }
@@ -4164,6 +4166,8 @@ int CModel::SetMotionFrame(int srcmotid, double srcframe)
 		//urmi->befframe = m_curmotinfo->curframe;
 		SetRenderSlotFrame(m_curmotinfo->curframe);
 		m_curmotinfo = curmi;//2025/01/11 m_curmotinfoの更新
+
+		SetMotionChanged(true);
 	}
 	else {
 		if (GetNoBoneFlag()) {
@@ -10067,6 +10071,7 @@ void CModel::BulletSimulationStopReq(CBtObject* srcbto)
 
 	if (srcbto->GetRigidBody()){
 		srcbto->GetRigidBody()->setActivationState(DISABLE_SIMULATION);
+		srcbto->OnMotionChanged();//速度０
 	}
 
 	int chilno;
@@ -11798,6 +11803,26 @@ int CModel::CreateRigidElem(const char* rename, int refflag, const char* impname
 	}
 
 	return 0;
+}
+
+void CModel::SetMotionChanged(bool srcflag)
+{
+	SetMotionChangedReq(GetTopBone(false), srcflag);
+}
+
+void CModel::SetMotionChangedReq(CBone* curbone, bool srcflag)
+{
+	if (curbone != nullptr) {
+
+		curbone->SetMotionChanged(srcflag);
+
+		if (curbone->GetChild(false)) {
+			SetMotionChangedReq(curbone->GetChild(false), srcflag);
+		}
+		if (curbone->GetBrother(false)) {
+			SetMotionChangedReq(curbone->GetBrother(false), srcflag);
+		}
+	}
 }
 
 void CModel::CreateRigidElemReq( CBone* curbone, int reflag, string rename, int impflag, string impname )
@@ -25488,14 +25513,14 @@ int CModel::ChangeIdlingMotion(int srcmotid)
 	return 0;
 }
 
-int CModel::CalcFillupTarget(int nextmotid, int filluppoint, double motionrate1, bool calcwm)
+int CModel::CalcFillupTarget(CFootRigDlg* srcfootrigdlg, int nextmotid, int filluppoint, double motionrate1, bool calcwm)
 {
 	ChaMatrix newwm;
 	if (calcwm) {
 		MOTINFO curmotinfo = GetCurMotInfo();
 		double srcframe;
 		srcframe = min((curmotinfo.curframe + filluppoint), (curmotinfo.frameleng - 1.0));
-		newwm = CalcNextModelWorldMat(curmotinfo.motid, srcframe, nextmotid, filluppoint);
+		newwm = CalcNextModelWorldMat(srcfootrigdlg, curmotinfo.motid, srcframe, nextmotid, filluppoint);
 	}
 	else {
 		newwm = GetMoaNextModelWM();
@@ -25523,25 +25548,27 @@ int CModel::CalcFillupTarget(int nextmotid, int filluppoint, double motionrate1,
 	return 0;
 }
 
-ChaMatrix CModel::CalcNextModelWorldMat(int srcmotid, double srcframe, int nextmotid, double nextframe)
+ChaMatrix CModel::CalcNextModelWorldMat(CFootRigDlg* srcfootrigdlg, int srcmotid, double srcframe, int nextmotid, double nextframe)
 {
-	ChaMatrix wm = m_matWorld;
+	ChaMatrix oldwm = m_matWorld;
 	ChaVector3 savepos = GetModelPosition();//2025/08/31
+	MOTINFO savemi = GetCurMotInfo();
+
 
 	CBone* hipsbone = GetHipsBone();
 	if (!hipsbone) {
-		return wm;
+		return oldwm;
 	}
 
 	ChaVector3 hipspos0 = hipsbone->GetJointFPos();
 
 	ChaMatrix currenthipslocal = hipsbone->GetWorldMat(g_limitdegflag, srcmotid, srcframe, nullptr);
-	ChaMatrix currenthipswm = currenthipslocal * wm;
+	ChaMatrix currenthipswm = currenthipslocal * oldwm;
 	ChaVector3 currenthipspos;
 	ChaVector3TransformCoord(&currenthipspos, &hipspos0, &currenthipswm);
 
 	ChaMatrix nexthipslocal = hipsbone->GetWorldMat(g_limitdegflag, nextmotid, nextframe, nullptr);
-	ChaMatrix nexthipswm = nexthipslocal * wm;
+	ChaMatrix nexthipswm = nexthipslocal * oldwm;
 	ChaVector3 nexthipspos;
 	ChaVector3TransformCoord(&nexthipspos, &hipspos0, &nexthipswm);
 
@@ -25551,19 +25578,39 @@ ChaMatrix CModel::CalcNextModelWorldMat(int srcmotid, double srcframe, int nextm
 	newpos.y = savepos.y;
 	//SetModelPosition(newpos);
 
-	ChaMatrix retmat = CalcModelWorldMatFromPosAndRot(newpos, GetModelRotation());
+	ChaMatrix wmmat0 = CalcModelWorldMatFromPosAndRot(newpos, GetModelRotation());
+	ChaMatrix retmat;
+	retmat.SetIdentity();
+
+	if (srcfootrigdlg != nullptr) {
+		//2026/09/12
+		//FootRigを考慮する
+		//新しいXZ位置と　新しいモーションの場合の　FootRigによるModelWorldMatを計算する
+		//この処理をしない場合　MOAでモーションを切り替えた場合に　Yが急に変化して　物理の髪の毛が　ぶわっとなる
+		SetMotionFrame(nextmotid, nextframe);
+		SetWorldMat(wmmat0);
+
+		srcfootrigdlg->OnFrameMove(this, g_limitdegflag);
+		retmat = GetWorldMat();
+
+		SetMotionFrame(savemi.motid, savemi.curframe);
+		SetWorldMat(oldwm);
+	}
+	else {
+		retmat = wmmat0;
+	}
 
 	SetMoaNextModelWM(retmat);//!!!!! CModel::Move2HipsPos(), CBone::UpdateMatrix()で使用する
 
 	return retmat;
 }
-ChaMatrix CModel::CalcNextModelWorldMat(int nextmotid, double nextframe)
+ChaMatrix CModel::CalcNextModelWorldMat(CFootRigDlg* srcfootrigdlg, int nextmotid, double nextframe)
 {
 	MOTINFO curmotinfo = GetCurMotInfo();
 	int curmotid = curmotinfo.motid;
 	double curmotframe = curmotinfo.curframe;
 	
-	ChaMatrix retmat = CalcNextModelWorldMat(curmotid, curmotframe, nextmotid, nextframe);
+	ChaMatrix retmat = CalcNextModelWorldMat(srcfootrigdlg, curmotid, curmotframe, nextmotid, nextframe);
 	return retmat;
 }
 
@@ -26043,7 +26090,7 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 				//###########################################################
 				if (GetMocapWalkFlag()) {
 					//MocapWalk Loop
-					CalcFillupTarget(GetCurrentMotID(), 1, 1.0,
+					CalcFillupTarget(pfootrigdlg, GetCurrentMotID(), 1, 1.0,
 						true
 					);
 
@@ -26052,7 +26099,7 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 					SetMoaStartFillUpFrame(curframe);
 				}
 				else if ((GetMoaNextMotId() <= 0)) {
-					CalcFillupTarget(idlingmotid, 1, 1.0,
+					CalcFillupTarget(pfootrigdlg, idlingmotid, 1, 1.0,
 						true
 					);
 
@@ -26061,7 +26108,7 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 					SetMoaStartFillUpFrame(curframe);
 				}
 				else {
-					CalcFillupTarget(GetMoaNextMotId(), GetMoaNextFrame(), 1.0,
+					CalcFillupTarget(pfootrigdlg, GetMoaNextMotId(), GetMoaNextFrame(), 1.0,
 						true
 					);
 
@@ -26193,11 +26240,11 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 							//通常補間ブレンドモード
 							//####################
 
-							CalcFillupTarget(model_nextmotid, filluppoint, motionrate1,
+							CalcFillupTarget(pfootrigdlg, model_nextmotid, filluppoint, motionrate1,
 								//IsJustEqualTime(curframe, GetMoaStartFillUpFrame())
 								(GetMoaFillupCount() == 0)
 							);
-							//CalcFillupTarget(model_nextmotid, model_nextframe, motionrate1, 
+							//CalcFillupTarget(pfootrigdlg, model_nextmotid, model_nextframe, motionrate1, 
 							// IsJustEqualTime(curframe, curstartfillupframe));
 						}
 						else {
@@ -26225,7 +26272,7 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 							double freezebigrate1 = fmin(3.9, (double)freezecount);
 
 							//2025/01/12 Be Big!!!
-							CalcFillupTarget(model_nextmotid, filluppoint, freezebigrate1, //motionrate1,
+							CalcFillupTarget(pfootrigdlg, model_nextmotid, filluppoint, freezebigrate1, //motionrate1,
 								//IsJustEqualTime(curframe, GetMoaStartFillUpFrame())
 								(GetMoaFillupCount() == 0)
 							);
@@ -26310,7 +26357,7 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 				//2026/08/22 通常のモーション時にもアイドリングに戻るときに　モーション終了時のWMに移動する
 				//if (GetMocapWalkFlag() || jumpflag) {
 				if (!GetPostureParentFlag()) {//2026/08/23 乗り物に乗っている状態でMove2HipsPos()すると落下するので応急処置
-					CalcFillupTarget(model_nextmotid, 1, 1.0,
+					CalcFillupTarget(pfootrigdlg, model_nextmotid, 1, 1.0,
 						true
 					);
 					Move2HipsPos(pfootrigdlg, model_nextmotid, 1.0);

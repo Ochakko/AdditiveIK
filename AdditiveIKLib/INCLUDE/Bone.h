@@ -1955,6 +1955,11 @@ public: //accesser
 	CMotionPoint* GetTargetMp() {
 		return &m_targetmp;
 	}
+
+	void SetMotionChanged(bool srcval);
+	bool GetMotionChanged() {
+		return (m_motionchanged != 0);
+	}
 public:
 	CRITICAL_SECTION m_CritSection_GetBefNext;
 	//CRITICAL_SECTION m_CritSection_GetBefNext2;
@@ -2049,6 +2054,8 @@ private:
 
 	int m_defboneposkind;//FbxFile.cpp FbxSetDefaultBonePosReq()でセット　BPの有無など
 
+
+	int m_motionchanged;
 
 	//CQuaternion m_addlimitq;
 

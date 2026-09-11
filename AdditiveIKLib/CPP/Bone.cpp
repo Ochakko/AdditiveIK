@@ -392,6 +392,8 @@ int CBone::InitParams()
 	//m_posconstraint = 0;
 	//ZeroMemory(m_coldisp, sizeof(CModel*)* COL_MAX);
 
+	m_motionchanged = 0;
+
 	ChaMatrixIdentity(&m_tmpsymmat);
 
 	ChaMatrixIdentity(&(m_btmat[0]));
@@ -7273,7 +7275,6 @@ int CBone::CalcNewBtMat(CModel* srcmodel, CBone* childbone, ChaMatrix* dstmat, C
 	else{
 		//シミュ結果をそのまま。アニメーションは考慮しなくてよい。
 		if (srcmodel->GetBtCnt() == 0){
-			//tramat = GetCurMp().GetWorldMat();
 			tramat = curworld;
 			rotmat = ChaMatrixRot(tramat);
 
@@ -7283,58 +7284,58 @@ int CBone::CalcNewBtMat(CModel* srcmodel, CBone* childbone, ChaMatrix* dstmat, C
 			ChaVector3TransformCoord(&m_btchildpos, &jointfpos, &tramat);
 		}
 		else{
-			tramat = befbtmat;
+			//tramat = befbtmat;
 
-			rotmat = ChaMatrixRot(tramat);
-			jointfpos = GetJointFPos();
-			ChaVector3TransformCoord(&m_btparentpos, &jointfpos, &tramat);
-			jointfpos = childbone->GetJointFPos();
-			ChaVector3TransformCoord(&m_btchildpos, &jointfpos, &tramat);
-
-			////親方向に　Kinematicのボーンを探す
-			//CBone* kinematicbone = 0;
-			//CBone* findbone = GetParent(false);
-			//while (findbone) {
-			//	if (findbone->IsSkeleton() && (findbone->GetBtKinFlag() != 0)) {
-			//		kinematicbone = findbone;
-			//		break;
-			//	}
-			//	findbone = findbone->GetParent(false);
-			//}
-			////2023/01/28
-			////純粋な物理計算においては　Kinematic部分だけ手動で移動すれば良いのだが
-			////計算が乱れやすく　大げさになり易いので
-			////Kinematicとそうではない境目のKinematicの　全フレームからの移動分を　子供ジョイントに波及させる
-			////この処理を加えることにより　ジャンプして着地した時の　乱れ方が　大きくなり過ぎないようになった
-			//if (kinematicbone != nullptr) {
-			//	ChaMatrix befparentwm, curparentwm;
-			//	befparentwm = kinematicbone->GetBtMat();//実質一回前の　BtMat
-			//	//befparentwm = kinematicbone->GetCurrentWorldMat(true, false);//2026/07/21
-			//	curparentwm = kinematicbone->GetCurrentWorldMat(true, true);//カレントのKinematic姿勢
-
-			//	jointfpos = kinematicbone->GetJointFPos();
-			//	ChaVector3 befparentpos, curparentpos;
-			//	ChaVector3TransformCoord(&befparentpos, &jointfpos, &befparentwm);
-			//	ChaVector3TransformCoord(&curparentpos, &jointfpos, &curparentwm);
-			//	ChaVector3 movevec;
-			//	movevec = curparentpos - befparentpos;//前回から今回への　位置移動分
-			//	ChaMatrix movemat;
-			//	movemat.SetIdentity();
-			//	movemat.SetTranslation(movevec);
-			//
-			//	tramat = befbtmat * movemat;
-			//	//tramat = befbtmat * (curparentwm * ChaMatrixInv(befparentwm));//2026/07/21
-			//}
-			//else {
-			//	tramat = befbtmat;
-			//}
-			//
-			//rotmat = ChaMatrixRot(tramat);				
-			//
+			//rotmat = ChaMatrixRot(tramat);
 			//jointfpos = GetJointFPos();
 			//ChaVector3TransformCoord(&m_btparentpos, &jointfpos, &tramat);
 			//jointfpos = childbone->GetJointFPos();
 			//ChaVector3TransformCoord(&m_btchildpos, &jointfpos, &tramat);
+
+			//親方向に　Kinematicのボーンを探す
+			CBone* kinematicbone = 0;
+			CBone* findbone = GetParent(false);
+			while (findbone) {
+				if (findbone->IsSkeleton() && (findbone->GetBtKinFlag() != 0)) {
+					kinematicbone = findbone;
+					break;
+				}
+				findbone = findbone->GetParent(false);
+			}
+			//2023/01/28
+			//純粋な物理計算においては　Kinematic部分だけ手動で移動すれば良いのだが
+			//計算が乱れやすく　大げさになり易いので
+			//Kinematicとそうではない境目のKinematicの　全フレームからの移動分を　子供ジョイントに波及させる
+			//この処理を加えることにより　ジャンプして着地した時の　乱れ方が　大きくなり過ぎないようになった
+			if (kinematicbone != nullptr) {
+				ChaMatrix befparentwm, curparentwm;
+				befparentwm = kinematicbone->GetBtMat();//実質一回前の　BtMat
+				////befparentwm = kinematicbone->GetCurrentWorldMat(true, false);//2026/07/21
+				curparentwm = kinematicbone->GetCurrentWorldMat(true, true);//カレントのKinematic姿勢
+
+				jointfpos = kinematicbone->GetJointFPos();
+				ChaVector3 befparentpos, curparentpos;
+				ChaVector3TransformCoord(&befparentpos, &jointfpos, &befparentwm);
+				ChaVector3TransformCoord(&curparentpos, &jointfpos, &curparentwm);
+				ChaVector3 movevec;
+				movevec = curparentpos - befparentpos;//前回から今回への　位置移動分
+				ChaMatrix movemat;
+				movemat.SetIdentity();
+				movemat.SetTranslation(movevec);
+			
+				tramat = befbtmat * movemat;
+				//tramat = befbtmat * (curparentwm * ChaMatrixInv(befparentwm));//2026/07/21
+			}
+			else {
+				tramat = befbtmat;
+			}
+			
+			rotmat = ChaMatrixRot(tramat);				
+			
+			jointfpos = GetJointFPos();
+			ChaVector3TransformCoord(&m_btparentpos, &jointfpos, &tramat);
+			jointfpos = childbone->GetJointFPos();
+			ChaVector3TransformCoord(&m_btchildpos, &jointfpos, &tramat);
 		}
 	}
 
@@ -10466,3 +10467,16 @@ CModel* CBone::GetPostureChildModel()
 	}
 }
 
+void CBone::SetMotionChanged(bool srcval) {
+	if (srcval) {
+		//if (m_motionchanged == 0) {
+		//m_motionchanged = 18;
+		//}
+		//m_motionchanged = max(4, min(80, (int)(8.0 / (g_avrgfps * g_dspeed / 80.0 + 0.0111))));
+		m_motionchanged = max(4, min(80, (int)(4.0 / (g_avrgfps * g_dspeed / 80.0))));
+	}
+	else {
+		m_motionchanged--;
+		m_motionchanged = max(0, m_motionchanged);
+	}
+}

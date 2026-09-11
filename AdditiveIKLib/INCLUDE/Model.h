@@ -475,7 +475,7 @@ public:
 	void UpdateMatrixTargetRateReq(CBone* srcbone, double srcrate1);
 	void SetUpdateSlotReq(CBone* srcbone, int srcslot);
 
-	int CalcFillupTarget(int nextmotid, int filluppoint, double motionrate1, bool calcwm);
+	int CalcFillupTarget(CFootRigDlg* srcfootrigdlg, int nextmotid, int filluppoint, double motionrate1, bool calcwm);
 
 	void ResetFootRigUpdated();
 	void UpdateMatrixFootRigReq(bool istoebase, bool limitdegflag, CBone* srcbone,
@@ -553,6 +553,7 @@ public:
 	int SetCurrentMotion( int srcmotid );
 	int BackUpLoopFlag();
 	int RestoreLoopFlag();
+	void SetMotionChanged(bool srcflag);
 
 /**
  * @fn
@@ -1250,14 +1251,16 @@ public:
 
 	ChaMatrix Move2HipsPos(CFootRigDlg* srcfootrigdlg, int nextmotid, double nextframe);
 	ChaMatrix RotMocapWalk(CFootRigDlg* srcfootrigdlg, double srcrot);
-	ChaMatrix CalcNextModelWorldMat(int srcmotid, double srcframe, int nextmotid, double nextframe);
-	ChaMatrix CalcNextModelWorldMat(int nextmotid, double nextframe);
+	ChaMatrix CalcNextModelWorldMat(CFootRigDlg* srcfootrigdlg, int srcmotid, double srcframe, int nextmotid, double nextframe);
+	ChaMatrix CalcNextModelWorldMat(CFootRigDlg* srcfootrigdlg, int nextmotid, double nextframe);
 	ChaMatrix CalcModelWorldMatFromPosAndRot(ChaVector3 srcpos, ChaVector3 srcrot);
 private:
 	int InitParams(int srcrefposnum);
 	int DestroyObjs();
 
 	void CreateRigidElemReq(CBone* curbone, int reflag, std::string rename, int impflag, std::string impname);
+
+	void SetMotionChangedReq(CBone* curbone, bool srcflag);
 
 	MODELBOUND CalcBoneBound();
 	int AddModelBound( MODELBOUND* mb, MODELBOUND* addmb );

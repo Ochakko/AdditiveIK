@@ -1,6 +1,15 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/09/12
+　モーションが切り替わる際の物理シミュを修正
+　　切り替わる際に動きに変化が少ないのにもかかわらず髪の毛がぶわっと跳ねるのを軽減
+　　切り替わる際に物理を減速
+　　切り替わる際の計算にFootRigの計算を考慮
+　　切り替え時に剛体オブジェクトの作り直しをしていたのをやめた
+　　低速再生にも対応したが、高速で描画しているときの方が安定(切り替え時に関しては).
+　　
+　　
 2026/09/10
 　ドキュメント追加
 　　Documents\TroubleShooting\ForUsing_UnityAsset_Morro_Mocap_fbx.docx

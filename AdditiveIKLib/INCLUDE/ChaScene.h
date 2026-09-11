@@ -190,6 +190,7 @@ public:
 	void ChangeIKStopAllOFF();
 
 	ChaMatrix GetWorldMatRenderSlot(CModel* srcmodel);
+	void SetMotionChanged(bool srcflag);
 
 private:
 	void InitParams();

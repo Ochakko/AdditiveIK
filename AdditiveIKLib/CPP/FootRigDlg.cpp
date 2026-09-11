@@ -2250,8 +2250,52 @@ int CFootRigDlg::LoadFootRigFile(WCHAR* savechadir, WCHAR* saveprojname)
 	return 0;
 }
 
+int CFootRigDlg::OnFrameMove(CModel* srcmodel, bool limitdegflag)
+{
+	//#######################
+	//2026/09/12
+	//指定モデルだけ計算
+	//#######################
+
+	//2025/12/06
+	//updateに関するモデルループを1回に.
+
+	if (g_underRetargetFlag == false) {//2025/02/09 retarget中は実行しない
+		std::unordered_map<CModel*, FOOTRIGELEM>::iterator itrelem;
+		for (itrelem = m_footrigelem.begin(); itrelem != m_footrigelem.end(); itrelem++)//FootRigに登録されているモデルだけ
+		{
+			CModel* curmodel = itrelem->first;
+			if ((curmodel != nullptr) && (curmodel == srcmodel) && (curmodel->ExistCurrentMotion() == true)) {
+				if (itrelem->second.IsEnable()) {
+					//FootRigがオンの場合
+					//curmodel->ResetFootRigUpdated();//2025/12/13 フラグリセットはFootRigオフの時だけ. フラグオンはRigControlFootRig()内で行う.
+					int result = Update(limitdegflag, curmodel);
+				}
+				else {
+					//FootRigがオフの場合
+					curmodel->ResetFootRigUpdated();
+
+					//2025/12/13 全ボーンに対するUpdateMatrix()はOnFrameMove()呼び出しレベルで呼び出すので、ここでは不要.
+					//ChaMatrix matWorld = curmodel->GetWorldMat(GETWM_MIXED);
+					//ChaMatrix matView = curmodel->GetViewMat();
+					//ChaMatrix matProj = curmodel->GetProjMat();
+					//int refposindex = 0;
+					//curmodel->UpdateMatrix(limitdegflag, &matWorld, &matView, &matProj, true, refposindex);
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+
 int CFootRigDlg::OnFrameMove(bool limitdegflag)
 {
+	//#######################
+	//全モデル計算
+	//#######################
+
+
 	//2025/12/06
 	//updateに関するモデルループを1回に.
 

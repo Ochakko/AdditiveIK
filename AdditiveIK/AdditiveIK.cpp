@@ -3614,6 +3614,8 @@ INT WINAPI wWinMain(
 					g_chascene->WaitForUpdateBlendShapeModels();
 				}
 
+				g_chascene->SetMotionChanged(false);
+
 				s_callingUpdateFlag = false;//for debug
 
 
@@ -13139,13 +13141,14 @@ int OnAnimMenu(bool dorefreshflag, int selindex, int saveundoflag)
 			}
 			s_curmotid = selmotid;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-			if (dorefreshflag) {
-				GetCurrentModel()->CreateBtObject(g_limitdegflag, 1);
-				//GetCurrentModel()->CalcBoneEul(-1);
+			//2026/09/12 comment out
+			//if (dorefreshflag) {
+			//	GetCurrentModel()->CreateBtObject(g_limitdegflag, 1);
+			//	//GetCurrentModel()->CalcBoneEul(-1);
 
-				//2023/10/26　コメントアウト
-				//GetCurrentModel()->CalcBoneEul(g_limitdegflag, selmotid);//2021/08/25
-			}
+			//	//2023/10/26　コメントアウト
+			//	//GetCurrentModel()->CalcBoneEul(g_limitdegflag, selmotid);//2021/08/25
+			//}
 
 
 			//2023/01/29 初回物理再生のために必要
@@ -26595,6 +26598,11 @@ int OnFramePreviewBt(double nextframe, double difftime, int endflag, int loopsta
 	for (modelcount = 0; modelcount < modelnum; modelcount++) {
 		CModel* curmodel = g_chascene->GetModel(modelcount);
 		if (curmodel && (curmodel->GetNoBoneFlag() == false)) {//2023/11/03 NoBoneのときはスキップ
+
+			if (curmodel->GetBtCnt() == 0) {
+				curmodel->SetMotionChanged(true);
+			}
+
 			if (curmodel->GetBtCnt() <= INITTERM) {
 				
 				//####################################################################
@@ -36701,7 +36709,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.81 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.82 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -40277,7 +40285,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.81 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.82 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {
