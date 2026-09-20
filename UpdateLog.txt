@@ -8,6 +8,10 @@ https://github.com/Ochakko/AdditiveIK
 　　スライダーを動かすとモーション名の末尾に
 　　物理減速係数が記述されて保存、使用される
 　　
+　ドキュメント追加
+　　モーション切り替え時とループ時の物理減速設定について
+　　Documents/TroubleShooting/VeloRateSettingOnLoopingMotion.docx
+　　
 2026/09/12
 　AdditiveIK 1.0.0.82 release
 　　モーションが切り替わる際の物理シミュを修正
