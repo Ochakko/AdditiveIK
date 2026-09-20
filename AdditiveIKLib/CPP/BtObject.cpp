@@ -1207,7 +1207,8 @@ int CBtObject::SetPosture2Bt(bool secondcall, bool btmovable, int limitrate,
 	if (m_bone->GetMotionChanged() && m_bone->GetParModel()) {
 		MOTINFO curmi = m_bone->GetParModel()->GetCurMotInfo();
 		if ((curmi.motid > 0) && m_bone->GetMotionChanged()) {
-			double velorate = m_bone->GetParModel()->GetDecelRateOnLoop(curmi.motid);
+			bool existflag = false;
+			double velorate = m_bone->GetParModel()->GetDecelRateOnLoop(curmi.motid, &existflag);
 			OnMotionChanged(velorate);
 		}
 	}

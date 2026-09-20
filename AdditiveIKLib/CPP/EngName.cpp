@@ -87,7 +87,8 @@ int ConvEngName( int type, char* srcname, int srcleng, char* dstname, int dstlen
 			curc = namepm[nameno];
 			if (((curc >= 'a') && (curc <= 'z')) || ((curc >= 'A') && (curc <= 'Z')) || ((curc >= '0') && (curc <= '9')) ||
 				(curc == '_') || 
-				(curc == '[') || (curc == ']')//2025/02/08 for [L], [R]
+				(curc == '[') || (curc == ']') || //2025/02/08 for [L], [R]
+				(curc == '#') || (curc == '.')//2026/09/21 for DecelRateOnLooping
 				) {
 				alnum = 1;
 			}

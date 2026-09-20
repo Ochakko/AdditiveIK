@@ -5268,6 +5268,20 @@ int CModel::MakeEnglishName()
 		MOTINFO* curmi = itrmi->second;
 		if( curmi ){
 			CallF( ConvEngName( ENGNAME_MOTION, curmi->motname, 256, curmi->engmotname, 256 ), return 1 );
+
+			//2026/09/21 モーション切り替え時またはループ時の　物理減速情報をモーション名の末尾に保存
+			bool existflag = false;
+			double decelrate = GetDecelRateOnLoop(curmi->motid, &existflag);
+			if (existflag) {
+				char decelpat[10] = "_#DL";
+				char* pdecelpat = strstr(curmi->engmotname, decelpat);
+				if (pdecelpat != nullptr) {
+					*pdecelpat = 0;
+				}
+				char strdecelrate[256] = { 0 };
+				sprintf_s(strdecelrate, 256, "_#DL%.3f", decelrate);
+				strcat_s(curmi->engmotname, 256, strdecelrate);
+			}
 		}
 	}
 
@@ -10071,7 +10085,8 @@ void CModel::BulletSimulationStopReq(CBtObject* srcbto)
 
 	if (srcbto->GetRigidBody()){
 		srcbto->GetRigidBody()->setActivationState(DISABLE_SIMULATION);
-		double decelrate0 = GetDecelRateOnLoop(GetCurMotInfo().motid);
+		bool existflag = false;
+		double decelrate0 = GetDecelRateOnLoop(GetCurMotInfo().motid, &existflag);
 		srcbto->OnMotionChanged(decelrate0);
 	}
 
@@ -26494,11 +26509,16 @@ ChaVector3 CModel::GetGrassMoverPosition()
 	return retpos;
 }
 
-double CModel::GetDecelRateOnLoop(int srcmotid)
+double CModel::GetDecelRateOnLoop(int srcmotid, bool* existflag)
 {
 	//モーション名に _#DLがついていた場合にはその続きの部分から減速係数を取得
 
-	MOTINFO chkmi = GetCurMotInfo();
+	if (!existflag) {
+		_ASSERT(0);
+		return 0.010;
+	}
+
+	MOTINFO chkmi = GetMotInfo(srcmotid);
 	if (chkmi.motid <= 0) {
 		return 0.010;
 	}
@@ -26507,13 +26527,13 @@ double CModel::GetDecelRateOnLoop(int srcmotid)
 	char motionname[MAX_PATH] = { 0 };
 	strcpy_s(motionname, MAX_PATH, chkmi.motname);
 
-	int namelen = strlen(motionname);
+	int namelen = (int)strlen(motionname);
 
 	char patdecrate[10] = "_#DL";
 	char* patptr = strstr(motionname, patdecrate);
 	if (patptr != nullptr) {
-		int restlen = namelen - (patptr - motionname);
-		int restlen2 = restlen - strlen(patdecrate);
+		int restlen = namelen - (int)(patptr - motionname);
+		int restlen2 = restlen - (int)strlen(patdecrate);
 		if (restlen2 > 0) {
 			char strrate[MAX_PATH] = { 0 };
 			strcpy_s(strrate, MAX_PATH, patptr + strlen(patdecrate));
@@ -26542,48 +26562,71 @@ double CModel::GetDecelRateOnLoop(int srcmotid)
 				if (isnan(decelrate0)) {
 					decelrate0 = 0.010;
 				}
+
+				*existflag = true;
 			}
 			else {
 				decelrate0 = 0.010;
+				*existflag = false;
 			}
 		}
 		else {
 			decelrate0 = 0.010;
+			*existflag = false;
 		}
 
 		return decelrate0;
 	}
 	else {
+		*existflag = false;
 		return 0.010;
 	}
 
 }
-void CModel::SetDecelRateOnLoop(double srcrate)
+void CModel::SetDecelRateOnLoop(int srcmotid, double srcrate)
 {
 	//モーション名の末尾に　モーションループ時の物理減衰係数を記述
 	// _#DL(rate value)が　名前の末尾になる
 
-	MOTINFO chkmi = GetCurMotInfo();
-	if (chkmi.motid <= 0) {
+	MOTINFO chkmi = GetMotInfo(srcmotid);
+	if ((chkmi.motid <= 0) || (chkmi.motid != srcmotid)) {
+		_ASSERT(0);
 		return;
 	}
-	double decelrate0 = GetDecelRateOnLoop(chkmi.motid);
+	bool existflag = false;
+	double decelrate0 = GetDecelRateOnLoop(chkmi.motid, &existflag);
 
-	char motionname[256] = { 0 };
-	strcpy_s(motionname, 256, chkmi.motname);
-
-	char* ppat = strstr(motionname, "_#DL");
-	if (ppat != nullptr) {
-		*ppat = 0;
-
-		char newmotionname[256] = { 0 };
-		sprintf_s(newmotionname, 256, "%s_#DL%.3f", motionname, srcrate);
+	char newmotionname[256] = { 0 };
+	char newmotionname_eng[256] = { 0 };
+	int result1 = MakeDecelRateOnLoopName(srcrate, chkmi.motname, 256, newmotionname, 256);
+	if (result1 == 0) {
 		SetMotionName(chkmi.motid, newmotionname);
 	}
 	else {
-		char newmotionname[256] = { 0 };
-		sprintf_s(newmotionname, 256, "%s_#DL%.3f", motionname, srcrate);
-		SetMotionName(chkmi.motid, newmotionname);
+		_ASSERT(0);
 	}
 }
 
+int CModel::MakeDecelRateOnLoopName(double srcrate, char* srcname, int srcleng, char* dstname, int dstleng)
+{
+	if ((srcname == nullptr) || (srcleng <= 0) || (dstname == nullptr) || (dstleng <= 0)) {
+		_ASSERT(0);
+		return 1;
+	}
+
+	char motionname[256] = { 0 };
+	char newmotionname[256] = { 0 };
+
+	strcpy_s(motionname, 256, srcname);
+	char* ppat = strstr(motionname, "_#DL");
+	if (ppat != nullptr) {
+		*ppat = 0;
+		sprintf_s(newmotionname, 256, "%s_#DL%.3f", motionname, srcrate);
+	}
+	else {
+		sprintf_s(newmotionname, 256, "%s_#DL%.3f", motionname, srcrate);
+	}
+
+	strcpy_s(dstname, dstleng, newmotionname);
+	return 0;
+}

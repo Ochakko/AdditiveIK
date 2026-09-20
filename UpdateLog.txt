@@ -1,6 +1,9 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/09/21
+　物理減速係数の保存と読み込み
+　
 2026/09/20
 　モーションループ時の物理減速係数を設定可能に.
 　　左下ペインのPropertyコマンドでダイアログを出し、

@@ -16161,7 +16161,8 @@ LRESULT CALLBACK MotPropDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				s_tmpmotloop = curmi.loopflag;
 				SendMessage(GetDlgItem(hDlgWnd, IDC_LOOP), BM_SETCHECK, (WPARAM)s_tmpmotloop, 0L);
 
-				double decelrate = GetCurrentModel()->GetDecelRateOnLoop(curmi.motid);
+				bool existflag = false;
+				double decelrate = GetCurrentModel()->GetDecelRateOnLoop(curmi.motid, &existflag);
 				char strdecelrate0[256] = { 0 };
 				sprintf_s(strdecelrate0, 256, "%.3f", decelrate);
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
@@ -16225,8 +16226,8 @@ LRESULT CALLBACK MotPropDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				swprintf_s(strval, 256, L"%.3f", (double)currentoffset);
 				SetDlgItemTextW(hDlgWnd, IDC_DecRateOnLoop, strval);
 
-				GetCurrentModel()->SetDecelRateOnLoop((double)cursliderpos * 0.0010);
-
+				MOTINFO curmi = GetCurrentModel()->GetCurMotInfo();
+				GetCurrentModel()->SetDecelRateOnLoop(curmi.motid, (double)cursliderpos * 0.0010);
 
 				char newmotionname[256] = { 0 };
 				GetCurrentModel()->GetCurrentMotName(newmotionname, 256);
