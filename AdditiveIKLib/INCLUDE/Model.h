@@ -1254,6 +1254,10 @@ public:
 	ChaMatrix CalcNextModelWorldMat(CFootRigDlg* srcfootrigdlg, int srcmotid, double srcframe, int nextmotid, double nextframe);
 	ChaMatrix CalcNextModelWorldMat(CFootRigDlg* srcfootrigdlg, int nextmotid, double nextframe);
 	ChaMatrix CalcModelWorldMatFromPosAndRot(ChaVector3 srcpos, ChaVector3 srcrot);
+
+	double GetDecelRateOnLoop(int srcmotid);
+	void SetDecelRateOnLoop(double srcrate);
+
 private:
 	int InitParams(int srcrefposnum);
 	int DestroyObjs();

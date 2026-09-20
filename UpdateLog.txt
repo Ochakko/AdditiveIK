@@ -1,7 +1,13 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
-
+2026/09/20
+　モーションループ時の物理減速係数を設定可能に.
+　　左下ペインのPropertyコマンドでダイアログを出し、
+　　VeloRate on Loopingスライダーにより設定
+　　スライダーを動かすとモーション名の末尾に
+　　物理減速係数が記述されて保存、使用される
+　　
 2026/09/12
 　AdditiveIK 1.0.0.82 release
 　　モーションが切り替わる際の物理シミュを修正

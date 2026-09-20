@@ -16137,7 +16137,8 @@ LRESULT CALLBACK MotPropDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	//static int s_tmpmotloop = 0;
 
 	WCHAR strframeleng[256];
-
+	WCHAR strdecelrate[256];
+	WCHAR strval[256];
 	static int s_motproptimerid = 345;
 
 
@@ -16159,6 +16160,19 @@ LRESULT CALLBACK MotPropDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 
 				s_tmpmotloop = curmi.loopflag;
 				SendMessage(GetDlgItem(hDlgWnd, IDC_LOOP), BM_SETCHECK, (WPARAM)s_tmpmotloop, 0L);
+
+				double decelrate = GetCurrentModel()->GetDecelRateOnLoop(curmi.motid);
+				char strdecelrate0[256] = { 0 };
+				sprintf_s(strdecelrate0, 256, "%.3f", decelrate);
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
+					strdecelrate0, 256, strdecelrate, 256);
+				SetDlgItemText(hDlgWnd, IDC_DecRateOnLoop, strdecelrate);
+
+
+				int sliderposx = int(fmax(0.0, fmin(1000.0, decelrate * 1000.0)));
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SL_DECRATE), TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)0);
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SL_DECRATE), TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)1000);
+				SendMessage(GetDlgItem(hDlgWnd, IDC_SL_DECRATE), TBM_SETPOS, (WPARAM)TRUE, (LPARAM)sliderposx);
 			}
 		}
 
@@ -16202,6 +16216,26 @@ LRESULT CALLBACK MotPropDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 	//case WM_TIMER:
 	//	OnDSUpdate();
 	//	break;
+	case WM_HSCROLL:
+		if (GetCurrentModel() != nullptr) {
+			if (GetDlgItem(hDlgWnd, IDC_SL_DECRATE) == (HWND)lp) {
+				int cursliderpos = (int)SendMessage(GetDlgItem(hDlgWnd, IDC_SL_DECRATE), TBM_GETPOS, 0, 0);
+				float currentoffset = (float)((double)cursliderpos * 0.0010);
+
+				swprintf_s(strval, 256, L"%.3f", (double)currentoffset);
+				SetDlgItemTextW(hDlgWnd, IDC_DecRateOnLoop, strval);
+
+				GetCurrentModel()->SetDecelRateOnLoop((double)cursliderpos * 0.0010);
+
+
+				char newmotionname[256] = { 0 };
+				GetCurrentModel()->GetCurrentMotName(newmotionname, 256);
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
+					newmotionname, 256, s_tmpmotname, 256);
+				SetDlgItemText(hDlgWnd, IDC_MOTNAME, s_tmpmotname);
+			}
+		}
+		break;
 	case WM_CLOSE:
 		KillTimer(hDlgWnd, s_motproptimerid);
 		s_motpropdlghwnd = 0;
@@ -36709,7 +36743,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.82 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.83 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -40285,7 +40319,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.82 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.83 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {

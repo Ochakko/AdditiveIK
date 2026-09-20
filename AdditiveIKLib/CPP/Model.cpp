@@ -10071,7 +10071,8 @@ void CModel::BulletSimulationStopReq(CBtObject* srcbto)
 
 	if (srcbto->GetRigidBody()){
 		srcbto->GetRigidBody()->setActivationState(DISABLE_SIMULATION);
-		srcbto->OnMotionChanged();//速度０
+		double decelrate0 = GetDecelRateOnLoop(GetCurMotInfo().motid);
+		srcbto->OnMotionChanged(decelrate0);
 	}
 
 	int chilno;
@@ -25928,7 +25929,14 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 		}
 
 	}
-
+	else {
+		//2026/09/20
+		//dualsenseの操作対象外モデルの場合
+		eventno = 0;
+		//eventno = eventpad->GetEventNo(padno_leftud, eventrepeats);
+		motionspeed = g_dsaxisvalueAnalogLeft * g_dspeed * 2.0;
+		SetMoaNextMotId(idlingmotid);
+	}
 
 
 	//////////////		
@@ -26097,11 +26105,19 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 					SetMoaNextMotId(GetCurrentMotID());
 					SetMoaNextFrame(1);
 					SetMoaStartFillUpFrame(curframe);
+
+					//ループの際にも物理減速機能を使う
+					SetMotionChanged(true);//2026/09/20
 				}
 				else if ((GetMoaNextMotId() <= 0)) {
 					CalcFillupTarget(pfootrigdlg, idlingmotid, 1, 1.0,
 						true
 					);
+
+					if (idlingmotid != GetCurMotInfo().motid) {
+						//ループの際にも物理減速機能を使う
+						SetMotionChanged(true);//2026/09/20
+					}
 
 					SetMoaNextMotId(idlingmotid);
 					SetMoaNextFrame(1);
@@ -26111,6 +26127,11 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 					CalcFillupTarget(pfootrigdlg, GetMoaNextMotId(), GetMoaNextFrame(), 1.0,
 						true
 					);
+
+					if (GetMoaNextMotId() != GetCurMotInfo().motid) {
+						//ループの際にも物理減速機能を使う
+						SetMotionChanged(true);//2026/09/20
+					}
 
 					SetMoaNextMotId(GetMoaNextMotId());
 					SetMoaNextFrame(GetMoaNextFrame());
@@ -26472,3 +26493,97 @@ ChaVector3 CModel::GetGrassMoverPosition()
 	}
 	return retpos;
 }
+
+double CModel::GetDecelRateOnLoop(int srcmotid)
+{
+	//モーション名に _#DLがついていた場合にはその続きの部分から減速係数を取得
+
+	MOTINFO chkmi = GetCurMotInfo();
+	if (chkmi.motid <= 0) {
+		return 0.010;
+	}
+	double decelrate0 = 0.010;
+
+	char motionname[MAX_PATH] = { 0 };
+	strcpy_s(motionname, MAX_PATH, chkmi.motname);
+
+	int namelen = strlen(motionname);
+
+	char patdecrate[10] = "_#DL";
+	char* patptr = strstr(motionname, patdecrate);
+	if (patptr != nullptr) {
+		int restlen = namelen - (patptr - motionname);
+		int restlen2 = restlen - strlen(patdecrate);
+		if (restlen2 > 0) {
+			char strrate[MAX_PATH] = { 0 };
+			strcpy_s(strrate, MAX_PATH, patptr + strlen(patdecrate));
+			
+			bool is_num = true;
+			int numlen = 0;
+			while (is_num) {
+				char chkc = strrate[numlen];
+				if ((chkc == '1') || (chkc == '2') || (chkc == '3') || (chkc == '4') || (chkc == '5') ||
+					(chkc == '6') || (chkc == '7') || (chkc == '8') || (chkc == '9') || (chkc == '0') || 
+					(chkc == '.')) {
+
+					numlen++;
+				}
+				else {
+					is_num = false;
+				}
+			}
+
+			if (numlen > 0) {
+				char strnum[MAX_PATH] = { 0 };
+				ZeroMemory(strnum, sizeof(char) * MAX_PATH);
+				strncpy_s(strnum, MAX_PATH, strrate, numlen);
+
+				decelrate0 = atof(strnum);
+				if (isnan(decelrate0)) {
+					decelrate0 = 0.010;
+				}
+			}
+			else {
+				decelrate0 = 0.010;
+			}
+		}
+		else {
+			decelrate0 = 0.010;
+		}
+
+		return decelrate0;
+	}
+	else {
+		return 0.010;
+	}
+
+}
+void CModel::SetDecelRateOnLoop(double srcrate)
+{
+	//モーション名の末尾に　モーションループ時の物理減衰係数を記述
+	// _#DL(rate value)が　名前の末尾になる
+
+	MOTINFO chkmi = GetCurMotInfo();
+	if (chkmi.motid <= 0) {
+		return;
+	}
+	double decelrate0 = GetDecelRateOnLoop(chkmi.motid);
+
+	char motionname[256] = { 0 };
+	strcpy_s(motionname, 256, chkmi.motname);
+
+	char* ppat = strstr(motionname, "_#DL");
+	if (ppat != nullptr) {
+		*ppat = 0;
+
+		char newmotionname[256] = { 0 };
+		sprintf_s(newmotionname, 256, "%s_#DL%.3f", motionname, srcrate);
+		SetMotionName(chkmi.motid, newmotionname);
+	}
+	else {
+		char newmotionname[256] = { 0 };
+		sprintf_s(newmotionname, 256, "%s_#DL%.3f", motionname, srcrate);
+		SetMotionName(chkmi.motid, newmotionname);
+	}
+}
+

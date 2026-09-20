@@ -101,7 +101,7 @@ public:
 	int AddChild(CBtObject* addbt);
 
 
-	int OnMotionChanged();
+	int OnMotionChanged(double decelrate0);
 	int SetEquilibriumPoint(bool limitdegflag, int lflag, int aflag);
 	int EnableSpring(bool angleflag, bool linearflag);
 	int SetDofRotAxis(int srcaxiskind);

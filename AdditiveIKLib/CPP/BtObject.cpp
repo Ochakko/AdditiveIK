@@ -880,7 +880,7 @@ int CBtObject::SetDofRotAxis(int srcaxiskind)
 	return 0;
 }
 
-int CBtObject::OnMotionChanged()
+int CBtObject::OnMotionChanged(double decelrate0)
 {
 	//########################################################
 	//2026/09/12
@@ -888,7 +888,14 @@ int CBtObject::OnMotionChanged()
 	//急に０にしても乱れてしまうので　減速する
 	//fpsが小さいほど　1フレームの変化が大きいので　減速もきつくする
 	//########################################################
-	btScalar decrate = btScalar(max(0.001, min(0.10, pow((g_avrgfps * g_dspeed * 0.01), 2.0))));
+	
+	//################################################################################################# 
+	//2026/09/20
+	//decelrate0の値は　左下ペインのPropertyボタンでダイアログを出し　VeloRate on Loopingのスライダーで設定可能に.
+	//################################################################################################# 
+	//btScalar decrate = btScalar(max(0.001, min(0.10, pow((g_avrgfps * g_dspeed * decelrate0), 2.0))));
+	btScalar decrate = btScalar(max(0.001, min(decelrate0, pow((g_avrgfps * g_dspeed * decelrate0), 2.0))));//2026/09/20
+
 
 	btVector3 angv = m_rigidbody->getAngularVelocity();
 	m_rigidbody->setAngularVelocity(angv * decrate);
@@ -1197,8 +1204,12 @@ int CBtObject::SetPosture2Bt(bool secondcall, bool btmovable, int limitrate,
 	m_rigidbody->getMotionState()->setWorldTransform(worldtra);
 	m_btpos.SetParams(srcrigidcenter.x, srcrigidcenter.y, srcrigidcenter.z);
 
-	if (m_bone->GetMotionChanged()) {
-		OnMotionChanged();
+	if (m_bone->GetMotionChanged() && m_bone->GetParModel()) {
+		MOTINFO curmi = m_bone->GetParModel()->GetCurMotInfo();
+		if ((curmi.motid > 0) && m_bone->GetMotionChanged()) {
+			double velorate = m_bone->GetParModel()->GetDecelRateOnLoop(curmi.motid);
+			OnMotionChanged(velorate);
+		}
 	}
 	else if (secondcall) {
 		//2024/05/02 LimitEulオンの時　SetBtMotion()の後にもう一度Motion2Bt()を呼び出す
