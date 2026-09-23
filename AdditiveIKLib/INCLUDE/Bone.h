@@ -1350,7 +1350,9 @@ public: //accesser
 
 	ChaMatrix GetFootRigMat(int limitdegflag, int srcmotid, double srcframe, CMotionPoint* srcmp) {
 		double roundingframe = RoundingTime(srcframe);
-		if (IsEqualRoundingTime(roundingframe, m_footrigtime)) {
+		
+		//2026/09/23 マウスでのIK時以外はm_footrigmat
+		if (!(GetParModel() && GetParModel()->GetUnderIKRot()) || IsEqualRoundingTime(roundingframe, m_footrigtime)) {
 			return m_footrigmat;
 		}
 		else {//applyframeのworldmatなどはこちらを通る

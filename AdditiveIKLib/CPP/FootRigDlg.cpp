@@ -2269,7 +2269,17 @@ int CFootRigDlg::OnFrameMove(CModel* srcmodel, bool limitdegflag)
 				if (itrelem->second.IsEnable()) {
 					//FootRigがオンの場合
 					//curmodel->ResetFootRigUpdated();//2025/12/13 フラグリセットはFootRigオフの時だけ. フラグオンはRigControlFootRig()内で行う.
-					int result = Update(limitdegflag, curmodel);
+
+					double currentframe = curmodel->GetCurrentFrame();
+					if (!IsEqualRoundingTime(0.0, currentframe))
+					{
+						int result = Update(limitdegflag, curmodel);
+					}
+					else {
+						//2026/09/23
+						//０フレーム再生時には　FootRigは行わない
+						curmodel->ResetFootRigUpdated();
+					}
 				}
 				else {
 					//FootRigがオフの場合
@@ -3258,8 +3268,13 @@ int CFootInfo::RigControlFootRigFunc(bool istoebase,
 			limitdegflag,
 			wallscrapingikflag,
 			0, curframe,
-			//footbone->GetBoneNo(),
-			m_toebasejoint->GetBoneNo(),//!!!!!!!!! 高さ比較は引数のbone. rigboneはtoebase
+			//m_footjoint->GetBoneNo(),
+			
+			//!!!!!!!!! 高さ比較は引数のbone. rigboneはtoebase
+			//フットリグジョイントはジョイント名では判断しない
+			//GUIによりフットリグジョイント(リグが設定されているジョイント)を指定して　それをm_toebasejointに格納する
+			m_toebasejoint->GetBoneNo(),
+			
 			m_rigdir,
 			rigstep,
 			m_rig, 0);
