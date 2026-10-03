@@ -1679,7 +1679,9 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 			}
 			break;
 		case 2:
-			if (renderobj.pmodel && renderobj.pmodel->GetRefPosPointDisp() && renderobj.pmodel->GetRefPosFlag()) {
+			if (renderobj.pmodel && renderobj.pmodel->GetRefPosPointDisp() && renderobj.pmodel->GetRefPosFlag() &&
+				(renderobj.refposindex != 0)//2026/10/03 refposindex==0つまりカレントフレーム描画時には　PointNumSpriteは表示しない
+				) {
 				//3. インデックスバッファを設定。
 				rc->SetIndexBuffer(m_indexBufferView_PointNumSprite);
 				rc->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
@@ -1744,7 +1746,7 @@ int CDispObj::RenderNormal(RenderContext* rc, myRenderer::RENDEROBJ renderobj)
 						if (topoline) {
 							curnumprim = curnumprim * 3;
 						}
-						
+
 						RenderNormalMaterial(useGS, topoline, rc, renderobj,
 							laterflag2,
 							latermaterial.pmaterial, latermaterial.offset, curnumprim,
@@ -2195,7 +2197,6 @@ int CDispObj::RenderNormalPM3(RenderContext* rc, myRenderer::RENDEROBJ renderobj
 		if (renderobj.renderkind == -1) {
 			renderobj.renderkind = RENDERKIND_NORMAL;//2023/12/11
 		}
-
 
 		if (!useGS) {
 			//##################

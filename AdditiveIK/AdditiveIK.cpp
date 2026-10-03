@@ -32551,14 +32551,19 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)refstartalpha);
 				}
 				refdiffusemult *= refpos_diffusemult;
+				if (refpos_diffusemult.w == 1.0f) {
+					//2026/10/03
+					//スライダーでAlphaの倍率を１．０指定した場合、diffusemult.wを強制的に1.0にする
+					refdiffusemult.w = 1.0f;
+				}
 
 				int lightflag = -1;
 				bool forcewithalpha = true;
 				bool zcmpalways = true;
 				bool zenable = true;
-				if (hasmotion && (current_diffusemult.w >= 0.99999f)) {
+				if (hasmotion && (refpos_diffusemult.w >= 0.99999f)) {
 					zcmpalways = false;
-					zenable = false;
+					//zenable = false;
 				}
 				g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
 					lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, effectView);
@@ -32641,15 +32646,20 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 						refdiffusemult.SetParams(1.0f, 1.0f, 1.0f, (float)renderalpha);
 					}
 					refdiffusemult *= refpos_diffusemult;
+					if (refpos_diffusemult.w == 1.0f) {
+						//2026/10/03
+						//スライダーでAlphaの倍率を１．０指定した場合、diffusemult.wを強制的に1.0にする
+						refdiffusemult.w = 1.0f;
+					}
 
 					//int lightflag = 0;
 					int lightflag = -1;
 					bool forcewithalpha = true;
 					bool zcmpalways = true;
 					bool zenable = true;
-					if (hasmotion && (current_diffusemult.w >= 0.99999f)) {
+					if (hasmotion && (refpos_diffusemult.w >= 0.99999f)) {
 						zcmpalways = false;
-						zenable = false;
+						//zenable = false;
 					}
 					g_chascene->AddToRefPos(curmodel, forcewithalpha, re,
 						lightflag, refdiffusemult, btflag, zcmpalways, zenable, refposindex, effectView);

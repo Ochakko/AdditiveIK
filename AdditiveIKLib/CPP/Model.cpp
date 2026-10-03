@@ -535,7 +535,8 @@ int CModel::InitParams(int srcrefposnum)
 	}
 	m_refpos_maxnum = REFPOSMAXNUM;
 	m_refpos_diffuserate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);
-	m_refpos_current_diffuserate = ChaVector4(1.0f, 1.0f, 1.0f, 0.5f);
+	//m_refpos_current_diffuserate = ChaVector4(1.0f, 1.0f, 1.0f, 0.5f);
+	m_refpos_current_diffuserate = ChaVector4(1.0f, 1.0f, 1.0f, 1.0f);//2026/10/06 default value of alpha = 1.0
 	m_refpos_rainbowmode = false;
 	m_refpos_soliddisp = true;
 	m_refpos_linedisp = false;
