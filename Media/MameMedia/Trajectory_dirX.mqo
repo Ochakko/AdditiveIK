@@ -18,7 +18,7 @@ Scene {
 	}
 }
 Material 1 {
-	"trajectory1" shader(3) col(1.000 1.000 1.000 1.000) dif(0.800) amb(0.600) emi(0.000) spc(0.000) power(5.00)
+	"trajectory1" shader(3) col(1.000 1.000 1.000 1.000) dif(0.800) amb(0.600) emi(1.000) spc(0.000) power(5.00)
 }
 Object "TrajectoryObj1" {
 	depth 0

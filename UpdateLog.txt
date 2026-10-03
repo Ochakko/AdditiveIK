@@ -2,11 +2,33 @@ AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
 2026/10/03
+　AdditiveIK 1.0.0.83 RC1(リリース候補1)
+　　モーションループ時の物理減速係数を設定可能に.
+　　　左下ペインのPropertyコマンドでダイアログを出し、
+　　　VeloRate on Loopingスライダーにより設定
+　　　スライダーを動かすとモーション名の末尾に
+　　　物理減速係数が記述されて保存、使用される
+　　
+　　ドキュメント追加
+　　　モーション切り替え時とループ時の物理減速設定について
+　　　Documents/TroubleShooting/VeloRateSettingOnLoopingMotion.docx
+　　　
+　　FootRigの修正
+　　　タイムライン操作時のフットリグ計算中のモデル位置飛びの緩和
+　　　
+　　RefPos修正
+　　　CurrentFrameDiffuseRateのアルファのデフォルト値を1.0に.
+　　　CurrentFrameのAlphaとRefPosのAlphaを両方1.0にしたときのビジュアル調整.
+　　　カレントフレームにはPointNumSpriteを表示しないように.
+　　　アローを少し明るく、少しにじむくらいの色に.
+　　　
+　　　
+2026/10/03
 　RefPos修正
 　　CurrentFrameDiffuseRateのアルファのデフォルト値を1.0に.
 　　CurrentFrameのAlphaとRefPosのAlphaを両方1.0にしたときのビジュアル調整.
 　　カレントフレームにはPointNumSpriteを表示しないように.
-
+　　
 2026/09/23
 　FootRigの修正
 　　タイムライン操作時のフットリグ計算中のモデル位置飛びの緩和

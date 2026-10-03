@@ -15715,7 +15715,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.82\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.83\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -32561,7 +32561,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 				bool forcewithalpha = true;
 				bool zcmpalways = true;
 				bool zenable = true;
-				if (hasmotion && (refpos_diffusemult.w >= 0.99999f)) {
+				if (hasmotion && (refpos_diffusemult.w >= 0.99999f)) {//2026/10/03 refpos_diffusemult
 					zcmpalways = false;
 					//zenable = false;
 				}
@@ -32657,7 +32657,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 					bool forcewithalpha = true;
 					bool zcmpalways = true;
 					bool zenable = true;
-					if (hasmotion && (refpos_diffusemult.w >= 0.99999f)) {
+					if (hasmotion && (refpos_diffusemult.w >= 0.99999f)) {//2026/10/03 refpos_diffusemult
 						zcmpalways = false;
 						//zenable = false;
 					}
@@ -32689,7 +32689,7 @@ int OnRenderRefPos(myRenderer::RenderingEngine* re, CModel* curmodel, double cur
 				CBone* childbone = curbone->GetChild(false);
 				if (childbone && childbone->IsSkeleton() && curbone->GetRefPosMark()) {
 					ChaVector4 arrowdiffusemult;
-					arrowdiffusemult.SetParams(1.0f, 0.5f, 0.5f, 0.75f);
+					arrowdiffusemult.SetParams(2.86f, 0.5f, 0.5f, 0.75f);//2026/10/03 矢印は　赤を光らせて　少しにじませる　lightflagは0
 
 					curbone->GetRefPosMark()->RenderRefArrow(g_limitdegflag,
 						re, g_chascene, s_matVP, curbone, arrowdiffusemult, 
