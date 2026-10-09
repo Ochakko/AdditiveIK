@@ -1,6 +1,11 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/10/10
+　新しいFbxSdkに対応
+　　FbxSdk2020.3.11に対応
+　　https://www.autodesk.com/products/fbx/overview
+　　
 2026/10/03
 　AdditiveIK 1.0.0.83 release
 　　モーションループ時の物理減速係数を設定可能に.
