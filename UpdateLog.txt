@@ -6,6 +6,9 @@ https://github.com/Ochakko/AdditiveIK
 　　FbxSdk2020.3.11に対応
 　　https://www.autodesk.com/products/fbx/overview
 　　
+　　ドキュメント追加
+　　　Documents\TroubleShooting\0_LoadFbxOf10084_by_Maya2026.3.3.docx
+　　
 2026/10/03
 　AdditiveIK 1.0.0.83 release
 　　モーションループ時の物理減速係数を設定可能に.
