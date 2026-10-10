@@ -1,6 +1,11 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/10/11
+　DualSense + MOA2.0修正
+　　左スティック処理とボタン処理が同時に行われて、ボタン処理がループするような意図しない振る舞いを修正.
+　　左スティックによるモーキャプウォークへのモーション切り替えはボタンによるモーション再生終了を待つように.
+　　
 2026/10/10
 　新しいFbxSdkに対応
 　　FbxSdk2020.3.11に対応

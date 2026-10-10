@@ -3794,7 +3794,12 @@ public: //accesser
 		return m_mocapwalk;
 	};
 
-
+	void SetMocapWalkMotID(int srcval) {
+		m_mocapwalk_motid = srcval;
+	};
+	int GetMocapWalkMotID() {
+		return m_mocapwalk_motid;
+	};
 
 	void ClearIKRotRec()
 	{
@@ -4303,6 +4308,8 @@ private:
 	ChaMatrix m_moa_NextModelWM;
 
 	bool m_mocapwalk;
+	int m_mocapwalk_motid;
+
 	bool m_ikstop_alloff;
 
 	bool m_postureparentflag;

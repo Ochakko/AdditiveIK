@@ -767,6 +767,7 @@ int CModel::InitParams(int srcrefposnum)
 	m_moa_NextModelWM.SetIdentity();
 
 	m_mocapwalk = false;
+	m_mocapwalk_motid = -1;
 
 	//m_moaeventtime = 0.0;//最後にeventno != 0を処理した時間
 	ZeroMemory(m_moaeventrepeats, sizeof(int) * 256);
@@ -25823,7 +25824,7 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 
 	if (dualsenseflag && (eventno == 0) && (g_enableDS == true)) {
 
-		{
+		if (mi0.motid != GetMocapWalkMotID()) {//2026/10/11
 			int padno;
 			for (padno = 0; padno < MOA_PADNUM; padno++) {
 				if (eventno == 0) {
@@ -25880,6 +25881,11 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 		}
 
 		if ((eventno == 0) && 
+			
+			//2026/10/11 歩いている途中もしくはアイドリングモーション時に限定することにより　スティック以外のボタン処理が終わるのを待つ
+			//この条件文を入れない場合、　ボタンを押している途中でスティックを倒すと　ループWalk再生の代わりに　ボタン処理のループ再生をしてしまう
+			((mi0.motid == GetMocapWalkMotID()) || (mi0.motid == idlingmotid)) &&
+
 			((g_dsaxisOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) ||
 			(g_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) || (g_dsaxisMOverTh[MB3D_DSAXIS_LEFT_LR] != 0))
 			) {
@@ -25911,15 +25917,18 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 			}
 
 			motionspeed = g_dsaxisvalueAnalogLeft * g_dspeed * 2.0;
-			//if (g_bef_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) {
-			//	backplay = true;
-			//}
-			//else {
-			//	backplay = false;
-			//}
+			////if (g_bef_dsaxisMOverTh[MB3D_DSAXIS_LEFT_UPDOWN] != 0) {
+			////	backplay = true;
+			////}
+			////else {
+			////	backplay = false;
+			////}
 
 			if ((jumpflag0 == false) && (eventno != 0)) {
 				SetMocapWalkFlag(true);
+			}
+			else {
+				SetMocapWalkFlag(false);
 			}
 
 		}
@@ -25929,8 +25938,9 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 			SetMoaEventRepeatsPAD(padno_leftud, 0);//リセット
 			int padno_leftlr = MB3D_DSBUTTONNUM + MB3D_DSAXIS_LEFT_LR;
 			SetMoaEventRepeatsPAD(padno_leftlr, 0);//リセット
-		}
 
+			SetMocapWalkFlag(false);
+		}
 
 		//MocapWalkLoop Rotation
 		if (g_dsaxisOverTh[MB3D_DSAXIS_LEFT_LR] != 0) {
@@ -25952,6 +25962,8 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 		//eventno = eventpad->GetEventNo(padno_leftud, eventrepeats);
 		motionspeed = g_dsaxisvalueAnalogLeft * g_dspeed * 2.0;
 		SetMoaNextMotId(idlingmotid);
+
+		SetMocapWalkFlag(false);
 	}
 
 
@@ -26033,6 +26045,12 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 		SetMoaTmpNextFrame(tmp_moa_nextframe);
 		//SetMoaNextMotId(tmp_moa_nextmotid);
 		//SetMoaNextFrame(tmp_moa_nextframe);
+
+		if (GetMocapWalkFlag() && (tmp_moa_nextmotid != idlingmotid) && (tmp_moa_nextmotid > 0)) {
+			//MocapWalkのmotidを記録
+			SetMocapWalkMotID(tmp_moa_nextmotid);
+		}
+
 		if (ret) {
 			DbgOut(L"AdditiveIK.cpp : SetNewPoseByMOA : mch GetNextMotion error !!!\n");
 			_ASSERT(0);
@@ -26246,7 +26264,7 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 						//if (GetMocapWalkFlag() || jumpflag) {
 						if (!GetPostureParentFlag()) {//2026/08/23 乗り物に乗っている状態でMove2HipsPos()すると落下するので応急処置
 							Move2HipsPos(pfootrigdlg, idlingmotid, 1.0);
-							SetMocapWalkFlag(false);
+							//SetMocapWalkFlag(false);
 						}
 						(pChangeMotionWithGUI)(this, idlingmotid);
 						SetMotionFrame(1.0);
@@ -26338,11 +26356,11 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 						//###########################
 						//補間計算終了　nextmotidへ遷移
 						//###########################
-						//2026/08/22 通常のモーション時にもアイドリングに戻るときに　モーション終了時のWMに移動する
+						//2026/08/22 通常のモーション時にもアイドリングに戻るときに　モーション終了時のModelWorldMatに移動する
 						//if (GetMocapWalkFlag()) {
 						if (!GetPostureParentFlag()) {//2026/08/23 乗り物に乗っている状態でMove2HipsPos()すると落下するので応急処置
 							Move2HipsPos(pfootrigdlg, model_nextmotid, (double)filluppoint);
-							SetMocapWalkFlag(false);
+							//SetMocapWalkFlag(false);
 						}
 						(pChangeMotionWithGUI)(this, model_nextmotid);
 						SetMotionFrame((double)filluppoint);
@@ -26364,7 +26382,7 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 						//if (GetMocapWalkFlag()) {
 						if (!GetPostureParentFlag()) {//2026/08/23 乗り物に乗っている状態でMove2HipsPos()すると落下するので応急処置
 							Move2HipsPos(pfootrigdlg, idlingmotid, 1.0);
-							SetMocapWalkFlag(false);
+							//SetMocapWalkFlag(false);
 						}
 						(pChangeMotionWithGUI)(this, idlingmotid);
 						SetMotionFrame(1.0);
@@ -26398,7 +26416,7 @@ int CModel::SetNewPoseByMoa_One(CFootRigDlg* pfootrigdlg, CMotChangeDlg* pmotcha
 						true
 					);
 					Move2HipsPos(pfootrigdlg, model_nextmotid, 1.0);
-					SetMocapWalkFlag(false);
+					//SetMocapWalkFlag(false);
 				}
 				(pChangeMotionWithGUI)(this, model_nextmotid);
 				SetMotionFrame(1.0);
