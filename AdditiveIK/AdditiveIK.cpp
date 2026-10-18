@@ -13445,12 +13445,13 @@ int OnModelMenu(bool dorefreshtl, int selindex, int callbymenu)
 	s_oprigflag = 0;
 
 
-	if (s_sidemenu_sellock) {
+	if (s_sidemenu_sellock && !s_nowloading) {
 		//AlwaysLockにチェックを入れたままモデルを変えると
 		//カメラ距離が急に大きくなり上限値を越えてカメラターゲットが動かなくなることがあった
 		//モデル変更時にはAlwaysLockのチェックを外す
 		//この処理と上述のs_curboneno, s_savebonenoの初期化も必要
-		s_sidemenu_sellock->setValue(false, false);
+		//s_sidemenu_sellock->setValue(false, false);
+		s_sidemenu_sellock->setValue(false, true);//2026/10/18 カメラロック機能をオフにするためにcalllistenerフラグをtrueに.
 	}
 
 
@@ -19824,7 +19825,7 @@ int OpenChaFile()
 
 
 	if (s_sidemenu_sellock) {//OnModelMenu()内部で sidemenu_sellockのチェックがfalseになるので　ここで設定
-		s_sidemenu_sellock->setValue(g_chacamera.GetCamTargetFlag() != 0);
+		s_sidemenu_sellock->setValue(g_chacamera.GetCamTargetFlag() != 0, true);//2026/10/18 calllistnerフラグをtrue
 	}
 
 
