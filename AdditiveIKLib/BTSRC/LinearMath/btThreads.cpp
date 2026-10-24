@@ -31,16 +31,21 @@ subject to the following restrictions:
 
 #endif  // #if BT_USE_PPL && BT_THREADSAFE
 
-#if BT_USE_TBB && BT_THREADSAFE
-
-// use Intel Threading Building Blocks for thread management
-#define __TBB_NO_IMPLICIT_LINKAGE 1
-#include <tbb/tbb.h>
-#include <tbb/task_scheduler_init.h>
-#include <tbb/parallel_for.h>
-#include <tbb/blocked_range.h>
-
-#endif  // #if BT_USE_TBB && BT_THREADSAFE
+//#if BT_USE_TBB && BT_THREADSAFE
+//
+//// use Intel Threading Building Blocks for thread management
+//#define __TBB_NO_IMPLICIT_LINKAGE 1
+////#include <tbb/tbb.h>
+////#include <tbb/task_scheduler_init.h>
+////#include <tbb/parallel_for.h>
+////#include <tbb/blocked_range.h>
+//#include "../../AdditiveIK/tbb2018/include/tbb/tbb.h"
+//#include <../../AdditiveIK/tbb2018/include/tbb/task_scheduler_init.h>
+//#include <../../AdditiveIK/tbb2018/include/tbb/parallel_for.h>
+//#include <../../AdditiveIK/tbb2018/include/tbb/blocked_range.h>
+//
+//
+//#endif  // #if BT_USE_TBB && BT_THREADSAFE
 
 #if BT_THREADSAFE
 //

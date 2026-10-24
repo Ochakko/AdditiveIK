@@ -1,6 +1,18 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+
+2026/10/24
+　物理のマルチスレッド処理を修正
+　　〇マルチスレッドライブラリとしてMicrosoftのPPLを使っています
+　　〇物理用のソルバースレッド数指定スライダーをBulletPhysicsプレートメニューに追加
+　　〇Update Threadsのスレッド数と別指定可能にしました
+　　　(UpdateMatrixのスレッド数はDisp and LimitsプレートメニューのUpdate Threadsスライダーで指定)
+　　〇１から８までの間で指定
+　　〇効果は高負荷にしないとわかりずらいです. 例えば、BulletPhysicsプレートメニューのBulletPhysics Calclation Countを１０にしてから
+　　　複数物理適用モデルがあるシーンにて
+　　　スレッド数を１のときと８のときで比較すると　CPU使用グラフの様子の違いがわかります
+　　
 2026/10/18
 　カメラロックオン機能修正
 　　モデルパネルでモデルをセレクトする場合に、自動でカメラロック機能をオフに.

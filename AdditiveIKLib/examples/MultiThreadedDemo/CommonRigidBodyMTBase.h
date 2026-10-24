@@ -1,4 +1,4 @@
-
+﻿
 #ifndef COMMON_RIGID_BODY_MT_BASE_H
 #define COMMON_RIGID_BODY_MT_BASE_H
 

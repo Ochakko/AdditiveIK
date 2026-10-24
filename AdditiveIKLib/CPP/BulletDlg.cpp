@@ -10,6 +10,7 @@
 #include <OrgWindow.h>
 #include <GlobalVar.h>
 
+#include <BPWorld.h>
 
 #define DBGH
 #include <dbg.h>
@@ -45,7 +46,14 @@ int CBulletDlg::DestroyObjs()
 		m_dlgWnd->setListenMouse(false);
 	}
 
-
+	if (m_bulletThreadsLabel) {
+		delete m_bulletThreadsLabel;
+		m_bulletThreadsLabel = nullptr;
+	}
+	if (m_bulletThreadsSlider) {
+		delete m_bulletThreadsSlider;
+		m_bulletThreadsSlider = nullptr;
+	}
 	if (m_bulletcalccntLabel) {
 		delete m_bulletcalccntLabel;
 		m_bulletcalccntLabel = nullptr;
@@ -122,6 +130,10 @@ int CBulletDlg::DestroyObjs()
 		delete m_bulletspacer6Label;
 		m_bulletspacer6Label = nullptr;
 	}
+	if (m_bulletspacer7Label) {
+		delete m_bulletspacer7Label;
+		m_bulletspacer7Label = nullptr;
+	}
 
 
 	if (m_dlgWnd) {
@@ -142,9 +154,13 @@ void CBulletDlg::InitParams()
 	m_sizex = 150;
 	m_sizey = 150;
 
+	m_bpWorld = nullptr;
+	m_btThreads = 8;
 
 	m_dlgWnd = nullptr;
 
+	m_bulletThreadsLabel = nullptr;
+	m_bulletThreadsSlider = nullptr;
 	m_bulletcalccntLabel = nullptr;
 	m_bulletcalccntSlider = nullptr;
 	m_bulletERPLabel = nullptr;
@@ -164,10 +180,15 @@ void CBulletDlg::InitParams()
 	m_bulletspacer4Label = nullptr;
 	m_bulletspacer5Label = nullptr;
 	m_bulletspacer6Label = nullptr;
+	m_bulletspacer7Label = nullptr;
 
 }
 
 
+void CBulletDlg::SetBpWorld(BPWorld* srcbpworld)
+{
+	m_bpWorld = srcbpworld;
+}
 
 
 int CBulletDlg::SetPosAndSize(int srcposx, int srcposy, int srcsizex, int srcsizey)
@@ -249,6 +270,17 @@ int CBulletDlg::CreateBulletWnd()
 
 	if (m_dlgWnd) {
 		m_dlgWnd->setListenMouse(true);
+
+		m_bulletThreadsLabel = new OWP_Label(L"Solver Threads", labelheight);
+		if (!m_bulletThreadsLabel) {
+			_ASSERT(0);
+			abort();
+		}
+		m_bulletThreadsSlider = new OWP_Slider((double)m_btThreads, 8.0, 1.0, labelheight);
+		if (!m_bulletThreadsSlider) {
+			_ASSERT(0);
+			abort();
+		}
 
 		m_bulletcalccntLabel = new OWP_Label(L"BulletPhysics Calclation Count", labelheight);
 		if (!m_bulletcalccntLabel) {
@@ -345,7 +377,15 @@ int CBulletDlg::CreateBulletWnd()
 			_ASSERT(0);
 			abort();
 		}
+		m_bulletspacer7Label = new OWP_Label(L"      ", labelheight);
+		if (!m_bulletspacer7Label) {
+			_ASSERT(0);
+			abort();
+		}
 
+		m_dlgWnd->addParts(*m_bulletThreadsLabel);
+		m_dlgWnd->addParts(*m_bulletThreadsSlider);
+		m_dlgWnd->addParts(*m_bulletspacer7Label);
 
 		m_dlgWnd->addParts(*m_bulletcalccntLabel);
 		m_dlgWnd->addParts(*m_bulletcalccntSlider);
@@ -377,6 +417,29 @@ int CBulletDlg::CreateBulletWnd()
 		//##########
 		//Slider
 		//##########
+		m_bulletThreadsSlider->setCursorListener([=, this]() {
+			int value = (int)(m_bulletThreadsSlider->getValue() + 0.5);
+			m_btThreads = max(1, min(8, value));
+			if (m_bpWorld != nullptr) {
+				m_bpWorld->setNumThread(max(1, min(8, value)));
+			}
+			m_bulletThreadsSlider->setValue((double)value, false);//intに丸めた値をセットし直し
+			});
+		m_bulletThreadsSlider->setLUpListener([=, this]() {
+			int value = (int)(m_bulletThreadsSlider->getValue() + 0.5);
+			m_btThreads = max(1, min(8, value));
+			if (m_bpWorld != nullptr) {
+				m_bpWorld->setNumThread(max(1, min(8, value)));
+			}
+			m_bulletThreadsSlider->setValue((double)value, false);//intに丸めた値をセットし直し
+			////#################################################
+			////ReleasedCaptureのときに　PrepairUndo用のフラグを立てる
+			////#################################################
+			////m_changeupdatethreadsFlag = true;
+			//if (g_mainhwnd && IsWindow(g_mainhwnd)) {
+			//	PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_BULLETDLG), (LPARAM)0);
+			//}
+			});
 		m_bulletcalccntSlider->setCursorListener([=, this]() {
 			double value = m_bulletcalccntSlider->getValue();
 			g_btcalccnt = (int)(value + 0.0001);
@@ -434,6 +497,9 @@ int CBulletDlg::CreateBulletWnd()
 int CBulletDlg::ParamsToDlg()
 {
 	if (m_dlgWnd) {
+		if (m_bulletThreadsSlider) {
+			m_bulletThreadsSlider->setValue((double)m_btThreads, false);
+		}
 		if (m_bulletlimitrateSlider) {
 			m_bulletlimitrateSlider->setValue(g_physicalLimitScale, false);
 		}

@@ -17,7 +17,7 @@
       <UniqueIdentifier>{7defb206-7216-4da1-9e4d-4cc7169c83ca}</UniqueIdentifier>
     </Filter>
     <Filter Include="BulletMT">
-      <UniqueIdentifier>{97385ba9-310d-4ac5-b286-56e746d4b9df}</UniqueIdentifier>
+      <UniqueIdentifier>{24550f72-0035-4dfb-9c01-78ca7ee7e0a5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -29,9 +29,6 @@
     </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\AdditiveIKLib\examples\MultiThreadedDemo\CommonRigidBodyMTBase.h">
-      <Filter>BulletMT</Filter>
     </ClInclude>
     <ClInclude Include="..\AdditiveIKLib\BTSRC\btBulletCollisionCommon.h">
       <Filter>BulletSrc</Filter>
@@ -618,6 +615,9 @@
     <ClInclude Include="..\AdditiveIKLib\BTSRC\LinearMath\TaskScheduler\btThreadSupportInterface.h">
       <Filter>BulletSrc</Filter>
     </ClInclude>
+    <ClInclude Include="..\AdditiveIKLib\examples\MultiThreadedDemo\CommonRigidBodyMTBase.h">
+      <Filter>BulletMT</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BulletPhysicsLib.cpp">
@@ -628,9 +628,6 @@
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="..\AdditiveIKLib\examples\MultiThreadedDemo\CommonRigidBodyMTBase.cpp">
-      <Filter>BulletMT</Filter>
     </ClCompile>
     <ClCompile Include="..\AdditiveIKLib\BTSRC\btBulletCollisionAll.cpp">
       <Filter>BulletSrc</Filter>
@@ -979,6 +976,9 @@
     </ClCompile>
     <ClCompile Include="..\AdditiveIKLib\BTSRC\LinearMath\TaskScheduler\btThreadSupportWin32.cpp">
       <Filter>BulletSrc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\AdditiveIKLib\examples\MultiThreadedDemo\CommonRigidBodyMTBase.cpp">
+      <Filter>BulletMT</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

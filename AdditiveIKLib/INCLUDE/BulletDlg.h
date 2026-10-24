@@ -21,6 +21,7 @@ class OrgWinGUI::OWP_EditBox;
 class OrgWinGUI::OWP_Separator;
 class OrgWinGUI::OWP_ScrollWnd;
 
+class BPWorld;
 
 /////////////////////////////////////////////////////////////////////////////
 // CBulletDlg
@@ -31,6 +32,7 @@ public:
 	~CBulletDlg();
 
 	int SetPosAndSize(int srcposx, int srcposy, int srcsizex, int srcsizey);//!!!!!!!!
+	void SetBpWorld(BPWorld* srcbpworld);
 
 	bool GetCreatedFlag()
 	{
@@ -58,9 +60,13 @@ private:
 	int m_sizex;
 	int m_sizey;
 
+	BPWorld* m_bpWorld;
+	int m_btThreads;
 
 	OrgWinGUI::OrgWindow* m_dlgWnd;
 
+	OrgWinGUI::OWP_Label* m_bulletThreadsLabel;
+	OrgWinGUI::OWP_Slider* m_bulletThreadsSlider;
 	OrgWinGUI::OWP_Label* m_bulletcalccntLabel;
 	OrgWinGUI::OWP_Slider* m_bulletcalccntSlider;
 	OrgWinGUI::OWP_Label* m_bulletERPLabel;
@@ -80,6 +86,7 @@ private:
 	OrgWinGUI::OWP_Label* m_bulletspacer4Label;
 	OrgWinGUI::OWP_Label* m_bulletspacer5Label;
 	OrgWinGUI::OWP_Label* m_bulletspacer6Label;
+	OrgWinGUI::OWP_Label* m_bulletspacer7Label;
 
 
 };

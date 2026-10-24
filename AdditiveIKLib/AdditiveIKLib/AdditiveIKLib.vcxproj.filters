@@ -1246,9 +1246,6 @@
     <ClInclude Include="..\BTSRC\BulletInverseDynamics\details\MultiBodyTreeInitCache.hpp">
       <Filter>BPHeaders</Filter>
     </ClInclude>
-    <ClInclude Include="..\examples\MultiThreadedDemo\CommonRigidBodyMTBase.h">
-      <Filter>BTSRC</Filter>
-    </ClInclude>
     <ClInclude Include="..\BTSRC\BulletSoftBody\DeformableBodyInplaceSolverIslandCallback.h">
       <Filter>BTSRC</Filter>
     </ClInclude>
@@ -1632,6 +1629,9 @@
     </ClInclude>
     <ClInclude Include="..\INCLUDE\GrassFile.h">
       <Filter>FileIO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\examples\MultiThreadedDemo\CommonRigidBodyMTBase.h">
+      <Filter>BTSRC</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

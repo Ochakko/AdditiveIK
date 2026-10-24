@@ -11,6 +11,7 @@
 #include <OrgWindow.h>
 #include <GlobalVar.h>
 
+//#include <BPWorld.h>
 
 #define DBGH
 #include <dbg.h>
@@ -337,8 +338,12 @@ int CDispLimitsDlg::DestroyObjs()
 
 void CDispLimitsDlg::InitParams()
 {
+	//m_bpWorld = nullptr;
+	//m_btThreads = 8;
+
 	m_createdflag = false;
 	m_visible = false;
+
 
 	m_posx = 0;
 	m_posy = 0;
@@ -423,6 +428,10 @@ void CDispLimitsDlg::InitParams()
 }
 
 
+//void CDispLimitsDlg::SetBpWorld(BPWorld* srcbpworld)
+//{
+//	m_bpWorld = srcbpworld;
+//}
 
 
 int CDispLimitsDlg::SetPosAndSize(int srcposx, int srcposy, int srcsizex, int srcsizey)
@@ -525,6 +534,7 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 			abort();
 		}
 		m_threadsSlider = new OWP_Slider((double)g_UpdateMatrixThreads, 8.0, 1.0, labelheight);
+		//m_threadsSlider = new OWP_Slider((double)m_btThreads, 8.0, 1.0, labelheight);
 		if (!m_threadsSlider) {
 			_ASSERT(0);
 			abort();
@@ -1102,11 +1112,19 @@ int CDispLimitsDlg::CreateDispLimitsWnd()
 		m_threadsSlider->setCursorListener([=, this]() {
 			int value = (int)(m_threadsSlider->getValue() + 0.5);
 			g_UpdateMatrixThreads = max(1, min(8, value));
+			//m_btThreads = max(1, min(8, value));
+			//if (m_bpWorld != nullptr) {
+			//	m_bpWorld->setNumThread(max(1, min(8, value)));
+			//}
 			m_threadsSlider->setValue((double)value, false);//intに丸めた値をセットし直し
 			});
 		m_threadsSlider->setLUpListener([=, this]() {
 			int value = (int)(m_threadsSlider->getValue() + 0.5);
 			g_UpdateMatrixThreads = max(1, min(8, value));
+			//m_btThreads = max(1, min(8, value));
+			//if (m_bpWorld != nullptr) {
+			//	m_bpWorld->setNumThread(max(1, min(8, value)));
+			//}
 			m_threadsSlider->setValue((double)value, false);//intに丸めた値をセットし直し
 
 			//#################################################
@@ -1256,6 +1274,7 @@ int CDispLimitsDlg::ParamsToDlg()
 		}
 		if (m_threadsSlider) {
 			m_threadsSlider->setValue((double)g_UpdateMatrixThreads, false);
+			//m_threadsSlider->setValue((double)m_btThreads, false);
 		}
 		//if (m_cameraheightSlider) {
 		//	m_cameraheightSlider->setValue((double)g_cameraheight, false);

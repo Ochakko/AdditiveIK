@@ -5344,6 +5344,9 @@ void InitApp()
 		//s_bpWorld->start();// ウィンドウを表示して，シミュレーションを開始する
 		s_btWorld = s_bpWorld->getDynamicsWorld();
 		s_bpWorld->setNumThread(g_numthread);
+
+		//s_displimitsdlg.SetBpWorld(s_bpWorld);
+		s_bulletdlg.SetBpWorld(s_bpWorld);
 	}
 
 
@@ -19771,6 +19774,8 @@ int OpenChaFile()
 		s_btWorld = s_bpWorld->getDynamicsWorld();
 		s_bpWorld->setNumThread(g_numthread);
 
+		//s_displimitsdlg.SetBpWorld(s_bpWorld);
+		s_bulletdlg.SetBpWorld(s_bpWorld);
 	}
 
 	HCURSOR oldcursor = SetCursor(LoadCursor(NULL, IDC_WAIT));

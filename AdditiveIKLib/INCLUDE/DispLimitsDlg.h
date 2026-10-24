@@ -21,6 +21,7 @@ class OrgWinGUI::OWP_EditBox;
 class OrgWinGUI::OWP_Separator;
 class OrgWinGUI::OWP_ScrollWnd;
 
+//class BPWorld;
 
 /////////////////////////////////////////////////////////////////////////////
 // CDispLimitsDlg
@@ -31,6 +32,7 @@ public:
 	~CDispLimitsDlg();
 
 	int SetPosAndSize(int srcposx, int srcposy, int srcsizex, int srcsizey);//!!!!!!!!
+	//void SetBpWorld(BPWorld* srcbpworld);
 
 	bool GetCreatedFlag()
 	{
@@ -51,6 +53,9 @@ private:
 	int ParamsToDlg();
 
 private:
+	//BPWorld* m_bpWorld;
+	//int m_btThreads;
+
 	bool m_createdflag;
 	bool m_visible;
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
 Bullet Continuous Collision Detection and Physics Library
 Copyright (c) 2003-2006 Erwin Coumans  http://continuousphysics.com/Bullet/
 
@@ -40,6 +40,8 @@ class btCollisionShape;
 //static int gNumIslands = 0;
 int gNumIslands = 1;
 bool gAllowNestedParallelForLoops = false;
+
+extern btScalar gSliderNumThreads;  // should be int
 
 class Profiler
 {
@@ -293,25 +295,39 @@ public:
 
 	void init()
 	{
-		addTaskScheduler(btGetSequentialTaskScheduler());
+		//addTaskScheduler(btGetSequentialTaskScheduler());
 #if BT_THREADSAFE
-		if (btITaskScheduler* ts = btCreateDefaultTaskScheduler())
+		//if (btITaskScheduler* ts = btCreateDefaultTaskScheduler())
+		//{
+		//	m_allocatedTaskSchedulers.push_back(ts);
+		//	addTaskScheduler(ts);
+		//}
+		//addTaskScheduler(btGetOpenMPTaskScheduler());
+		//addTaskScheduler(btGetTBBTaskScheduler());
+		//addTaskScheduler(btGetPPLTaskScheduler());
+		//if (getNumTaskSchedulers() > 1)
+		//{
+		//	// prefer a non-sequential scheduler if available
+		//	btSetTaskScheduler(m_taskSchedulers[1]);
+		//}
+		//else
+		//{
+		//	btSetTaskScheduler(m_taskSchedulers[0]);
+		//}
+
+
+		//2026/10/24 PPLだけに.
+		btITaskScheduler* ts = btGetPPLTaskScheduler();//newではない
+		if (ts != nullptr)
 		{
-			m_allocatedTaskSchedulers.push_back(ts);
+			//m_allocatedTaskSchedulers.push_back(ts);//newではないのでpush_backしない
 			addTaskScheduler(ts);
+			btSetTaskScheduler(ts);
 		}
-		addTaskScheduler(btGetOpenMPTaskScheduler());
-		addTaskScheduler(btGetTBBTaskScheduler());
-		addTaskScheduler(btGetPPLTaskScheduler());
-		if (getNumTaskSchedulers() > 1)
-		{
-			// prefer a non-sequential scheduler if available
-			btSetTaskScheduler(m_taskSchedulers[1]);
+		else {
+			int dbgflag1 = 1;
 		}
-		else
-		{
-			btSetTaskScheduler(m_taskSchedulers[0]);
-		}
+
 #endif  // #if BT_THREADSAFE
 	}
 	void shutdown()
@@ -335,11 +351,12 @@ public:
 		{
 #if BT_THREADSAFE
 			// if initial number of threads is 0 or 1,
-			if (ts->getNumThreads() <= 1)
-			{
-				// for OpenMP, TBB, PPL set num threads to number of logical cores
-				ts->setNumThreads(ts->getMaxNumThreads());
-			}
+			//if (ts->getNumThreads() <= 1)
+			//{
+			//	// for OpenMP, TBB, PPL set num threads to number of logical cores
+			//	ts->setNumThreads(ts->getMaxNumThreads());
+			//}
+			ts->setNumThreads(gSliderNumThreads);
 #endif  // #if BT_THREADSAFE
 			m_taskSchedulers.push_back(ts);
 		}
@@ -374,7 +391,7 @@ static btScalar gSliderMaxBatchSize = btScalar(btSequentialImpulseConstraintSolv
 static btScalar gSliderLeastSquaresResidualThreshold = 0.0f;
 
 
-btScalar gSliderNumThreads = 3.0f;                                                               // should be int
+btScalar gSliderNumThreads = 8;                                                               // should be int
 
 ////////////////////////////////////
 CommonRigidBodyMTBase::CommonRigidBodyMTBase(struct GUIHelperInterface* helper)
@@ -387,8 +404,12 @@ CommonRigidBodyMTBase::CommonRigidBodyMTBase(struct GUIHelperInterface* helper)
 	  m_pickedConstraint(0),
 	  m_guiHelper(helper)
 {
-	m_multithreadedWorld = false;
-	m_multithreadCapable = false;
+	//m_multithreadedWorld = false;
+	//m_multithreadCapable = false;
+
+	m_multithreadedWorld = true;//2026/10/24
+	m_multithreadCapable = true;//2026/10/24
+
 	if (gTaskSchedulerMgr.getNumTaskSchedulers() == 0)
 	{
 		gTaskSchedulerMgr.init();
@@ -399,11 +420,22 @@ CommonRigidBodyMTBase::CommonRigidBodyMTBase(struct GUIHelperInterface* helper)
 void CommonRigidBodyMTBase::setThreadNumFunc(int srcnum) {
 	int taskschedulernum = gTaskSchedulerMgr.getNumTaskSchedulers();
 	int i;
-	for (i = 0; i < taskschedulernum; i++) {
+	
+	for (i = 0; i < taskschedulernum; i++) 
+	{
 		btITaskScheduler* curscheduler = gTaskSchedulerMgr.getTaskScheduler(i);
 		if (curscheduler) {
-			curscheduler->setNumThreads((int)gSliderNumThreads);
+			curscheduler->setNumThreads((int)srcnum);
+
+			int chkthreads = curscheduler->getNumThreads();
+			if ((int)srcnum != chkthreads) {
+				int dbgflag1 = 1;
+			}
 		}
+	}
+
+	if (btGetTaskScheduler() != nullptr) {
+		btGetTaskScheduler()->setNumThreads(srcnum);
 	}
 };
 
@@ -442,15 +474,15 @@ static void toggleSolverModeCallback(int buttonId, bool buttonState, void* userP
 
 void setSolverTypeComboBoxCallback(int combobox, const char* item, void* userPointer)
 {
-	const char** items = static_cast<const char**>(userPointer);
-	for (int i = 0; i < SOLVER_TYPE_COUNT; ++i)
-	{
-		if (strcmp(item, items[i]) == 0)
-		{
-			gSolverType = static_cast<SolverType>(i);
-			break;
-		}
-	}
+	//const char** items = static_cast<const char**>(userPointer);
+	//for (int i = 0; i < SOLVER_TYPE_COUNT; ++i)
+	//{
+	//	if (strcmp(item, items[i]) == 0)
+	//	{
+	//		gSolverType = static_cast<SolverType>(i);
+	//		break;
+	//	}
+	//}
 }
 
 static void setNumThreads(int numThreads)
@@ -476,8 +508,9 @@ void setTaskSchedulerComboBoxCallback(int combobox, const char* item, void* user
 		{
 			// change the task scheduler
 			btITaskScheduler* ts = gTaskSchedulerMgr.getTaskScheduler(i);
+			ts->setNumThreads(gSliderNumThreads);//2026/10/24
 			btSetTaskScheduler(ts);
-			gSliderNumThreads = float(ts->getNumThreads());
+			//gSliderNumThreads = float(ts->getNumThreads());
 			break;
 		}
 	}
@@ -504,7 +537,7 @@ static void setThreadCountCallback(float val, void* userPtr)
 {
 #if BT_THREADSAFE
 	setNumThreads(int(gSliderNumThreads));
-	gSliderNumThreads = float(btGetTaskScheduler()->getNumThreads());
+	//gSliderNumThreads = float(btGetTaskScheduler()->getNumThreads());
 #endif  // #if BT_THREADSAFE
 }
 
@@ -566,7 +599,7 @@ void CommonRigidBodyMTBase::createEmptyDynamicsWorld()
 		m_dispatcher = new MyCollisionDispatcher(m_collisionConfiguration, 40);
 		m_broadphase = new btDbvtBroadphase();
 
-		btConstraintSolverPoolMt* solverPool;
+		btConstraintSolverPoolMt* solverPool = nullptr;
 		{
 			SolverType poolSolverType = m_solverType;
 			if (poolSolverType == SOLVER_TYPE_SEQUENTIAL_IMPULSE_MT)
@@ -584,7 +617,7 @@ void CommonRigidBodyMTBase::createEmptyDynamicsWorld()
 			solverPool = new btConstraintSolverPoolMt(solvers, maxThreadCount);
 			m_solver = solverPool;
 		}
-		btSequentialImpulseConstraintSolverMt* solverMt = NULL;
+		btSequentialImpulseConstraintSolverMt* solverMt = nullptr;
 		if (m_solverType == SOLVER_TYPE_SEQUENTIAL_IMPULSE_MT)
 		{
 			solverMt = new MySequentialImpulseConstraintSolverMt();
