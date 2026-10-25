@@ -173,6 +173,8 @@ int CChaFile::WriteChaFile(bool limitdegflag, BPWorld* srcbpw, WCHAR* projdir, W
 	CGrassFile grassfile;
 	CallF(grassfile.WriteGrassFile(wgrassname), return 1);
 
+	CallF(Write2File("  <UpdateThreads>%d</UpdateThreads>\r\n", g_UpdateMatrixThreads), return 1);
+	CallF(Write2File("  <BtThreads>%d</BtThreads>\r\n", g_BtThreads), return 1);
 
 	CallF(Write2File("  <BoneMarkDisp>%d</BoneMarkDisp>\r\n", g_bonemarkflag), return 1);
 	CallF(Write2File("  <RigidMarkDisp>%d</RigidMarkDisp>\r\n", g_rigidmarkflag), return 1);
@@ -342,7 +344,9 @@ int CChaFile::WriteFileInfo()
 	//version 1029 : 2026/07/20 1.0.0.77へ向けて  LightSlot, ShadowSlot, SkySlot, FogSlot, DofSlot追加
 	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1029</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 	//version 1030 : 2026/07/20 1.0.0.78へ向けて  GrassShapeScaleX, GrassShapeScaleY, GrassShapeScaleZ, GrassDiffuseRateR, GrassDiffuseRateG, GrassDiffuseRateB, GrassDiffuseRateA, GrassBendScale追加
-	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1030</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1030</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
+	//version 1031 : 2026/07/20 1.0.0.84へ向けて  UpdateThreads, BtThreads追加
+	CallF(Write2File("  <FileInfo>\r\n    <kind>AdditiveIK_ProjectFile</kind>\r\n    <version>1031</version>\r\n    <type>0</type>\r\n  </FileInfo>\r\n"), return 1);
 
 	
 	CallF( Write2File( "  <ProjectInfo>\r\n" ), return 1 );
@@ -974,6 +978,17 @@ int CChaFile::LoadChaFile(bool limitdegflag, WCHAR* strpath,
 
 
 	int result = 0;
+	int tempupdatethreads = 2;
+	result = Read_Int(&m_xmliobuf, "<UpdateThreads>", "</UpdateThreads>", &tempupdatethreads);
+	if (result == 0) {
+		g_UpdateMatrixThreads = tempupdatethreads;
+	}
+	int tempbtthreads = 8;
+	result = Read_Int(&m_xmliobuf, "<BtThreads>", "</BtThreads>", &tempbtthreads);
+	if (result == 0) {
+		g_BtThreads = tempbtthreads;
+	}
+
 	int tempbonemarkdisp = 1;
 	result = Read_Int(&m_xmliobuf, "<BoneMarkDisp>", "</BoneMarkDisp>", &tempbonemarkdisp);
 	if (result == 0) {

@@ -61,7 +61,7 @@ private:
 	int m_sizey;
 
 	BPWorld* m_bpWorld;
-	int m_btThreads;
+	//int m_btThreads;//---> g_BtThreads
 
 	OrgWinGUI::OrgWindow* m_dlgWnd;
 

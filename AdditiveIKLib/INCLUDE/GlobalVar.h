@@ -189,7 +189,7 @@ int g_writeFbxState = WRITEFBX_NONE;
 //bool g_underCopyW2LW = false;
 bool g_changeUpdateThreadsNum = false;
 
-int	g_numthread = 3;
+int	g_BtThreads = 8;
 
 //double g_btcalccnt = 3.0;
 //double g_btcalccnt = 1.0;//2023/01/18
@@ -498,7 +498,7 @@ extern int g_writeFbxState;
 //extern bool g_underCopyW2LW;
 extern bool g_changeUpdateThreadsNum;
 
-extern int	g_numthread;
+extern int	g_BtThreads;
 extern double g_btcalccnt;
 extern int g_dbgloadcnt;
 extern double g_calcfps;

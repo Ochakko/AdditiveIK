@@ -1,7 +1,30 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
-
+2026/10/24
+　AdditiveIK 1.0.0.84 RC1(リリース候補1)
+　　〇新しいFbxSdkに対応
+　　　・FbxSdk2020.3.11に対応
+　　　　https://www.autodesk.com/products/fbx/overview
+　　　・ドキュメント追加
+　　　　　Documents\TroubleShooting\0_LoadFbxOf10084_by_Maya2026.3.3.docx
+　　〇物理のマルチスレッド処理を修正
+　　　・マルチスレッドライブラリとしてMicrosoftのPPLを使っています
+　　　・物理用のソルバースレッド数指定スライダーをBulletPhysicsプレートメニューに追加
+　　　・Update Threadsのスレッド数と別指定可能にしました
+　　　　(UpdateMatrixのスレッド数はDisp and LimitsプレートメニューのUpdate Threadsスライダーで指定)
+　　　・１から８までの間で指定
+　　　・効果は高負荷にしないとわかりずらいです. 例えば、BulletPhysicsプレートメニューのBulletPhysics Calclation Countを１０にしてから
+　　　　複数物理適用モデルがあるシーンにて
+　　　　スレッド数を１のときと８のときで比較すると　CPU使用グラフの様子の違いがわかります
+　　　・プロジェクトファイル(*.cha)と一緒に保存、読み込み
+　　〇DualSense + MOA2.0修正
+　　　・左スティック処理とボタン処理が同時に行われて、ボタン処理がループするような意図しない振る舞いを修正.
+　　　・左スティックによるモーキャプウォークへのモーション切り替えはボタンによるモーション再生終了を待つように.
+　　〇カメラロックオン機能修正
+　　　・モデルパネルでモデルをセレクトする場合に、自動でカメラロック機能をオフに.
+　　　
+　　　
 2026/10/24
 　物理のマルチスレッド処理を修正
 　　〇マルチスレッドライブラリとしてMicrosoftのPPLを使っています

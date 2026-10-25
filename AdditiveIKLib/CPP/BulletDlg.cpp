@@ -155,7 +155,7 @@ void CBulletDlg::InitParams()
 	m_sizey = 150;
 
 	m_bpWorld = nullptr;
-	m_btThreads = 8;
+	//m_btThreads = 8;//-->g_BtThreads
 
 	m_dlgWnd = nullptr;
 
@@ -276,7 +276,7 @@ int CBulletDlg::CreateBulletWnd()
 			_ASSERT(0);
 			abort();
 		}
-		m_bulletThreadsSlider = new OWP_Slider((double)m_btThreads, 8.0, 1.0, labelheight);
+		m_bulletThreadsSlider = new OWP_Slider((double)g_BtThreads, 8.0, 1.0, labelheight);
 		if (!m_bulletThreadsSlider) {
 			_ASSERT(0);
 			abort();
@@ -419,7 +419,7 @@ int CBulletDlg::CreateBulletWnd()
 		//##########
 		m_bulletThreadsSlider->setCursorListener([=, this]() {
 			int value = (int)(m_bulletThreadsSlider->getValue() + 0.5);
-			m_btThreads = max(1, min(8, value));
+			g_BtThreads = max(1, min(8, value));
 			if (m_bpWorld != nullptr) {
 				m_bpWorld->setNumThread(max(1, min(8, value)));
 			}
@@ -427,7 +427,7 @@ int CBulletDlg::CreateBulletWnd()
 			});
 		m_bulletThreadsSlider->setLUpListener([=, this]() {
 			int value = (int)(m_bulletThreadsSlider->getValue() + 0.5);
-			m_btThreads = max(1, min(8, value));
+			g_BtThreads = max(1, min(8, value));
 			if (m_bpWorld != nullptr) {
 				m_bpWorld->setNumThread(max(1, min(8, value)));
 			}
@@ -498,7 +498,7 @@ int CBulletDlg::ParamsToDlg()
 {
 	if (m_dlgWnd) {
 		if (m_bulletThreadsSlider) {
-			m_bulletThreadsSlider->setValue((double)m_btThreads, false);
+			m_bulletThreadsSlider->setValue((double)g_BtThreads, false);
 		}
 		if (m_bulletlimitrateSlider) {
 			m_bulletlimitrateSlider->setValue(g_physicalLimitScale, false);

@@ -4485,7 +4485,7 @@ void InitApp()
 	g_rotatetanim = false;
 	g_HighRpmMode = true;//2023/12/30 起動時にオン
 	g_UpdateMatrixThreads = 2;
-
+	g_BtThreads = 8;
 
 	s_fTime = 0.0;
 	s_fElapsedTime = 0.0;
@@ -5343,7 +5343,7 @@ void InitApp()
 		s_bpWorld->setGlobalERP(btScalar(g_erp));// ERP
 		//s_bpWorld->start();// ウィンドウを表示して，シミュレーションを開始する
 		s_btWorld = s_bpWorld->getDynamicsWorld();
-		s_bpWorld->setNumThread(g_numthread);
+		s_bpWorld->setNumThread(g_BtThreads);
 
 		//s_displimitsdlg.SetBpWorld(s_bpWorld);
 		s_bulletdlg.SetBpWorld(s_bpWorld);
@@ -6133,7 +6133,7 @@ void OnUserFrameMove(double fTime, float fElapsedTime, double difftime, int endf
 
 
 		//WCHAR sz[100];
-		////swprintf_s(sz, 100, L"ThreadNum:%d(%d)", g_numthread, gNumIslands);
+		////swprintf_s(sz, 100, L"ThreadNum:%d(%d)", g_BtThreads, gNumIslands);
 		////g_SampleUI.GetStatic(IDC_STATIC_NUMTHREAD)->SetText(sz);
 		//swprintf_s(sz, 100, L"UpdateThreads:%d", g_UpdateMatrixThreads);
 		//g_SampleUI.GetStatic(IDC_STATIC_UMTHREADS)->SetText(sz);
@@ -15719,7 +15719,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.83\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.84\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -19772,7 +19772,7 @@ int OpenChaFile()
 		s_bpWorld->setGlobalERP(btScalar(g_erp));// ERP
 									   //s_bpWorld->start();// ウィンドウを表示して，シミュレーションを開始する
 		s_btWorld = s_bpWorld->getDynamicsWorld();
-		s_bpWorld->setNumThread(g_numthread);
+		s_bpWorld->setNumThread(g_BtThreads);
 
 		//s_displimitsdlg.SetBpWorld(s_bpWorld);
 		s_bulletdlg.SetBpWorld(s_bpWorld);
@@ -43314,6 +43314,10 @@ int ChangeUpdateMatrixThreads()
 	if (!g_chascene) {
 		return 0;
 	}
+	if (s_nowloading) {
+		return 0;
+	}
+
 
 	StopBt();
 
@@ -43325,7 +43329,7 @@ int ChangeUpdateMatrixThreads()
 	int modelcount;
 	for (modelcount = 0; modelcount < modelnum; modelcount++) {
 		CModel* curmodel = g_chascene->GetModel(modelcount);
-		if (curmodel) {
+		if (curmodel && !curmodel->GetUnderLoadFbx()) {
 			curmodel->CreateBoneUpdateMatrix();
 		}
 	}
