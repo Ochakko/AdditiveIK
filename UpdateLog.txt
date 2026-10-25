@@ -1,8 +1,8 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
-2026/10/24
-　AdditiveIK 1.0.0.84 RC1(リリース候補1)
+2026/10/25
+　AdditiveIK 1.0.0.84 release
 　　〇新しいFbxSdkに対応
 　　　・FbxSdk2020.3.11に対応
 　　　　https://www.autodesk.com/products/fbx/overview
@@ -23,7 +23,6 @@ https://github.com/Ochakko/AdditiveIK
 　　　・左スティックによるモーキャプウォークへのモーション切り替えはボタンによるモーション再生終了を待つように.
 　　〇カメラロックオン機能修正
 　　　・モデルパネルでモデルをセレクトする場合に、自動でカメラロック機能をオフに.
-　　　
 　　　
 2026/10/24
 　物理のマルチスレッド処理を修正
