@@ -91,7 +91,7 @@ public:
 	int SetNames(std::vector<DOLLYELEM2>& copyhistory);
 
 	int OnDelete(int delid);
-	int OnRadio(int radioid, bool pasteflag);
+	int OnRadio(int radioid, bool pasteflag, bool callFromKey);
 	int OnSaveDolly();
 
 	void SetVisible(bool srcflag);

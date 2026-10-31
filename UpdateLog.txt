@@ -1,6 +1,12 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/10/31
+　STREAM DECK XLのプロファイルを更新
+　　3ページ目の１２個のボタンでカメラヒストリーの上から12個までに対応
+　　プロファイルは以下の場所に. 
+　　Test\STREAM_DECK_XL_Profile\AdditiveIK Profile.streamDeckProfile
+
 2026/10/25
 　AdditiveIK 1.0.0.84 release
 　　〇新しいFbxSdkに対応

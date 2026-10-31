@@ -25443,44 +25443,88 @@ int OnFrameKeyboard()
 		//########################
 		bool shiftdoneflag = false;
 		{
-			if (g_controlkey && (g_keybuf[VK_F19] & 0x80) && ((g_savekeybuf[VK_F19] & 0x80) == 0)) {
+			//2026/10/31
+			//Select Camera Dolly History
+			bool pasteflag = true;
+			bool callFromKey = true;
+
+			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F13] & 0x80) && ((g_savekeybuf[VK_F13] & 0x80) == 0)) {
+				s_dollyhistorydlg2.OnRadio(0, pasteflag, callFromKey);
+			}
+			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F14] & 0x80) && ((g_savekeybuf[VK_F14] & 0x80) == 0)) {
+				s_dollyhistorydlg2.OnRadio(1, pasteflag, callFromKey);
+			}
+			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F15] & 0x80) && ((g_savekeybuf[VK_F15] & 0x80) == 0)) {
+				s_dollyhistorydlg2.OnRadio(2, pasteflag, callFromKey);
+			}
+			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F16] & 0x80) && ((g_savekeybuf[VK_F16] & 0x80) == 0)) {
+				s_dollyhistorydlg2.OnRadio(3, pasteflag, callFromKey);
+			}
+			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F17] & 0x80) && ((g_savekeybuf[VK_F17] & 0x80) == 0)) {
+				s_dollyhistorydlg2.OnRadio(4, pasteflag, callFromKey);
+			}
+			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F18] & 0x80) && ((g_savekeybuf[VK_F18] & 0x80) == 0)) {
+				s_dollyhistorydlg2.OnRadio(5, pasteflag, callFromKey);
+			}
+			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F19] & 0x80) && ((g_savekeybuf[VK_F19] & 0x80) == 0)) {
+				s_dollyhistorydlg2.OnRadio(6, pasteflag, callFromKey);
+			}
+			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F20] & 0x80) && ((g_savekeybuf[VK_F20] & 0x80) == 0)) {
+				s_dollyhistorydlg2.OnRadio(7, pasteflag, callFromKey);
+			}
+			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F21] & 0x80) && ((g_savekeybuf[VK_F21] & 0x80) == 0)) {
+				s_dollyhistorydlg2.OnRadio(8, pasteflag, callFromKey);
+			}
+			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F22] & 0x80) && ((g_savekeybuf[VK_F22] & 0x80) == 0)) {
+				s_dollyhistorydlg2.OnRadio(9, pasteflag, callFromKey);
+			}
+			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F23] & 0x80) && ((g_savekeybuf[VK_F23] & 0x80) == 0)) {
+				s_dollyhistorydlg2.OnRadio(10, pasteflag, callFromKey);
+			}
+			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F24] & 0x80) && ((g_savekeybuf[VK_F24] & 0x80) == 0)) {
+				s_dollyhistorydlg2.OnRadio(11, pasteflag, callFromKey);
+			}
+		}
+
+		{
+			if (!g_shiftkey && g_controlkey && (g_keybuf[VK_F19] & 0x80) && ((g_savekeybuf[VK_F19] & 0x80) == 0)) {
 				g_preciseRotation = !g_preciseRotation;
 			}
 
-			if (g_controlkey && (g_keybuf[VK_F13] & 0x80) && ((g_savekeybuf[VK_F13] & 0x80) == 0)) {
+			if (!g_shiftkey && g_controlkey && (g_keybuf[VK_F13] & 0x80) && ((g_savekeybuf[VK_F13] & 0x80) == 0)) {
 				g_ikkind = IKKIND_ROTATE;
 				OnChangeIKKind(false);
 			}
-			if (g_controlkey && (g_keybuf[VK_F14] & 0x80) && ((g_savekeybuf[VK_F14] & 0x80) == 0)) {
+			if (!g_shiftkey && g_controlkey && (g_keybuf[VK_F14] & 0x80) && ((g_savekeybuf[VK_F14] & 0x80) == 0)) {
 				g_ikkind = IKKIND_MOVE;
 				OnChangeIKKind(false);
 			}
-			if (g_controlkey && (g_keybuf[VK_F15] & 0x80) && ((g_savekeybuf[VK_F15] & 0x80) == 0)) {
+			if (!g_shiftkey && g_controlkey && (g_keybuf[VK_F15] & 0x80) && ((g_savekeybuf[VK_F15] & 0x80) == 0)) {
 				g_ikkind = IKKIND_SCALE;
 				OnChangeIKKind(false);
 			}
 
 
-			if (g_controlkey && (g_keybuf[VK_F20] & 0x80) && ((g_savekeybuf[VK_F20] & 0x80) == 0)) {
+			if (!g_shiftkey && g_controlkey && (g_keybuf[VK_F20] & 0x80) && ((g_savekeybuf[VK_F20] & 0x80) == 0)) {
 				//Toggle CameraAnimSwitch
 				ChangeCameraMode(0);
 			}
 			
 			
-			if (g_controlkey && (g_keybuf[VK_F21] & 0x80) && ((g_savekeybuf[VK_F21] & 0x80) == 0)) {
+			if (!g_shiftkey && g_controlkey && (g_keybuf[VK_F21] & 0x80) && ((g_savekeybuf[VK_F21] & 0x80) == 0)) {
 				//bt start
 				if (GetCurrentModel()) {
 					s_calclimitedwmState = 101;
 				}
 			}
-			if (g_controlkey && (g_keybuf[VK_F22] & 0x80) && ((g_savekeybuf[VK_F22] & 0x80) == 0)) {
+			if (!g_shiftkey && g_controlkey && (g_keybuf[VK_F22] & 0x80) && ((g_savekeybuf[VK_F22] & 0x80) == 0)) {
 				//play
 				if (GetCurrentModel()) {
 					s_calclimitedwmState = 1; s_LstartFlag = true; s_LcursorFlag = true;
 					//s_LtimelineWnd->setDoneFlag(1);
 				}
 			}
-			if (g_controlkey && (g_keybuf[VK_F23] & 0x80) && ((g_savekeybuf[VK_F23] & 0x80) == 0)) {
+			if (!g_shiftkey && g_controlkey && (g_keybuf[VK_F23] & 0x80) && ((g_savekeybuf[VK_F23] & 0x80) == 0)) {
 				//reset
 				if (GetCurrentModel()) {
 					if (s_owpLTimeline) {
@@ -25491,21 +25535,21 @@ int OnFrameKeyboard()
 				}
 			}
 
-			if (g_controlkey && (g_keybuf[VK_F24] & 0x80) && ((g_savekeybuf[VK_F24] & 0x80) == 0)) {
+			if (!g_shiftkey && g_controlkey && (g_keybuf[VK_F24] & 0x80) && ((g_savekeybuf[VK_F24] & 0x80) == 0)) {
 				//Play Moa with Bt
 				if (GetCurrentModel()) {
 					BOOL dummyhandled = true;
 					s_motchangedlg.OnPlayWithBt(0, 0, nullptr, dummyhandled);
 				}
 			}
-			if (g_altkey && (g_keybuf[VK_F13] & 0x80) && ((g_savekeybuf[VK_F13] & 0x80) == 0)) {
+			if (!g_shiftkey && g_altkey && (g_keybuf[VK_F13] & 0x80) && ((g_savekeybuf[VK_F13] & 0x80) == 0)) {
 				//Play Moa
 				if (GetCurrentModel()) {
 					BOOL dummyhandled = true;
 					s_motchangedlg.OnPlay(0, 0, nullptr, dummyhandled);
 				}
 			}
-			if (g_altkey && (g_keybuf[VK_F14] & 0x80) && ((g_savekeybuf[VK_F14] & 0x80) == 0)) {
+			if (!g_shiftkey && g_altkey && (g_keybuf[VK_F14] & 0x80) && ((g_savekeybuf[VK_F14] & 0x80) == 0)) {
 				//Stop Moa
 				if (GetCurrentModel()) {
 					BOOL dummyhandled = true;
@@ -25515,7 +25559,7 @@ int OnFrameKeyboard()
 
 
 
-			if (g_altkey && (g_keybuf[VK_F15] & 0x80) && ((g_savekeybuf[VK_F15] & 0x80) == 0)) {
+			if (!g_shiftkey && g_altkey && (g_keybuf[VK_F15] & 0x80) && ((g_savekeybuf[VK_F15] & 0x80) == 0)) {
 				//Copy
 				if (GetCurrentModel()) {
 					if (s_copyFlag == false) {
@@ -25525,7 +25569,7 @@ int OnFrameKeyboard()
 					}
 				}
 			}
-			if (g_altkey && (g_keybuf[VK_F16] & 0x80) && ((g_savekeybuf[VK_F16] & 0x80) == 0)) {
+			if (!g_shiftkey && g_altkey && (g_keybuf[VK_F16] & 0x80) && ((g_savekeybuf[VK_F16] & 0x80) == 0)) {
 				//Paste
 				if (GetCurrentModel()) {
 					if (s_pasteFlag == false) {
@@ -25535,7 +25579,7 @@ int OnFrameKeyboard()
 					}
 				}
 			}
-			if (g_altkey && (g_keybuf[VK_F17] & 0x80) && ((g_savekeybuf[VK_F17] & 0x80) == 0)) {
+			if (!g_shiftkey && g_altkey && (g_keybuf[VK_F17] & 0x80) && ((g_savekeybuf[VK_F17] & 0x80) == 0)) {
 				//Camera Copy
 				if (GetCurrentModel()) {
 					if (s_copycameraFlag == false) {
@@ -25545,7 +25589,7 @@ int OnFrameKeyboard()
 					}
 				}
 			}
-			if (g_altkey && (g_keybuf[VK_F18] & 0x80) && ((g_savekeybuf[VK_F18] & 0x80) == 0)) {
+			if (!g_shiftkey && g_altkey && (g_keybuf[VK_F18] & 0x80) && ((g_savekeybuf[VK_F18] & 0x80) == 0)) {
 				//Camera Paste
 				if (GetCurrentModel()) {
 					if (s_pastecameraFlag == false) {
@@ -25555,7 +25599,7 @@ int OnFrameKeyboard()
 					}
 				}
 			}
-			if (g_altkey && (g_keybuf[VK_F19] & 0x80) && ((g_savekeybuf[VK_F19] & 0x80) == 0)) {
+			if (!g_shiftkey && g_altkey && (g_keybuf[VK_F19] & 0x80) && ((g_savekeybuf[VK_F19] & 0x80) == 0)) {
 				//Copy History
 				if (GetCurrentModel()) {
 					if (s_selCopyHisotryFlag == false) {
@@ -25567,14 +25611,14 @@ int OnFrameKeyboard()
 			}
 
 
-			if (g_altkey && (g_keybuf[VK_F21] & 0x80) && ((g_savekeybuf[VK_F21] & 0x80) == 0)) {
+			if (!g_shiftkey && g_altkey && (g_keybuf[VK_F21] & 0x80) && ((g_savekeybuf[VK_F21] & 0x80) == 0)) {
 				if (s_sidemenu_sellock != nullptr) {
 					bool value = s_sidemenu_sellock->getValue();
 					s_sidemenu_sellock->setValue(!value, true);
 				}
 			}
 
-			if (g_altkey && (g_keybuf[VK_F22] & 0x80) && ((g_savekeybuf[VK_F22] & 0x80) == 0)) {
+			if (!g_shiftkey && g_altkey && (g_keybuf[VK_F22] & 0x80) && ((g_savekeybuf[VK_F22] & 0x80) == 0)) {
 				//Green Frog Button for change EditTarget
 				s_spret2prev.ButtonDown();
 				s_SpriteButtonDown = true;
@@ -25612,7 +25656,7 @@ int OnFrameKeyboard()
 				//２段目を変更
 				GUIMenuSetVisible(nextmenukind, nextplateno);
 			}
-			if (g_altkey && (g_keybuf[VK_F23] & 0x80) && ((g_savekeybuf[VK_F23] & 0x80) == 0)) {
+			if (!g_shiftkey && g_altkey && (g_keybuf[VK_F23] & 0x80) && ((g_savekeybuf[VK_F23] & 0x80) == 0)) {
 				//Blue Frog Button for change EditTarget
 				if (GetCurrentModel()) {
 					s_spret2prev2.ButtonDown();
@@ -25620,7 +25664,7 @@ int OnFrameKeyboard()
 					ChangeToolSpriteMode();
 				}
 			}
-			if (g_altkey && (g_keybuf[VK_F24] & 0x80) && ((g_savekeybuf[VK_F24] & 0x80) == 0)) {
+			if (!g_shiftkey && g_altkey && (g_keybuf[VK_F24] & 0x80) && ((g_savekeybuf[VK_F24] & 0x80) == 0)) {
 				//Red Frog Button for change EditTarget
 				if (GetCurrentModel()) {
 					s_LchangeTargetFlag = true;
@@ -25746,7 +25790,7 @@ int OnFrameKeyboard()
 				GUIMenuSetVisible(SPPLATEMENUKIND_EFFECT, SPEFFECTSW_REFPOS + 1);//２段目　(enum + 1)
 				shiftdoneflag = true;
 			}
-			if (g_altkey && (g_keybuf[VK_F20] & 0x80) && ((g_savekeybuf[VK_F20] & 0x80) == 0)) {
+			if (!g_shiftkey && !g_controlkey && g_altkey && (g_keybuf[VK_F20] & 0x80) && ((g_savekeybuf[VK_F20] & 0x80) == 0)) {
 				s_guiswflag = false;
 				GUIMenuSetVisible(SPPLATEMENUKIND_EFFECT, SPEFFECTSW_GRASS + 1);//２段目　(enum + 1)
 				//shiftdoneflag = true;
@@ -36810,7 +36854,7 @@ HWND CreateMainWindow()
 
 
 	WCHAR strwindowname[MAX_PATH] = { 0L };
-	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.84 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strwindowname, MAX_PATH, L"AdditiveIK Ver1.0.0.85 : No.%d : ", s_appcnt);//本体のバージョン
 
 	s_rcmainwnd.top = 0;
 	s_rcmainwnd.left = 0;
@@ -40386,7 +40430,7 @@ void SetMainWindowTitle()
 
 
 	WCHAR strmaintitle[MAX_PATH * 3] = { 0L };
-	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.84 : No.%d : ", s_appcnt);//本体のバージョン
+	swprintf_s(strmaintitle, MAX_PATH * 3, L"AdditiveIK Ver1.0.0.85 : No.%d : ", s_appcnt);//本体のバージョン
 
 
 	if (GetCurrentModel() && g_chascene) {

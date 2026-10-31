@@ -210,7 +210,8 @@ int CDollyHistoryOWPElem::SetEventFunc(CDollyHistoryDlg2* srcdlg)
 		m_nameChk->setButtonListener([=, this]() {
 			if (m_parentdlg) {
 				bool pasteflag = true;//カメラアニメスイッチオンの場合にはカメラアニメにペーストする
-				m_parentdlg->OnRadio(m_dollyelemindex, pasteflag);
+				bool callFromKey = false;
+				m_parentdlg->OnRadio(m_dollyelemindex, pasteflag, callFromKey);
 			}
 		});
 	}
@@ -1063,7 +1064,7 @@ int CDollyHistoryDlg2::SetDollyElem2Camera(DOLLYELEM2 srcelem, bool pasteflag)
 	return 0;
 }
 
-int CDollyHistoryDlg2::OnRadio(int radioid, bool pasteflag)
+int CDollyHistoryDlg2::OnRadio(int radioid, bool pasteflag, bool callFromKey)
 {
 
 	if (m_dollyhistory.empty()) {
@@ -1073,7 +1074,7 @@ int CDollyHistoryDlg2::OnRadio(int radioid, bool pasteflag)
 		return 0;
 	}
 
-	if (m_onshow == true) {
+	if (!callFromKey && m_onshow) {
 		//2024/02/27
 		//ShowWindow()を呼び出したときにOnRadio*()内でカメラが動いてしまわないようにフラグで回避
 		//ユーザーは　保存したいカメラ位置を決めてからカメラドリーダイアログを出す場合がある　そのときにカメラが動いてしまうと困る
