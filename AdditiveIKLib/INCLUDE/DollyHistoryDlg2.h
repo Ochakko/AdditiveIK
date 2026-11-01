@@ -55,9 +55,16 @@ public:
 	OrgWinGUI::OWP_Label* GetMemoLabel() {
 		return m_memoLabel;
 	};
+	void ChangeDollyElemIndex(int srcindex) {
+		m_dollyelemindex = srcindex;
+	};
+	DOLLYELEM2 GetDollyElem() {
+		return m_dollyelem;
+	};
 private:
 	CDollyHistoryDlg2* m_parentdlg;
 	int m_dollyelemindex;
+	DOLLYELEM2 m_dollyelem;
 	OrgWinGUI::OWP_Separator* m_namesp;
 	OrgWinGUI::OWP_Separator* m_namesp2;
 	OrgWinGUI::OWP_CheckBoxA* m_nameChk;
@@ -67,6 +74,10 @@ private:
 	OrgWinGUI::OWP_Label* m_memoLabel;
 	OrgWinGUI::OWP_Label* m_spacerLabel;
 
+	OrgWinGUI::OWP_Separator* m_descsp;
+	OrgWinGUI::OWP_Separator* m_descsp2;
+	OrgWinGUI::OWP_Button* m_upB;
+	OrgWinGUI::OWP_Button* m_downB;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -85,14 +96,21 @@ public:
 		return m_createdflag;
 	};
 
-	int LoadDollyHistory(std::vector<DOLLYELEM2>& vecdolly);
-	int LoadDollyHistory_ver1(std::vector<DOLLYELEM2>& vecdolly);
-	int LoadDollyHistory_ver2(std::vector<DOLLYELEM2>& vecdolly);
+	int LoadDollyHistory(std::vector<DOLLYELEM2>& vecdolly, WCHAR* envdir);
+	bool CheckInitializedVer3(WCHAR* envdir);
+	bool LoadDollyHistory_ver1(std::vector<DOLLYELEM2>& vecdolly);
+	bool LoadDollyHistory_ver2(std::vector<DOLLYELEM2>& vecdolly);
+	bool LoadDollyHistory_ver3(std::vector<DOLLYELEM2>& vecdolly);
 	int SetNames(std::vector<DOLLYELEM2>& copyhistory);
+	int SetNames();
 
 	int OnDelete(int delid);
+	int OnUp(int srcindex);
+	int OnDown(int srcindex);
+
 	int OnRadio(int radioid, bool pasteflag, bool callFromKey);
-	int OnSaveDolly();
+	int OnSaveDolly(bool reloadflag);
+	int SaveDollyFiles(WCHAR* newenvdir);
 
 	void SetVisible(bool srcflag);
 
@@ -107,7 +125,6 @@ private:
 
 	int ParamsToDlg();
 	int EditParamsToDlg();
-
 
 	DOLLYELEM2 GetFirstValidElem();
 	DOLLYELEM2 GetCheckedElem();
@@ -135,6 +152,7 @@ private:
 	//size_t m_namenum;//m_dollyhistory.size()を使う
 	std::vector<DOLLYELEM2> m_dollyhistory;
 	std::vector<CDollyHistoryOWPElem*> m_owpelemvec;
+	WCHAR m_envdir[MAX_PATH];
 
 	ChaVector3 m_camerapos;
 	ChaVector3 m_targetpos;

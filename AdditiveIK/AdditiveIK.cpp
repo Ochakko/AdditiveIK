@@ -2373,7 +2373,7 @@ static int SetModel2Dlgs(CModel* srcmodel);
 
 
 //static int CreateCameraDollyWnd();//2023/08/23 CreateDollyHistoryDlg()に移行
-static int CreateDollyHistoryDlg();
+static int CreateDollyHistoryDlg(WCHAR* envdir);
 static int ShowCameraDollyDlg();
 static int CreateMaterialRateWnd();
 static int ShowMaterialRateDlg();
@@ -3397,7 +3397,7 @@ INT WINAPI wWinMain(
 	CreatePostureChildWnd();
 
 	//CreateCopyHistoryDlg();//s_modelが出来てから呼ぶ　OnModelMenu()に移動
-	CreateDollyHistoryDlg();//CheckResolution()より後、g_mainhwndがセットされた後で呼ぶ
+	//CreateDollyHistoryDlg();//CheckResolution()より後、g_mainhwndがセットされた後で呼ぶ  LoadEnvFiles()に移動
 
 
 	GUIMenuSetVisible(s_platemenukind, s_platemenuno);
@@ -8752,7 +8752,6 @@ LRESULT CALLBACK AppMsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		float newcamdist = (float)g_chacamera.CalcCameraDist();
 		ChangeCameraDist(newcamdist, g_chacamera.GetCamMoveEyePos(), false);
 		
-
 		//if (GetCurrentModel() && (s_pickinfo.pickobjno >= 0) && (g_previewFlag == 5)){
 		if (GetCurrentModel() && (g_previewFlag == 5)) {
 			if ((s_pickinfo.pickobjno >= 0)) {// && 
@@ -19388,6 +19387,11 @@ int SaveEnvFiles(WCHAR* projdir, WCHAR* projname)
 	SaveFogParamsFile(envdir);
 	SaveDofParamsFile(envdir);
 
+
+	if (s_dollyhistorydlg2.GetCreatedFlag()) {
+		s_dollyhistorydlg2.SaveDollyFiles(envdir);
+	}
+
 	return 0;
 }
 
@@ -19408,6 +19412,8 @@ int LoadEnvFiles(WCHAR* projdir, WCHAR* projname)
 	LoadSkyParamsFile(envdir);
 	LoadFogParamsFile(envdir);
 	LoadDofParamsFile(envdir);
+	
+	CreateDollyHistoryDlg(envdir);
 
 	return 0;
 }
@@ -28715,15 +28721,15 @@ void AddRJointReq(CBone* srcbone)
 //
 //	return 0;
 //}
-int CreateDollyHistoryDlg()
+int CreateDollyHistoryDlg(WCHAR* envdir)
 {
 	//dollyhistorydlg2の作成は位置とサイズが決まってg_mainhwndがセットされた後で
 	s_dollyhistorydlg2.SetUpdateFunc(UpdateCameraPosAndTarget, OnCameraAnimPaste);
 	std::vector<DOLLYELEM2> vecdolly;
 	vecdolly.clear();
 	//s_dollyhistorydlg2.SetOnShow(true);//2024/02/27 ダイアログを出したときにカメラが動いてしまうのを防止
-	s_dollyhistorydlg2.LoadDollyHistory(vecdolly);
-	s_dollyhistorydlg2.SetNames(vecdolly);
+	s_dollyhistorydlg2.LoadDollyHistory(vecdolly, envdir);
+	//s_dollyhistorydlg2.SetNames(vecdolly);
 
 	return 0;
 }
@@ -36382,8 +36388,17 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			}
 		}
 		else if (menuid == (ID_RMENU_0 + MENUOFFSET_DOLLYHISTORYDLG)) {
-			if (s_dollyhistorydlg2.GetCreatedFlag()) {
-				s_dollyhistorydlg2.OnSaveDolly();
+			int opekind = (int)lParam;
+			if (opekind == 0) {
+				if (s_dollyhistorydlg2.GetCreatedFlag()) {
+					bool reloadflag = true;
+					s_dollyhistorydlg2.OnSaveDolly(reloadflag);
+				}
+			}
+			else if (opekind == 1) {
+				if (s_dollyhistorydlg2.GetCreatedFlag()) {
+					s_dollyhistorydlg2.SetNames();
+				}
 			}
 		}
 		else if (menuid == (ID_RMENU_0 + MENUOFFSET_COPYHISTORYDLG)) {

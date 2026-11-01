@@ -1,8 +1,18 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/11/01
+　カメラヒストリー機能修正
+　　カメラ履歴ファイルの保存場所をプロジェクトフォルダのAdditiveIK_ENVフォルダ内に変更.
+　　　AdditiveIK_ENVフォルダに移行目印のファイルがない場合には、元の場所からAdditiveIK_ENVフォルダに自動コピー.
+　　３D画面上段のカエルボタンでカメラアイコンをクリックするとカメラヒストリが右ペインに出る.
+　　それぞれの履歴に↑ボタンと↓ボタンを追加、履歴の順番を変更可能.
+　　STREAM DECK XL(32buttons)で上から１２個まで、ボタンで履歴呼び出し可能.
+　　　STREAM DECK XL(32buttons)のプロファイルは以下の場所に. 
+　　　Test\STREAM_DECK_XL_Profile\AdditiveIK Profile.streamDeckProfile
+　　
 2026/10/31
-　STREAM DECK XLのプロファイルを更新
+　STREAM DECK XL(32buttons)のプロファイルを更新
 　　3ページ目の１２個のボタンでカメラヒストリーの上から12個までに対応
 　　プロファイルは以下の場所に. 
 　　Test\STREAM_DECK_XL_Profile\AdditiveIK Profile.streamDeckProfile
