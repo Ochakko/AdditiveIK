@@ -2650,8 +2650,10 @@ static int CameraForEditRotate(float rotxz, float roty);
 static int CameraForEditDist(float deltadist);
 
 static void OnCameraTargetAlways();
+static void OnCameraMoveEye();
 static void OnCameraTargetOnce();
 static void OnCameraTargetManipulator();
+static void OnCameraHeight();
 
 static int DispMotionWindow();
 static int DispToolWindow();
@@ -25617,10 +25619,28 @@ int OnFrameKeyboard()
 			}
 
 
-			if (!g_shiftkey && g_altkey && (g_keybuf[VK_F21] & 0x80) && ((g_savekeybuf[VK_F21] & 0x80) == 0)) {
+			if (!g_shiftkey && !g_controlkey && g_altkey && (g_keybuf[VK_F21] & 0x80) && ((g_savekeybuf[VK_F21] & 0x80) == 0)) {
+				// !shift +
+				//camera target select lock
 				if (s_sidemenu_sellock != nullptr) {
 					bool value = s_sidemenu_sellock->getValue();
 					s_sidemenu_sellock->setValue(!value, true);
+				}
+			}
+			if (g_shiftkey && !g_controlkey && g_altkey && (g_keybuf[VK_F22] & 0x80) && ((g_savekeybuf[VK_F22] & 0x80) == 0)) {
+				// shift +
+				//camera move flag 2026/11/07
+				if (s_sidemenu_moveeyepos != nullptr) {
+					bool value = s_sidemenu_moveeyepos->getValue();
+					s_sidemenu_moveeyepos->setValue(!value, true);
+				}
+			}
+			if (g_shiftkey && !g_controlkey && g_altkey && (g_keybuf[VK_F23] & 0x80) && ((g_savekeybuf[VK_F23] & 0x80) == 0)) {
+				// shift +
+				//camera height 2026/11/07
+				if (s_cameraheightChk != nullptr) {
+					bool value = s_cameraheightChk->getValue();
+					s_cameraheightChk->setValue(!value, true);
 				}
 			}
 
@@ -31454,13 +31474,7 @@ int CreateSideMenuWnd()
 			}
 			if (s_sidemenu_moveeyepos) {
 				s_sidemenu_moveeyepos->setButtonListener([]() {
-					bool value = s_sidemenu_moveeyepos->getValue();
-					if (value) {
-						g_chacamera.SetCamMoveEyePos(true);
-					}
-					else {
-						g_chacamera.SetCamMoveEyePos(false);
-					}
+					OnCameraMoveEye();
 					});
 			}
 
@@ -31471,15 +31485,11 @@ int CreateSideMenuWnd()
 					});
 			}
 
-			s_cameraheightChk->setButtonListener([]() {
-				bool value = s_cameraheightChk->getValue();
-				if (value) {
-					g_chacamera.SetCameraHeightFlag(1);
-				}
-				else {
-					g_chacamera.SetCameraHeightFlag(0);
-				}
-				});
+			if (s_cameraheightChk) {
+				s_cameraheightChk->setButtonListener([]() {
+					OnCameraHeight();
+					});
+			}
 			s_cameraheightSlider->setCursorListener([]() {
 				double value = s_cameraheightSlider->getValue();
 				g_chacamera.SetCameraHeight((float)value);
@@ -49679,6 +49689,33 @@ void OnCameraTargetOnce()
 			//Once　
 			s_befLockMatView = s_matView;
 			g_chacamera.SetCamTargetOnceFlag(1);
+		}
+	}
+}
+
+void OnCameraHeight()
+{
+	if (s_cameraheightChk != nullptr) {
+		bool value = s_cameraheightChk->getValue();
+		s_cameraheightChk->setValue(value, false);
+		if (value) {
+			g_chacamera.SetCameraHeightFlag(1);
+		}
+		else {
+			g_chacamera.SetCameraHeightFlag(0);
+		}
+	}
+}
+void OnCameraMoveEye()
+{
+	if (s_sidemenu_moveeyepos != nullptr) {
+		bool value = s_sidemenu_moveeyepos->getValue();
+		s_sidemenu_moveeyepos->setValue(value, false);
+		if (value) {
+			g_chacamera.SetCamMoveEyePos(true);
+		}
+		else {
+			g_chacamera.SetCamMoveEyePos(false);
 		}
 	}
 }

@@ -1,6 +1,12 @@
 AdditiveIK UpdateLog
 https://github.com/Ochakko/AdditiveIK
 
+2026/11/07
+　STREAM DECK XL(32buttons)のプロファイルを更新
+　　3ページ目のボタンに　CamEyeMoveチェックボタンと　CamHeightチェックボタンを追加　
+　　プロファイルは以下の場所に. 
+　　Test\STREAM_DECK_XL_Profile\AdditiveIK Profile.streamDeckProfile
+　　
 2026/11/01
 　カメラヒストリー機能修正
 　　カメラ履歴ファイルの保存場所をプロジェクトフォルダのAdditiveIK_ENVフォルダ内に変更.
