@@ -73,7 +73,7 @@
 #include <GrassFile.h>
 #include "SettingsDlg.h"
 #include <CopyHistoryDlg2.h>
-#include <DollyHistoryDlg2.h>
+#include <DollyMemoDlg.h>
 #include <RigidParamsDlg.h>
 #include <DispLimitsDlg.h>
 #include <BulletDlg.h>
@@ -1002,7 +1002,7 @@ static bool s_allmodelbone = false;
 
 static std::vector<HISTORYELEM> s_cptfilename;
 static CCopyHistoryDlg2 s_copyhistorydlg2;
-static CDollyHistoryDlg2 s_dollyhistorydlg2;
+static CDollyMemoDlg s_dollymemodlg;
 
 
 static CRigidParamsDlg s_rigidparamsdlg;
@@ -2076,8 +2076,8 @@ ChaVector4 g_lightdirforall[LIGHTNUMMAX];//2024/02/15 有効無効に関わら�
 //#define MENUOFFSET_RIGIDPARAMSDLG		(96)
 //// (97)はCpInfoDlg2をトリガーとするCopyMotionFunc()呼び出し用に確保
 //#define MENUOFFSET_CPINFODLG			(97)
-//// (98)はDollyHistoryDlg2のOnSaveDolly()呼び出し用に確保
-//#define MENUOFFSET_DOLLYHISTORYDLG		(98)
+//// (98)はDollyMemoDlgのOnSaveDolly()呼び出し用に確保
+//#define MENUOFFSET_DOLLYMEMODLG		(98)
 //// (99)はCopyHistoryDlg2のOnSearch()呼び出し用に確保
 //#define MENUOFFSET_COPYHISTORYDLG		(99)
 
@@ -2372,8 +2372,8 @@ static void ChangeCurDirFromMameMediaToTest();
 static int SetModel2Dlgs(CModel* srcmodel);
 
 
-//static int CreateCameraDollyWnd();//2023/08/23 CreateDollyHistoryDlg()に移行
-static int CreateDollyHistoryDlg(WCHAR* envdir);
+//static int CreateCameraDollyWnd();//2023/08/23 CreateDollyMemoDlg()に移行
+static int CreateDollyMemoDlg(WCHAR* envdir);
 static int ShowCameraDollyDlg();
 static int CreateMaterialRateWnd();
 static int ShowMaterialRateDlg();
@@ -3399,7 +3399,7 @@ INT WINAPI wWinMain(
 	CreatePostureChildWnd();
 
 	//CreateCopyHistoryDlg();//s_modelが出来てから呼ぶ　OnModelMenu()に移動
-	//CreateDollyHistoryDlg();//CheckResolution()より後、g_mainhwndがセットされた後で呼ぶ  LoadEnvFiles()に移動
+	//CreateDollyMemoDlg();//CheckResolution()より後、g_mainhwndがセットされた後で呼ぶ  LoadEnvFiles()に移動
 
 
 	GUIMenuSetVisible(s_platemenukind, s_platemenuno);
@@ -3849,7 +3849,7 @@ int SetRightPainDlgsPosAndSize()
 	int windowposy = TOPSLIDERSWNDH + SIDESLIDERWNDH;
 
 	s_copyhistorydlg2.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
-	s_dollyhistorydlg2.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
+	s_dollymemodlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
 	s_rigidparamsdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
 	s_displimitsdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
 	s_bulletdlg.SetPosAndSize(windowposx, windowposy, s_sidewidth, s_sideheight);
@@ -3922,7 +3922,7 @@ void InitApp()
 	s_copyhistorydlg2.InitParams();
 
 	{
-		s_dollyhistorydlg2.InitParams();
+		s_dollymemodlg.InitParams();
 		//ここではまだhistorydlg2.SetPosAndSize()が呼ばれていないのでダイアログの作成はしない
 		//SetPosAndSize()が呼ばれてg_mainhwndがセットされた後で作成する
 	}
@@ -5577,7 +5577,7 @@ void OnDestroyDevice()
 
 
 	s_copyhistorydlg2.DestroyObjs();
-	s_dollyhistorydlg2.DestroyObjs();
+	s_dollymemodlg.DestroyObjs();
 	s_rigidparamsdlg.DestroyObjs();
 	s_displimitsdlg.DestroyObjs();
 	s_bulletdlg.DestroyObjs();
@@ -15720,7 +15720,7 @@ LRESULT CALLBACK OpenMqoDlgProc(HWND hDlgWnd, UINT msg, WPARAM wp, LPARAM lp)
 				wfilename[0] = 0L;
 				WCHAR waFolderPath[MAX_PATH];
 				//SHGetSpecialFolderPath(NULL, waFolderPath, CSIDL_PROGRAMS, 0);//これではAppDataのパスになってしまう
-				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.84\\Test\\");
+				swprintf_s(waFolderPath, MAX_PATH, L"C:\\Program Files\\OchakkoLAB\\AdditiveIK1.0.0.85\\Test\\");
 				ofn.lpstrInitialDir = waFolderPath;
 				ofn.lpstrFile = wfilename;
 
@@ -19390,8 +19390,8 @@ int SaveEnvFiles(WCHAR* projdir, WCHAR* projname)
 	SaveDofParamsFile(envdir);
 
 
-	if (s_dollyhistorydlg2.GetCreatedFlag()) {
-		s_dollyhistorydlg2.SaveDollyFiles(envdir);
+	if (s_dollymemodlg.GetCreatedFlag()) {
+		s_dollymemodlg.SaveDollyFiles(envdir);
 	}
 
 	return 0;
@@ -19415,7 +19415,7 @@ int LoadEnvFiles(WCHAR* projdir, WCHAR* projname)
 	LoadFogParamsFile(envdir);
 	LoadDofParamsFile(envdir);
 	
-	CreateDollyHistoryDlg(envdir);
+	CreateDollyMemoDlg(envdir);
 
 	return 0;
 }
@@ -25457,40 +25457,40 @@ int OnFrameKeyboard()
 			bool callFromKey = true;
 
 			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F13] & 0x80) && ((g_savekeybuf[VK_F13] & 0x80) == 0)) {
-				s_dollyhistorydlg2.OnRadio(0, pasteflag, callFromKey);
+				s_dollymemodlg.OnRadio(0, pasteflag, callFromKey);
 			}
 			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F14] & 0x80) && ((g_savekeybuf[VK_F14] & 0x80) == 0)) {
-				s_dollyhistorydlg2.OnRadio(1, pasteflag, callFromKey);
+				s_dollymemodlg.OnRadio(1, pasteflag, callFromKey);
 			}
 			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F15] & 0x80) && ((g_savekeybuf[VK_F15] & 0x80) == 0)) {
-				s_dollyhistorydlg2.OnRadio(2, pasteflag, callFromKey);
+				s_dollymemodlg.OnRadio(2, pasteflag, callFromKey);
 			}
 			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F16] & 0x80) && ((g_savekeybuf[VK_F16] & 0x80) == 0)) {
-				s_dollyhistorydlg2.OnRadio(3, pasteflag, callFromKey);
+				s_dollymemodlg.OnRadio(3, pasteflag, callFromKey);
 			}
 			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F17] & 0x80) && ((g_savekeybuf[VK_F17] & 0x80) == 0)) {
-				s_dollyhistorydlg2.OnRadio(4, pasteflag, callFromKey);
+				s_dollymemodlg.OnRadio(4, pasteflag, callFromKey);
 			}
 			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F18] & 0x80) && ((g_savekeybuf[VK_F18] & 0x80) == 0)) {
-				s_dollyhistorydlg2.OnRadio(5, pasteflag, callFromKey);
+				s_dollymemodlg.OnRadio(5, pasteflag, callFromKey);
 			}
 			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F19] & 0x80) && ((g_savekeybuf[VK_F19] & 0x80) == 0)) {
-				s_dollyhistorydlg2.OnRadio(6, pasteflag, callFromKey);
+				s_dollymemodlg.OnRadio(6, pasteflag, callFromKey);
 			}
 			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F20] & 0x80) && ((g_savekeybuf[VK_F20] & 0x80) == 0)) {
-				s_dollyhistorydlg2.OnRadio(7, pasteflag, callFromKey);
+				s_dollymemodlg.OnRadio(7, pasteflag, callFromKey);
 			}
 			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F21] & 0x80) && ((g_savekeybuf[VK_F21] & 0x80) == 0)) {
-				s_dollyhistorydlg2.OnRadio(8, pasteflag, callFromKey);
+				s_dollymemodlg.OnRadio(8, pasteflag, callFromKey);
 			}
 			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F22] & 0x80) && ((g_savekeybuf[VK_F22] & 0x80) == 0)) {
-				s_dollyhistorydlg2.OnRadio(9, pasteflag, callFromKey);
+				s_dollymemodlg.OnRadio(9, pasteflag, callFromKey);
 			}
 			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F23] & 0x80) && ((g_savekeybuf[VK_F23] & 0x80) == 0)) {
-				s_dollyhistorydlg2.OnRadio(10, pasteflag, callFromKey);
+				s_dollymemodlg.OnRadio(10, pasteflag, callFromKey);
 			}
 			if (g_shiftkey && g_controlkey && (g_keybuf[VK_F24] & 0x80) && ((g_savekeybuf[VK_F24] & 0x80) == 0)) {
-				s_dollyhistorydlg2.OnRadio(11, pasteflag, callFromKey);
+				s_dollymemodlg.OnRadio(11, pasteflag, callFromKey);
 			}
 		}
 
@@ -28741,15 +28741,15 @@ void AddRJointReq(CBone* srcbone)
 //
 //	return 0;
 //}
-int CreateDollyHistoryDlg(WCHAR* envdir)
+int CreateDollyMemoDlg(WCHAR* envdir)
 {
-	//dollyhistorydlg2の作成は位置とサイズが決まってg_mainhwndがセットされた後で
-	s_dollyhistorydlg2.SetUpdateFunc(UpdateCameraPosAndTarget, OnCameraAnimPaste);
+	//dollymemodlgの作成は位置とサイズが決まってg_mainhwndがセットされた後で
+	s_dollymemodlg.SetUpdateFunc(UpdateCameraPosAndTarget, OnCameraAnimPaste);
 	std::vector<DOLLYELEM2> vecdolly;
 	vecdolly.clear();
-	//s_dollyhistorydlg2.SetOnShow(true);//2024/02/27 ダイアログを出したときにカメラが動いてしまうのを防止
-	s_dollyhistorydlg2.LoadDollyHistory(vecdolly, envdir);
-	//s_dollyhistorydlg2.SetNames(vecdolly);
+	//s_dollymemodlg.SetOnShow(true);//2024/02/27 ダイアログを出したときにカメラが動いてしまうのを防止
+	s_dollymemodlg.LoadDollyMemo(vecdolly, envdir);
+	//s_dollymemodlg.SetNames(vecdolly);
 
 	return 0;
 }
@@ -36397,17 +36397,17 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				}
 			}
 		}
-		else if (menuid == (ID_RMENU_0 + MENUOFFSET_DOLLYHISTORYDLG)) {
+		else if (menuid == (ID_RMENU_0 + MENUOFFSET_DOLLYMEMODLG)) {
 			int opekind = (int)lParam;
 			if (opekind == 0) {
-				if (s_dollyhistorydlg2.GetCreatedFlag()) {
+				if (s_dollymemodlg.GetCreatedFlag()) {
 					bool reloadflag = true;
-					s_dollyhistorydlg2.OnSaveDolly(reloadflag);
+					s_dollymemodlg.OnSaveDolly(reloadflag);
 				}
 			}
 			else if (opekind == 1) {
-				if (s_dollyhistorydlg2.GetCreatedFlag()) {
-					s_dollyhistorydlg2.SetNames();
+				if (s_dollymemodlg.GetCreatedFlag()) {
+					s_dollymemodlg.SetNames();
 				}
 			}
 		}
@@ -45549,16 +45549,16 @@ int ShowCameraDollyDlg()
 
 	//std::vector<DOLLYELEM> vecdolly;
 	//vecdolly.clear();
-	//s_dollyhistorydlg.SetOnShow(true);//2024/02/27 ダイアログを出したときにカメラが動いてしまうのを防止
-	//s_dollyhistorydlg.LoadDollyHistory(vecdolly);
-	//s_dollyhistorydlg.SetNames(vecdolly);
-	//s_dollyhistorydlg.ShowWindow(SW_SHOW);
-	////s_dollyhistorydlg.SetOnShow(false);//2024/02/27 この時点ではまだカメラ位置を変えようとしていない　OFFはdollyhistorydlgのOnPaint()で行う
+	//s_dollymemodlg.SetOnShow(true);//2024/02/27 ダイアログを出したときにカメラが動いてしまうのを防止
+	//s_dollymemodlg.LoadDollyMemo(vecdolly);
+	//s_dollymemodlg.SetNames(vecdolly);
+	//s_dollymemodlg.ShowWindow(SW_SHOW);
+	////s_dollymemodlg.SetOnShow(false);//2024/02/27 この時点ではまだカメラ位置を変えようとしていない　OFFはdollymemodlgのOnPaint()で行う
 
 	//2024/07/25
 	//SetNames()呼び出しはInitApp()で行う
 	//開いたり閉じたりした場合にもウインドウの状態が保たれるようにここではSetNames()を呼ばない
-	s_dollyhistorydlg2.SetVisible(true);
+	s_dollymemodlg.SetVisible(true);
 
 	return 0;
 }
@@ -48597,8 +48597,8 @@ void CloseAllRightPainWindow(bool closefirstraw)
 		s_copyhistorydlg2.SetVisible(false);
 	}
 	
-	if (s_dollyhistorydlg2.GetCreatedFlag() == true) {
-		s_dollyhistorydlg2.SetVisible(false);
+	if (s_dollymemodlg.GetCreatedFlag() == true) {
+		s_dollymemodlg.SetVisible(false);
 	}
 	//if (s_limitWnd) {
 	//	s_underanglelimithscroll = 0;

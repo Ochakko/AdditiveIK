@@ -205,7 +205,7 @@
     <ClCompile Include="..\CPP\DispObj.cpp" />
     <ClCompile Include="..\CPP\DofDlg.cpp" />
     <ClCompile Include="..\CPP\DofParamsFile.cpp" />
-    <ClCompile Include="..\CPP\DollyHistoryDlg2.cpp" />
+    <ClCompile Include="..\CPP\DollyMemoDlg.cpp" />
     <ClCompile Include="..\CPP\EditRange.cpp" />
     <ClCompile Include="..\CPP\EngName.cpp" />
     <ClCompile Include="..\CPP\EventKey.cpp" />
@@ -638,7 +638,7 @@
     <ClInclude Include="..\INCLUDE\DispObj.h" />
     <ClInclude Include="..\INCLUDE\DofDlg.h" />
     <ClInclude Include="..\INCLUDE\DofParamsFile.h" />
-    <ClInclude Include="..\INCLUDE\DollyHistoryDlg2.h" />
+    <ClInclude Include="..\INCLUDE\DollyMemoDlg.h" />
     <ClInclude Include="..\INCLUDE\EditRange.h" />
     <ClInclude Include="..\INCLUDE\EngName.h" />
     <ClInclude Include="..\INCLUDE\EventKey.h" />

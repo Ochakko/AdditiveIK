@@ -1,6 +1,6 @@
 ﻿#include "stdafx.h"
 
-#include <DollyHistoryDlg2.h>
+#include <DollyMemoDlg.h>
 #include "../../AdditiveIK/SetDlgPos.h"
 
 #include <StrMisc.h>
@@ -27,15 +27,15 @@ extern ChaCamera g_chacamera;
 static WCHAR s_checkfilename[MAX_PATH] = L"MB3DOpenProjDollyInitialized10085.dol";
 
 
-CDollyHistoryOWPElem::CDollyHistoryOWPElem()
+CDollyMemoOWPElem::CDollyMemoOWPElem()
 {
 	InitParams();
 }
-CDollyHistoryOWPElem::~CDollyHistoryOWPElem()
+CDollyMemoOWPElem::~CDollyMemoOWPElem()
 {
 	DestroyObjs();
 }
-int CDollyHistoryOWPElem::SetDollyElem(
+int CDollyMemoOWPElem::SetDollyElem(
 	int srcdollyelemindex, OrgWinGUI::OrgWindow* parwnd, OrgWinGUI::OWP_Separator* parentsp,
 	DOLLYELEM2 srcdollyelem)
 {
@@ -161,7 +161,7 @@ int CDollyHistoryOWPElem::SetDollyElem(
 
 	return 0;
 }
-int CDollyHistoryOWPElem::AddParts(OrgWinGUI::OWP_Separator* parentsp)
+int CDollyMemoOWPElem::AddParts(OrgWinGUI::OWP_Separator* parentsp)
 {
 	if (!parentsp) {
 		_ASSERT(0);
@@ -242,7 +242,7 @@ int CDollyHistoryOWPElem::AddParts(OrgWinGUI::OWP_Separator* parentsp)
 
 	return 0;
 }
-int CDollyHistoryOWPElem::SetEventFunc(CDollyHistoryDlg2* srcdlg)
+int CDollyMemoOWPElem::SetEventFunc(CDollyMemoDlg* srcdlg)
 {
 	m_parentdlg = srcdlg;
 
@@ -289,7 +289,7 @@ int CDollyHistoryOWPElem::SetEventFunc(CDollyHistoryDlg2* srcdlg)
 	return 0;
 }
 
-void CDollyHistoryOWPElem::InitParams()
+void CDollyMemoOWPElem::InitParams()
 {
 	m_dollyelemindex = -1;
 
@@ -309,7 +309,7 @@ void CDollyHistoryOWPElem::InitParams()
 
 	m_parentdlg = nullptr;
 }
-void CDollyHistoryOWPElem::DestroyObjs()
+void CDollyMemoOWPElem::DestroyObjs()
 {
 	if (m_namesp) {
 		delete m_namesp;
@@ -366,19 +366,19 @@ void CDollyHistoryOWPElem::DestroyObjs()
 
 
 /////////////////////////////////////////////////////////////////////////////
-// CDollyHistoryDlg2
+// CDollyMemoDlg
 
-CDollyHistoryDlg2::CDollyHistoryDlg2()
+CDollyMemoDlg::CDollyMemoDlg()
 {
 	InitParams();
 }
 
-CDollyHistoryDlg2::~CDollyHistoryDlg2()
+CDollyMemoDlg::~CDollyMemoDlg()
 {
 	DestroyObjs();
 }
 	
-int CDollyHistoryDlg2::DestroyObjs()
+int CDollyMemoDlg::DestroyObjs()
 {
 	DestroyOWPWnd();
 	InitParams();
@@ -386,7 +386,7 @@ int CDollyHistoryDlg2::DestroyObjs()
 	return 0;
 }
 
-void CDollyHistoryDlg2::InitParams()
+void CDollyMemoDlg::InitParams()
 {
 	m_createdflag = false;
 	m_visible = false;
@@ -398,7 +398,7 @@ void CDollyHistoryDlg2::InitParams()
 	m_sizex = 150;
 	m_sizey = 150;
 
-	m_dollyhistory.clear();
+	m_dollymemo.clear();
 	m_owpelemvec.clear();
 
 	m_camerapos.SetParams(0.0f, 0.0f, 10.0f);
@@ -440,13 +440,13 @@ void CDollyHistoryDlg2::InitParams()
 	m_spacer2Label = nullptr;
 }
 
-void CDollyHistoryDlg2::SetUpdateFunc(int (*UpdateFunc)(), int (*PasteFunc)())
+void CDollyMemoDlg::SetUpdateFunc(int (*UpdateFunc)(), int (*PasteFunc)())
 {
 	m_UpdateFunc = UpdateFunc;
 	m_PasteFunc = PasteFunc;
 }
 
-int CDollyHistoryDlg2::DestroyOWPWnd()
+int CDollyMemoDlg::DestroyOWPWnd()
 {
 	if (m_dlgwnd) {
 		m_dlgwnd->setVisible(false);
@@ -576,12 +576,12 @@ int CDollyHistoryDlg2::DestroyOWPWnd()
 
 	return 0;
 }
-int CDollyHistoryDlg2::DestroyOWPElem()
+int CDollyMemoDlg::DestroyOWPElem()
 {
 	size_t elemnum = m_owpelemvec.size();
 	size_t elemindex;
 	for (elemindex = 0; elemindex < elemnum; elemindex++) {
-		CDollyHistoryOWPElem* curowp = m_owpelemvec[elemindex];
+		CDollyMemoOWPElem* curowp = m_owpelemvec[elemindex];
 		if (curowp) {
 			delete curowp;
 		}
@@ -591,7 +591,7 @@ int CDollyHistoryDlg2::DestroyOWPElem()
 	return 0;
 }
 
-int CDollyHistoryDlg2::SetPosAndSize(int srcposx, int srcposy, int srcsizex, int srcsizey)
+int CDollyMemoDlg::SetPosAndSize(int srcposx, int srcposy, int srcsizex, int srcsizey)
 {
 	m_posx = srcposx;
 	m_posy = srcposy;
@@ -602,7 +602,7 @@ int CDollyHistoryDlg2::SetPosAndSize(int srcposx, int srcposy, int srcsizex, int
 }
 
 
-//LRESULT CDollyHistoryDlg2::OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+//LRESULT CDollyMemoDlg::OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 //{
 //	//size_t selectedno = 0;//チェックされていない場合(あり得ないが)、一番最初
 //	//size_t nameno;
@@ -629,7 +629,7 @@ int CDollyHistoryDlg2::SetPosAndSize(int srcposx, int srcposy, int srcsizex, int
 //	return 0;
 //}
 //
-//LRESULT CDollyHistoryDlg2::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+//LRESULT CDollyMemoDlg::OnCancel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 //{
 //	m_initsearchcomboflag = false;
 //	//EndDialog(wID);
@@ -638,7 +638,7 @@ int CDollyHistoryDlg2::SetPosAndSize(int srcposx, int srcposy, int srcsizex, int
 //	return 0;
 //}
 
-int CDollyHistoryDlg2::EditParamsToDlg()
+int CDollyMemoDlg::EditParamsToDlg()
 {
 	if (m_posxEdit) {
 		WCHAR dispname[EDIT_BUFLEN_NUM] = { 0L };
@@ -713,7 +713,7 @@ int CDollyHistoryDlg2::EditParamsToDlg()
 }
 
 
-int CDollyHistoryDlg2::ParamsToDlg()
+int CDollyMemoDlg::ParamsToDlg()
 {
 
 	//##################
@@ -732,18 +732,18 @@ int CDollyHistoryDlg2::ParamsToDlg()
 	return 0;
 }
 
-int CDollyHistoryDlg2::CreateOWPWnd()
+int CDollyMemoDlg::CreateOWPWnd()
 {
 
 	DestroyOWPWnd();
 
 	m_dlgwnd = new OrgWindow(
 		0,
-		_T("DollyHistoryDlg"),		//ウィンドウクラス名
+		_T("DollyMemoDlg"),		//ウィンドウクラス名
 		GetModuleHandle(NULL),	//インスタンスハンドル
 		WindowPos(m_posx, m_posy),
 		WindowSize(m_sizex, m_sizey),		//サイズ
-		_T("DollyHistoryDlg"),	//タイトル
+		_T("DollyMemoDlg"),	//タイトル
 		g_mainhwnd,	//親ウィンドウハンドル
 		false,					//表示・非表示状態
 		//70, 50, 70,				//カラー
@@ -771,12 +771,12 @@ int CDollyHistoryDlg2::CreateOWPWnd()
 		}
 		m_dlgwnd->addParts(*m_dlgspheader);
 
-		m_dlgSc = new OWP_ScrollWnd(L"DollyHistoryScroll", true, labelheight);
+		m_dlgSc = new OWP_ScrollWnd(L"DollyMemoScroll", true, labelheight);
 		if (!m_dlgSc) {
 			_ASSERT(0);
 			abort();
 		}
-		int linedatanum = (int)((double)m_dollyhistory.size() * 4.0 * 1.25);
+		int linedatanum = (int)((double)m_dollymemo.size() * 4.0 * 1.25);
 		m_dlgSc->setLineDataSize(linedatanum);
 		m_dlgwnd->addParts(*m_dlgSc);
 
@@ -955,10 +955,10 @@ int CDollyHistoryDlg2::CreateOWPWnd()
 
 
 		size_t nameno;
-		size_t namenum = m_dollyhistory.size();
+		size_t namenum = m_dollymemo.size();
 		for (nameno = 0; nameno < namenum; nameno++) {
-			DOLLYELEM2 curhistory = m_dollyhistory[nameno];
-			CDollyHistoryOWPElem* newowp = new CDollyHistoryOWPElem();
+			DOLLYELEM2 curhistory = m_dollymemo[nameno];
+			CDollyMemoOWPElem* newowp = new CDollyMemoOWPElem();
 			if (!newowp) {
 				_ASSERT(0);
 				abort();
@@ -974,14 +974,14 @@ int CDollyHistoryDlg2::CreateOWPWnd()
 		size_t owpindex;
 		size_t owpnum = m_owpelemvec.size();
 		for (owpindex = 0; owpindex < owpnum; owpindex++) {
-			CDollyHistoryOWPElem* curowp = m_owpelemvec[owpindex];
+			CDollyMemoOWPElem* curowp = m_owpelemvec[owpindex];
 			if (curowp) {
 				curowp->AddParts(m_dlgsplist);
 			}
 		}
 		size_t owpindex2;
 		for (owpindex2 = 0; owpindex2 < owpnum; owpindex2++) {
-			CDollyHistoryOWPElem* curowp = m_owpelemvec[owpindex2];
+			CDollyMemoOWPElem* curowp = m_owpelemvec[owpindex2];
 			if (curowp) {
 				curowp->SetEventFunc(this);
 			}
@@ -998,7 +998,7 @@ int CDollyHistoryDlg2::CreateOWPWnd()
 			if (g_mainhwnd && IsWindow(g_mainhwnd)) {
 				//OnSaveDolly();//OnSaveDolly()からはParams2Dlg()が呼ばれてそこからCreateOWPWnd()が呼ばれてm_saveBは作り直されエラーになる
 				int opekind = 0;
-				::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_DOLLYHISTORYDLG), opekind);//SendMessageでも上記と同様のエラー.　PostMessage()を使う
+				::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_DOLLYMEMODLG), opekind);//SendMessageでも上記と同様のエラー.　PostMessage()を使う
 			}
 		});
 
@@ -1020,19 +1020,19 @@ int CDollyHistoryDlg2::CreateOWPWnd()
 	return 0;
 }
 
-int CDollyHistoryDlg2::SetNames(std::vector<DOLLYELEM2>& copyhistory)
+int CDollyMemoDlg::SetNames(std::vector<DOLLYELEM2>& copyhistory)
 {
 
-	m_dollyhistory = copyhistory;
+	m_dollymemo = copyhistory;
 
 	ParamsToDlg();
 
 	m_createdflag = true;
 	return 0;
 }
-int CDollyHistoryDlg2::SetNames()
+int CDollyMemoDlg::SetNames()
 {
-	//m_dollyhistory = copyhistory;
+	//m_dollymemo = copyhistory;
 
 	vector<DOLLYELEM2> newhistory;
 	size_t owpnum = m_owpelemvec.size();
@@ -1043,7 +1043,7 @@ int CDollyHistoryDlg2::SetNames()
 	for (owpindex = 0; owpindex < owpnum; owpindex++) {
 		newhistory.push_back(m_owpelemvec[owpindex]->GetDollyElem());
 	}
-	m_dollyhistory = newhistory;
+	m_dollymemo = newhistory;
 
 	ParamsToDlg();
 
@@ -1052,17 +1052,17 @@ int CDollyHistoryDlg2::SetNames()
 }
 
 
-int CDollyHistoryDlg2::OnDelete(int delid)
+int CDollyMemoDlg::OnDelete(int delid)
 {
-	if (m_dollyhistory.empty()) {
+	if (m_dollymemo.empty()) {
 		return 0;
 	}
-	if ((delid < 0) || (delid >= (int)m_dollyhistory.size())) {
+	if ((delid < 0) || (delid >= (int)m_dollymemo.size())) {
 		return 0;
 	}
 
 	WCHAR delcpt[MAX_PATH] = { 0L };
-	wcscpy_s(delcpt, MAX_PATH, m_dollyhistory[delid].elem1.wfilename);
+	wcscpy_s(delcpt, MAX_PATH, m_dollymemo[delid].elem1.wfilename);
 	delcpt[MAX_PATH - 1] = 0L;
 	if (delcpt[0] != 0L) {
 		BOOL bexist;
@@ -1072,15 +1072,15 @@ int CDollyHistoryDlg2::OnDelete(int delid)
 		}
 	}
 
-	wcscpy_s(m_dollyhistory[delid].elem1.wfilename, MAX_PATH, L"deleted.");
-	m_dollyhistory[delid].elem1.validflag = false;
+	wcscpy_s(m_dollymemo[delid].elem1.wfilename, MAX_PATH, L"deleted.");
+	m_dollymemo[delid].elem1.validflag = false;
 
 
 	size_t owpnum = m_owpelemvec.size();
 	int owpindex;
 	for (owpindex = 0; owpindex < owpnum; owpindex++) {
-		CDollyHistoryOWPElem* curowp = m_owpelemvec[owpindex];
-		if (curowp && (curowp->GetDollyHistoryIndex() == delid)) {
+		CDollyMemoOWPElem* curowp = m_owpelemvec[owpindex];
+		if (curowp && (curowp->GetDollyMemoIndex() == delid)) {
 			if (curowp->GetDescLabel()) {
 				curowp->GetDescLabel()->setName(L"deleted.");
 			}
@@ -1102,12 +1102,12 @@ int CDollyHistoryDlg2::OnDelete(int delid)
 	return 0;
 }
 
-int CDollyHistoryDlg2::OnUp(int srcindex)
+int CDollyMemoDlg::OnUp(int srcindex)
 {
-	if (m_dollyhistory.empty()) {
+	if (m_dollymemo.empty()) {
 		return 0;
 	}
-	if ((srcindex < 0) || (srcindex >= (int)m_dollyhistory.size())) {
+	if ((srcindex < 0) || (srcindex >= (int)m_dollymemo.size())) {
 		return 0;
 	}
 
@@ -1116,8 +1116,8 @@ int CDollyHistoryDlg2::OnUp(int srcindex)
 		return 0;
 	}
 
-	vector<CDollyHistoryOWPElem*> newvec;
-	CDollyHistoryOWPElem* saveelem = m_owpelemvec[srcindex - 1];
+	vector<CDollyMemoOWPElem*> newvec;
+	CDollyMemoOWPElem* saveelem = m_owpelemvec[srcindex - 1];
 
 	
 	//before
@@ -1149,18 +1149,18 @@ int CDollyHistoryDlg2::OnUp(int srcindex)
 	if (g_mainhwnd && IsWindow(g_mainhwnd)) {
 		//OnUp();//OnUp()からはParams2Dlg()が呼ばれてそこからCreateOWPWnd()が呼ばれてm_saveBは作り直されエラーになる
 		int opekind = 1;
-		::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_DOLLYHISTORYDLG), opekind);//SendMessageでも上記と同様のエラー.　PostMessage()を使う
+		::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_DOLLYMEMODLG), opekind);//SendMessageでも上記と同様のエラー.　PostMessage()を使う
 	}
 
 	return 0;
 
 }
-int CDollyHistoryDlg2::OnDown(int srcindex)
+int CDollyMemoDlg::OnDown(int srcindex)
 {
-	if (m_dollyhistory.empty()) {
+	if (m_dollymemo.empty()) {
 		return 0;
 	}
-	if ((srcindex < 0) || (srcindex >= (int)m_dollyhistory.size())) {
+	if ((srcindex < 0) || (srcindex >= (int)m_dollymemo.size())) {
 		return 0;
 	}
 
@@ -1169,8 +1169,8 @@ int CDollyHistoryDlg2::OnDown(int srcindex)
 		return 0;
 	}
 
-	vector<CDollyHistoryOWPElem*> newvec;
-	CDollyHistoryOWPElem* saveelem = m_owpelemvec[srcindex + 1];
+	vector<CDollyMemoOWPElem*> newvec;
+	CDollyMemoOWPElem* saveelem = m_owpelemvec[srcindex + 1];
 
 
 	//before
@@ -1202,7 +1202,7 @@ int CDollyHistoryDlg2::OnDown(int srcindex)
 	if (g_mainhwnd && IsWindow(g_mainhwnd)) {
 		//OnDown();//OnDown()からはParams2Dlg()が呼ばれてそこからCreateOWPWnd()が呼ばれてm_saveBは作り直されエラーになる
 		int opekind = 1;
-		::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_DOLLYHISTORYDLG), opekind);//SendMessageでも上記と同様のエラー.　PostMessage()を使う
+		::PostMessage(g_mainhwnd, WM_COMMAND, (ID_RMENU_0 + MENUOFFSET_DOLLYMEMODLG), opekind);//SendMessageでも上記と同様のエラー.　PostMessage()を使う
 	}
 
 	return 0;
@@ -1210,7 +1210,7 @@ int CDollyHistoryDlg2::OnDown(int srcindex)
 
 
 
-int CDollyHistoryDlg2::SetDollyElem2Camera(DOLLYELEM2 srcelem, bool pasteflag)
+int CDollyMemoDlg::SetDollyElem2Camera(DOLLYELEM2 srcelem, bool pasteflag)
 {
 	if (!m_UpdateFunc) {
 		_ASSERT(0);
@@ -1270,13 +1270,13 @@ int CDollyHistoryDlg2::SetDollyElem2Camera(DOLLYELEM2 srcelem, bool pasteflag)
 	return 0;
 }
 
-int CDollyHistoryDlg2::OnRadio(int radioid, bool pasteflag, bool callFromKey)
+int CDollyMemoDlg::OnRadio(int radioid, bool pasteflag, bool callFromKey)
 {
 
-	if (m_dollyhistory.empty()) {
+	if (m_dollymemo.empty()) {
 		return 0;
 	}
-	if ((radioid < 0) || (radioid >= (int)m_dollyhistory.size())) {
+	if ((radioid < 0) || (radioid >= (int)m_dollymemo.size())) {
 		return 0;
 	}
 
@@ -1291,9 +1291,9 @@ int CDollyHistoryDlg2::OnRadio(int radioid, bool pasteflag, bool callFromKey)
 	size_t owpnum = m_owpelemvec.size();
 	int owpindex;
 	for (owpindex = 0; owpindex < owpnum; owpindex++) {
-		CDollyHistoryOWPElem* curowp = m_owpelemvec[owpindex];
+		CDollyMemoOWPElem* curowp = m_owpelemvec[owpindex];
 		if (curowp && curowp->GetNameCheckBox()) {
-			if (curowp->GetDollyHistoryIndex() == radioid) {
+			if (curowp->GetDollyMemoIndex() == radioid) {
 				curowp->GetNameCheckBox()->setValue(true, false);
 			}
 			else {
@@ -1318,8 +1318,8 @@ int CDollyHistoryDlg2::OnRadio(int radioid, bool pasteflag, bool callFromKey)
 
 	//OKボタンを押さないでも反映されるように
 	int result = 0;
-	if (!m_dollyhistory.empty()) {
-		DOLLYELEM2 curelem = m_dollyhistory[radioid];
+	if (!m_dollymemo.empty()) {
+		DOLLYELEM2 curelem = m_dollymemo[radioid];
 		result = SetDollyElem2Camera(curelem, pasteflag);
 	}
 
@@ -1331,12 +1331,12 @@ int CDollyHistoryDlg2::OnRadio(int radioid, bool pasteflag, bool callFromKey)
 }
 
 
-DOLLYELEM2 CDollyHistoryDlg2::GetFirstValidElem()
+DOLLYELEM2 CDollyMemoDlg::GetFirstValidElem()
 {
-	int elemnum = (int)m_dollyhistory.size();
+	int elemnum = (int)m_dollymemo.size();
 	int elemno;
 	for (elemno = 0; elemno < elemnum; elemno++) {
-		DOLLYELEM2 helem = m_dollyhistory[elemno];
+		DOLLYELEM2 helem = m_dollymemo[elemno];
 		if (helem.elem1.validflag) {
 			return helem;
 		}
@@ -1351,23 +1351,23 @@ DOLLYELEM2 CDollyHistoryDlg2::GetFirstValidElem()
 	return inielem;
 }
 
-DOLLYELEM2 CDollyHistoryDlg2::GetCheckedElem()
+DOLLYELEM2 CDollyMemoDlg::GetCheckedElem()
 {
 	int selectedno = -1;//チェックされていない場合
 
 	size_t owpnum = m_owpelemvec.size();
 	int owpindex;
 	for (owpindex = 0; owpindex < owpnum; owpindex++) {
-		CDollyHistoryOWPElem* curowp = m_owpelemvec[owpindex];
+		CDollyMemoOWPElem* curowp = m_owpelemvec[owpindex];
 		if (curowp && curowp->GetNameCheckBox() && curowp->GetNameCheckBox()->getValue()) {
 			//selectedno = owpindex;
-			selectedno = curowp->GetDollyHistoryIndex();
+			selectedno = curowp->GetDollyMemoIndex();
 			break;
 		}
 	}
 
-	if ((selectedno >= 0) && (selectedno < (int)m_dollyhistory.size())) {
-		DOLLYELEM2 checkedelem = m_dollyhistory[selectedno];
+	if ((selectedno >= 0) && (selectedno < (int)m_dollymemo.size())) {
+		DOLLYELEM2 checkedelem = m_dollymemo[selectedno];
 		if (checkedelem.elem1.validflag) {
 			return checkedelem;
 			//return (int)selectedno;
@@ -1382,7 +1382,7 @@ DOLLYELEM2 CDollyHistoryDlg2::GetCheckedElem()
 }
 
 
-int CDollyHistoryDlg2::OnGetDolly()
+int CDollyMemoDlg::OnGetDolly()
 {
 	m_camerapos = g_chacamera.GetCamEye();
 	m_targetpos = g_chacamera.GetCamTargetPos();
@@ -1394,7 +1394,7 @@ int CDollyHistoryDlg2::OnGetDolly()
 
 	return 0;
 }
-int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
+int CDollyMemoDlg::OnSetDolly(bool pasteflag)
 {
 	WCHAR strpos[256] = { 0L };
 	float posvalue = 0.0f;
@@ -1482,7 +1482,7 @@ int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
 	g_chacamera.SetCamUpDir(m_upvec);
 	//#########################################################################
 	//m_upvecはエディットボックス編集しない
-	//LoadDollyHistory_ver2()で読み込まれる
+	//LoadDollyMemo_ver2()で読み込まれる
 	//OnGet()と　OnRadio()から呼ばれるSetDollyElem2Camera()で取得した値をそのまま使う
 	//#########################################################################
 
@@ -1542,7 +1542,7 @@ int CDollyHistoryDlg2::OnSetDolly(bool pasteflag)
 
 
 
-int CDollyHistoryDlg2::OnSaveDolly(bool reloadflag)
+int CDollyMemoDlg::OnSaveDolly(bool reloadflag)
 {
 	BOOL bhandled = true;
 	bool pasteflag = true;//カメラアニメスイッチオンの場合にはカメラアニメにペーストする
@@ -1559,10 +1559,10 @@ int CDollyHistoryDlg2::OnSaveDolly(bool reloadflag)
 
 
 
-		vector<CDollyHistoryOWPElem*> newvec;
+		vector<CDollyMemoOWPElem*> newvec;
 
 
-		CDollyHistoryOWPElem* newowp = new CDollyHistoryOWPElem();
+		CDollyMemoOWPElem* newowp = new CDollyMemoOWPElem();
 		if (!newowp) {
 			_ASSERT(0);
 			abort();
@@ -1578,7 +1578,7 @@ int CDollyHistoryDlg2::OnSaveDolly(bool reloadflag)
 		int orgsize = (int)m_owpelemvec.size();
 		int owpindex;
 		for (owpindex = 0; owpindex < orgsize; owpindex++) {
-			CDollyHistoryOWPElem* currentowp = m_owpelemvec[owpindex];
+			CDollyMemoOWPElem* currentowp = m_owpelemvec[owpindex];
 			if (currentowp != nullptr) {
 				currentowp->ChangeDollyElemIndex(owpindex + 1);//一番上に１つ足したので、１つ下にずらす
 				newvec.push_back(currentowp);
@@ -1598,8 +1598,8 @@ int CDollyHistoryDlg2::OnSaveDolly(bool reloadflag)
 			std::vector<DOLLYELEM2> vecdolly;
 			vecdolly.clear();
 			
-			//LoadDollyHistory(vecdolly, m_envdir);
-			LoadDollyHistory_ver3(vecdolly);//ver3:upvec有り, elemindex名前付き　の履歴を読込
+			//LoadDollyMemo(vecdolly, m_envdir);
+			LoadDollyMemo_ver3(vecdolly);//ver3:upvec有り, elemindex名前付き　の履歴を読込
 			SetNames(vecdolly);
 		}
 
@@ -1610,7 +1610,7 @@ int CDollyHistoryDlg2::OnSaveDolly(bool reloadflag)
 	}
 }
 
-bool CDollyHistoryDlg2::CheckInitializedVer3(WCHAR* envdir)
+bool CDollyMemoDlg::CheckInitializedVer3(WCHAR* envdir)
 {
 	//ver3へ移行した印のファイルがあるかどうかを調べる
 	WCHAR chkfilename[MAX_PATH] = { 0L };
@@ -1664,7 +1664,7 @@ bool CDollyHistoryDlg2::CheckInitializedVer3(WCHAR* envdir)
 	}
 }
 
-int CDollyHistoryDlg2::LoadDollyHistory(std::vector<DOLLYELEM2>& vecdolly, WCHAR* envdir)
+int CDollyMemoDlg::LoadDollyMemo(std::vector<DOLLYELEM2>& vecdolly, WCHAR* envdir)
 {
 	vecdolly.clear();
 	if (envdir == nullptr) {
@@ -1681,8 +1681,8 @@ int CDollyHistoryDlg2::LoadDollyHistory(std::vector<DOLLYELEM2>& vecdolly, WCHAR
 		//変更前と順番が同じ状態から始められるように　２回読み込む
 
 		//1回目読み込み　ファイルタイムでソートする
-		LoadDollyHistory_ver1(vecdolly);//ver1:upvec無しの履歴を読込
-		LoadDollyHistory_ver2(vecdolly);//ver2:upvec有りの履歴を読込
+		LoadDollyMemo_ver1(vecdolly);//ver1:upvec無しの履歴を読込
+		LoadDollyMemo_ver2(vecdolly);//ver2:upvec有りの履歴を読込
 		//ソート
 		if (!vecdolly.empty()) {
 			std::sort(vecdolly.begin(), vecdolly.end());
@@ -1696,14 +1696,14 @@ int CDollyHistoryDlg2::LoadDollyHistory(std::vector<DOLLYELEM2>& vecdolly, WCHAR
 	}
 	
 	//２回目読み込み　ファイル名で並んでいれば　ソートは不要
-	LoadDollyHistory_ver3(vecdolly);//ver3:upvec有り, elemindex名前付き　の履歴を読込
+	LoadDollyMemo_ver3(vecdolly);//ver3:upvec有り, elemindex名前付き　の履歴を読込
 	SetNames(vecdolly);
 
 	return 0;
 }
 
 
-bool CDollyHistoryDlg2::LoadDollyHistory_ver1(std::vector<DOLLYELEM2>& vecdolly)
+bool CDollyMemoDlg::LoadDollyMemo_ver1(std::vector<DOLLYELEM2>& vecdolly)
 {
 	//###########
 	//version 1
@@ -1822,7 +1822,7 @@ bool CDollyHistoryDlg2::LoadDollyHistory_ver1(std::vector<DOLLYELEM2>& vecdolly)
 	return copy2envdir;
 }
 
-bool CDollyHistoryDlg2::LoadDollyHistory_ver2(std::vector<DOLLYELEM2>& vecdolly)
+bool CDollyMemoDlg::LoadDollyMemo_ver2(std::vector<DOLLYELEM2>& vecdolly)
 {
 	//###########
 	//version 2
@@ -1936,7 +1936,7 @@ bool CDollyHistoryDlg2::LoadDollyHistory_ver2(std::vector<DOLLYELEM2>& vecdolly)
 	return copy2envdir;
 }
 
-bool CDollyHistoryDlg2::LoadDollyHistory_ver3(std::vector<DOLLYELEM2>& vecdolly)
+bool CDollyMemoDlg::LoadDollyMemo_ver3(std::vector<DOLLYELEM2>& vecdolly)
 {
 	//###########
 	//version 3
@@ -2036,7 +2036,7 @@ bool CDollyHistoryDlg2::LoadDollyHistory_ver3(std::vector<DOLLYELEM2>& vecdolly)
 }
 
 
-int CDollyHistoryDlg2::SaveDollyFiles(WCHAR* newenvdir)
+int CDollyMemoDlg::SaveDollyFiles(WCHAR* newenvdir)
 {
 	if (newenvdir == nullptr) {
 		_ASSERT(0);
@@ -2078,10 +2078,10 @@ int CDollyHistoryDlg2::SaveDollyFiles(WCHAR* newenvdir)
 	int elemnum = (int)m_owpelemvec.size();
 	int elemindex;
 	for (elemindex = 0; elemindex < elemnum; elemindex++) {
-		CDollyHistoryOWPElem* curowpelem = m_owpelemvec[elemindex];
+		CDollyMemoOWPElem* curowpelem = m_owpelemvec[elemindex];
 		if (curowpelem != nullptr) {
 			WCHAR savefilename[MAX_PATH] = { 0L };
-			swprintf_s(savefilename, MAX_PATH, L"%s\\MB3DOpenProjDolly3_%04d.dol", newenvdir, elemindex);// curowpelem->GetDollyHistoryIndex());
+			swprintf_s(savefilename, MAX_PATH, L"%s\\MB3DOpenProjDolly3_%04d.dol", newenvdir, elemindex);// curowpelem->GetDollyMemoIndex());
 
 			HANDLE hfile;
 			hfile = CreateFile(savefilename, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
@@ -2105,7 +2105,7 @@ int CDollyHistoryDlg2::SaveDollyFiles(WCHAR* newenvdir)
 	return 0;
 }
 
-//LRESULT CDollyHistoryDlg2::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+//LRESULT CDollyMemoDlg::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 //{
 //	//LRESULT result = DefWindowProcW();
 //	bHandled = TRUE;
@@ -2123,7 +2123,7 @@ int CDollyHistoryDlg2::SaveDollyFiles(WCHAR* newenvdir)
 //}
 
 
-void CDollyHistoryDlg2::SetVisible(bool srcflag)
+void CDollyMemoDlg::SetVisible(bool srcflag)
 {
 	if (srcflag) {
 		if (m_dlgwnd) {

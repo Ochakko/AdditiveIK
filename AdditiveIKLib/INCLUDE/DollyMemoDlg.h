@@ -1,5 +1,5 @@
-﻿#ifndef __CDollyHistoryDlg2_H_
-#define __CDollyHistoryDlg2_H_
+﻿#ifndef __CDollyMemoDlg_H_
+#define __CDollyMemoDlg_H_
 
 
 #include <windows.h>
@@ -20,27 +20,27 @@ class OrgWinGUI::OWP_EditBox;
 class OrgWinGUI::OWP_Separator;
 class OrgWinGUI::OWP_ScrollWnd;
 
-class CDollyHistoryDlg2;
+class CDollyMemoDlg;
 
 
-class CDollyHistoryOWPElem
+class CDollyMemoOWPElem
 {
 public:
-	CDollyHistoryOWPElem();
-	~CDollyHistoryOWPElem();
+	CDollyMemoOWPElem();
+	~CDollyMemoOWPElem();
 
 	int SetDollyElem(
 		int srcdollyelemindex, OrgWinGUI::OrgWindow* parwnd, OrgWinGUI::OWP_Separator* parentsp,
 		DOLLYELEM2 srcdollyelem);
 	int AddParts(OrgWinGUI::OWP_Separator* parentsp);
-	int SetEventFunc(CDollyHistoryDlg2* srcdlg);
+	int SetEventFunc(CDollyMemoDlg* srcdlg);
 
 private:
 	void InitParams();
 	void DestroyObjs();
 
 public:
-	int GetDollyHistoryIndex() {
+	int GetDollyMemoIndex() {
 		return m_dollyelemindex;
 	};
 	OrgWinGUI::OWP_CheckBoxA* GetNameCheckBox() {
@@ -62,7 +62,7 @@ public:
 		return m_dollyelem;
 	};
 private:
-	CDollyHistoryDlg2* m_parentdlg;
+	CDollyMemoDlg* m_parentdlg;
 	int m_dollyelemindex;
 	DOLLYELEM2 m_dollyelem;
 	OrgWinGUI::OWP_Separator* m_namesp;
@@ -81,12 +81,12 @@ private:
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// CDollyHistoryDlg2
-class CDollyHistoryDlg2
+// CDollyMemoDlg
+class CDollyMemoDlg
 {
 public:
-	CDollyHistoryDlg2();
-	~CDollyHistoryDlg2();
+	CDollyMemoDlg();
+	~CDollyMemoDlg();
 
 	int SetPosAndSize(int srcposx, int srcposy, int srcsizex, int srcsizey);//!!!!!!!!
 	void SetUpdateFunc(int (*UpdateFunc)(), int (*PasteFunc)());
@@ -96,11 +96,11 @@ public:
 		return m_createdflag;
 	};
 
-	int LoadDollyHistory(std::vector<DOLLYELEM2>& vecdolly, WCHAR* envdir);
+	int LoadDollyMemo(std::vector<DOLLYELEM2>& vecdolly, WCHAR* envdir);
 	bool CheckInitializedVer3(WCHAR* envdir);
-	bool LoadDollyHistory_ver1(std::vector<DOLLYELEM2>& vecdolly);
-	bool LoadDollyHistory_ver2(std::vector<DOLLYELEM2>& vecdolly);
-	bool LoadDollyHistory_ver3(std::vector<DOLLYELEM2>& vecdolly);
+	bool LoadDollyMemo_ver1(std::vector<DOLLYELEM2>& vecdolly);
+	bool LoadDollyMemo_ver2(std::vector<DOLLYELEM2>& vecdolly);
+	bool LoadDollyMemo_ver3(std::vector<DOLLYELEM2>& vecdolly);
 	int SetNames(std::vector<DOLLYELEM2>& copyhistory);
 	int SetNames();
 
@@ -149,9 +149,9 @@ public:
 private:
 	bool m_createdflag;
 	bool m_visible;
-	//size_t m_namenum;//m_dollyhistory.size()を使う
-	std::vector<DOLLYELEM2> m_dollyhistory;
-	std::vector<CDollyHistoryOWPElem*> m_owpelemvec;
+	//size_t m_namenum;//m_dollymemo.size()を使う
+	std::vector<DOLLYELEM2> m_dollymemo;
+	std::vector<CDollyMemoOWPElem*> m_owpelemvec;
 	WCHAR m_envdir[MAX_PATH];
 
 	ChaVector3 m_camerapos;
@@ -162,7 +162,7 @@ private:
 	ChaVector3 m_upvec;
 	//#########################################################################
 	//m_upvecはエディットボックス編集しない
-	//LoadDollyHistory_ver2()で読み込まれる
+	//LoadDollyMemo_ver2()で読み込まれる
 	//OnGet()と　OnRadio()から呼ばれるSetDollyElem2Camera()で取得した値をそのまま使う
 	//#########################################################################
 

@@ -112,8 +112,8 @@ enum {//g_dsaxisvalue[], g_dsaxisOverTh[], g_dsaxisMOverTh[]のインデック�
 #define MENUOFFSET_RIGIDPARAMSDLG		(96)
 // (97)はCpInfoDlg2をトリガーとするCopyMotionFunc()呼び出し用に確保
 #define MENUOFFSET_CPINFODLG			(97)
-// (98)はDollyHistoryDlg2のOnSaveDolly()呼び出し用に確保
-#define MENUOFFSET_DOLLYHISTORYDLG		(98)
+// (98)はDollyMemoDlgのOnSaveDolly()呼び出し用に確保
+#define MENUOFFSET_DOLLYMEMODLG		(98)
 // (99)はCopyHistoryDlg2のOnSearch()呼び出し用に確保
 #define MENUOFFSET_COPYHISTORYDLG		(99)
 
