@@ -4,6 +4,8 @@ https://github.com/Ochakko/AdditiveIK
 2026/11/08
 　文言修正
 　　カメラ情報の順番を変えたり編集することにしたので、DollyHistoryという文言をDollyMemoに変更
+　　ドキュメント追加
+　　　Documents/TroubleShooting/0_HowToCalling_CameraDollyMemo.docx
 　　
 2026/11/07
 　STREAM DECK XL(32buttons)のプロファイルを更新
